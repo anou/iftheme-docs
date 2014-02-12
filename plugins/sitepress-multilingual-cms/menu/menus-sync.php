@@ -13,6 +13,7 @@
     
     <br />
     <?php if($icl_menus_sync->is_preview): ?>
+
         <form id="icl_msync_confirm_form" method="post">
         <input type="hidden" name="action" value="icl_msync_confirm" />
         
@@ -33,21 +34,39 @@
                 <?php foreach($icl_menus_sync->menus as $menu_id => $menu): ?>
                 <?php if(
                             isset($icl_menus_sync->sync_data['menu_translations'][$menu_id]) || 
-                            isset($icl_menus_sync->sync_data['add'][$menu_id]) || 
+                            isset($icl_menus_sync->sync_data['menu_options'][$menu_id]) ||
+                            isset($icl_menus_sync->sync_data['add'][$menu_id]) ||
                             isset($icl_menus_sync->sync_data['del'][$menu_id]) || 
+                            isset($icl_menus_sync->sync_data['label_changed'][$menu_id]) ||
+                            isset($icl_menus_sync->sync_data['url_changed'][$menu_id]) ||
+                            isset($icl_menus_sync->sync_data['label_missing'][$menu_id]) ||
+                            isset($icl_menus_sync->sync_data['url_missing'][$menu_id]) ||
                             isset($icl_menus_sync->sync_data['mov'][$menu_id])
                         ): ?>
                 <tr class="icl_msync_menu_title"><td colspan="3"><?php echo $menu['name'] ?></td></tr>
                 
                 <?php // Display actions per menu ?>
                 <?php // menu translations ?>
-                <?php if(isset($icl_menus_sync->sync_data['menu_translations'])): foreach($icl_menus_sync->sync_data['menu_translations'][$menu_id] as $language => $name):?>
+                <?php if(isset($icl_menus_sync->sync_data['menu_translations']) && isset($icl_menus_sync->sync_data['menu_translations'][$menu_id])): foreach($icl_menus_sync->sync_data['menu_translations'][$menu_id] as $language => $name):?>
                 <?php $lang_details = $sitepress->get_language_details($language);?>
                 <tr>
                     <th scope="row" class="check-column"><input type="checkbox" name="sync[menu_translation][<?php echo $menu_id ?>][<?php echo $language ?>]" value="<?php echo esc_attr($name) ?>" /></th>
                     <td><?php echo $lang_details['display_name']; ?></td>
-                    <td><?php printf(__('Add menu translation:  %s', 'sitepress'), '<strong>' . $name . '</strong>'); ?> </td> 
+                    <td><?php printf(__('Add menu translation:  %s', 'sitepress'), '<strong>' . $name . '</strong>'); ?> </td>
                 </tr>
+                <?php endforeach; endif; ?>
+                <?php if(isset($icl_menus_sync->sync_data['menu_options']) && isset($icl_menus_sync->sync_data['menu_options'][$menu_id])): foreach($icl_menus_sync->sync_data['menu_options'][$menu_id] as $language => $option):?>
+                <?php $lang_details = $sitepress->get_language_details($language);?>
+				<?php //TODO: compare with source menu ?>
+				<?php foreach($option as $key => $value): ?>
+				<?php if(isset($menu[$key]) && $menu[$key] != $value): ?>
+                <tr>
+                    <th scope="row" class="check-column"><input type="checkbox" name="sync[menu_options][<?php echo $menu_id ?>][<?php echo $language ?>][<?php echo $key; ?>]" value="<?php echo esc_attr($menu[$key]) ?>" /></th>
+                    <td><?php echo $lang_details['display_name']; ?></td>
+                    <td><?php printf(__('Update %s menu option', 'sitepress'), '<strong>' . $key . '</strong>'); ?> </td>
+                </tr>
+                <?php endif; ?>
+                <?php endforeach; ?>
                 <?php endforeach; endif; ?>
                 <?php // items translations / add ?>
                 <?php if(isset($icl_menus_sync->sync_data['add'][$menu_id])): foreach($icl_menus_sync->sync_data['add'][$menu_id] as $item_id => $languages):?>
@@ -102,9 +121,72 @@
                 </tr>
                 <?php endforeach; ?>
                 <?php endforeach; endif; ?>
-                
-                
-                <?php endif; ?>
+
+                <?php // items translations / label changed ?>
+                <?php if(isset($icl_menus_sync->sync_data['label_changed'][$menu_id])): foreach($icl_menus_sync->sync_data['label_changed'][$menu_id] as $item_id => $languages):?>
+                <?php foreach($languages as $language => $name):?>
+                <?php $lang_details = $sitepress->get_language_details($language);?>
+                <tr>
+                    <th scope="row" class="check-column">
+                        <input type="checkbox" name="sync[label_changed][<?php echo $menu_id ?>][<?php echo $language ?>][<?php echo $item_id ?>]" value="<?php echo esc_attr($name) ?>" />
+                    </th>
+                    <td><?php echo $lang_details['display_name'];?></td>
+                    <td><?php
+                        printf(__('Rename label to %s', 'sitepress'), '<strong>' . $name . '</strong>');
+                    ?> </td>
+                </tr>
+                <?php endforeach; ?>
+                <?php endforeach; endif; ?>
+
+                <?php // items translations / url changed ?>
+                <?php if(isset($icl_menus_sync->sync_data['url_changed'][$menu_id])): foreach($icl_menus_sync->sync_data['url_changed'][$menu_id] as $item_id => $languages):?>
+                <?php foreach($languages as $language => $url):?>
+                <?php $lang_details = $sitepress->get_language_details($language);?>
+                <tr>
+                    <th scope="row" class="check-column">
+                        <input type="checkbox" name="sync[url_changed][<?php echo $menu_id ?>][<?php echo $language ?>][<?php echo $item_id ?>]" value="<?php echo esc_attr($url) ?>" />
+                    </th>
+                    <td><?php echo $lang_details['display_name'];?></td>
+                    <td><?php
+                        printf(__('Update URL to %s', 'sitepress'), '<strong>' . $url . '</strong>');
+                    ?> </td>
+                </tr>
+                <?php endforeach; ?>
+                <?php endforeach; endif; ?>
+
+                <?php // items translations / label missing ?>
+                <?php if(isset($icl_menus_sync->sync_data['label_missing'][$menu_id])): foreach($icl_menus_sync->sync_data['label_missing'][$menu_id] as $item_id => $languages):?>
+                <?php foreach($languages as $language => $name):?>
+                <?php $lang_details = $sitepress->get_language_details($language);?>
+                <tr>
+                    <th scope="row" class="check-column">
+                        <input type="checkbox" name="sync[label_missing][<?php echo $menu_id ?>][<?php echo $language ?>][<?php echo $item_id ?>]" value="<?php echo esc_attr($name) ?>" />
+                    </th>
+                    <td><?php echo $lang_details['display_name'];?></td>
+                    <td><?php
+                        printf(__('Untranslated string %s', 'sitepress'), '<strong>' . $name . '</strong>');
+                    ?> </td>
+                </tr>
+                <?php endforeach; ?>
+                <?php endforeach; endif; ?>
+
+                <?php // items translations / url missing ?>
+                <?php if(isset($icl_menus_sync->sync_data['url_missing'][$menu_id])): foreach($icl_menus_sync->sync_data['url_missing'][$menu_id] as $item_id => $languages):?>
+                <?php foreach($languages as $language => $url):?>
+                <?php $lang_details = $sitepress->get_language_details($language);?>
+                <tr>
+                    <th scope="row" class="check-column">
+                        <input type="checkbox" name="sync[url_missing][<?php echo $menu_id ?>][<?php echo $language ?>][<?php echo $item_id ?>]" value="<?php echo esc_attr($url) ?>" />
+                    </th>
+                    <td><?php echo $lang_details['display_name'];?></td>
+                    <td><?php
+                        printf(__('Untranslated URL %s', 'sitepress'), '<strong>' . $url . '</strong>');
+                    ?> </td>
+                </tr>
+                <?php endforeach; ?>
+                <?php endforeach; endif; ?>
+
+					<?php endif; ?>
                 <?php endforeach; ?>
                 
             <?php endif; ?>
@@ -150,6 +232,9 @@
                             echo esc_attr($menu['name']) . ' - ' . $l['display_name'] ?>" />
                         <small><?php _e('Auto-generated title. Edit to change.', 'sitepress') ?></small>
                     <?php endif; ?>
+					<?php if(isset($menu['translations'][$l['code']]['auto_add'])): ?>
+					<input type="hidden" name="sync[menu_options][<?php echo $menu_id ?>][<?php echo $l['code'] ?>][auto_add]" value="<?php echo esc_attr($menu['translations'][$l['code']]['auto_add']); ?>" />
+					<?php endif; ?>
                     </td>
                     <?php endforeach; //foreach($secondary_languages as $l): ?>
                 </tr>            
@@ -169,13 +254,21 @@
         
         <?php if(!empty($icl_menus_sync->operations)) foreach($icl_menus_sync->operations as $op => $c):?>
         <?php if($op == 'add'): ?>
-        <span class="icl_msync_item icl_msync_add"><?php _e('Item will be added', 'sitepress') ?></span>
+        <span class="icl_msync_item icl_msync_add"><?php _e('Item will be added', 'sitepress'); ?></span>
         <?php elseif($op == 'del'): ?>
-        <span class="icl_msync_item icl_msync_del"><?php _e('Item will be removed', 'sitepress') ?></span>
+        <span class="icl_msync_item icl_msync_del"><?php _e('Item will be removed', 'sitepress'); ?></span>
         <?php elseif($op == 'not'): ?>
-        <span class="icl_msync_item icl_msync_not"><?php _e('Item cannot be added (parent not translated)', 'sitepress') ?></span>
+        <span class="icl_msync_item icl_msync_not"><?php _e('Item cannot be added (parent not translated)', 'sitepress'); ?></span>
         <?php elseif($op == 'mov'): ?>
-        <span class="icl_msync_item icl_msync_mov"><?php _e('Item changed position', 'sitepress') ?></span>
+        <span class="icl_msync_item icl_msync_mov"><?php _e('Item changed position', 'sitepress'); ?></span>
+        <?php elseif($op == 'label_changed'): ?>
+        <span class="icl_msync_item icl_msync_label_changed"><?php _e('Strings for menus will be updated', 'sitepress'); ?></span>
+        <?php elseif($op == 'url_changed'): ?>
+        <span class="icl_msync_item icl_msync_url_changed"><?php _e('URLs for menus will be updated', 'sitepress'); ?></span>
+		<?php elseif($op == 'label_missing'): ?>
+        <span class="icl_msync_item icl_msync_label_missing"><?php _e('Untranslated strings for menus', 'sitepress'); ?></span>
+		<?php elseif($op == 'url_missing'): ?>
+        <span class="icl_msync_item icl_msync_url_missing"><?php _e('Untranslated URLs for menus', 'sitepress'); ?></span>
         <?php endif; ?>
         <?php endforeach; ?>
         

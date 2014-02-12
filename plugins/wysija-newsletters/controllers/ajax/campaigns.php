@@ -3,8 +3,17 @@ defined('WYSIJA') or die('Restricted access');
 class WYSIJA_control_back_campaigns extends WYSIJA_control{
 
     function WYSIJA_control_back_campaigns(){
-        if(!WYSIJA::current_user_can('wysija_newsletters'))  die("Action is forbidden.");
+        if(!WYSIJA::current_user_can('wysija_newsletters'))  die('Action is forbidden.');
         parent::WYSIJA_control();
+    }
+
+    function save_poll(){
+        $model_config = WYSIJA::get('config','model');
+        $model_config->save(array('poll_origin' => $_REQUEST['how'] , 'poll_origin_url' => $_REQUEST['where']));
+
+        $res['result'] = true;
+        $res['msg'] = '<span><span class="checkmark">---</span>'. __('Thanks!',WYSIJA). '</span>';
+        return $res;
     }
 
     function switch_theme() {
@@ -17,12 +26,12 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
 
             $theme = (isset($rawData['theme'])) ? $rawData['theme'] : 'default';
 
-            $wjEngine =& WYSIJA::get('wj_engine', 'helper');
+            $wjEngine = WYSIJA::get('wj_engine', 'helper');
             $res['templates'] = $wjEngine->renderTheme($theme);
 
             $email_id = (int)$_REQUEST['id'];
 
-            $campaignsHelper =& WYSIJA::get('campaigns', 'helper');
+            $campaignsHelper = WYSIJA::get('campaigns', 'helper');
 
             if(isset($res['templates']['divider_options'])) {
                 // save divider
@@ -53,18 +62,18 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
         }
 
         if(!$rawData){
-            $this->error("Error saving",false);
+            $this->error('Error saving',false);
             return array('result' => false);
         }
 
-        $wjEngine =& WYSIJA::get('wj_engine', 'helper');
+        $wjEngine = WYSIJA::get('wj_engine', 'helper');
         $wjEngine->setData($rawData);
         $result = false;
 
         // get email id
         $email_id = (int)$_REQUEST['id'];
 
-        $modelEmail =& WYSIJA::get('email', 'model');
+        $modelEmail = WYSIJA::get('email', 'model');
         $emailData = $modelEmail->getOne(array('wj_styles', 'subject', 'params', 'email_id'), array('email_id' => $email_id));
 
         $wjEngine->setStyles($emailData['wj_styles'], true);
@@ -81,10 +90,10 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
 
         if(!$result) {
             // throw error
-            $this->error(__("Your email could not be saved", WYSIJA));
+            $this->error(__('Your email could not be saved', WYSIJA));
         } else {
             // save successful
-            $this->notice(__("Your email has been saved", WYSIJA));
+            $this->notice(__('Your email has been saved', WYSIJA));
         }
 
         return array('result' => $result);
@@ -107,7 +116,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
             $rawData['a-underline'] = -1;
         }
 
-        $wjEngine =& WYSIJA::get('wj_engine', 'helper');
+        $wjEngine = WYSIJA::get('wj_engine', 'helper');
         $wjEngine->setStyles($wjEngine->formatStyles($rawData));
 
         $result = false;
@@ -120,15 +129,15 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
         $email_id = (int)$_REQUEST['id'];
 
         // update data in DB
-        $modelEmail =& WYSIJA::get('email', 'model');
+        $modelEmail = WYSIJA::get('email', 'model');
         $result = $modelEmail->update($values, array('email_id' => $email_id));
 
         if(!$result) {
             // throw error
-            $this->error(__("Styles could not be saved", WYSIJA));
+            $this->error(__('Styles could not be saved', WYSIJA));
         } else {
             // save successful
-            $this->notice(__("Styles have been saved", WYSIJA));
+            $this->notice(__('Styles have been saved', WYSIJA));
         }
 
         return array(
@@ -143,7 +152,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
             /* delete the image with id imgid */
              $result=wp_delete_attachment($_REQUEST['imgid'],true);
              if($result){
-                 $this->notice(__("Image has been deleted.",WYSIJA));
+                 $this->notice(__('Image has been deleted.',WYSIJA));
              }
         }
 
@@ -155,7 +164,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
     function deleteTheme(){
         if(isset($_REQUEST['themekey']) && $_REQUEST['themekey']){
             /* delete the image with id imgid */
-            $helperTheme=&WYSIJA::get("themes","helper");
+            $helperTheme=WYSIJA::get('themes','helper');
             $result=$helperTheme->delete($_REQUEST['themekey']);
         }
 
@@ -164,6 +173,25 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
         return $res;
     }
 
+    // set newsletter default theme
+    function setDefaultTheme() {
+        if(isset($_REQUEST['theme']) && $_REQUEST['theme']) {
+            // check that the theme exists
+            // TODO
+            $theme_exists = true;
+            if($theme_exists === true) {
+                // update config
+                $model_config = WYSIJA::get('config', 'model');
+                $model_config->save(array('newsletter_default_theme' => $_REQUEST['theme']));
+
+                $result = true;
+            } else {
+                $result = false;
+            }
+        }
+
+        return array('result' => $result);
+    }
 
     function save_IQS() {
         // decode json data and convert to array
@@ -180,7 +208,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
         $values['email_id']=$email_id;
 
         // update data in DB
-        $modelEmail =& WYSIJA::get('email', 'model');
+        $modelEmail = WYSIJA::get('email', 'model');
         $result = $modelEmail->update($values, array('email_id' => $email_id));
 
         if(!$result) {
@@ -200,7 +228,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
         $email_id = (int)$_REQUEST['id'];
 
         // update data in DB
-        $modelEmail =& WYSIJA::get('email', 'model');
+        $modelEmail = WYSIJA::get('email', 'model');
         $result = $modelEmail->getOne(false,array('email_id' => $email_id));
 
         echo $result['body'];
@@ -212,10 +240,10 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
         $email_id = (int)$_REQUEST['id'];
 
         // update data in DB
-        $modelEmail =& WYSIJA::get('email', 'model');
+        $modelEmail = WYSIJA::get('email', 'model');
         $email= $modelEmail->getOne(false,array('email_id' => $email_id));
 
-        $wjEngine =& WYSIJA::get('wj_engine', 'helper');
+        $wjEngine = WYSIJA::get('wj_engine', 'helper');
         $wjEngine->setStyles($result['wj_styles'], true);
         $wjEngine->setData($result['wj_data'], true);
         $html = $wjEngine->renderEmail($email);
@@ -232,11 +260,11 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
         // fixes issue with pcre functions
         @ini_set('pcre.backtrack_limit', 1000000);
 
-        $model=&WYSIJA::get('user','model');
+        $model=WYSIJA::get('user','model');
 
         //Carefull WordPress global
         global $wpdb;
-        $mConfig=&WYSIJA::get('config','model');
+        $mConfig=WYSIJA::get('config','model');
         $isFullArticle=$mConfig->getValue('editor_fullarticle');
 
         //test to set the default value
@@ -251,7 +279,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
         if(isset($_REQUEST['cpt'])){
             $cpt = array();
             if($_REQUEST['cpt'] === 'all') {
-                $hWPTools =& WYSIJA::get('wp_tools','helper');
+                $hWPTools = WYSIJA::get('wp_tools','helper');
                 $post_types = $hWPTools->get_post_types();
                 $cpt = array_keys($post_types);
                 $cpt[] = 'post';
@@ -267,7 +295,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
                 $query_cpt = ' '.$wpdb->posts.'.post_type="'.$cpt.'"';
             }
         }
-        $hWPTools =& WYSIJA::get('wp_tools','helper');
+        $hWPTools = WYSIJA::get('wp_tools','helper');
         $post_statuses = $hWPTools->get_post_statuses();
         if(isset($_REQUEST['status'])){
             $statuses = array();
@@ -326,8 +354,8 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
         $count = $model->query('get_row', $queryCount);
         $res['total'] = (int)$count['total'];
 
-        $helper_engine=&WYSIJA::get('wj_engine','helper');
-        $helper_articles =& WYSIJA::get('articles', 'helper');
+        $helper_engine=WYSIJA::get('wj_engine','helper');
+        $helper_articles = WYSIJA::get('articles', 'helper');
 
         // set params for post format
         $params = array('post_content' => 'full');
@@ -363,14 +391,14 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
     }
 
     function send_preview($spamtest=false){
-        $mailer=&WYSIJA::get('mailer','helper');
+        $mailer=WYSIJA::get('mailer','helper');
         $email_id = $_REQUEST['id'];
         $resultarray=array();
 
         // update data in DB
-        $modelEmail =& WYSIJA::get('email', 'model');
-        $modelEmail->getFormat=OBJECT;
-        $emailObject = $modelEmail->getOne(false,array('email_id' => $email_id));
+        $model_email = WYSIJA::get('email', 'model');
+        $model_email->getFormat=OBJECT;
+        $email_object = $model_email->getOne(false,array('email_id' => $email_id));
         $mailer->testemail=true;
 
 
@@ -378,7 +406,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
            $dataTemp=$_REQUEST['data'];
             $_REQUEST['data']=array();
             foreach($dataTemp as $val) $_REQUEST['data'][$val['name']]=$val['value'];
-            $dataTemp=null;
+            unset($dataTemp);
             foreach($_REQUEST['data'] as $k =>$v){
                 $newkey=str_replace(array('wysija[email][',']'),'',$k);
                 $configVal[$newkey]=$v;
@@ -389,18 +417,17 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
                     'from_email'=>$configVal['from_email'],
                     'replyto_name'=>$configVal['replyto_name'],
                     'replyto_email'=>$configVal['replyto_email']);
-                if(isset($configVal['subject']))    $emailObject->subject=$configVal['subject'];
+                if(isset($configVal['subject']))    $email_object->subject=$configVal['subject'];
             }
 
         }else{
             $params=array(
-                'from_name'=>$emailObject->from_name,
-                'from_email'=>$emailObject->from_email,
-                'replyto_name'=>$emailObject->replyto_name,
-                'replyto_email'=>$emailObject->replyto_email
+                'from_name'=>$email_object->from_name,
+                'from_email'=>$email_object->from_email,
+                'replyto_name'=>$email_object->replyto_name,
+                'replyto_email'=>$email_object->replyto_email
             );
         }
-
         if(strpos($_REQUEST['receiver'], ',')) {
             $receivers = explode(',',$_REQUEST['receiver']);
         } else if(strpos($_REQUEST['receiver'], ';')) {
@@ -409,66 +436,80 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
             $receivers = array($_REQUEST['receiver']);
         }
 
+        $user_model = WYSIJA::get('user', 'model');
         foreach($receivers as $key => $receiver){
-            $receivers[$key] = trim($receiver);
-            $dummyReceiver = new stdClass();
-            $dummyReceiver->user_id = 0;
-            $dummyReceiver->email = $receiver;
-            $dummyReceiver->status = 1;
-            $dummyReceiver->lastname = $dummyReceiver->firstname =$langextra='';
-            if($spamtest){
-                $dummyReceiver->firstname ='Mail Tester';
-                if(defined('WPLANG') && WPLANG) $langextra='&lang='.WPLANG;
-                $resultarray['urlredirect']='http://www.mail-tester.com/check.php?id='.urlencode($dummyReceiver->email).$langextra;
+            $receiver = trim($receiver);
+            $dummy_receiver = $user_model->get_object_by_email($receiver);
+            if(empty($dummy_receiver)){
+                $dummy_receiver = new stdClass();
+                $dummy_receiver->user_id = 0;
+                $dummy_receiver->email = $receiver;
+                $dummy_receiver->status = 1;
+                $dummy_receiver->lastname = $dummy_receiver->firstname = '';
             }
 
-            $receivers[$key] = $dummyReceiver;
+            if($spamtest){
+                $langextra = '';
+                $dummy_receiver->firstname ='Mail Tester';
+
+                $wp_lang = get_locale();
+                if(!empty($wp_lang)) $langextra ='&lang='.$wp_lang;
+                $resultarray['urlredirect']='http://www.mail-tester.com/check.php?id='.urlencode($dummy_receiver->email).$langextra;
+            }
+            $receivers[$key] = $dummy_receiver;
 
         }
 
-        $emailClone=array();
-        foreach($emailObject as $kk=>$vv)  $emailClone[$kk]=$vv;
+        $email_clone=array();
+        foreach($email_object as $kk=>$vv)  $email_clone[$kk]=$vv;
 
 
-        $wjEngine =& WYSIJA::get('wj_engine', 'helper');
+        $wj_engine = WYSIJA::get('wj_engine', 'helper');
         // set data & styles
-        if(isset($emailClone['wj_data'])) { $wjEngine->setData($emailClone['wj_data'], true); } else { $wjEngine->setData(); }
-        if(isset($emailClone['wj_styles'])) { $wjEngine->setStyles($emailClone['wj_styles'], true); } else { $wjEngine->setStyles(); }
+        if(isset($email_clone['wj_data'])) { $wj_engine->setData($email_clone['wj_data'], true); } else { $wj_engine->setData(); }
+        if(isset($email_clone['wj_styles'])) { $wj_engine->setStyles($email_clone['wj_styles'], true); } else { $wj_engine->setStyles(); }
 
         // generate email html body
-        $body = $wjEngine->renderEmail($emailClone);
+        $body = $wj_engine->renderEmail($email_clone);
 
         // get back email data as it will be updated during the rendering (articles ids + articles count)
-        $emailChild = $wjEngine->getEmailData();
+        $email_child = $wj_engine->getEmailData();
 
-        if((int)$emailChild['type'] === 2 && isset($emailChild['params']['autonl']['articles'])){
+        // [total] [number] and [post_title] are only valid for post notifications newsletter
+        if((int)$email_child['type'] === 2 && isset($email_child['params']['autonl']['event']) &&
+                $email_child['params']['autonl']['event'] === 'new-articles' && isset($email_child['params']['autonl']['articles'])){
 
-            $itemCount = 0;
-            $totalCount = 1;
-            $firstSubject = '';
+            $item_count = 0;
+            $total_count = 1;
+            $first_subject = '';
 
-            if(isset($emailChild['params']['autonl']['articles']['count'])) $itemCount = (int)$emailChild['params']['autonl']['articles']['count'];
-            if(isset($emailChild['params']['autonl']['articles']['first_subject'])) $firstSubject = $emailChild['params']['autonl']['articles']['first_subject'];
-            if(isset($emailClone['params']['autonl']['total_child'])) $totalCount = (int)$emailClone['params']['autonl']['total_child'] + 1;
+            if(isset($email_child['params']['autonl']['articles']['count'])) $item_count = (int)$email_child['params']['autonl']['articles']['count'];
+            if(isset($email_child['params']['autonl']['articles']['first_subject'])) $first_subject = $email_child['params']['autonl']['articles']['first_subject'];
+            if(isset($email_child['params']['autonl']['total_child'])) $total_count = (int)$email_child['params']['autonl']['total_child'] + 1;
 
-            if(empty($firstSubject)) {
+            if(empty($first_subject)) {
                 $this->error(__('There are no articles to be sent in this email.',WYSIJA),1);
                 return array('result' => false);
             }
-            $emailObject->subject = str_replace(
+            $email_object->subject = str_replace(
                     array('[total]','[number]','[post_title]'),
-                    array($itemCount, $totalCount, $firstSubject),
-                    $emailChild['subject']);
+                    array($item_count, $total_count, $first_subject),
+                    $email_child['subject']);
         }
 
-        $successmsg=__('Your email preview has been sent to %1$s', WYSIJA);
+        $successmsg = __('Your email preview has been sent to %1$s', WYSIJA);
 
-        if(isset($emailObject->params)) {
-            $params['params']=$emailObject->params;
+        // correction added for post notifications with the tag [newsletter:post_title] failing to send
+        if(isset($email_object->params['autonl']) && isset($email_child['params']['autonl'])){
+            $email_object->params['autonl']=$email_child['params']['autonl'];
+        }
+
+        if(isset($email_object->params)) {
+            $params['params']=$email_object->params;
 
             if(isset($configVal['params[googletrackingcode'])){
                 $paramsemail=array();
-                if(!is_array($emailObject->params)) $paramsemail=unserialize(base64_decode($emailObject->params));
+                if(!is_array($email_object->params)) $paramsemail=unserialize(base64_decode($email_object->params));
 
                 if(trim($configVal['params[googletrackingcode'])) {
                     $paramsemail['googletrackingcode']=$configVal['params[googletrackingcode'];
@@ -476,15 +517,15 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
                 else {
                     unset($paramsemail['googletrackingcode']);
                 }
-                $params['params']=base64_encode(serialize($paramsemail));
+                $params['params'] = base64_encode(serialize($paramsemail));
             }
         }
 
-        $params['email_id']=$emailObject->email_id;
+        $params['email_id'] = $email_object->email_id;
         $receiversList = array();
         $res = false;
         foreach($receivers as $receiver){
-            if($mailer->sendSimple($receiver,  stripslashes($emailObject->subject),$emailObject->body,$params)) {
+            if($mailer->sendSimple($receiver,  stripslashes($email_object->subject),$email_object->body,$params)) {
                 $res = true;
                 $receiversList[] = $receiver->email;
             }
@@ -496,6 +537,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
         }
 
         $resultarray['result'] = $res;
+
         return $resultarray;
     }
 
@@ -514,7 +556,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
 
         if($src === NULL OR $width === NULL OR $height === NULL) {
             // there is a least one missing parameter, fallback to default divider
-            $dividersHelper =& WYSIJA::get('dividers', 'helper');
+            $dividersHelper = WYSIJA::get('dividers', 'helper');
             $divider = $dividersHelper->getDefault();
         } else {
             // use provided params
@@ -527,13 +569,13 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
 
         // update campaign parameters
         $email_id = (int)$_REQUEST['id'];
-        $campaignsHelper =& WYSIJA::get('campaigns', 'helper');
+        $campaignsHelper = WYSIJA::get('campaigns', 'helper');
         $campaignsHelper->saveParameters($email_id, 'divider', $divider);
 
         // set params
         $block = array_merge(array('no-block' => true, 'type' => 'divider'), $divider);
 
-        $helper_engine=&WYSIJA::get("wj_engine","helper");
+        $helper_engine=WYSIJA::get('wj_engine','helper');
         return base64_encode($helper_engine->renderEditorBlock($block));
     }
 
@@ -541,9 +583,8 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
         $size = isset($_POST['wysijaData']['size']) ? $_POST['wysijaData']['size'] : NULL;
         $theme = isset($_POST['wysijaData']['theme']) ? $_POST['wysijaData']['theme'] : NULL;
 
-        $bookmarksHelper =& WYSIJA::get('bookmarks', 'helper');
+        $bookmarksHelper = WYSIJA::get('bookmarks', 'helper');
         $bookmarks = $bookmarksHelper->getAll($size, $theme);
-
         return json_encode(array('icons' => $bookmarks));
     }
 
@@ -602,11 +643,11 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
         }
 
         // save url in config
-        $config=&WYSIJA::get('config',"model");
+        $config=WYSIJA::get('config','model');
         $config->save(array('social_bookmarks' => $urls));
 
         // get iconset icons
-        $bookmarksHelper =& WYSIJA::get('bookmarks', 'helper');
+        $bookmarksHelper = WYSIJA::get('bookmarks', 'helper');
 
         // if the iconset is 00, then it's the theme's bookmarks
         if($iconset === '00') {
@@ -635,7 +676,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
         // set optimal width
         $block['width'] = max(0, min($width, 564));
 
-        $helper_engine=&WYSIJA::get("wj_engine","helper");
+        $helper_engine=WYSIJA::get('wj_engine','helper');
         return base64_encode($helper_engine->renderEditorBlock($block));
     }
 
@@ -647,32 +688,32 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
                 $getpremiumtheme=apply_filters('wysija_install_theme_premium', false);
 
                 if(!$getpremiumtheme){
-                    $wjEngine =& WYSIJA::get('wj_engine', 'helper');
+                    $wjEngine = WYSIJA::get('wj_engine', 'helper');
                     $themes = $wjEngine->renderThemes();
-                    return array("result"=>false, 'themes' => $themes);
+                    return array('result'=>false, 'themes' => $themes);
                 }
             }
 
 
-            $httpHelp=&WYSIJA::get('http','helper');
+            $httpHelp=WYSIJA::get('http','helper');
             $url=admin_url('admin.php');
 
-            $helperToolbox=&WYSIJA::get('toolbox','helper');
+            $helperToolbox=WYSIJA::get('toolbox','helper');
             $domain_name=$helperToolbox->_make_domain_name($url);
 
             $request='http://api.wysija.com/download/zip/'.$_REQUEST['theme_id'].'?domain='.$domain_name;
 
-            $ZipfileResult = $httpHelp->request($request);
+            $ZipfileResult = $httpHelp->wp_request($request);
 
-            if(!$ZipfileResult){
+            if($ZipfileResult === false){
                 $result=false;
                 $this->error(__('We were unable to contact the API, the site may be down. Please try again later.',WYSIJA),true);
             }else{
-                $themesHelp=&WYSIJA::get('themes','helper');
+                $themesHelp=WYSIJA::get('themes','helper');
                 $result = $themesHelp->installTheme($ZipfileResult);
 
                 // refresh themes list
-                $wjEngine =& WYSIJA::get('wj_engine', 'helper');
+                $wjEngine = WYSIJA::get('wj_engine', 'helper');
                 $themes = $wjEngine->renderThemes();
             }
         }else{
@@ -685,14 +726,14 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
 
     function refresh_themes() {
         // refresh themes list
-        $wjEngine =& WYSIJA::get('wj_engine', 'helper');
-        return array("result"=>true, 'themes' => $wjEngine->renderThemes());
+        $wjEngine = WYSIJA::get('wj_engine', 'helper');
+        return array('result'=>true, 'themes' => $wjEngine->renderThemes());
     }
 
     function generate_auto_post() {
         // get params and generate html
-        $wjEngine =& WYSIJA::get('wj_engine', 'helper');
-        $helper_articles =& WYSIJA::get('articles', 'helper');
+        $wjEngine = WYSIJA::get('wj_engine', 'helper');
+        $helper_articles = WYSIJA::get('articles', 'helper');
 
         // get parameters
         $block_params = array();
@@ -756,11 +797,11 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
         } else {
             // get email params
             $email_id = (int)$_REQUEST['id'];
-            $modelEmail =& WYSIJA::get('email', 'model');
+            $modelEmail = WYSIJA::get('email', 'model');
             $email = $modelEmail->getOne(array('params','sent_at','campaign_id'), array('email_id' => $email_id));
 
-            $articlesHelper =& WYSIJA::get('articles', 'helper');
-            $wjEngine =& WYSIJA::get('wj_engine', 'helper');
+            $articlesHelper = WYSIJA::get('articles', 'helper');
+            $wjEngine = WYSIJA::get('wj_engine', 'helper');
 
             // see if posts have already been sent
             if(!empty($email['params']['autonl']['articles']['ids'])) {
@@ -785,7 +826,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
                     $params['post_date'] = $email['params']['autonl']['lastSend'];
                 }else{
                     //get the latest child newsletter sent_at value
-                    $mEmail=&WYSIJA::get('email','model');
+                    $mEmail=WYSIJA::get('email','model');
                     $mEmail->reset();
                     $mEmail->orderBy('email_id','DESC');
                     $lastEmailSent=$mEmail->getOne(false,array('campaign_id'=>$email['campaign_id'],'type'=>'1'));
@@ -821,7 +862,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
                 if(isset($email['params']['divider'])) {
                     $params['divider'] = $email['params']['divider'];
                 } else {
-                    $dividersHelper =& WYSIJA::get('dividers', 'helper');
+                    $dividersHelper = WYSIJA::get('dividers', 'helper');
                     $params['divider'] = $dividersHelper->getDefault();
                 }
             }

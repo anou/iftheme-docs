@@ -1,8 +1,8 @@
 <?php
   
-  // WPML Sunrise Script
+  // WPML Sunrise Script - START
   // Version 1.0beta
-  // Place this script in teh wp-content folder and add "define('SUNRISE', 'on');" in wp-config.php n order to enable using different domains for different languages in multisite mode
+  // Place this script in the wp-content folder and add "define('SUNRISE', 'on');" in wp-config.php n order to enable using different domains for different languages in multisite mode
   // 
   // Experimental feature
   define('WPML_SUNRISE_MULTISITE_DOMAINS', true);
@@ -48,6 +48,6 @@
       
       return $q;
   }
-
+  // WPML Sunrise Script - END
   
 ?>

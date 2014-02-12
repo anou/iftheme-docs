@@ -1,4 +1,7 @@
     <?php
+    if(function_exists('wpml_home_url_ls_hide_check') && wpml_home_url_ls_hide_check()){
+        return;
+    }
         
     $languages = $this->get_ls_languages();
     
@@ -21,9 +24,13 @@
                 <a href="javascript:;" class="lang_sel_sel icl-<?php echo $current_language['language_code'] ?>">
                     <?php if( $this->settings['icl_lso_flags'] ):?>                
                     <img class="iclflag" src="<?php echo $current_language['country_flag_url'] ?>" alt="<?php echo $current_language['language_code'] ?>"  title="<?php 
-                        echo $this->settings['icl_lso_native_lang'] ? esc_attr($current_language['native_name']) : esc_attr($current_language['translated_name']) ; ?>" />
+                        echo $this->settings['icl_lso_display_lang'] ? esc_attr($current_language['translated_name']) : esc_attr($current_language['native_name']) ; ?>" />
                     <?php endif; ?>
-                    <?php echo $current_language['native_name']; ?>
+                    <?php 
+                        if($this->settings['icl_lso_display_lang'] || $this->settings['icl_lso_native_lang']){
+                            echo $current_language['native_name'];                         
+                        }
+                    ?>
                 
                 <?php if(!isset($ie_ver) || $ie_ver > 6): ?></a><?php endif; ?>
                 <?php if(isset($ie_ver) && $ie_ver <= 6): ?><table><tr><td><?php endif ?>
@@ -34,7 +41,7 @@
                         <a rel="alternate" href="<?php echo apply_filters('WPML_filter_link', $language['url'], $language)?>">
                             <?php if( $this->settings['icl_lso_flags'] ):?>                
                             <img class="iclflag" src="<?php echo $language['country_flag_url'] ?>" alt="<?php echo $language['language_code'] ?>" title="<?php 
-                                echo $this->settings['icl_lso_native_lang'] ? esc_attr($language['native_name']) : esc_attr($language['translated_name']) ; ?>" />&nbsp;                    
+                                echo $this->settings['icl_lso_display_lang'] ? esc_attr($language['translated_name']) : esc_attr($language['native_name']) ; ?>" />&nbsp;                    
                             <?php endif; ?>                        
                             
                             <?php 
@@ -43,8 +50,10 @@
                                          <span class="icl_lang_sel_translated">(' . $language['translated_name'] . ')</span>';
                             }elseif($this->settings['icl_lso_display_lang']){
                                 $language_name = '<span class="icl_lang_sel_translated">' . $language['translated_name'] . '</span>';
-                            }else{
+                            }elseif($this->settings['icl_lso_native_lang']){
                                 $language_name = '<span class="icl_lang_sel_native">' . $language['native_name'] .'</span>';
+                            }else{
+                                $language_name = ''; 
                             }
                             
                             ?>

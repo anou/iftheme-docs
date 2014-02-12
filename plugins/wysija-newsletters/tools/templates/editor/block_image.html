@@ -1,7 +1,7 @@
-<div wysija_ratio="{#image|ratio}" class="wysija_image{if ! #text} alone{/if}{if ! #image} empty{/if}" {if ! #image.static}style="width:{#image.width|default:150}px;"{/if}>
+<div wysija_ratio="{#image|ratio}" class="wysija_image{if ! #text} alone{/if}{if ! #image} empty{/if}" {if #image && ! #image.static}style="width:{#image.width|default:80}px;"{/if}>
     {if ! #image}
         {set var="#image_src" concat="#WYSIJA_EDITOR_IMG,transparent.png"}
-        <img class="image_placeholder empty" src="{#image_src}" height="{#image.height|default:85}" width="{#image.width|default:150}" />
+        <img height="80" width="80" class="image_placeholder empty" src="{#image_src}" alt="" />
     {/if}
 
     {if #image}
@@ -16,7 +16,7 @@
             </div>
             <img class="image_placeholder static active" src="{#image_src}" height="{#image.height}" width="{#image.width}" />
         {/if}
-        {if ! #image.static}<img class="image_placeholder" src="{#image.src}" height="{#image.height}" width="{#image.width}" alt="{#image.alt}" />{/if}
+        {if ! #image.static}<img class="image_placeholder" src="{#image.src}" wysija_src="{#image.src}" height="{#image.height}" wysija_height="{#image.height}" width="{#image.width}" wysija_width="{#image.width}" alt="{#image.alt}" />{/if}
 
         {if ! #image.static}
         <ul style="display: none;" class="wysija_tools">

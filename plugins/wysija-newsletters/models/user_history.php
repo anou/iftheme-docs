@@ -2,14 +2,14 @@
 defined('WYSIJA') or die('Restricted access');
 class WYSIJA_model_user_history extends WYSIJA_model{
 
-    var $pk="history_id";
-    var $table_name="user_history";
+    var $pk='history_id';
+    var $table_name='user_history';
     var $columns=array(
-        'history_id'=>array("req"=>true,"type"=>"integer"),
-        'email_id'=>array("req"=>true,"type"=>"integer"),
-        'user_id'=>array("req"=>true,"type"=>"integer"),
-        'executed_at' => array("type"=>"integer"),
-        'executed_by' => array("type"=>"integer"),
+        'history_id'=>array('req'=>true,'type'=>'integer'),
+        'email_id'=>array('req'=>true,'type'=>'integer'),
+        'user_id'=>array('req'=>true,'type'=>'integer'),
+        'executed_at' => array('type'=>'integer'),
+        'executed_by' => array('type'=>'integer'),
         'type' => array(),
         'details' => array(),
         'source' => array()
@@ -21,6 +21,14 @@ class WYSIJA_model_user_history extends WYSIJA_model{
         $this->WYSIJA_model();
     }
 
+    /**
+     * overriding the model insert function to be compatible with acymailing way of doing it
+     * @param type $subid
+     * @param type $action
+     * @param string $data
+     * @param type $mailid
+     * @return type
+     */
     function insert($subid,$action,$data = array(),$mailid = 0){
             $current_user=WYSIJA::wp_get_userdata();
             /*dbg($current_user,0);
@@ -34,7 +42,7 @@ class WYSIJA_model_user_history extends WYSIJA_model{
             $history['details'] = implode("\n",$data);
             $history['executed_at'] = time();
             $history['email_id'] = $mailid;
-            $userHelper = &WYSIJA::get("user","helper");
+            $userHelper = WYSIJA::get('user','helper');
             $history['executed_by'] = $userHelper->getIP();
             if(!empty($_SERVER)){
                     $source = array();

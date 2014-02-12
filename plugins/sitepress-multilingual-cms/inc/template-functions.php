@@ -165,11 +165,14 @@ function icl_link_to_element($element_id, $element_type='post', $link_text='',
     }
 }
 
-function icl_object_id($element_id, $element_type='post',
-        $return_original_if_missing=false, $ulanguage_code=null) {
+function icl_object_id($element_id, $element_type='post', $return_original_if_missing=false, $ulanguage_code=null) {
     global $sitepress, $wpdb, $wp_post_types, $wp_taxonomies;
 
-    // special case of any - we assume it's a post type
+	if ( is_null( $ulanguage_code ) ) {
+		$ulanguage_code = $sitepress->get_current_language();
+	}
+
+	// special case of any - we assume it's a post type
     if($element_type == 'any' && $_dtype = $wpdb->get_var($wpdb->prepare("SELECT post_type FROM {$wpdb->posts} WHERE ID=%d", $element_id))){
         $element_type = $_dtype;    
     }
@@ -191,7 +194,7 @@ function icl_object_id($element_id, $element_type='post',
     $element_types[] = 'comment';
     
     if (!in_array($element_type, $element_types)) {
-        trigger_error(__('Invalid object kind', 'sitepress'), E_USER_NOTICE);
+        trigger_error(sprintf(__('Invalid object kind: %s', 'sitepress'), $element_type), E_USER_NOTICE);
         return null;
     } elseif (!$element_id) {
         trigger_error(__('Invalid object id', 'sitepress'), E_USER_NOTICE);
@@ -214,11 +217,8 @@ function icl_object_id($element_id, $element_type='post',
     }
 
     $trid = $sitepress->get_element_trid($icl_element_id, $icl_element_type);
-    $translations = $sitepress->get_element_translations($trid,
-            $icl_element_type);    
-    if (is_null($ulanguage_code)) {
-        $ulanguage_code = $sitepress->get_current_language();
-    }
+    $translations = $sitepress->get_element_translations($trid, $icl_element_type);
+
     if (isset($translations[$ulanguage_code]->element_id)) {
         $ret_element_id = $translations[$ulanguage_code]->element_id;
         if (in_array($element_type, $taxonomies)) {
@@ -387,9 +387,11 @@ function wpml_cf_translation_preferences_store($id, $custom_field) {
  *
  * This should be used to popupate any custom field controls when
  * a new translation is selected and the field is marked as "copy" (sync)
+ * 
+ * @param array fields
  */
 
-function wpml_get_copied_fields_for_post_edit() {
+function wpml_get_copied_fields_for_post_edit( $fields = array() ) {
     global $sitepress, $wpdb, $sitepress_settings, $pagenow;
     
     $copied_cf = array('fields' => array());
@@ -426,7 +428,16 @@ function wpml_get_copied_fields_for_post_edit() {
                 $copied_cf['copy_message'] = $ccf_note . sprintf(__('WPML will copy this field from %s when you save this post.', 'sitepress'), $lang_details['display_name']);
                 
                 foreach((array)$sitepress_settings['translation-management']['custom_fields_translation'] as $key=>$sync_opt){
-                    if($sync_opt == 1 && isset($original_custom[$key])){
+                    /*
+                     * Added parameter $fields so except checking if field exist in DB,
+                     * it can be checked if set in pre-defined fields.
+                     * Noticed when testing checkbox field that does not save
+                     * value to DB if not checked (omitted from list of copied fields).
+                     * https://icanlocalize.basecamphq.com/projects/2461186-wpml/todo_items/169933388/comments
+                     */
+                    if( $sync_opt == 1
+                            && ( isset($original_custom[$key]) || in_array( $key, $fields ) )
+                    ){
                         $copied_cf['fields'][] = $key;    
                     }
                 }

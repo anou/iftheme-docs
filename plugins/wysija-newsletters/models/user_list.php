@@ -20,8 +20,8 @@ class WYSIJA_model_user_list extends WYSIJA_model{
 
     function hook_subscriber_to_list( $details ) {
 
-        $config=&WYSIJA::get('config','model');
-        $modelUser=&WYSIJA::get('user','model');
+        $config=WYSIJA::get('config','model');
+        $modelUser=WYSIJA::get('user','model');
         $userdata=$modelUser->getOne(false,array('user_id'=>$details['user_id']));
         $confirmed=true;
 
@@ -29,7 +29,7 @@ class WYSIJA_model_user_list extends WYSIJA_model{
         /*if($config->getValue('confirm_dbleoptin') && (int)$userdata['status']!=1)   $confirmed=false;
 
         if($confirmed){
-            $helperU=&WYSIJA::get('user','helper');
+            $helperU=WYSIJA::get('user','helper');
             $helperU->sendAutoNl($details['user_id'],array(0=>$details));
         }*/
         $dbloptin=$config->getValue('confirm_dbleoptin');
@@ -37,7 +37,7 @@ class WYSIJA_model_user_list extends WYSIJA_model{
 
         if(!$dbloptin || ($dbloptin && (int)$userdata['status']>0)){
             /*check for auto nl and send if needed*/
-            $helperU=&WYSIJA::get('user','helper');
+            $helperU=WYSIJA::get('user','helper');
             if(isset($this->backSave) && $this->backSave){
                 $helperU->sendAutoNl($details['user_id'],array(0=>$details),'subs-2-nl',true);
             }else{

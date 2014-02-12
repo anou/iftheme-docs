@@ -1,5 +1,5 @@
-<p>
-    {if ! #params.label_within}<label for="">{#params.label}{if #params.required} <span class="wysija-required">*</span>{/if}</label>{/if}
+<p class="wysija-paragraph">
+    {if ! #params.label_within}<label>{#params.label}{if #params.required} <span class="wysija-required">*</span>{/if}</label>{/if}
     <input type="text" name="wysija[user][{#field}]" class="wysija-input {$validation}" title="{#params.label|html_value}" {if #params.label_within}placeholder="{#params.label|html_value}"{/if} value="{if #value}{#value|html_value}{/if}" />
     {if ! $preview}
     <span class="abs-req">

@@ -43,10 +43,12 @@ class WYSIJA_control_front extends WYSIJA_control{
         return $result;
     }
 
-    function redirect($location){
-        //header("Location: $location", true, $status);
+    function redirect($location) {
+        // make sure we encode square brackets as wp_redirect will strip them off
+        $location = str_replace(array('[', ']'), array('%5B', '%5D'), $location);
+
+        // redirect to specified location
         wp_redirect($location);
         exit;
     }
-
 }

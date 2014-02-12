@@ -4,29 +4,6 @@
 require_once ICL_PLUGIN_PATH . '/res/languages.csv.php';
 $langs_names = unserialize($__icl_lang_names); 
 
-/* - disabled this in favor of reading from a php file 
-$fh = fopen(ICL_PLUGIN_PATH . '/res/languages.csv', 'r');
-$idx = 0;
-while($data = fgetcsv($fh)){
-    if($idx == 0){
-        foreach($data as $k=>$v){
-            if($k < 3) continue;
-            $lang_idxs[] = $v; 
-        }
-    }else{
-        foreach($data as $k=>$v){
-            if($k < 2) continue;                    
-            if($k == 2){
-                $langs_names[$lang_idxs[$idx-1]]['major'] = intval($v);
-                continue;
-            }
-            $langs_names[$lang_idxs[$idx-1]]['tr'][$lang_idxs[$k-3]] = $v; 
-        }
-    }
-    $idx++;
-}
-*/
-
 $lang_codes = array(
     'Afar'    => 'aa',
     'Abkhazian'    => 'ab',
@@ -206,7 +183,8 @@ $lang_codes = array(
     'Chinese (Simplified)'    => 'zh-hans',
     'Chinese (Traditional)'    => 'zh-hant',
     'Zulu'    => 'zu',
-    'Slavic'    => 'sla'
+    'Slavic'    => 'sla',
+    'Malay'     => 'ms'
 );  
 
 $lang_locales = array(
@@ -269,6 +247,6 @@ $lang_locales = array(
     'ug'    => 'ug',
     'uz'    => 'uz_UZ',
     'vi'    => 'vi',
-    'cy'    => 'cy'
-)
-?>
+    'cy'    => 'cy',
+    'ms'    => 'ms_MY'
+);

@@ -57,12 +57,13 @@ class AbsoluteLinks{
         }       
         $home_url = str_replace("?", "\?",$home_url);           
         
-        $int1  = preg_match_all('@<a([^>]*)href="(('.rtrim($home_url,'/').')?/([^"^>]+))"([^>]*)>@i',$text,$alp_matches1);        
-        $int2 = preg_match_all('@<a([^>]*)href=\'(('.rtrim($home_url,'/').')?/([^\'^>]+))\'([^>]*)>@i',$text,$alp_matches2);        
+        $int1  = preg_match_all('@<a([^>]*)href="(('.rtrim($home_url,'/').')?/([^"^>^\[^\]]+))"([^>]*)>@i',$text,$alp_matches1);
+        $int2 = preg_match_all('@<a([^>]*)href=\'(('.rtrim($home_url,'/').')?/([^\'^>^\[^\]]+))\'([^>]*)>@i',$text,$alp_matches2);
+
         for($i = 0; $i < 6; $i++){
-            $alp_matches[$i] = array_merge((array)$alp_matches1[$i], (array)$alp_matches2[$i]); 
-        }               
-        
+            $alp_matches[$i] = array_merge((array)$alp_matches1[$i], (array)$alp_matches2[$i]);
+        }
+
         $sitepress_settings = $sitepress->get_settings();
         
         if($int1 || $int2){   
@@ -213,7 +214,7 @@ class AbsoluteLinks{
                         }
                     }
                     
-                    //$name = $wpdb->escape($post_name);
+                    //$name = esc_sql($post_name);
                     //$post_type = isset($perma_query_vars['pagename']) ? 'page' : 'post';
                     //$p = $wpdb->get_row("SELECT ID, post_type FROM {$wpdb->posts} WHERE post_name='{$name}' AND post_type ='{$post_type}'");
                     
@@ -248,7 +249,7 @@ class AbsoluteLinks{
                         $def_url[$regk] = $regv;
                     }else{ 
                         $alp_broken_links[$alp_matches[2][$k]] = array();                            
-                        $name = $wpdb->escape($post_name);
+                        $name = esc_sql($post_name);
                         $p = $wpdb->get_results("SELECT ID, post_type FROM {$wpdb->posts} WHERE post_name LIKE '{$name}%' AND post_type IN('post','page')");
                         if($p){
                             foreach($p as $post_suggestion){
@@ -383,4 +384,3 @@ class AbsoluteLinks{
     }    
     
 }  
-?>

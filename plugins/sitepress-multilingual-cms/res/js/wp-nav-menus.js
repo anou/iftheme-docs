@@ -1,5 +1,5 @@
 jQuery(document).ready(function(){
-    jQuery('#icl_menu_language').live('change', icl_wp_nav_language_change);
+    jQuery(document).delegate('#icl_menu_language', 'change', icl_wp_nav_language_change);
 });
 
 function icl_wp_nav_language_change(){

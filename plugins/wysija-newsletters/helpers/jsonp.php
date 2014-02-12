@@ -1,9 +1,17 @@
 <?php
 defined('WYSIJA') or die('Restricted access');
 class WYSIJA_help_jsonp extends WYSIJA_object {
+
     function WYSIJA_help_jsonp() {
+
     }
-    
+    /**
+     * Is valid callback
+     *
+     * @param string $callback
+     *
+     * @return boolean
+     */
     public function isValidCallback($callback) {
         $reserved = array(
             'break',
@@ -52,6 +60,7 @@ class WYSIJA_help_jsonp extends WYSIJA_object {
             'true',
             'false'
         );
+
         foreach(explode('.', $callback) as $identifier) {
             if(!preg_match('/^[a-zA-Z_$][0-9a-zA-Z_$]*(?:\[(?:".+"|\'.+\'|\d+)\])*?$/', $identifier)) {
                 return false;
@@ -60,6 +69,7 @@ class WYSIJA_help_jsonp extends WYSIJA_object {
                 return false;
             }
         }
+
         return true;
     }
 }

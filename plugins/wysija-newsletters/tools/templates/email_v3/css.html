@@ -1,0 +1,43 @@
+.ReadMsgBody { width:100%; }
+.ExternalClass { width:100%; }
+.ExternalClass, .ExternalClass p, .ExternalClass span, .ExternalClass font, .ExternalClass td, .ExternalClass div {line-height: 100%;}
+h1 { font-family:"{#h1.family}"; font-size:{#h1.size}px; line-height:1.3em; color:{#h1.color|color} !important; font-weight:normal; margin:0; padding:0; font-style:normal; }
+h2 { font-family:"{#h2.family}"; font-size:{#h2.size}px; line-height:1.2em; color:{#h2.color|color} !important; font-weight:normal; margin:0; padding:0; font-style:normal; }
+h3 { font-family:"{#h3.family}"; font-size:{#h3.size}px; line-height:1.1em; color:{#h3.color|color} !important; font-weight:normal; margin:0; padding:0; font-style:normal; }
+.yshortcuts { color:{#a.color|color}; }
+p { font-family:"{#body.family}"; margin:1em 0; word-wrap: break-word; }
+img {outline:none; text-decoration:none; -ms-interpolation-mode: bicubic;}
+a img {border:none;}
+#outlook a {padding:0;}
+body, {#wysija_container} {
+    background:{#html.background|color};
+    color:{#body.color|color};
+    font-family:"{#body.family}";
+    font-size:{#body.size}px;
+    -webkit-text-size-adjust:100%;
+    -ms-text-size-adjust:100%;
+    {if #is_rtl}direction:rtl;
+    unicode-bidi:embed;{/if}
+}
+table { border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt; }
+table tr td { border-collapse:collapse; }
+div, p, a, li, td { -webkit-text-size-adjust:none; -ms-text-size-adjust:none; }
+{#viewbrowser_container} p, {#viewbrowser_container} a {
+    font-family: "{#viewbrowser.family}" !important;
+    font-size: {#viewbrowser.size}px !important;
+    color: {#viewbrowser.color|color} !important;
+}
+{#viewbrowser_container} a, {#unsubscribe_container} a {
+    text-decoration:underline;
+}
+{#unsubscribe_container} p, {#unsubscribe_container} p a {
+    text-align:center;
+    color: {#unsubscribe.color|color} !important;
+    font-size:12px;
+}
+a { color:{#a.color|color}; }
+a:link { color:{#a.color|color}; }
+a:visited { color:{#a.color|color}; }
+h1 a { font-family:"{#h1.family}"; font-size:{#h1.size}px; color:{#a.color|color} !important; font-weight:normal; margin:0; padding:0; font-style:normal; }
+h2 a { font-family:"{#h2.family}"; font-size:{#h2.size}px; color:{#a.color|color} !important; font-weight:normal; margin:0; padding:0; font-style:normal; }
+h3 a { font-family:"{#h3.family}"; font-size:{#h3.size}px; color:{#a.color|color} !important; font-weight:normal; margin:0; padding:0; font-style:normal; }

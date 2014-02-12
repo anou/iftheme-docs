@@ -45,7 +45,7 @@ class WYSIJA_model_queue extends WYSIJA_model{
             if(!isset($email['params']['schedule']['isscheduled'])){
                 $emails_need_to_be_queued = true;
             }else{
-                $helper_toolbox = &WYSIJA::get('toolbox','helper');
+                $helper_toolbox = WYSIJA::get('toolbox','helper');
                 $schedule_date = $email['params']['schedule']['day'].' '.$email['params']['schedule']['time'];
                 $unix_scheduled_time = strtotime($schedule_date);
 
@@ -63,7 +63,7 @@ class WYSIJA_model_queue extends WYSIJA_model{
 
         // if it is a standard email we get the campaign list
         if(!$follow_up){
-            $model_campaign = &WYSIJA::get('campaign','model');
+            $model_campaign = WYSIJA::get('campaign','model');
             $data = $model_campaign->getDetails($email['email_id']);
 
             $lists_to_send_to = $data['campaign']['lists']['ids'];
@@ -71,12 +71,12 @@ class WYSIJA_model_queue extends WYSIJA_model{
         }else{
             // if it is a follow up we get the campaign list
             $lists_to_send_to = array($email['params']['autonl']['subscribetolist']);
-            $delay=$this->calculate_delay($email['params']['autonl']);
-            $to_be_sent='(B.created_at) + '.$delay;
+            $delay = $this->calculate_delay($email['params']['autonl']);
+            $to_be_sent = '(A.sub_date) + '.$delay;
         }
 
         // get the minimum status to queue emails based on the double optin config
-        $model_config=&WYSIJA::get('config','model');
+        $model_config=WYSIJA::get('config','model');
         if($model_config->getValue('confirm_dbleoptin')) $status_min=0;
         else $status_min=-1;
 
@@ -88,22 +88,33 @@ class WYSIJA_model_queue extends WYSIJA_model{
         $query='INSERT IGNORE INTO [wysija]queue (`email_id` ,`user_id`,`send_at`) ';
         $query.='SELECT '.$email['email_id'].', A.user_id,'.$to_be_sent.'
             FROM [wysija]user_list as A
-                JOIN [wysija]user as B on A.user_id=B.user_id
-                    WHERE B.status>'.$status_min.' AND A.list_id IN ('.implode(',',$lists_to_send_to).') AND A.sub_date>'.$status_min.' AND A.unsub_date=0;';
+            JOIN [wysija]user as B on A.user_id=B.user_id
+            WHERE B.status>'.$status_min.'
+                AND A.list_id IN ('.implode(',',$lists_to_send_to).')
+                AND A.sub_date>'.$status_min.'
+                AND A.unsub_date=0';
+
+        // if some emails have already been sent on that newsletter, make sure we don't re enqueue the same emails again
+        $query_count = 'SELECT count(user_id) as count FROM [wysija]email_user_stat WHERE email_id = '.$email['email_id'];
+        if( $this->count( $query_count) > 0){
+            $query .= ' AND A.user_id NOT IN (SELECT user_id FROM [wysija]email_user_stat WHERE email_id = '.$email['email_id'].')';
+        }
+
         $this->query($query);
 
-        // rows were inserted
-        $nb_emails=$this->getAffectedRows();
-        if((int)$nb_emails  > 0){
-            //$this->notice($nb_emails.' email(s) queued',false);
-            return true;
-        }
-        
-        if(!$result){
-           $this->error('Queue failure : '.$query);
-            return false;
-        }
+        if($this->sql_error){
 
+            $this->error($this->sql_error);
+            $this->error('Full query : '.$query);
+            return false;
+        }else{
+            // rows were inserted
+            $nb_emails=$this->getAffectedRows();
+            if((int)$nb_emails  > 0){
+                //$this->notice(sprintf(__('%1$s email(s) queued', WYSIJA),$nb_emails),false);
+                return true;
+            }
+        }
         return true;
     }
 

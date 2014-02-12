@@ -115,7 +115,7 @@ $translation_jobs = $iclTranslationManagement->get_translation_jobs((array)$icl_
                 <?php endif; ?>
             </td>            
             <td width="60"><?php echo $job->job_id; ?></td>
-            <td><?php echo TranslationManagement::tm_post_link($job->original_doc_id); ?></td>
+            <td><?php echo TranslationManagement::tm_post_link($job->original_doc_id, $job->post_title); ?></td>
             <td><?php echo $job->lang_text ?></td>            
             <td><span id="icl_tj_job_status_<?php echo $job->job_id ?>"><?php echo $iclTranslationManagement->status2text($job->status) ?></span>
                 <?php if($job->needs_update) _e(' - (needs update)', 'wpml-translation-management'); ?>
@@ -140,6 +140,11 @@ $translation_jobs = $iclTranslationManagement->get_translation_jobs((array)$icl_
                     ?>
                     <?php else: ?>
                     <a href="<?php echo $iclTranslationManagement->get_translator_edit_url($job->translator_id) ?>"><?php echo esc_html($job->translator_name) ?></a>
+                    
+                    <?php if($job->translation_service=='local' && $job->status == ICL_TM_IN_PROGRESS): ?>
+                    <input type="button" class="button-secondary" value="<?php esc_attr_e('Abort translation', 'wpml-translation-management') ?>" onclick="icl_abort_translation(jQuery(this), <?php echo $job->job_id ?>)" />
+                    <?php endif; ?>
+                    
                     <?php endif;?>
                 <?php else: ?>
                 <span class="icl_tj_select_translator"><?php 
@@ -170,6 +175,7 @@ $translation_jobs = $iclTranslationManagement->get_translation_jobs((array)$icl_
 <input id="icl-tm-jobs-cancel-but" class="button-primary" type="submit" value="<?php _e('Cancel selected', 'wpml-translation-management') ?>" disabled="disabled" />
 <span id="icl-tm-jobs-cancel-msg" style="display: none"><?php _e('Are you sure you want to cancel these jobs?', 'wpml-translation-management'); ?></span>
 <span id="icl-tm-jobs-cancel-msg-2" style="display: none"><?php _e('WARNING: %s job(s) are currently being translated.', 'wpml-translation-management'); ?></span>
+<span id="icl-tm-jobs-cancel-msg-3" style="display: none"><?php _e('Are you sure you want to abort this translation?', 'wpml-translation-management'); ?></span>
 
 </form>
     

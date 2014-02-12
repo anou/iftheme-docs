@@ -2,7 +2,7 @@
 /*
 Plugin Name: Widget Context Antenna
 Plugin URI: http://smol.org
-Description: Display widgets in antenna context.
+Description: Display widgets in antenna context. Do not activate it if you have only one antenna!!!
 Version: 1.0
 Author: David Thomas
 Author URI: http://smol.org
@@ -85,7 +85,7 @@ class widget_context {
 				// Check if widget will be shown
 				if ($sidebar_id != 'wp_inactive_widgets' && !empty($widgets)) {
 					foreach ($widgets as $widget_no => $widget_id) {
-						if (!$this->check_widget_visibility($this->context_options[$widget_id])) {
+						if( isset($this->context_options[$widget_id]) && !$this->check_widget_visibility($this->context_options[$widget_id])) {
 							unset($sidebars_widgets[$sidebar_id][$widget_no]);
 							unset($_wp_sidebars_widgets[$sidebar_id][$widget_no]);
 						}
@@ -171,7 +171,7 @@ class widget_context {
   			$do_show = $this->check_widget_visibility($this->context_options[$widget_id]);
 			}
 			
-			if (!$do_show) { // If not shown, remove it temporeraly from the list of existing widgets
+			if (isset($do_show) && !$do_show) { // If not shown, remove it temporeraly from the list of existing widgets
 				wp_unregister_sidebar_widget($widget_id);
 			} else {
 				//if (!$wp_registered_widgets[$widget_id]['params'][0]['widget_id']) {
@@ -190,7 +190,7 @@ class widget_context {
 		
 		$all_params = func_get_args();
 		
-		if (is_array($all_params[2]))
+		if (isset($all_params[2]) && is_array($all_params[2]))
 			$widget_id = $all_params[2]['widget_id'];
 		else
 			$widget_id = $all_params[1]['widget_id'];

@@ -31,7 +31,7 @@ if ( isset( $_REQUEST['updated'] ) && $_REQUEST['updated'] == 'true' && ! empty(
         $msg = '<div class="updated" id="message"><p>' . $msg . '</p></div>';
 }
 
-
+$text = isset($text) ? $text : '';
 
 ?>
 

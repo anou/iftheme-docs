@@ -3,7 +3,7 @@ defined('WYSIJA') or die('Restricted access');
 class WYSIJA_view_front_widget_nl extends WYSIJA_view_front {
 
     function WYSIJA_view_front_widget_nl(){
-        $this->model=&WYSIJA::get('user','model');
+        $this->model=WYSIJA::get('user','model');
     }
 
     function wrap($content){
@@ -29,7 +29,7 @@ class WYSIJA_view_front_widget_nl extends WYSIJA_view_front {
                     $iframeCssUrl=WYSIJA_UPLOADS_MS_URL.'css/iframe.css';
                 }
             }
-            apply_filters('wysija_iframe_css_url', $iframeCssUrl);
+            $iframeCssUrl = apply_filters('wysija_iframe_css_url', $iframeCssUrl);
 
             //check if an iframe.js file exists in the site uploads/wysija/js/iframe.js or in MS blogs.dir/5/files/wysija/js/iframe.js
             if(file_exists(WYSIJA_UPLOADS_DIR.'js'.DS.'iframe.js')){
@@ -40,7 +40,7 @@ class WYSIJA_view_front_widget_nl extends WYSIJA_view_front {
                     $iframeJsUrl=WYSIJA_UPLOADS_MS_URL.'js/iframe.js';
                 }
             }
-            apply_filters('wysija_iframe_js_url', $iframeJsUrl);
+            $iframeJsUrl = apply_filters('wysija_iframe_js_url', $iframeJsUrl);
 
             //if an iframe file has been detected then load it
             if($iframeCssUrl){
@@ -83,7 +83,13 @@ class WYSIJA_view_front_widget_nl extends WYSIJA_view_front {
         $list_fields_hidden=$list_fields='';
         $disabled_submit=$msg_success_preview='';
 
-        $data.='<div class="widget_wysija_cont">';
+        // set specific class depending on form type (shortcode, iframe, html)
+        $extra_class = '';
+        if(isset($params['form_type'])) {
+            $extra_class = ' '.$params['form_type'].'_wysija';
+        }
+
+        $data.='<div class="widget_wysija_cont'.$extra_class.'">';
 
         //if data has been posted the classique php/HTML way we display the result straight in good old HTML
         if(isset($_POST['wysija']['user']['email']) && isset($_POST['formid']) && $form_id_real==$_POST['formid']){
@@ -96,13 +102,13 @@ class WYSIJA_view_front_widget_nl extends WYSIJA_view_front {
         if(isset($params['form']) && (int)$params['form'] > 0) {
 
             // get form data
-            $model_forms =& WYSIJA::get('forms', 'model');
+            $model_forms = WYSIJA::get('forms', 'model');
             $form = $model_forms->getOne(array('form_id' => (int)$params['form']));
 
             // if the form exists
             if(!empty($form)) {
                 // load form data into form engine
-                $helper_form_engine =& WYSIJA::get('form_engine', 'helper');
+                $helper_form_engine = WYSIJA::get('form_engine', 'helper');
                 $helper_form_engine->set_data($form['data'], true);
 
                 // get html rendering of form
@@ -110,12 +116,12 @@ class WYSIJA_view_front_widget_nl extends WYSIJA_view_front {
 
                 // replace shortcodes
                 if(strpos($form_html, '[total_subscribers]') !== FALSE) {
-                    $model_config =& WYSIJA::get('config', 'model');
+                    $model_config = WYSIJA::get('config', 'model');
                     // replace total subscribers shortcode by actual value
                     $form_html = str_replace('[total_subscribers]', number_format($model_config->getValue('total_subscribers'), 0, '.', ' '), $form_html);
                 }
 
-                $data .= '<form id="'.$form_id_real.'" method="post" data-version="2" action="#wysija" class="widget_wysija">';
+                $data .= '<form id="'.$form_id_real.'" method="post" action="#wysija" class="widget_wysija'.$extra_class.'">';
                 $data .= $form_html;
                 $data .= '</form>';
             }
@@ -123,11 +129,11 @@ class WYSIJA_view_front_widget_nl extends WYSIJA_view_front {
 
             // What is included in this Else condition is only for retrocompatibility we should move it maybe to another file at some point as deprecated
 
-            $data .= '<form id="'.$form_id_real.'" method="post" data-version="1" action="#wysija" class="widget_wysija form-valid-sub">';
+            $data .= '<form id="'.$form_id_real.'" method="post" action="#wysija" class="widget_wysija form-valid-sub">';
 
             if(isset($params['instruction']) && $params['instruction'])   {
                 if(strpos($params['instruction'], '[total_subscribers') !== false){
-                    $modelC=&WYSIJA::get('config','model');
+                    $modelC=WYSIJA::get('config','model');
                     $totalsubscribers=  str_replace(',', ' ', number_format($modelC->getValue('total_subscribers')));
 
                     $params['instruction']=str_replace('[total_subscribers]', $totalsubscribers, $params['instruction']);

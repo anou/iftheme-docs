@@ -172,7 +172,7 @@ function iclToggleMoreLanguages(){
 
 
 
-//jQuery('#TB_window').live('unload', function(){
+//jQuery(document).delegate('#TB_window', 'unload', function(){
 //    location.href=location.href.replace(/#(.+)$/,'');    
 //});
 

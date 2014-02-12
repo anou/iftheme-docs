@@ -97,12 +97,12 @@ var wysijatrans = window.parent.wysijatrans;
     <h4><script>document.write(wysijatrans.tags_user);</script>:</h4>
     <ul>
       <li>
-        <a class="button" href="javascript:ButtonDialog.insert(ButtonDialog.local_ed, 'user:firstname | default:subscriber')">
+        <a class="button" href="javascript:ButtonDialog.insert(ButtonDialog.local_ed, 'user:firstname | default:reader')">
           <script>document.write(wysijatrans.tags_user_firstname);</script>
         </a>
       </li>
       <li>
-        <a class="button" href="javascript:ButtonDialog.insert(ButtonDialog.local_ed, 'user:lastname | default:subscriber')">
+        <a class="button" href="javascript:ButtonDialog.insert(ButtonDialog.local_ed, 'user:lastname | default:reader')">
           <script>document.write(wysijatrans.tags_user_lastname);</script>
         </a>
       </li>
@@ -116,6 +116,11 @@ var wysijatrans = window.parent.wysijatrans;
           <script>document.write(wysijatrans.tags_user_displayname);</script>
         </a>
       </li>
+      <li>
+        <a class="button" href="javascript:ButtonDialog.insert(ButtonDialog.local_ed, 'user:count')">
+          <script>document.write(wysijatrans.tags_user_count);</script>
+        </a>
+      </li>        
     </ul>
     <h4><script>document.write(wysijatrans.tags_newsletter);</script>:</h4>
     <ul>

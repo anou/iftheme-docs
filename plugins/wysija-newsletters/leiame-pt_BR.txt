@@ -10,7 +10,7 @@ Envie seus posts e newsletters do WordPress com facilidade, e beleza.
 
 == Descrição ==
 
-Arraste/Solte seus artigos, imagens, marcadores sociais e divisores direto na sua newsletter. Escolha um dos 20 temas disponíveis. Mude as cores enquanto edita. Gerencie suas listas e formulários de assinatura com poucos cliques. Configuração a prova de leigos. E se você se perder, [estamos aqui](http://support.wysija.com/) para ajudar. Enviar newsletters no WordPress finalmente ficou divertido.
+Arraste/Solte seus artigos, imagens, marcadores sociais e divisores direto na sua newsletter. Escolha um dos 20 temas disponíveis. Mude as cores enquanto edita. Gerencie suas listas e formulários de assinatura com poucos cliques. Configuração a prova de leigos. E se você se perder, [estamos aqui](http://support.mailpoet.com/) para ajudar. Enviar newsletters no WordPress finalmente ficou divertido.
 
 
 = Vídeo demonstrativo de um minuto =

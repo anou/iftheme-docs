@@ -34,7 +34,7 @@ if(!function_exists('dbg')) {
 $debugok=false;
 $pageisconfig=false;
 //dbg(WYSIJA_DBG);
-if(isset($_REQUEST['page']) && $_REQUEST['page']=='wysija_config') $pageisconfig=true;
+if(isset($_REQUEST['page']) && $_REQUEST['page']=='wysija_config' && !isset($_REQUEST['wj_debug'])) $pageisconfig=true;
 if(WYSIJA_DBG==3){
     if(WYSIJA_ITF && !$pageisconfig){
         $debugok=true;

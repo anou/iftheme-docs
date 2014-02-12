@@ -1,5 +1,9 @@
 <?php
+// Require constants.
 require_once(dirname(__FILE__).DIRECTORY_SEPARATOR.'constants.php');
+// Require global classes autoloader
+require_once(dirname(__FILE__).DIRECTORY_SEPARATOR.'autoloader.php');
+
 defined('WYSIJA') or die('Restricted access');
 global $wysija_msg;
 global $wysija_wpmsg;
@@ -14,27 +18,29 @@ class WYSIJA_object{
     /**
      * return a plugin version safely anywhere in any hook and stock it staticaly
      * @staticvar array $versions
-     * @param string $pluginName
+     * @param string $plugin_name
      * @return array|string
      */
-    public static function get_version($pluginName=false) {
+    public static function get_version($plugin_name=false) {
         static $versions=array();
-        if(isset($versions[$pluginName])) return $versions[$pluginName];
+        if(isset($versions[$plugin_name])) return $versions[$plugin_name];
         if ( ! function_exists( 'get_plugins' ) )   {
             if(file_exists(ABSPATH . 'wp-admin'.DS.'includes'.DS.'plugin.php')){
                 require_once( ABSPATH . 'wp-admin'.DS.'includes'.DS.'plugin.php' );
             }
         }
         if (function_exists( 'get_plugins' ) )  {
-            if(!$pluginName)    $pluginName='wysija-newsletters/index.php';
-            $pluginFile=WYSIJA_PLG_DIR.str_replace('/',DS,$pluginName);
-            $plugin_data = get_plugin_data( $pluginFile );
-            $versions[$pluginName] = $plugin_data['Version'];
+            if(!$plugin_name)    $plugin_name='wysija-newsletters/index.php';
+            $plugin_file=WYSIJA_PLG_DIR.str_replace('/',DS,$plugin_name);
+            $plugin_data = get_plugin_data( $plugin_file );
+            $versions[$plugin_name] = $plugin_data['Version'];
         }else{
-            $versions[$pluginName]='undefined';
+            $versions[$plugin_name]='undefined';
         }
-        return $versions[$pluginName];
+        return $versions[$plugin_name];
     }
+
+
 
     /**
      * get the current_user data in a safe manner making sure a field exists before returning it's value
@@ -196,15 +202,11 @@ class WYSIJA_help extends WYSIJA_object{
     }
 
     function register_scripts(){
-        if(defined('WPLANG') && WPLANG!=''){
-            $locale=explode('_',WPLANG);
-            $wplang=$locale[0];
-        }else{
-            $wplang='en';
-        }
+        $helper_toolbox = WYSIJA::get('toolbox','helper');
+        $wp_language_code = $helper_toolbox->get_language_code();
 
-        if(file_exists(WYSIJA_DIR.'js'.DS.'validate'.DS.'languages'.DS.'jquery.validationEngine-'.$wplang.'.js')){
-            wp_register_script('wysija-validator-lang',WYSIJA_URL.'js/validate/languages/jquery.validationEngine-'.$wplang.'.js', array( 'jquery' ),WYSIJA::get_version(),true );
+        if(file_exists(WYSIJA_DIR.'js'.DS.'validate'.DS.'languages'.DS.'jquery.validationEngine-'.$wp_language_code.'.js')){
+            wp_register_script('wysija-validator-lang',WYSIJA_URL.'js/validate/languages/jquery.validationEngine-'.$wp_language_code.'.js', array( 'jquery' ),WYSIJA::get_version(),true );
         }else{
             wp_register_script('wysija-validator-lang',WYSIJA_URL.'js/validate/languages/jquery.validationEngine-en.js', array( 'jquery' ),WYSIJA::get_version(),true );
         }
@@ -234,7 +236,7 @@ class WYSIJA_help extends WYSIJA_object{
             $wysijapp='wysija-newsletters';
             if(isset($_REQUEST['wysijaplugin'])) $wysijapp=$_REQUEST['wysijaplugin'];
 
-            $this->controller=&WYSIJA::get($_REQUEST['controller'],'controller', false, $wysijapp);
+            $this->controller=WYSIJA::get($_REQUEST['controller'],'controller', false, $wysijapp);
 
             if(method_exists($this->controller, $_REQUEST['task'])){
                 $resultArray['result']=$this->controller->$_REQUEST['task']();
@@ -253,7 +255,7 @@ class WYSIJA_help extends WYSIJA_object{
 
         //in some case scenario our client will have jquery forcing the jsonp so we need to adapt ourselves
         if(isset($_REQUEST['callback'])) {
-            $hJSONP =& WYSIJA::get('jsonp', 'helper');
+            $hJSONP = WYSIJA::get('jsonp', 'helper');
             if($hJSONP->isValidCallback($_REQUEST['callback'])) {
                 print $_REQUEST['callback'] . '('.$jsonData.');';
             }
@@ -279,7 +281,7 @@ class WYSIJA extends WYSIJA_object{
      * @return type
      */
     public static function get_permalink($pageid,$params=array(),$simple=false){
-        $hWPtools=&WYSIJA::get('wp_tools','helper');
+        $hWPtools=WYSIJA::get('wp_tools','helper');
         return $hWPtools->get_permalink($pageid,$params,$simple);
     }
 
@@ -339,7 +341,7 @@ class WYSIJA extends WYSIJA_object{
         if((int)$debugmode>0 && empty($current_user)) return true;
 
         if(isset($current_user->data->user_email) &&
-                (strpos($current_user->data->user_email, '@wysija.com') !== false
+                (strpos($current_user->data->user_email, '@mailpoet.com') !== false
                 || strpos($current_user->data->user_email, '@bencaubere.com') !== false)) {
             return true;
         }
@@ -351,7 +353,7 @@ class WYSIJA extends WYSIJA_object{
      * @param type $extendedplugin
      */
     public static function load_lang_init($extendedplugin=false){
-        $config=&WYSIJA::get('config','model');
+        $config=WYSIJA::get('config','model');
         $debugmode=(int)$config->getValue('debug_new');
         if($debugmode==0 || ($debugmode>0 && !WYSIJA::is_wysija_admin($debugmode))){
             $extensionloaded=WYSIJA::load_lang('get_all');
@@ -487,18 +489,16 @@ class WYSIJA extends WYSIJA_object{
      * @return type
      */
     public static function log($key='default',$data='empty',$category='default'){
-        $config=&WYSIJA::get('config','model');
+        $config=WYSIJA::get('config','model');
 
-        if(defined('WYSIJA_DBG') && WYSIJA_DBG>1 && $category && (int)$config->getValue('debug_log_'.$category)>0){
+        if((int)$config->getValue('debug_new')>1 && $category && $config->getValue('debug_log_'.$category)){
 
             $optionlog=get_option('wysija_log');
-            if ( false === $optionlog ){
-                add_option( 'wysija_log', array() ,'','no');
-                $optionlog=array();
-            }
+
 
             $optionlog[$category][(string)microtime(true)][$key]=$data;
-            update_option('wysija_log', $optionlog);
+
+            WYSIJA::update_option('wysija_log' , $optionlog);
         }
         return false;
     }
@@ -555,20 +555,36 @@ class WYSIJA extends WYSIJA_object{
     /**
      * scheduled task for sending the emails in the queue, the frequency is set in the settings
      */
-    public static function croned_queue() {
-        //create the automatic post notifications email if there is any
-        $autoNL=&WYSIJA::get('autonews','helper');
-        $autoNL->checkPostNotif();
+    public static function croned_queue( $check_scheduled_newsletter = true) {
 
-        //queue the scheduled newsletter also if there are any
-        $autoNL->checkScheduled();
-        $config=&WYSIJA::get('config','model');
-        if((int)$config->getValue('total_subscribers')<2000 ){
-            $helperQ=&WYSIJA::get('queue','helper');
-            $helperQ->report=false;
-            WYSIJA::log('croned_queue process',true,'cron');
-            $helperQ->process();
+        // check the scheduled tasks only if it's a standard WP scheduled task free only
+        if($check_scheduled_newsletter){
+            WYSIJA::check_scheduled_newsletters();
         }
+
+        $model_config = WYSIJA::get('config','model');
+        if((int)$model_config->getValue('total_subscribers') < 2000 ){
+            $helper_queue = WYSIJA::get('queue','helper');
+            $helper_queue->report=false;
+            WYSIJA::log('croned_queue process',true,'cron');
+            $helper_queue->process();
+        }
+    }
+
+    public static function check_scheduled_newsletters(){
+        $last_scheduled_check = get_option('wysija_last_scheduled_check');
+
+        // if the latest post notification check was done more than five minutes ago let's check it again
+        if(empty($last_scheduled_check) || ( time() > ($last_scheduled_check + 300) ) ){
+            // create the scheduled automatic post notifications email if there are any
+            $helper_autonews = WYSIJA::get('autonews','helper');
+            $helper_autonews->checkPostNotif();
+
+            // queue the scheduled newsletter also if there are any
+            $helper_autonews->checkScheduled();
+            WYSIJA::update_option('wysija_last_scheduled_check', time());
+        }
+
     }
 
 
@@ -581,22 +597,22 @@ class WYSIJA extends WYSIJA_object{
         @ini_set('max_execution_time',0);
 
         /*user refresh count total*/
-        $helper_user =& WYSIJA::get('user','helper');
+        $helper_user = WYSIJA::get('user','helper');
         $helper_user->refreshUsers();
 
         /*clear temporary folders*/
-        $helper_file =& WYSIJA::get('file','helper');
+        $helper_file = WYSIJA::get('file','helper');
         $helper_file->clear();
 
         /*clear queue from unsubscribed*/
-        $helper_queue =& WYSIJA::get('queue','helper');
+        $helper_queue = WYSIJA::get('queue','helper');
         $helper_queue->clear();
 
-        $model_config =& WYSIJA::get('config','model');
+        $model_config = WYSIJA::get('config','model');
 
         /* send daily report about emails sent */
         if($model_config->getValue('emails_notified_when_dailysummary')){
-            $helper_stats =& WYSIJA::get('stats','helper');
+            $helper_stats = WYSIJA::get('stats','helper');
             $helper_stats->sendDailyReport();
         }
 
@@ -607,7 +623,7 @@ class WYSIJA extends WYSIJA_object{
 
         @ini_set('max_execution_time',0);
 
-        $model_config =& WYSIJA::get('config','model');
+        $model_config = WYSIJA::get('config','model');
 
         // If enabled, flag MixPanel sending on next page load.
         if ($model_config->getValue('analytics') == 1) {
@@ -621,11 +637,11 @@ class WYSIJA extends WYSIJA_object{
 
         @ini_set('max_execution_time',0);
 
-        $model_config =& WYSIJA::get('config','model');
+        $model_config = WYSIJA::get('config','model');
 
         /* send daily report about emails sent */
         if ($model_config->getValue('sharedata')) {
-            $helper_stats =& WYSIJA::get('stats','helper');
+            $helper_stats = WYSIJA::get('stats','helper');
             $helper_stats->share();
         }
 
@@ -648,15 +664,20 @@ class WYSIJA extends WYSIJA_object{
      * @global type $wysija_msg
      * @global type $wysija_queries
      * @global type $wysija_queries_errors
-     * @param type $redirectTo
+     * @param type $location
      */
-    public static function redirect($redirectTo){
+    public static function redirect($location) {
         //save the messages
         global $wysija_msg,$wysija_queries,$wysija_queries_errors;
         WYSIJA::update_option('wysija_msg',$wysija_msg);
         WYSIJA::update_option('wysija_queries',$wysija_queries);
         WYSIJA::update_option('wysija_queries_errors',$wysija_queries_errors);
-        wp_redirect($redirectTo);
+
+        // make sure we encode square brackets as wp_redirect will strip them off
+        $location = str_replace(array('[', ']'), array('%5B', '%5D'), $location);
+
+        // redirect to specified location
+        wp_redirect($location);
         exit;
     }
 
@@ -734,29 +755,30 @@ class WYSIJA extends WYSIJA_object{
 
 
         //check first if a subscribers exists if it doesn't then let's insert it
-        $modelC=&WYSIJA::get('config','model');
-        $modelUser=&WYSIJA::get('user','model');
-        $subscriber_exists=$modelUser->getOne(array('user_id'),array('email'=>$data->user_email));
-        $modelUser->reset();
+        $model_config=WYSIJA::get('config','model');
+        $model_user=WYSIJA::get('user','model');
+        $model_user->getFormat=ARRAY_A; // there is one case where we were getting an object instead of an array
+        $subscriber_exists=$model_user->getOne(array('user_id'),array('email'=>$data->user_email));
+
+        $first_name=$data->first_name;
+        $last_name=$data->last_name;
+        if(!$data->first_name && !$data->last_name) $first_name=$data->display_name;
+
+        $model_user->reset();
         if($subscriber_exists){
-            $uid=$subscriber_exists['user_id'];
-
+            $user_id=$subscriber_exists['user_id'];
+            // we need to update the current subscriber using it's id
+            $model_user->update(array('wpuser_id'=>$data->ID,'firstname'=>$first_name,'lastname'=>$last_name),array('user_id'=>$user_id));
         }else{
-            $modelUser->noCheck=true;
-
-            $firstname=$data->first_name;
-            $lastname=$data->last_name;
-            if(!$data->first_name && !$data->last_name) $firstname=$data->display_name;
-
-            $uid=$modelUser->insert(array('email'=>$data->user_email,'wpuser_id'=>$data->ID,'firstname'=>$firstname,'lastname'=>$lastname,'status'=>$modelC->getValue('confirm_dbleoptin')));
-
+            $model_user->noCheck=true;
+            $user_id=$model_user->insert(array('email'=>$data->user_email,'wpuser_id'=>$data->ID,'firstname'=>$first_name,'lastname'=>$last_name,'status'=>$model_config->getValue('confirm_dbleoptin')));
         }
 
-        $modelUL=&WYSIJA::get('user_list','model');
-        $modelUL->insert(array('user_id'=>$uid,'list_id'=>$modelC->getValue('importwp_list_id'),'sub_date'=>time()),true);
+        $model_user_list=WYSIJA::get('user_list','model');
+        $model_user_list->insert(array('user_id'=>$user_id,'list_id'=>$model_config->getValue('importwp_list_id'),'sub_date'=>time()),true);
 
-        $helperUser=&WYSIJA::get('user','helper');
-        $helperUser->sendAutoNl($uid,$data,'new-user');
+        $helper_user=WYSIJA::get('user','helper');
+        $helper_user->sendAutoNl($user_id,$data,'new-user');
         return true;
     }
 
@@ -769,44 +791,44 @@ class WYSIJA extends WYSIJA_object{
         $data=get_userdata($user_id);
 
         //check first if a subscribers exists if it doesn't then let's insert it
-        $modelUser=&WYSIJA::get('user','model');
-        $modelC=&WYSIJA::get('config','model');
-        $modelUL=&WYSIJA::get('user_list','model');
+        $model_user=WYSIJA::get('user','model');
+        $model_config=WYSIJA::get('config','model');
+        $model_user_list=WYSIJA::get('user_list','model');
+        $model_user->getFormat = ARRAY_A;
+        $subscriber_exists=$model_user->getOne(array('user_id'),array('email'=>$data->user_email));
 
-        $subscriber_exists=$modelUser->getOne(array('user_id'),array('email'=>$data->user_email));
+        $model_user->reset();
 
-        $modelUser->reset();
-
-        $firstname=$data->first_name;
-        $lastname=$data->last_name;
-        if(!$data->first_name && !$data->last_name) $firstname=$data->display_name;
+        $first_name=$data->first_name;
+        $last_name=$data->last_name;
+        if(!$data->first_name && !$data->last_name) $first_name=$data->display_name;
 
         if($subscriber_exists){
-            $uid=$subscriber_exists['user_id'];
+            $user_id=$subscriber_exists['user_id'];
 
-            $modelUser->update(array('email'=>$data->user_email,'firstname'=>$firstname,'lastname'=>$lastname),array('wpuser_id'=>$data->ID));
+            $model_user->update(array('wpuser_id'=>$data->ID, 'email'=>$data->user_email,'firstname'=>$first_name,'lastname'=>$last_name),array('user_id'=>$user_id));
 
-            $result=$modelUL->getOne(false,array('user_id'=>$uid,'list_id'=>$modelC->getValue('importwp_list_id')));
-            $modelUL->reset();
+            $result=$model_user_list->getOne(false,array('user_id'=>$user_id,'list_id'=>$model_config->getValue('importwp_list_id')));
+            $model_user_list->reset();
             if(!$result)
-                $modelUL->insert(array('user_id'=>$uid,'list_id'=>$modelC->getValue('importwp_list_id'),'sub_date'=>time()));
+                $model_user_list->insert(array('user_id'=>$user_id,'list_id'=>$model_config->getValue('importwp_list_id'),'sub_date'=>time()));
         }else{
             //chck that we didnt update the email
-            $subscriber_exists=$modelUser->getOne(false,array('wpuser_id'=>$data->ID));
+            $subscriber_exists=$model_user->getOne(false,array('wpuser_id'=>$data->ID));
 
             if($subscriber_exists){
-                $uid=$subscriber_exists['user_id'];
+                $user_id=$subscriber_exists['user_id'];
 
-                $modelUser->update(array('email'=>$data->user_email,'firstname'=>$firstname,'lastname'=>$lastname),array('wpuser_id'=>$data->ID));
+                $model_user->update(array('email'=>$data->user_email,'firstname'=>$first_name,'lastname'=>$last_name),array('wpuser_id'=>$data->ID));
 
-                $result=$modelUL->getOne(false,array('user_id'=>$uid,'list_id'=>$modelC->getValue('importwp_list_id')));
-                $modelUL->reset();
+                $result=$model_user_list->getOne(false,array('user_id'=>$user_id,'list_id'=>$model_config->getValue('importwp_list_id')));
+                $model_user_list->reset();
                 if(!$result)
-                    $modelUL->insert(array('user_id'=>$uid,'list_id'=>$modelC->getValue('importwp_list_id'),'sub_date'=>time()));
+                    $model_user_list->insert(array('user_id'=>$user_id,'list_id'=>$model_config->getValue('importwp_list_id'),'sub_date'=>time()));
             }else{
-                $modelUser->noCheck=true;
-                $uid=$modelUser->insert(array('email'=>$data->user_email,'wpuser_id'=>$data->ID,'firstname'=>$firstname,'lastname'=>$lastname,'status'=>$modelC->getValue('confirm_dbleoptin')));
-                $modelUL->insert(array('user_id'=>$uid,'list_id'=>$modelC->getValue('importwp_list_id'),'sub_date'=>time()));
+                $model_user->noCheck=true;
+                $user_id=$model_user->insert(array('email'=>$data->user_email,'wpuser_id'=>$data->ID,'firstname'=>$first_name,'lastname'=>$last_name,'status'=>$model_config->getValue('confirm_dbleoptin')));
+                $model_user_list->insert(array('user_id'=>$user_id,'list_id'=>$model_config->getValue('importwp_list_id'),'sub_date'=>time()));
             }
         }
         return true;
@@ -817,12 +839,20 @@ class WYSIJA extends WYSIJA_object{
      * @param type $user_id
      */
     public static function hook_del_WP_subscriber($user_id) {
-        $modelConf=&WYSIJA::get('config','model');
-        $modelUser=&WYSIJA::get('user','model');
-        $data=$modelUser->getOne(array('email','user_id'),array('wpuser_id'=>$user_id));
-        $modelUser->delete(array('email'=>$data['email']));
-        $modelUser=&WYSIJA::get('user_list','model');
-        $modelUser->delete(array('user_id'=>$data['user_id'],'list_id'=>$modelConf->getValue('importwp_list_id')));
+        $model_config=WYSIJA::get('config','model');
+        $model_user=WYSIJA::get('user','model');
+        $data = $model_user->getOne(array('email','user_id'),array('wpuser_id'=>$user_id));
+        $model_user->delete(array('email'=>$data['email']));
+        $model_user=WYSIJA::get('user_list','model');
+        $model_user->delete(array('user_id'=>$data['user_id'],'list_id'=>$model_config->getValue('importwp_list_id')));
+    }
+
+
+    public static function hook_auto_newsletter_refresh($post_id) {
+        $helper_autonews = WYSIJA::get('autonews', 'helper');
+        $helper_autonews->refresh_automatic_content();
+
+        return true;
     }
 
     /**
@@ -835,19 +865,24 @@ class WYSIJA extends WYSIJA_object{
     public static function hook_postNotification_transition($new_status, $old_status, $post) {
         //we run some process only if the status of the post changes from something to publish
         if( $new_status=='publish' && $old_status!=$new_status){
-            $modelEmail =& WYSIJA::get('email', 'model');
-            $emails = $modelEmail->get(false, array('type' => 2, 'status' => array(1, 3, 99)));
+
+            $model_email = WYSIJA::get('email', 'model');
+            $emails = $model_email->get(false, array('type' => 2, 'status' => array(1, 3, 99)));
             if(!empty($emails)){
                 //we loop through all of the automatic emails
                 foreach($emails as $key => $email) {
                     //we will try to give birth to a child email only if the automatic newsletter is a post notification email and in immediate mode
                     if(is_array($email) && $email['params']['autonl']['event'] === 'new-articles' && $email['params']['autonl']['when-article'] === 'immediate') {
                         WYSIJA::log('post_transition_hook_give_birth',array('postID'=>$post->ID,'postID'=>$post->post_title,'old_status'=>$old_status,'new_status'=>$new_status),'post_notif');
-                        $modelEmail->reset();
-                        $modelEmail->give_birth($email, $post->ID);
+                        $model_email->reset();
+                        $model_email->give_birth($email, $post->ID);
                     }
                 }
             }
+
+            // we check for automatic latest content widget in automatic newsletter
+            $helper_autonews = WYSIJA::get('autonews', 'helper');
+            $helper_autonews->refresh_automatic_content();
         }
 
         return true;
@@ -857,7 +892,7 @@ class WYSIJA extends WYSIJA_object{
      * uninstall process not used
      */
     public static function uninstall(){
-        $helperUS=&WYSIJA::get('uninstall','helper');
+        $helperUS=WYSIJA::get('uninstall','helper');
         $helperUS->uninstall();
     }
 
@@ -875,11 +910,11 @@ class WYSIJA extends WYSIJA_object{
 
         //test again for plugins on reactivation
         if($installApp){
-            $helper_import=&WYSIJA::get('import','helper');
+            $helper_import=WYSIJA::get('import','helper');
             $helper_import->testPlugins();
 
             //resynch wordpress list
-            $helper_user=&WYSIJA::get('user','helper');
+            $helper_user=WYSIJA::get('user','helper');
             $helper_user->synchList($values['importwp_list_id']);
         }
     }
@@ -921,6 +956,24 @@ class WYSIJA extends WYSIJA_object{
         $current_user->get_role_caps();
 
         return true;
+    }
+
+     /**
+     * test whether the plugin is a beta version or not
+     * 2.4.4.4  is a beta
+     * 2.4.4 is a bug fix release
+     * 2.4 is a feature release
+     * @param string $plugin_name
+     */
+    public static function is_beta($plugin_name=false){
+        // exceptions
+        $not_beta_versions = array('2.5.9.1', '2.5.9.2', '2.5.9.3', "2.5.9.4");
+        $mailpoet_version = WYSIJA::get_version($plugin_name);
+        if(in_array($mailpoet_version, $not_beta_versions)) return false;
+
+        // standard way of defining a beta version
+        if(count(explode('.', $mailpoet_version)) > 3 ) return true;
+        return false;
     }
 
     /**
@@ -972,21 +1025,20 @@ class WYSIJA extends WYSIJA_object{
      * @return type an array of frequencies
      */
     public static function get_cron_frequencies(){
-        $mConfig=&WYSIJA::get('config','model');
-        $fHelper=&WYSIJA::get('forms','helper');
+        $model_config = WYSIJA::get('config','model');
+        $helper_forms = WYSIJA::get('forms','helper');
 
-        $is_multisite=is_multisite();
-
-        //$is_multisite=true;//PROD comment that line
-        if($is_multisite && $mConfig->getValue('sending_method')=='network'){
-           $sending_emails_each=$mConfig->getValue('ms_sending_emails_each');
+        if(is_multisite() && $model_config->getValue('sending_method')=='network'){
+           $sending_emails_each = $model_config->getValue('ms_sending_emails_each');
         }else{
-           $sending_emails_each=$mConfig->getValue('sending_emails_each');
+           $sending_emails_each = $model_config->getValue('sending_emails_each');
         }
 
-        $queue_frequency=$fHelper->eachValuesSec[$sending_emails_each];
-        $bounce_frequency=99999999999999;
-        if(isset($fHelper->eachValuesSec[$mConfig->getValue('bouncing_emails_each')]))  $bounce_frequency=$fHelper->eachValuesSec[$mConfig->getValue('bouncing_emails_each')];
+        $queue_frequency = $helper_forms->eachValuesSec[$sending_emails_each];
+        $bounce_frequency = 99999999999999;
+        if(isset($helper_forms->eachValuesSec[$model_config->getValue('bouncing_emails_each')])){
+            $bounce_frequency = $helper_forms->eachValuesSec[$model_config->getValue('bouncing_emails_each')];
+        }
         return array('queue'=>$queue_frequency,'bounce'=>$bounce_frequency,'daily'=>86400,'weekly'=>604800,'monthly'=>2419200);
     }
 
@@ -994,44 +1046,52 @@ class WYSIJA extends WYSIJA_object{
      * set the next cron schedule
      * TODO : needs probably to make the difference of running process for the next schedule, so that there is no delay(this is only problematic on some slow servers)
      * @param string $schedule
-     * @param int $lastsaved
+     * @param int $last_saved
      * @param boolean $set_running
      * @return boolean
      */
-    public static function set_cron_schedule($schedule=false,$lastsaved=0,$set_running=false){
-        $cron_schedules=array();
+    public static function set_cron_schedule($schedule = false , $last_saved = 0 , $set_running = false){
+        $cron_schedules = array();
 
-        $start_time=$lastsaved;
-        if(!$start_time)    $start_time=time();
-        $processes=WYSIJA::get_cron_frequencies();
+        $start_time = $last_saved;
+        if(!$start_time)    $start_time = time();
+        $processes = WYSIJA::get_cron_frequencies();
         if(!$schedule){
             foreach($processes as $process => $frequency){
-                $next_schedule=$start_time+$frequency;
-                $prev_schedule=0;
+                $next_schedule = $start_time + $frequency;
+                $prev_schedule = 0;
                 if(isset($cron_schedules[$process]['running']) && $cron_schedules[$process]['running']) $prev_schedule=$cron_schedules[$process]['running'];
                 $cron_schedules[$process]=array(
-                    'next_schedule'=>$next_schedule,
-                    'prev_schedule'=>$prev_schedule,
-                    'running'=>false);
+                    'next_schedule' => $next_schedule,
+                    'prev_schedule' => $prev_schedule,
+                    'running' => false);
             }
         }else{
-            $cron_schedules=WYSIJA::get_cron_schedule('all');
+            $cron_schedules = WYSIJA::get_cron_schedule('all');
             if($set_running){
-                 $cron_schedules[$schedule]['running']=$set_running;
+                 $cron_schedules[$schedule]['running'] = $set_running;
             }else{
-                 $running=0;
-                if(isset($cron_schedules[$schedule]['running'])) $running=$cron_schedules[$schedule]['running'];
-                //if the process is not running or has been running for more than 15 minutes then we set the next_schedule date
-                if(!$running || time()>$running+900){
-                    $next_schedule=$start_time+$processes[$schedule];
-                    $cron_schedules[$schedule]=array(
-                            'next_schedule'=>$next_schedule,
-                            'prev_schedule'=>$running,
-                            'running'=>false);
+                 $running = 0;
+                if(isset($cron_schedules[$schedule]['running'])) $running = $cron_schedules[$schedule]['running'];
+                // if the process is not running or has been running for more than 15 minutes then we set the next_schedule date
+                $process_frequency = $processes[$schedule];
+
+                if(!$running || ( time() > ($running + $process_frequency) ) ){
+
+                    $next_schedule = $start_time + $process_frequency;
+                    // if the next schedule is already behind, we give it 30 seconds before it can triggers again
+                    if( $next_schedule < $start_time ){
+                        $next_schedule = $start_time + 30;
+                    }
+
+                    $cron_schedules[$schedule] = array(
+                            'next_schedule' => $next_schedule,
+                            'prev_schedule' => $running,
+                            'running' => false);
                 }
             }
         }
-        WYSIJA::update_option('wysija_schedules',$cron_schedules,'yes');
+        WYSIJA::update_option( 'wysija_schedules' , $cron_schedules , 'yes' );
         return true;
     }
 
@@ -1041,49 +1101,68 @@ class WYSIJA extends WYSIJA_object{
      */
     public static function cron_check() {
 
-        $cron_schedules=WYSIJA::get_cron_schedule('all');
+        $cron_schedules = WYSIJA::get_cron_schedule('all');
         if(empty($cron_schedules)) return;
         else{
-            $processes=WYSIJA::get_cron_frequencies();
-            $updatedsched=false;
-            foreach($cron_schedules as $proc => &$params){
-                    $running=0;
-                    if(isset($params['running'])) $running=$params['running'];
+            $processes = WYSIJA::get_cron_frequencies();
+
+            $updated_sched = false;
+            foreach($cron_schedules as $schedule => &$params){
+                    $running = 0;
+                    $time_now = time();
+                    if(isset($params['running'])) $running = $params['running'];
                     //if the process has timedout we reschedule the next execution
-                    if($running && time()>$running+900){
+                    if($running && ( $time_now> ($running + $processes[$schedule]) ) ){
                         //WYSIJA::setInfo('error','modifying next schedule for '.$proc);
-                        $next_schedule=time()+$processes[$proc];
+                        $process_frequency = $processes[$schedule];
+
+                        $next_schedule = $running + $process_frequency;
+                        // if the next schedule is already behind, we give it 30 seconds before it can trigger again
+                        if( $next_schedule < $time_now ){
+                            $next_schedule = $time_now + 30;
+                        }
                         $params=array(
-                                'next_schedule'=>$next_schedule,
-                                'prev_schedule'=>$running,
-                                'running'=>false);
-                        $updatedsched=true;
+                                'next_schedule' => $next_schedule,
+                                'prev_schedule' => $running,
+                                'running' => false);
+                        $updated_sched=true;
                     }
             }
-            if($updatedsched){
+            if($updated_sched){
                 //WYSIJA::setInfo('error','updating scheds');
-                WYSIJA::update_option('wysija_schedules',$cron_schedules,'yes');
+                WYSIJA::update_option( 'wysija_schedules' , $cron_schedules , 'yes' );
             }
 
         }
 
-        $timenow=time();
-        $processesToRun=array();
-        foreach($cron_schedules as $process =>$scheduled_times){
-            if((!$scheduled_times['running'] || (int)$scheduled_times['running']+900<$timenow) && $scheduled_times['next_schedule']<$timenow){
-                $processesToRun[]=$process;
+        $time_now = time();
+        $processesToRun = array();
+        foreach($cron_schedules as $schedule => $scheduled_times){
+            $process_frequency = $processes[$schedule];
+            if( ( !$scheduled_times['running'] || (int)$scheduled_times['running'] + $process_frequency < $time_now ) && $scheduled_times['next_schedule'] < $time_now){
+                $processesToRun[] = $schedule;
             }
         }
 
-        $model_config=&WYSIJA::get('config','model');
-        if(!empty($processesToRun) && $model_config->getValue('cron_page_hit_trigger')){
+        $model_config = WYSIJA::get('config','model');
+        $page_view_trigger = (int)$model_config->getValue('cron_page_hit_trigger');
+        if(!empty($processesToRun) && $page_view_trigger === 1){
             //call the cron url
+            // do not call that more than once per 5 minutes attempt at reducing the CPU load for some users
+            // http://wordpress.org/support/topic/wysija-newsletters-slowing-down-my-site-1
+            $last_cron_time_plus_5min = (int)get_option('wysija_last_php_cron_call') + (5*60);
 
-            $cron_url=site_url( 'wp-cron.php').'?'.WYSIJA_CRON.'&action=wysija_cron&process='.implode(',',$processesToRun).'&silent=1';
+            if($last_cron_time_plus_5min < time()){
+                $cron_url = site_url( 'wp-cron.php').'?'.WYSIJA_CRON.'&action=wysija_cron&process='.implode(',',$processesToRun).'&silent=1';
+                $cron_request = apply_filters( 'cron_request', array(
+                        'url' => $cron_url,
+                        'args' => array( 'timeout' => 0.01, 'blocking' => false, 'sslverify' => apply_filters( 'https_local_ssl_verify', true ) )
+                ) );
 
-            //TODO we should use the http class there
-            $hHTTP=&WYSIJA::get('http','helper');
-            $hHTTP->request_timeout($cron_url);
+                wp_remote_post( $cron_url, $cron_request['args'] );
+                WYSIJA::update_option('wysija_last_php_cron_call', time());
+            }
+
 
         }
     }
@@ -1121,97 +1200,126 @@ class WYSIJA extends WYSIJA_object{
     }
 }
 
-//if we're entering the wysija's cron part, it should go and end there
-if(isset($_REQUEST['action']) && $_REQUEST['action']=='wysija_cron'){
-    add_action('init', 'init_wysija_cron',1);
-    function init_wysija_cron(){
-        $hCron=WYSIJA::get('cron','helper');
-        $hCron->run();
-    }
-}
-
-//subscribers/wp-user synch hooks
+// subscribers/wp-user synch hooks
 add_action('user_register', array('WYSIJA', 'hook_add_WP_subscriber'), 1);
 add_action('added_existing_user', array('WYSIJA', 'hook_add_WP_subscriber'), 1);
 add_action('profile_update', array('WYSIJA', 'hook_edit_WP_subscriber'), 1);
+// for standard blog
 add_action('delete_user', array('WYSIJA', 'hook_del_WP_subscriber'), 1);
+// for multisite
+add_action('deleted_user', array('WYSIJA', 'hook_del_WP_subscriber'), 1);
 
-//post notif trigger
+
+// post notif trigger
 add_action('transition_post_status', array('WYSIJA', 'hook_postNotification_transition'), 1, 3);
+// refresh auto newsletter content when a post is modified
+//add_action('save_post', array('WYSIJA', 'hook_auto_newsletter_refresh'), 1, 1);
+add_action('delete_post', array('WYSIJA', 'hook_auto_newsletter_refresh'), 1, 1);
 
-//add image size for emails
-add_image_size( 'wysija-newsletters-max', 600, 99999 );
+// add image size for emails
+add_image_size('wysija-newsletters-max', 600, 99999);
 
-$modelConf=&WYSIJA::get('config','model');
+$modelConf=WYSIJA::get('config','model');
 if($modelConf->getValue('installed_time')){
+
+    // START all that concerns the CRON
+    // make sure we check when is the schedule due with wysija's cron
     if($modelConf->getValue('cron_manual')){
-        //if cron queue is still set then unset it
+        // if WP cron tasks are still set, we clear them
         if(wp_get_schedule('wysija_cron_queue'))    WYSIJA::deactivate();
 
-        //set the crons schedule for each process
+        // set the crons schedule for each process
         WYSIJA::get_cron_schedule();
 
-    }else{
-        //filter fixing a bug with automatic load_text_domain_from WP didn't understand yet why this was necessary...
-        //somehow wp_register_script(which is irrelevant) was triggerring this kind of notice
-        //Warning: is_readable() [function.is-readable]: open_basedir restriction in effect. File(C:\Domains\website.com\wwwroot\web/wp-content/plugins/C:\Domains\website.com\wwwroot\web\wp-content\plugins\wysija-newsletters/languages/wysija-newsletters-en_US.mo) is not within the allowed path(s): (.;C:\Domains\;C:\PHP\;C:\Sites\;C:\SitesData\;/) in C:\Domains\website.com\wwwroot\web\wp-includes\l10n.php on line 339
-        //the only solution is to make sure on our end that the file exists and rewrite it if necessary
-        add_filter( 'override_load_textdomain', array( 'WYSIJA', 'override_load_textdomain' ), 10, 3);
-        add_filter('load_textdomain_mofile',  array( 'WYSIJA', 'load_textdomain_mofile' ), 10, 2);
+        // check that there is no late cron schedules if we are using wysija's cron option and that the cron option is triggerred by any page view
+        if(!isset($_REQUEST['process'])){
+            WYSIJA::cron_check();
+        }
 
-        //filter to add new possible frequencies to the cron
+        // this action is triggerred only by a cron job
+        // if we're entering the wysija's cron part, it should end here
+        if(isset($_REQUEST['action']) && $_REQUEST['action']=='wysija_cron'){
+            // priority is hundred so that the messages such as unsubscribe or view in your browser have time to be translated(they get translated around 96, 97)
+            add_action('init', 'init_wysija_cron',100);
+
+            function init_wysija_cron(){
+                $hCron=WYSIJA::get('cron','helper');
+                $hCron->run();
+            }
+        }
+
+    // make sure the scheduled tasks are recorded when using WordPress' cron
+    }else{
+
+        // filter to add new possible frequencies to the cron
         add_filter( 'cron_schedules', array( 'WYSIJA', 'filter_cron_schedules' ) );
 
-        //action to handle the scheduled tasks in wysija
+        // action to handle the scheduled tasks in wysija
         add_action( 'wysija_cron_queue', array( 'WYSIJA', 'croned_queue' ) );
         add_action( 'wysija_cron_daily', array( 'WYSIJA', 'croned_daily' ) );
         add_action( 'wysija_cron_weekly', array( 'WYSIJA', 'croned_weekly' ) );
         add_action( 'wysija_cron_monthly', array( 'WYSIJA', 'croned_monthly' ) );
 
-        //same with the weekly task
+        // same with the weekly task
         if(!wp_next_scheduled('wysija_cron_weekly')){
             wp_schedule_event( $modelConf->getValue('last_save') , 'eachweek', 'wysija_cron_weekly' );
         }
-        //the monthly task...
+        // the monthly task...
         if(!wp_next_scheduled('wysija_cron_monthly')){
             wp_schedule_event( $modelConf->getValue('last_save') , 'each28days', 'wysija_cron_monthly' );
         }
 
-        //the daily task...
+        // the daily task...
         if(!wp_next_scheduled('wysija_cron_daily')){
             wp_schedule_event( $modelConf->getValue('last_save') , 'daily', 'wysija_cron_daily' );
         }
 
-        //if the bounce task is not scheduled then we initialize it
+
+        if(is_multisite()){
+
+            // in the case of multisite and the network's method we schedule with a different frequency
+            // this option contains the list of sites already scheduled
+            $ms_wysija_bounce_cron = get_site_option('ms_wysija_bounce_cron');
+            global $blog_id;
+
+            // if this blog is not recorded in our wysija_sending_cron option then we clear its scheduled so that we can reinitialize it
+            if(!$ms_wysija_bounce_cron || !isset($ms_wysija_bounce_cron[$blog_id])){
+                wp_clear_scheduled_hook('wysija_cron_bounce');
+                WYSIJA::set_cron_schedule('queue');
+                $ms_wysija_bounce_cron[$blog_id] = 1;
+                update_site_option('ms_wysija_bounce_cron',$ms_wysija_bounce_cron);
+            }
+
+        }
+
+        // if the bounce task is not scheduled then we initialize it
         if(!wp_next_scheduled('wysija_cron_bounce')){
             wp_schedule_event( $modelConf->getValue('last_save') , $modelConf->getValue('bouncing_emails_each'), 'wysija_cron_bounce' );
         }
 
-        //and  the queue processing task ...
-        //if we are in a multisite case we make sure that the ms frequency hasn't been changed, if it has we reset it
-         $is_multisite=is_multisite();
-        if($is_multisite && $modelConf->getValue('sending_method')=='network'){
-            //in the case of multisite and the network's method we schedule with a different frequency
-            //this option contains the list of sites already scheduled
+        // and  the queue processing task ...
+        // if we are in a multisite case we make sure that the ms frequency hasn't been changed, if it has we reset it
+        if(is_multisite() && $modelConf->getValue('sending_method')=='network'){
+            // in the case of multisite and the network's method we schedule with a different frequency
+            // this option contains the list of sites already scheduled
             $ms_wysija_sending_cron=get_site_option('ms_wysija_sending_cron');
             global $blog_id;
 
-            //if this blog is not recorded in our wysija_sending_cron option then we clear its scheduled so that we can reinitialize it
+            // if this blog is not recorded in our wysija_sending_cron option then we clear its scheduled so that we can reinitialize it
             if(!$ms_wysija_sending_cron || !isset($ms_wysija_sending_cron[$blog_id])){
                 wp_clear_scheduled_hook('wysija_cron_queue');
                 WYSIJA::set_cron_schedule('queue');
                 $ms_wysija_sending_cron[$blog_id]=1;
                 update_site_option('ms_wysija_sending_cron',$ms_wysija_sending_cron);
             }
-
         }
 
 
-        //simply schedule the queue
+        // simply schedule the queue
         if(!wp_next_scheduled('wysija_cron_queue')){
 
-            //in the case of multisite and the network's method we schedule with a different frequency
-            if($is_multisite && $modelConf->getValue('sending_method')=='network'){
+            // in the case of multisite and the network's method we schedule with a different frequency
+            if(is_multisite() && $modelConf->getValue('sending_method')=='network'){
                 $sending_emails_each=$modelConf->getValue('ms_sending_emails_each');
             }else{
                $sending_emails_each=$modelConf->getValue('sending_emails_each');
@@ -1219,22 +1327,25 @@ if($modelConf->getValue('installed_time')){
             wp_schedule_event( $modelConf->getValue('last_save') , $sending_emails_each, 'wysija_cron_queue' );
         }
 
-    }
+    }// END all that concerns the CRON
+
+    // filter fixing a bug with automatic load_text_domain_from WP didn't understand yet why this was necessary...
+    // somehow wp_register_script(which is irrelevant) was triggerring this kind of notice
+    // Warning: is_readable() [function.is-readable]: open_basedir restriction in effect. File(C:\Domains\website.com\wwwroot\web/wp-content/plugins/C:\Domains\website.com\wwwroot\web\wp-content\plugins\wysija-newsletters/languages/wysija-newsletters-en_US.mo) is not within the allowed path(s): (.;C:\Domains\;C:\PHP\;C:\Sites\;C:\SitesData\;/) in C:\Domains\website.com\wwwroot\web\wp-includes\l10n.php on line 339
+    // the only solution is to make sure on our end that the file exists and rewrite it if necessary
+    add_filter( 'override_load_textdomain', array( 'WYSIJA', 'override_load_textdomain' ), 10, 3);
+    add_filter('load_textdomain_mofile',  array( 'WYSIJA', 'load_textdomain_mofile' ), 10, 2);
 }
 
-//not yet used but the purpose is to override any notification sent through wp_mail
+// not yet used but the purpose is to override any notification sent through wp_mail
 if($modelConf->getValue('wp_notifications')){
-    $hWPnotif=&WYSIJA::get('wp_notifications','helper');
-}
-
-//check that there is no late cron schedules if we are using wysija's cron option and that the cron option is triggerred by any page view
-if($modelConf->getValue('cron_manual') && !isset($_REQUEST['process'])){
-    WYSIJA::cron_check();
+    $hWPnotif=WYSIJA::get('wp_notifications','helper');
 }
 
 register_deactivation_hook(WYSIJA_FILE, array( 'WYSIJA', 'deactivate' ));
 register_activation_hook(WYSIJA_FILE, array( 'WYSIJA', 'activate' ));
 add_action( 'init', array('WYSIJA','create_post_type') );
 
-//launch application
-$helper=&WYSIJA::get(WYSIJA_SIDE,'helper');
+
+// launch application
+$helper=WYSIJA::get(WYSIJA_SIDE,'helper');

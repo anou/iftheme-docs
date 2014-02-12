@@ -36,9 +36,9 @@ class WPML_Browser_Redirect{
         
         // Send params to javascript
         $params = array(
-            'pageLanguage'  => defined('ICL_LANGUAGE_CODE')? ICL_LANGUAGE_CODE : get_bloginfo('language'),
-            'languageUrls'  => $language_urls,
-            'cookie'        => $cookie
+            'pageLanguage'      => defined('ICL_LANGUAGE_CODE')? ICL_LANGUAGE_CODE : get_bloginfo('language'),
+            'languageUrls'      => $language_urls,
+            'cookie'            => $cookie            
         );
         wp_localize_script('wpml-browser-redirect', 'wpml_browser_redirect_params', $params);        
         

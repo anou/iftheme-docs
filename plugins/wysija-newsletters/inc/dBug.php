@@ -170,7 +170,7 @@ class dBug {
 
         function convertTimeStampToDate($var){
             if($this->varIsValidTimeStamp((string)$var)){
-                $helper_toolbox=&WYSIJA::get('toolbox','helper');
+                $helper_toolbox=WYSIJA::get('toolbox','helper');
                 $var=date('d-m-y h:i:s A', $helper_toolbox->servertime_to_localtime($var)).' <small>('.$var.')</small>';
             }
             return $var;

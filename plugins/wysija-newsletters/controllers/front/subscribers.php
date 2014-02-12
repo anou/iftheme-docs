@@ -19,7 +19,7 @@ class WYSIJA_control_front_subscribers extends WYSIJA_control_front{
     }
 
    function save(){
-        $config=&WYSIJA::get('config','model');
+        $config=WYSIJA::get('config','model');
 
         if(!$config->getValue('allow_no_js')){
             $this->notice(__('Subscription without JavaScript is disabled.',WYSIJA));
@@ -40,7 +40,7 @@ class WYSIJA_control_front_subscribers extends WYSIJA_control_front{
             if(!isset($data[$key]))  $data[$key]=$val;
         }
 
-        $helperUser=&WYSIJA::get('user','helper');
+        $helperUser=WYSIJA::get('user','helper');
         if(!$helperUser->checkData($data))return false;
 
         $helperUser->addSubscriber($data);

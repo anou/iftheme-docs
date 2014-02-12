@@ -50,13 +50,33 @@ class WYSIJA_view_back_tmce extends WYSIJA_view_back{
         <?php
     }
 
-
-    function registerAdd($datawidget){
-//dbg($datawidget,0);
+    function subscribersAdd($data){
         $this->head();
-
         ?>
-
+        <form id="formTable" action="" style="display:block;" class="wp-core-ui" method="post" >
+                <div id="subscriber-ccount-form">
+                    <select id="wysija-list">
+                        <option value="0">All</option>
+                        <?php foreach ($data['lists'] as $list){ ?>
+                            <option value="<?php echo $list['list_id']; ?>"><?php echo $list['name']; ?></option>
+                        <?php } ?>
+                    </select>
+                    <?php if ($data['confirm_dbleoptin']) {?>
+                        <br /><br />
+                        <input type="checkbox" id="confirmedSubscribers"/><label><?php echo esc_attr(__('Confirmed subscribers only', WYSIJA)); ?></label>
+                    <?php } ?>
+                    <br /><br />
+                    <input type="submit" id="subscribers-insert" class="button-primary action" name="doaction" value="<?php echo esc_attr(__('Insert', WYSIJA)); ?>">
+                </div>
+                <div style="clear:both;"></div>
+         </form>
+            <?php
+        $this->foot();
+    }
+    
+    function registerAdd($datawidget){
+        $this->head();
+        ?>
         <form id="formTable" action="" style="display:block;" class="wp-core-ui" method="post" >
 
                 <div id="widget-form">
@@ -72,10 +92,8 @@ class WYSIJA_view_back_tmce extends WYSIJA_view_back{
 
                 <div style="clear:both;"></div>
          </form>
-
             <?php
         $this->foot();
-
     }
 
 }

@@ -1,29 +1,39 @@
 <?php
 defined('WYSIJA') or die('Restricted access');
 class WYSIJA_help_bookmarks extends WYSIJA_object {
+
     function WYSIJA_help_bookmarks() {
     }
-    
+
+    /**
+     * Get all bookmarks based on size
+     * @param string $size
+     * @return array
+     */
     function getAll($size = 'medium', $theme = 'default') {
-        $fileHelper =& WYSIJA::get('file', 'helper');
+        $fileHelper = WYSIJA::get('file', 'helper');
         $dirHandle = $fileHelper->exists('bookmarks'.DS.$size);
+
         if($dirHandle['result'] === FALSE) {
             return array();
         } else {
             $bookmarks = array();
 
+            // if size is medium and the current theme is not default, load theme's bookmarks
             if($size === 'medium' and $theme !== 'default') {
                 $themeIcons = $this->getAllByTheme($theme, 'url');
                 if(!empty($themeIcons)) {
                     $bookmarks['00'] = $themeIcons;
                 }
             }
+
             $sourceDir = $dirHandle['file'];
             $iconsets = scandir($sourceDir);
             foreach($iconsets as $iconset) {
-
+                // loop through each iconset
                 if(in_array($iconset, array('.', '..', '.DS_Store', 'Thumbs.db')) === FALSE and is_dir($sourceDir.DS.$iconset)) {
 
+                    // get all icons from current iconset
                     $icons = scandir($sourceDir.DS.$iconset);
                     foreach($icons as $icon) {
                         if(in_array($icon, array('.', '..', '.DS_Store', 'Thumbs.db')) === FALSE and strrpos($icon, '.txt') === FALSE) {
@@ -36,11 +46,18 @@ class WYSIJA_help_bookmarks extends WYSIJA_object {
             return $bookmarks;
         }
     }
-    
+
+    /**
+     * Get all bookmarks based on size for a given iconset
+     * @param string $size
+     * @param string $iconset
+     * @return array
+     */
     function getAllByIconset($size = 'medium', $iconset)
     {
-        $fileHelper =& WYSIJA::get('file', 'helper');
+        $fileHelper = WYSIJA::get('file', 'helper');
         $dirHandle = $fileHelper->exists('bookmarks'.DS.$size.DS.$iconset);
+
         if($dirHandle['result'] === FALSE) {
             return array();
         } else {
@@ -61,10 +78,12 @@ class WYSIJA_help_bookmarks extends WYSIJA_object {
             return $bookmarks;
         }
     }
+
     function getAllByTheme($theme, $type = 'all')
     {
-        $fileHelper =& WYSIJA::get('file', 'helper');
+        $fileHelper = WYSIJA::get('file', 'helper');
         $dirHandle = $fileHelper->exists('themes'.DS.$theme.DS.'bookmarks');
+
         if($dirHandle['result'] === FALSE) {
             return array();
         } else {
@@ -73,6 +92,7 @@ class WYSIJA_help_bookmarks extends WYSIJA_object {
             $icons = scandir($sourceDir);
             foreach($icons as $icon) {
                 if(in_array($icon, array('.', '..', '.DS_Store', 'Thumbs.db')) === FALSE and strrpos($icon, '.txt') === FALSE) {
+
                     if($type === 'all') {
                         $info = pathinfo($sourceDir.DS.$icon);
                         $dimensions = @getimagesize($sourceDir.DS.$icon);

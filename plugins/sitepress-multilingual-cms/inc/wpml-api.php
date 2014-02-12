@@ -64,7 +64,7 @@ function wpml_add_translatable_content($content_type, $content_id, $language_cod
         }
     }
     
-    if($wpdb->get_var("SELECT translation_id FROM {$wpdb->prefix}icl_translations WHERE element_type='".$wpdb->escape($content_type)."' AND element_id='{$content_id}'")){
+    if($wpdb->get_var("SELECT translation_id FROM {$wpdb->prefix}icl_translations WHERE element_type='".esc_sql($content_type)."' AND element_id='{$content_id}'")){
         return WPML_API_CONTENT_EXISTS;
     }
     
@@ -379,7 +379,7 @@ function wpml_get_contents($content_type, $language_code = false){
         $language_code = $sitepress->get_current_language();
     }
     
-    $contents = $wpdb->get_col("SELECT element_id FROM {$wpdb->prefix}icl_translations WHERE element_type='".$wpdb->escape($content_type)."' AND language_code='{$language_code}'");
+    $contents = $wpdb->get_col("SELECT element_id FROM {$wpdb->prefix}icl_translations WHERE element_type='".esc_sql($content_type)."' AND language_code='{$language_code}'");
     return $contents;
     
 }
@@ -514,6 +514,221 @@ function wpml_get_word_count($string, $language = false){
     $ret = array('count'=>$count, 'cost'=>$cost);
         
     return $ret;
-    
 }
+
+/**
+ *  Check user is translator
+ *  
+ * @since 1.3
+ * @package WPML
+ * @subpackage WPML API
+ *
+ * @param string $from_language Language to translate from
+ * @param string $to_language Language to translate into
+ *    
+ * @return bool (true if translator)
+ *  */
+function wpml_check_user_is_translator($from_language, $to_language) {
+    global $wpdb;
+
+    $is_translator = false;
+    
+    if(get_current_user_id()){
+        $translation_languages = $wpdb->get_row("SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id = '" . get_current_user_id() . "' AND meta_key = '{$wpdb->prefix}language_pairs'");
+        if($translation_languages){
+        foreach (unserialize($translation_languages->meta_value) as $key => $language) {
+            if ($key == $from_language) {
+                $is_translator = key_exists($to_language, $language);
+            }
+        }
+    }
+    }
+
+    return $is_translator;
+}
+
+/**
+ *  Check user is translator
+ *  
+ * @since 1.3
+ * @package WPML
+ * @subpackage WPML API
+ *
+ * @param int $post_id Post ID
+ * @param int $form_id Form ID
+ * @param string $current_language(optional) current language
+ *    
+ * @return bool (true if translator)
+ *  */
+function wpml_generate_controls($post_id, $cred_form_id , $current_language = false) {
+    global $sitepress,$sitepress_settings;
+
+    if (!$current_language)
+        $current_language = $sitepress->get_default_language();
+
+    if($current_language != $sitepress->get_language_for_element($post_id, 'post_' . get_post_type($post_id)))
+        $current_language = $sitepress->get_language_for_element($post_id, 'post_' . get_post_type($post_id));    
+    
+    $controls = array();
+
+    $trid = $sitepress->get_element_trid($post_id,'post_' . get_post_type($post_id));
+    $translations = $sitepress->get_element_translations($trid, 'post_' . get_post_type($post_id));
+
+    foreach ($sitepress->get_active_languages() as $active_language) {
+        if ($current_language == $active_language['code'] || !wpml_check_user_is_translator($current_language, $active_language['code']))
+            continue;
+
+        if (key_exists($active_language['code'], $translations)) {
+            //edit translation
+            $controls[$active_language['code']]['action'] = 'edit';
+            $post_url = get_permalink($translations[$active_language['code']]->element_id);
+            if(false===strpos($post_url,'?') || (false===strpos($post_url,'?') && $sitepress_settings['language_negotiation_type'] != '3')){
+                $controls[$active_language['code']]['url'] = $post_url.'?action=edit_translation&cred-edit-form='.$cred_form_id; //CRED edit form ID
+            }else{
+                $controls[$active_language['code']]['url'] = $post_url.'&action=edit_translation&cred-edit-form='.$cred_form_id; //CRED edit form ID
+            }
+        } else {
+            //add translation
+            $controls[$active_language['code']]['action'] = 'create';
+            $post_url = get_permalink($post_id);
+            if(false===strpos($post_url,'?') || (false===strpos($post_url,'?') && $sitepress_settings['language_negotiation_type'] != '3')){
+                $controls[$active_language['code']]['url'] = get_permalink($post_id).'?action=create_translation&trid='.$trid.'&to_lang='.$active_language['code'].'&source_lang='.$current_language.'&cred-edit-form='.$cred_form_id; //CRED new form ID
+            }else{
+                $controls[$active_language['code']]['url'] = get_permalink($post_id).'&action=create_translation&trid='.$trid.'&to_lang='.$active_language['code'].'&source_lang='.$current_language.'&cred-edit-form='.$cred_form_id; //CRED new form ID
+            }
+        }
+
+        $controls[$active_language['code']]['language'] = $sitepress->get_display_language_name($active_language['code'], $current_language);
+        $controls[$active_language['code']]['flag'] = $sitepress->get_flag_url($active_language['code']);
+    }
+
+    return $controls;
+}
+
+/**
+ *  Get original content
+ *  
+ * @since 1.3
+ * @package WPML
+ * @subpackage WPML API
+ *
+ * @param int $post_id Post ID
+ * @param string $field Post field
+ *    
+ * @return string or array
+ *  */
+function wpml_get_original_content($post_id, $field, $field_name = false) {
+
+    $post = get_post($post_id);
+    switch ($field) {
+        case 'title':
+            return $post->post_title;
+            break;
+        case 'content':
+            return $post->post_content;
+            break;
+        case 'excerpt':
+            return $post->post_excerpt;
+            break;
+        case 'categories':             
+            $terms =  get_the_terms($post->ID, 'category');           
+            $taxs = array();
+            if($terms)
+            foreach ($terms as $term) {
+                $taxs[$term->term_taxonomy_id] = $term->name;
+            }
+            return $taxs;
+            break;
+        case 'tags':
+            $terms = get_the_terms($post->ID, 'post_tag');
+            $taxs = array();
+            if($terms)
+            foreach ($terms as $term) {
+                $taxs[$term->term_taxonomy_id] = $term->name;
+            }
+            return $taxs;
+            break;
+        case 'taxonomies':
+            return wpml_get_synchronizing_taxonomies($post_id,$field_name);
+            break;
+        case 'custom_fields':
+            return wpml_get_synchronizing_fields($post_id,$field_name);
+            break;
+        default:
+            break;
+    }
+
+    return WPML_API_ERROR;
+}
+
+/**
+ *  Get synchronizing taxonomies
+ *  
+ * @since 1.3
+ * @package WPML
+ * @subpackage WPML API
+ *
+ * @param int $post_id Post ID
+ *    
+ * @return array
+ *  */
+function wpml_get_synchronizing_taxonomies($post_id,$tax_name) {
+    global $wpdb, $sitepress_settings;
+    $taxs = array();
+    // get custom taxonomies
+    if (!empty($post_id)) {
+        $taxonomies = $wpdb->get_col("
+                SELECT DISTINCT tx.taxonomy 
+                FROM {$wpdb->term_taxonomy} tx JOIN {$wpdb->term_relationships} tr ON tx.term_taxonomy_id = tr.term_taxonomy_id
+                WHERE tr.object_id = {$post_id}
+            ");
+    
+        sort($taxonomies, SORT_STRING);
+
+        foreach ($taxonomies as $t) {
+            if ($tax_name == $t && @intval($sitepress_settings['taxonomies_sync_option'][$t]) == 1) {
+                foreach (wp_get_object_terms($post_id, $t) as $trm) {
+                    $taxs[$t][$trm->term_taxonomy_id] = $trm->name;
+                }
+            }
+        }
+}
+    return $taxs;
+}
+
+/**
+ *  Get synchronizing fields
+ *  
+ * @since 1.3
+ * @package WPML
+ * @subpackage WPML API
+ *
+ * @param int $post_id Post ID
+ * @param string $field_name Field name   
+ * @return array
+ *  */
+function wpml_get_synchronizing_fields($post_id,$field_name) {
+    global $sitepress_settings;
+    $custom_fields_values = array();
+    if (!empty($post_id)) {
+
+        if (is_array($sitepress_settings['translation-management']['custom_fields_translation'])) {
+            
+            foreach ($sitepress_settings['translation-management']['custom_fields_translation'] as $cf => $op) {
+                
+                if ($cf == $field_name && ($op == '2' || $op == '1')) {                  
+                    $values = get_post_meta($post_id, $cf, false);                   
+                    if (!empty($values)){
+                        foreach ($values as $key=>$value) {
+                            $custom_fields_values[$key] = $value;
+                        }
+                    }                     
+                }
+            }           
+          
+        }
+    }
+    return $custom_fields_values;
+}
+
 ?>

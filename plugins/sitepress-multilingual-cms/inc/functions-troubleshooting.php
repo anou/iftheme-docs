@@ -154,15 +154,24 @@ function _icl_ts_backup_table($table, $segment = 'none', $fp) {
                     foreach ($table_data as $row) {
                         $values = array();
                         foreach ($row as $key => $value) {
+                            
                             if ($ints[strtolower($key)]) {
                                 // make sure there are no blank spots in the insert syntax,
                                 // yet try to avoid quotation marks around integers
                                 $value = ( null === $value || '' === $value) ? $defs[strtolower($key)] : $value;
                                 $values[] = ( '' === $value ) ? "''" : $value;
                             } else {
-                                $values[] = "'" . str_replace($search, $replace, $wpdb->escape($value)) . "'";
+                                
+                                if(is_null($value)){
+                                    $values[] = 'NULL';
+                                }else{
+                                    $values[] = "'" . str_replace($search, $replace, esc_sql($value)) . "'";    
+                                    
+                                }
+                                
                             }
                         }
+                        
                         _icl_ts_stow(" \n" . $entries . implode(', ', $values) . ');', $fp);
                     }
                     $row_start += $row_inc;

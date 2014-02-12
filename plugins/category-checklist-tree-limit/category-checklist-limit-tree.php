@@ -10,7 +10,7 @@ Plugin URI: http://scribu.net/wordpress/category-checklist-tree
 
 class Category_Checklist_Limit {
 
-	function init() {
+	public static function init() {
 		add_filter( 'wp_terms_checklist_args', array( __CLASS__, 'checklist_args_limit' ) );
 	}
 

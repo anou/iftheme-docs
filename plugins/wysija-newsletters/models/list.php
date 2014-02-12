@@ -6,15 +6,15 @@ class WYSIJA_model_list extends WYSIJA_model{
     var $table_name='list';
     var $columns=array(
         'list_id'=>array('auto'=>true),
-        'name' => array('req'=>true,'type'=>"text"),
-        'namekey' => array('req'=>true,"type"=>"text"),
-        'description' => array("type"=>"text"),
-        'unsub_mail_id' => array("req"=>true,"type"=>"integer"),
-        'welcome_mail_id' => array("req"=>true,"type"=>"integer"),
-        'is_enabled' => array("req"=>true,"type"=>"boolean"),
-        'is_public' => array("req"=>true,"type"=>"boolean"),
-        'ordering' => array("req"=>true,"type"=>"integer"),
-        'created_at' => array("req"=>true,"type"=>"integer"),
+        'name' => array('req'=>true,'type'=>'text'),
+        'namekey' => array('req'=>true,'type'=>'text'),
+        'description' => array('type'=>'text'),
+        'unsub_mail_id' => array('req'=>true,'type'=>'integer'),
+        'welcome_mail_id' => array('req'=>true,'type'=>'integer'),
+        'is_enabled' => array('req'=>true,'type'=>'boolean'),
+        'is_public' => array('req'=>true,'type'=>'boolean'),
+        'ordering' => array('req'=>true,'type'=>'integer'),
+        'created_at' => array('req'=>true,'type'=>'integer'),
     );
     var $escapeFields=array('name','description');
     var $escapingOn=true;
@@ -36,81 +36,94 @@ class WYSIJA_model_list extends WYSIJA_model{
         return true;
     }
 
-    function getLists($id=false){
-
-        if($id){
-            $query='SELECT A.name, A.list_id, A.description, A.is_enabled, A.is_public, A.namekey
+    function get_one_list($list_id){
+        $query='SELECT A.name, A.list_id, A.description, A.is_enabled, A.is_public, A.namekey
                 FROM '.$this->getPrefix().'list as A
                 LEFT JOIN '.$this->getPrefix().'email as B on A.welcome_mail_id=B.email_id
-                WHERE A.list_id='.(int)$id;
-                $result=$this->getResults($query);
-                $this->escapeQuotesFromRes($result);
-                return $result[0];
-        }else{
-            $query='SELECT A.name, A.list_id, A.created_at, A.is_enabled, A.is_public, A.namekey, 0 as subscribers, 0 as campaigns_sent
-            FROM '.$this->getPrefix().'list as A';
-
-            $this->countRows=$this->count($query);
-
-            if(isset($this->_limitison) && $this->_limitison)  $query.=$this->setLimit();
-            $listres=$this->getResults($query);
-
-            $listids=array();
-            foreach($listres as $res) $listids[]=$res['list_id'];
-
-            //add the count of subscribers and unsubscribers
-            $qry='SELECT count(distinct A.user_id) as nbsub,A.list_id FROM `'.$this->getPrefix().'user_list` as A WHERE list_id IN ('.implode(',',$listids).')  GROUP BY list_id';
-            $qry1='SELECT count(distinct A.user_id) as total,B.status,A.list_id FROM `'.$this->getPrefix().'user_list` as A LEFT JOIN `'.$this->getPrefix().'user` as B on A.user_id=B.user_id WHERE list_id IN ('.implode(',',$listids).') and A.sub_date>0 and A.unsub_date=0 GROUP BY A.list_id,B.status';
-
-            $total=$this->getResults($qry);
-            $subscribed=$this->getResults($qry1);
-
-
-            foreach($total as $tot){
-                foreach($listres as $key=>$res){
-                    if($tot['list_id']==$res['list_id']) $listres[$key]['totals']=$tot['nbsub'];
-                }
-            }
-
-            //get the count of the subscribed people per list
-            foreach($subscribed as $subscriber){
-                foreach($listres as $key=>$res){
-                    if($subscriber['list_id']==$res['list_id']){
-                        if((int)$subscriber['status'] <0){
-                            if(!isset($listres[$key]['unsubscribers'])) $listres[$key]['unsubscribers']=0;
-                            $listres[$key]['unsubscribers']=$listres[$key]['unsubscribers']+$subscriber['total'];
-                        }elseif((int)$subscriber['status'] >0){
-                            if(!isset($listres[$key]['subscribers'])) $listres[$key]['subscribers']=0;
-                            $listres[$key]['subscribers']=$listres[$key]['subscribers']+$subscriber['total'];
-                        }else{
-                            if(!isset($listres[$key]['unconfirmed'])) $listres[$key]['unconfirmed']=0;
-                            $listres[$key]['unconfirmed']=$listres[$key]['unconfirmed']+$subscriber['total'];
-                        }
-                    }
-                }
-            }
-
-            $model_config=&WYSIJA::get('config','model');
-            foreach($listres as $key=>$res){
-                if(!isset($listres[$key]['unconfirmed'])) $listres[$key]['unconfirmed']=0;
-                if(!isset($listres[$key]['unsubscribers'])) $listres[$key]['unsubscribers']=0;
-                if(!isset($listres[$key]['subscribers'])) $listres[$key]['subscribers']=0;
-                if(!isset($listres[$key]['totals'])) $listres[$key]['totals']=0;
-                //if the double optin is not activated then we need to make the sum of the subscribed and unconfirmed
-                //this is a rare case but it happens
-                if(!$model_config->getValue('confirm_dbleoptin')){
-                    $listres[$key]['subscribers']+=$listres[$key]['unconfirmed'];
-                }
-            }
-
-
-
-
-            $this->escapeQuotesFromRes($listres);
-            return $listres;
-        }
-
+                WHERE A.list_id='.(int)$list_id;
+        $result = $this->getResults($query);
+        $this->escapeQuotesFromRes($result);
+        return $result[0];
     }
 
+    /**
+     * get the detail about list(s) total of subscribers, unsubscribers, unconfirmed etc
+     * @param int $list_id
+     * @return type
+     */
+    function getLists(){
+        $model_user = WYSIJA::get('user','model');
 
+        $query='SELECT A.`name`, A.`list_id`, A.`created_at`, A.`is_enabled`, A.`is_public`, A.`namekey`, 0 as subscribers, 0 as campaigns_sent
+        FROM '.$this->getPrefix().'list as A ORDER BY A.`name`';
+
+        $this->countRows=$this->count($query);
+
+        if(isset($this->_limitison) && $this->_limitison)  $query.=$this->setLimit();
+        $result_lists=$this->getResults($query);
+
+        $lists_details=array();
+
+        foreach($result_lists as $result){
+            $lists_details[$result['list_id']]=$result;
+        }
+
+        $list_ids = array_keys($lists_details);
+
+
+        $model_config = WYSIJA::get('config' , 'model');
+        if($model_config->getValue('speed_no_count')){
+            // we disable the count in order to speed up the process
+            $counts_per_list = array();
+        }else{
+            // these count requests can take a lot of time on big databases, we need to change the db diagram slightly to improve that
+            $counts_per_list = $model_user->count_users_per_list($list_ids);
+        }
+
+
+        // get the count of confirmed user per each and unconfirmed user per list
+        foreach($lists_details as $key_list_id => &$result){
+            if(isset($counts_per_list[$key_list_id])){
+                foreach($counts_per_list[$key_list_id] as $property => $value){
+                    $result[$property] = $value;
+                }
+            }
+        }
+
+
+        // we need to fill in the count value that will be used by the dropdown
+        // the value will depend on the status filter
+        foreach($lists_details as $key_list_id => &$result){
+
+            if(!isset($result['unsubscribers'])) $result['unsubscribers'] = 0;
+            if(!isset($result['subscribers'])) $result['subscribers'] = 0;
+            if(!isset($result['unconfirmed'])) $result['unconfirmed'] = 0;
+            if(!isset($result['belonging'])) $result['belonging'] = 0;
+
+            if(!empty($_REQUEST['link_filter'])){
+                switch($_REQUEST['link_filter']){
+                    case 'unsubscribed' :
+                        $result['users'] = $result['unsubscribers'];
+                        break;
+                    case 'subscribed' :
+                        $result['users'] = $result['subscribers'];
+                        break;
+                    case 'unconfirmed' :
+                        $result['users'] = $result['unconfirmed'];
+                        break;
+                    default :
+
+                        $result['users'] = $result['belonging'];
+                }
+            }else{
+                $result['users'] = $result['belonging'];
+            }
+
+        }
+
+
+        $this->escapeQuotesFromRes($lists_details);
+        return $lists_details;
+
+    }
 }

@@ -762,13 +762,13 @@ function _potx_find_t_calls_with_context($file, $save_callback, $function_name =
             }
             
             // exception for gettext calls with contexts
-            if(false !== $context_offset){
-                if(!preg_match('#^(\'|")(.+)#', $_potx_tokens[$ti+$context_offset][1])){
+            if(false !== $context_offset && isset($_potx_tokens[$ti+$context_offset])){
+                if(!preg_match('#^(\'|")(.+)#', @$_potx_tokens[$ti+$context_offset][1])){
                     $constant_val = @constant($_potx_tokens[$ti+$context_offset][1]);    
                     if(!is_null($constant_val)){
                         $context = $constant_val;                   
                     }else{
-                        if(function_exists($_potx_tokens[$ti+$context_offset][1])){
+                        if(function_exists(@$_potx_tokens[$ti+$context_offset][1])){
                             $context = @$_potx_tokens[$ti+$context_offset][1]();    
                             if(empty($context)){
                                 return false;

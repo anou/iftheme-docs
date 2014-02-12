@@ -12,13 +12,13 @@ msgstr ""
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 
-msgid "Updated %s translation is available for WordPress %s."
+msgid "Updated %s translation is available"
 msgstr ""
 
 msgid "Review changes and update"
 msgstr ""
 
-msgid "No newer versions found."
+msgid "No updates found."
 msgstr ""
 
 msgid "Failed downloading the language information file. Please go back and try a little later."
@@ -262,6 +262,9 @@ msgid "No options found. Make sure you saved your theme options at least once. <
 msgstr ""
 
 msgid "These are the strings that we found in your .po file. Please carefully review them. Then, click on the 'add' or 'cancel' buttons at the %sbottom of this screen%s. You can exclude individual strings by clearing the check boxes next to them."
+msgstr ""
+
+msgid "Name: %s"
 msgstr ""
 
 msgid "Add selected strings"
@@ -562,7 +565,4 @@ msgid "Translate custom posts slugs (via WPML String Translation)."
 msgstr ""
 
 msgid "Custom posts slug translation options"
-msgstr ""
-
-msgid "Slug translation is a new and experimental feature, which may not work in all permalink settings."
 msgstr ""

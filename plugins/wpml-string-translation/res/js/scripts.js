@@ -61,7 +61,7 @@ jQuery(document).ready(function(){
     jQuery('#icl_tl_rescan').click(iclThemeLocalizationRescan);
     jQuery('#icl_tl_rescan_p').submit(iclThemeLocalizationRescanP);
     
-    jQuery('.wpml_st_pop_download').live('click', icl_st_pop_download);
+    jQuery(document).delegate('.wpml_st_pop_download', 'click', icl_st_pop_download);
     
     jQuery('#icl_st_more_options').submit(iclSaveForm);
     jQuery('#icl_st_more_options').submit(
@@ -309,7 +309,7 @@ function icl_validate_po_upload(){
 }
 
 var icl_show_in_source_scroll_once = false;
-jQuery('#icl_show_source_wrap').live('mouseover', function(){
+jQuery(document).delegate('#icl_show_source_wrap', 'mouseover', function(){
     if(icl_show_in_source_scroll_once){
         icl_show_in_source(0, icl_show_in_source_scroll_once);
         icl_show_in_source_scroll_once = false;
@@ -524,8 +524,8 @@ var icl_auto_download_mo = {
         
         icl_auto_download_mo.list_form_setup();
         
-        jQuery('#icl_auto_download_mo').live('submit', icl_auto_download_mo.save_preferences);
-        jQuery('#icl_adm_update_check').live('click', icl_auto_download_mo.updates_check);
+        jQuery(document).delegate('#icl_auto_download_mo', 'submit', icl_auto_download_mo.save_preferences);
+        jQuery(document).delegate('#icl_adm_update_check', 'click', icl_auto_download_mo.updates_check);
         
     },
     
@@ -558,7 +558,7 @@ var icl_auto_download_mo = {
         
     list_form_setup: function(){
         
-        jQuery('#icl_admo_list_table thead :checkbox').live('change', function(){
+        jQuery(document).delegate('#icl_admo_list_table thead :checkbox', 'change', function(){
             if(jQuery(this).is(':checked')){
                 jQuery('#icl_admo_list_table :checkbox').attr('checked', 'checked');
             }else{

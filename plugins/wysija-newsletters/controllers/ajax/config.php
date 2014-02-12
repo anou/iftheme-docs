@@ -28,11 +28,11 @@ class WYSIJA_control_back_config extends WYSIJA_control{
         $configVal=$this->_convertPostedInarray();
 
         /*send a test mail*/
-        $hEmail=&WYSIJA::get('email','helper');
+        $hEmail=WYSIJA::get('email','helper');
         $res['result']=$hEmail->send_test_mail($configVal);
 
         if($res['result']){
-            $modelConf=&WYSIJA::get('config','model');
+            $modelConf=WYSIJA::get('config','model');
             $modelConf->save(array('sending_emails_ok'=>$res['result']));
         }
         $this->_hideErrors();
@@ -45,10 +45,10 @@ class WYSIJA_control_back_config extends WYSIJA_control{
         $configVal=$this->_convertPostedInarray();
 
         /*send a test mail*/
-        $hEmail=&WYSIJA::get('email','helper');
+        $hEmail=WYSIJA::get('email','helper');
         $res['result']=$hEmail->send_test_mail($configVal,true);
         if($res['result']){
-            $modelConf=&WYSIJA::get('config','model');
+            $modelConf=WYSIJA::get('config','model');
             $modelConf->save(array('ms_sending_emails_ok'=>$res['result']));
         }
         //$this->_hideErrors();
@@ -56,9 +56,10 @@ class WYSIJA_control_back_config extends WYSIJA_control{
     }
 
     function bounce_connect(){
+
         $configVal=$this->_convertPostedInarray();
         /*try to connect to thebounce server*/
-        $bounceClass=&WYSIJA::get('bounce','helper');
+        $bounceClass=WYSIJA::get('bounce','helper');
         $bounceClass->report = true;
         $res['result']=false;
         if($bounceClass->init($configVal)){
@@ -91,48 +92,29 @@ class WYSIJA_control_back_config extends WYSIJA_control{
         return $res;
     }
 
-
+    /**
+     * processing the bounce manually through the config
+     * @return type
+     */
     function bounce_process(){
+        // bounce handling
+        $helper_bounce = WYSIJA::get('bounce','helper');
 
-        @ini_set('max_execution_time',0);
+        // in a multisite case we process first the bounce recording into the bounce table
+        if(is_multisite()){
+            $helper_bounce->record_bounce_ms();
 
-        $config = &WYSIJA::get('config','model');
-        $bounceClass = &WYSIJA::get('bounce','helper');
-        $bounceClass->report = true;
-        if(!$bounceClass->init()){
-                $res['result']=false;
-                return $res;
-        }
-        if(!$bounceClass->connect()){
-                $this->error($bounceClass->getErrors());
-                $res['result']=false;
-                return $res;
-        }
-        $this->notice(sprintf(__('Successfully connected to %1$s'),$config->getValue('bounce_login')));
-        $nbMessages = $bounceClass->getNBMessages();
-
-
-        if(empty($nbMessages)){
-            $this->error(__('There are no messages'),true);
-            $res['result']=false;
-            return $res;
+            // then we take actions from what has been returned by the bounce
+            return $helper_bounce->process_bounce_ms();
         }else{
-            $this->notice(sprintf(__('There are %1$s messages in your mailbox'),$nbMessages));
+           return $helper_bounce->process_bounce();
         }
-
-
-        $bounceClass->handleMessages();
-        $bounceClass->close();
-
-        $res['result']=true;
-
-        return $res;
     }
 
     function linkignore(){
         $this->_displayErrors();
 
-        $modelConf=&WYSIJA::get('config','model');
+        $modelConf=WYSIJA::get('config','model');
 
         $ignore_msgs=$modelConf->getValue('ignore_msgs');
         if(!$ignore_msgs) $ignore_msgs=array();
@@ -149,7 +131,7 @@ class WYSIJA_control_back_config extends WYSIJA_control{
     function share_analytics() {
         $this->_displayErrors();
 
-        $model_config =& WYSIJA::get('config','model');
+        $model_config = WYSIJA::get('config','model');
         $model_config->save(array('analytics' => 1));
 
         $res['result'] = true;
@@ -158,7 +140,7 @@ class WYSIJA_control_back_config extends WYSIJA_control{
     }
 
     function validate(){
-        $helpLic=&WYSIJA::get('licence','helper');
+        $helpLic=WYSIJA::get('licence','helper');
         $res=$helpLic->check();
 
         if(!isset($res['result']))  $res['result']=false;
@@ -167,7 +149,7 @@ class WYSIJA_control_back_config extends WYSIJA_control{
 
     function devalidate(){
 
-        $modelCOnfig=&WYSIJA::get('config','model');
+        $modelCOnfig=WYSIJA::get('config','model');
         $res=$modelCOnfig->save(array('premium_key'=>false));
 
         if(!isset($res['result']))  $res['result']=false;
@@ -201,7 +183,7 @@ class WYSIJA_control_back_config extends WYSIJA_control{
             $json_data = str_replace('\"', '"', $decoded_data);
             $field = json_decode($json_data, true);
 
-            $helper_form_engine =& WYSIJA::get('form_engine', 'helper');
+            $helper_form_engine = WYSIJA::get('form_engine', 'helper');
             return base64_encode($helper_form_engine->render_editor_template($field));
         }
     }
@@ -214,7 +196,7 @@ class WYSIJA_control_back_config extends WYSIJA_control{
 
         if(strlen($form_name) > 0 && $form_id > 0) {
             // update the form name within the database
-            $model_forms =& WYSIJA::get('forms', 'model');
+            $model_forms = WYSIJA::get('forms', 'model');
             $model_forms->update(array('name' => $form_name), array('form_id' => $form_id));
         }
         return array('name' => $form_name);
@@ -291,7 +273,7 @@ class WYSIJA_control_back_config extends WYSIJA_control{
             $raw_data['form_id'] = $form_id;
 
             // set data in form engine so we can generate the render the web version
-            $helper_form_engine =& WYSIJA::get('form_engine', 'helper');
+            $helper_form_engine = WYSIJA::get('form_engine', 'helper');
             $helper_form_engine->set_data($raw_data);
 
             // check if the form has already been inserted in a widget and therefore display different success message
@@ -320,7 +302,7 @@ class WYSIJA_control_back_config extends WYSIJA_control{
             }
 
             // update form data in DB
-            $model_forms =& WYSIJA::get('forms', 'model');
+            $model_forms = WYSIJA::get('forms', 'model');
             $model_forms->reset();
             $result = $model_forms->update(array(
                 // get encoded data to store it in the database

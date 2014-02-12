@@ -62,8 +62,8 @@
                         return {
                                 longname : 'Wysija Custom Fields',
                                 author : 'Wysija',
-                                authorurl : 'http://www.wysija.com',
-                                infourl : 'http://www.wysija.com',
+                                authorurl : 'http://www.mailpoet.com',
+                                infourl : 'http://www.mailpoet.com',
                                 version : '0.2'
                         };
                 }

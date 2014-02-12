@@ -3,7 +3,7 @@ defined('WYSIJA') or die('Restricted access');
 class WYSIJA_view_front_confirm extends WYSIJA_view_front {
 
     function WYSIJA_view_front_confirm(){
-        $this->model=&WYSIJA::get('user','model');
+        $this->model=WYSIJA::get('user','model');
     }
 
     /**
@@ -15,7 +15,7 @@ class WYSIJA_view_front_confirm extends WYSIJA_view_front {
     function subscriptions($data){
         $this->addScripts(false);
         $content=$this->messages();
-        $formObj=&WYSIJA::get('forms','helper');
+        $formObj=WYSIJA::get('forms','helper');
 
         $content.='<form id="wysija-subscriptions" method="post" action="#wysija-subscriptions" class="form-valid">';
 
@@ -24,7 +24,7 @@ class WYSIJA_view_front_confirm extends WYSIJA_view_front {
         //user details */
 
         //do not show the email input if the subscriber is a wordPress user
-        $configm=&WYSIJA::get('config','model');
+        $configm=WYSIJA::get('config','model');
         $synchwp=$configm->getValue('importwp_list_id');
         $iswpsynched=false;
         foreach($data['user']['lists'] as $listdt){
@@ -103,7 +103,7 @@ class WYSIJA_view_front_confirm extends WYSIJA_view_front {
                 }
             }
 
-            $formObj=&WYSIJA::get('forms','helper');
+            $formObj=WYSIJA::get('forms','helper');
             foreach($data['list'] as $list){
                 $checked=false;
                 $extratext=$extraCheckbox=$hiddenField='';

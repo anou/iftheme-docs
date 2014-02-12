@@ -1,1 +1,1 @@
-jQuery(function(a){a(document).ready(function(){if(a(".form-valid")&&a(".form-valid")["validationEngine"]!==undefined){a(".form-valid").validationEngine("attach",{promptPosition:"topRight",scroll:false,validationEventTrigger:"submit"})}a('input[name="wysija[user][email]"]').blur(function(){a(this).val(trim(a(this).val()))})})});
+jQuery(function(i){i(document).ready(function(){i(".form-valid")&&void 0!==i(".form-valid").validationEngine&&i(".form-valid").validationEngine("attach",{promptPosition:"topRight",scroll:!1,validationEventTrigger:"submit"})})});

@@ -1,7 +1,8 @@
 /* CSS file for row dialog in the table plugin */
 
 .panel_wrapper div.current {
-	height: 200px;
+	min-height: 200px;
+	height: auto;
 }
 
 .advfield {

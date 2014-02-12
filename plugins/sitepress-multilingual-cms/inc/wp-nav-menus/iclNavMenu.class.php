@@ -65,7 +65,6 @@ class iclNavMenu{
         
         $this->get_current_menu();
         
-        
         if(isset( $_POST['action']) && $_POST['action'] == 'menu-get-metabox'){            
             $parts = parse_url($_SERVER['HTTP_REFERER']);
             @parse_str($parts['query'], $query);
@@ -73,6 +72,13 @@ class iclNavMenu{
                 $sitepress->switch_lang($query['lang']);    
             }
         }
+        
+        
+        if(isset($this->current_menu['language']) && $this->current_menu['language'] && $this->current_menu['language'] != $sitepress->get_default_language() && isset($_GET['menu']) && empty($_GET['lang'])){
+            wp_redirect(admin_url(sprintf('nav-menus.php?menu=%d&lang=%s',$this->current_menu['id'], $this->current_menu['language'])));    
+        }
+        
+        
             
         if(!empty($this->current_menu['language'])){
             $this->current_lang = $this->current_menu['language'];   
@@ -180,7 +186,7 @@ class iclNavMenu{
     */
     function _get_first_menu($lang){
         global $wpdb;
-        $menu_tt_id = $wpdb->get_var("SELECT MIN(element_id) FROM {$wpdb->prefix}icl_translations WHERE element_type='tax_nav_menu' AND language_code='".$wpdb->escape($lang)."'");    
+        $menu_tt_id = $wpdb->get_var("SELECT MIN(element_id) FROM {$wpdb->prefix}icl_translations WHERE element_type='tax_nav_menu' AND language_code='".esc_sql($lang)."'");    
         $menu_id = $wpdb->get_var($wpdb->prepare("SELECT term_id FROM {$wpdb->term_taxonomy} WHERE term_taxonomy_id=%d",$menu_tt_id));
         return (int) $menu_id;
     }
@@ -251,7 +257,12 @@ class iclNavMenu{
         global $sitepress, $wpdb;
         if($menu_data){
             if(isset($_POST['icl_translation_of']) && $_POST['icl_translation_of']){
-                $trid = $sitepress->get_element_trid($_POST['icl_translation_of'], 'tax_nav_menu');
+				$src_term_id = $_POST['icl_translation_of'];
+				if ($src_term_id != 'none') {
+					$trid = $sitepress->get_element_trid($_POST['icl_translation_of'], 'tax_nav_menu');
+				} else {
+					$trid = null;
+				}
             }else{
                 $trid = isset($_POST['icl_nav_menu_trid']) ? intval($_POST['icl_nav_menu_trid']) : null;                 
             }        
@@ -359,7 +370,8 @@ class iclNavMenu{
         
         // show 'translation of' if this element is not in the default language and there are untranslated elements
         $langsel .= '<span id="icl_translation_of_wrap">';
-        if($this->current_menu['language'] != $sitepress->get_default_language() && !empty($menus_wout_translation)){
+        
+        if($this->current_menu['id'] && $this->current_menu['language'] != $sitepress->get_default_language() && !empty($menus_wout_translation)){
             $langsel .= '<label class="menu-name-label howto"><span>' . __('Translation of:', 'sitepress') . '</span>';                
             if(!$this->current_menu['id'] && isset($_GET['trid'])){
                 $disabled = ' disabled="disabled"';
@@ -367,7 +379,7 @@ class iclNavMenu{
                 $disabled = '';
             }
             $langsel .= '<select name="icl_translation_of" id="icl_menu_translation_of"'.$disabled.'>';    
-            $langsel .= '<option value="">--' . __('none', 'sitepress') . '--</option>';                
+            $langsel .= '<option value="none">--' . __('none', 'sitepress') . '--</option>';
             foreach($menus_wout_translation as $mtrid=>$m){
                 if($this->current_menu['trid'] === $mtrid || (isset($this->current_menu['translations'][$sitepress->get_default_language()]) && $this->current_menu['translations'][$sitepress->get_default_language()]->element_id)){
                     $selected = ' selected="selected"';
@@ -588,19 +600,23 @@ class iclNavMenu{
     }
     
     function option_nav_menu_options($val){
-        global $wpdb;
+        global $wpdb, $sitepress;
         // special case of getting menus with auto-add only in a specific language
         $db = debug_backtrace();
         if(isset($db[4]) && $db[4]['function'] == '_wp_auto_add_pages_to_menu' && !empty($val['auto_add'])){
-            $post_lang = $_POST['icl_post_language'];
-            $val['auto_add'] = $wpdb->get_col("
-                SELECT element_id 
-                FROM {$wpdb->prefix}icl_translations 
-                WHERE element_type='tax_nav_menu' 
-                    AND element_id IN (".join(',',$val['auto_add']).")
-                    AND language_code = '{$post_lang}'");    
+            $post_lang = isset($_POST['icl_post_language']) ? $_POST['icl_post_language'] : (isset($_POST['lang']) ? $_POST['lang'] : false);
+
+			//$val['auto_add'] = false;
+			if($post_lang) {
+				$val['auto_add'] = $wpdb->get_col("
+					SELECT element_id
+					FROM {$wpdb->prefix}icl_translations
+					WHERE element_type='tax_nav_menu'
+						AND element_id IN (".join(',',$val['auto_add']).")
+						AND language_code = '{$post_lang}'");
+			}
         }
-        
+
         return $val;
     }
     

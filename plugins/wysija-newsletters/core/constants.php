@@ -14,7 +14,7 @@ $current_folder=dirname(dirname(__FILE__));
 if(!defined('DS')) define('DS', DIRECTORY_SEPARATOR);
 define('WYSIJA', $plugin_name);
 define('WYSIJAFUTURE','wysija-future');
-define('WYSIJA_PLG_DIR', dirname($current_folder).DS);
+if(!defined('WYSIJA_PLG_DIR')) define('WYSIJA_PLG_DIR', dirname($current_folder).DS);
 define('WYSIJA_DIR', $current_folder.DS);
 define('WYSIJA_DATA_DIR', WYSIJA_DIR.'data'.DS);
 define('WYSIJA_FILE',WYSIJA_DIR.'index.php');

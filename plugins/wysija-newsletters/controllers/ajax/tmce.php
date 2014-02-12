@@ -5,9 +5,25 @@ class WYSIJA_control_back_tmce extends WYSIJA_control{
     function WYSIJA_control_back_tmce(){
         if(!WYSIJA::current_user_can('wysija_subscriwidget')) die('Action is forbidden.');
         parent::WYSIJA_control();
-        $this->viewObj=&WYSIJA::get('tmce','view');
+        $this->viewObj=WYSIJA::get('tmce','view');
     }
 
+    function subscribersAdd(){
+        $this->viewObj->title=__('Insert Total of Subscribers',WYSIJA);
+        $data = array();
+        $data['lists'] = WYSIJA::get('list','model')->getLists();
+        foreach ($data['lists'] as $k => $list){
+            if (empty($list['is_enabled']) OR empty($list['is_public'])) unset($data['lists'][$k]);
+        }
+        $data['confirm_dbleoptin'] = WYSIJA::get('config','model')->getValue('confirm_dbleoptin');
+        
+        $this->viewObj->subscribersAdd($data);
+        exit;        
+    }
+    
+    function subscribersEdit(){
+        
+    }
 
     function registerAdd(){
         $this->viewObj->title=__('Insert Subscription Form',WYSIJA);
@@ -35,13 +51,13 @@ class WYSIJA_control_back_tmce extends WYSIJA_control{
             // we need a title to identify the form
             $data_widget['title'] = 'Form on '.$post->post_type.': '.$post->post_title;
 
-            $model_forms =& WYSIJA::get('forms', 'model');
+            $model_forms = WYSIJA::get('forms', 'model');
             $model_forms->reset();
             $form = $model_forms->getOne(false,array('name' => $data_widget['title']));
 
             // this form doesn't exist yet in the new format so let's try to import it
             if(empty($form)){
-                $helper_update=&WYSIJA::get('update','helper');
+                $helper_update=WYSIJA::get('update','helper');
 
                 $form_id = $helper_update->convert_widget_to_form($data_widget);
                 if($form_id!==false) {
@@ -114,7 +130,6 @@ class WYSIJA_control_back_tmce extends WYSIJA_control{
 
         }
 
-        //dbg($datawidget,0);
         if(!isset($data_widget['customfields']) && isset($data_widget['labelswithin']) && $data_widget['labelswithin']=='labels_within'){
             $data_widget['customfields']=array('email'=>array('label'=>__('Email',WYSIJA)));
         }

@@ -1,5 +1,9 @@
 <?php
 
+if(function_exists('wpml_home_url_ls_hide_check') && wpml_home_url_ls_hide_check()){
+    return;
+}
+
 global $w_this_lang;
 
 
@@ -25,7 +29,7 @@ if(empty($main_language)){
     <ul>
         <li><a href="#" class="lang_sel_sel icl-<?php echo $w_this_lang['code'] ?>">
             <?php if( $this->settings['icl_lso_flags'] || $icl_language_switcher_preview):?>                
-            <img <?php if( !$this->settings['icl_lso_flags'] ):?>style="display:none"<?php endif?> class="iclflag" src="<?php echo $main_language['country_flag_url'] ?>" alt="<?php echo $main_language['language_code'] ?>"  title="<?php echo $this->settings['icl_lso_native_lang'] ? esc_attr($main_language['native_name']) : esc_attr($main_language['translated_name']) ; ?>" />                                
+            <img <?php if( !$this->settings['icl_lso_flags'] ):?>style="display:none"<?php endif?> class="iclflag" src="<?php echo $main_language['country_flag_url'] ?>" alt="<?php echo $main_language['language_code'] ?>"  title="<?php echo $this->settings['icl_lso_display_lang'] ? esc_attr($main_language['translated_name']) : esc_attr($main_language['native_name']) ; ?>" />                                
             &nbsp;<?php endif;
                 if($icl_language_switcher_preview){
                     $lang_native = $main_language['native_name'];
@@ -65,9 +69,9 @@ if(empty($main_language)){
                 <?php $active_languages_ordered = $this->order_languages($active_languages); ?>
                 <?php foreach($active_languages_ordered as $lang): ?>
                 <li class="icl-<?php echo $lang['language_code'] ?>">          
-                    <a rel="alternate" hreflang="<?php echo $lang['language_code'] ?>" href="<?php echo apply_filters('WPML_filter_link', $lang['url'], $lang)?>">
+                    <a href="<?php echo apply_filters('WPML_filter_link', $lang['url'], $lang)?>">
                     <?php if( $this->settings['icl_lso_flags'] || $icl_language_switcher_preview):?>                
-                    <img <?php if( !$this->settings['icl_lso_flags'] ):?>style="display:none"<?php endif?> class="iclflag" src="<?php echo $lang['country_flag_url'] ?>" alt="<?php echo $lang['language_code'] ?>" title="<?php echo $this->settings['icl_lso_native_lang'] ? esc_attr($lang['native_name']) : esc_attr($lang['translated_name']) ; ?>" />&nbsp;                    
+                    <img <?php if( !$this->settings['icl_lso_flags'] ):?>style="display:none"<?php endif?> class="iclflag" src="<?php echo $lang['country_flag_url'] ?>" alt="<?php echo $lang['language_code'] ?>" title="<?php echo $this->settings['icl_lso_display_lang'] ? esc_attr($lang['translated_name']) : esc_attr($lang['native_name']) ; ?>" />&nbsp;                    
                     <?php endif; ?>
                     <?php 
                         if($icl_language_switcher_preview){

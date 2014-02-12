@@ -21,7 +21,7 @@ class WPML_ST_MO_Downloader{
         while(list($locale, $code) = fgetcsv($fh)){
             $this->lang_map[$locale] = $code;            
         }   
-        $this->lang_map_rev =& array_flip($this->lang_map);
+        $this->lang_map_rev = array_flip($this->lang_map);
          
          
         $this->settings = get_option('icl_adl_settings');

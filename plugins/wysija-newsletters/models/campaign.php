@@ -24,13 +24,13 @@ class WYSIJA_model_campaign extends WYSIJA_model{
         $where_condition=array('email_id'=>$email_id);
 
         $data=array();
-        $model_email=&WYSIJA::get('email','model');
+        $model_email=WYSIJA::get('email','model');
         $data['email']=$model_email->getOne(false,$where_condition);
 
         $data['campaign']=$this->getOne(false,array('campaign_id'=>$data['email']['campaign_id']));
 
 
-        $model_campaign_list=&WYSIJA::get('campaign_list','model');
+        $model_campaign_list=WYSIJA::get('campaign_list','model');
         $data['campaign']['lists']['full']=$model_campaign_list->get(array('list_id','filter'),array('campaign_id'=>$data['email']['campaign_id']));
 
         foreach($data['campaign']['lists']['full'] as $list){

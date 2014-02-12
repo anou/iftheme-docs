@@ -1,20 +1,38 @@
 <?php
 defined('WYSIJA') or die('Restricted access');
 class WYSIJA_help_email extends WYSIJA_object{
+
     function WYSIJA_help_email(){
+
     }
 
-    
+
+    /**
+     * used to strip the unsubscribe links and the view in browser links from an email html
+     * @param type $content
+     * @return type
+     */
     function stripPersonalLinks($content){
 
+        //delete the view in browser span
         $content = preg_replace('#<td id="wysija_viewbrowser_content"[^>]*>(.*)</td>#Uis','',$content);
 
+        //delete the unsubscribe td
         $content = preg_replace('#<td id="wysija_unsubscribe_content"[^>]*>(.*)</td>#Uis','',$content);
+
         return $content;
+
     }
-    
+
+    /**
+     *
+     * @param array $values configuration form's current values
+     * @param boolean $testMultisite test the multisite configuration
+     * @return boolean
+     */
     function send_test_mail($values,$testMultisite=false){
         $content_email=__('Yup, it works. You can start blasting away emails to the moon.',WYSIJA);
+
         $options=array(
             'sending_method'=>'sending_method',
             'sending_emails_site_method'=>'sending_emails_site_method',
@@ -26,12 +44,15 @@ class WYSIJA_help_email extends WYSIJA_object{
             'smtp_auth'=>'smtp_auth',
         );
 
+        //add a prefix to each option if we are in ms test case
         if($testMultisite){
             $is_multisite=is_multisite();
 
+            //$is_multisite=true;//PROD comment that line
             if(!$is_multisite) return false;
             foreach($options as &$option) $option='ms_'.$option;
         }
+
         switch($values[$options['sending_method']]){
             case 'site':
                 if($values[$options['sending_emails_site_method']]=='phpmail'){
@@ -44,50 +65,62 @@ class WYSIJA_help_email extends WYSIJA_object{
             case 'smtp':
                 $smtp=array();
                 $send_method='SMTP';
-                $config=&WYSIJA::get('config','model');
+                $config=WYSIJA::get('config','model');
                 if(!isset($values[$options['smtp_rest']])) unset($config->values[$options['smtp_rest']]);
                 break;
             case 'gmail':
                 $send_method='Gmail';
+
                 $values[$options['smtp_host']]='smtp.gmail.com';
                 $values[$options['smtp_port']]='465';
                 $values[$options['smtp_secure']]='ssl';
                 $values[$options['smtp_auth']]=true;
+
                 $content_email=__('You\'re all setup! You\'ve successfully sent with Gmail.',WYSIJA).'<br/><br/>';
                 $content_email.=str_replace(
                         array('[link]','[/link]'),
-                        array('<a href="http://support.wysija.com/knowledgebase/send-with-smtp-when-using-a-professional-sending-provider/" target="_blank" title="SendGrid partnership">','</a>'),
+                        array('<a href="http://support.mailpoet.com/knowledgebase/send-with-smtp-when-using-a-professional-sending-provider/?utm_source=wpadmin&utm_campaign=test_email_result" target="_blank" title="SendGrid partnership">','</a>'),
                         __('Looking for a faster method to send? [link]Read more[/link] on sending with a professional SMTP.',WYSIJA));
                 break;
         }
-        $mailer=&WYSIJA::get('mailer','helper');
+
+        $mailer=WYSIJA::get('mailer','helper');
         $mailer->WYSIJA_help_mailer('',$values,$testMultisite);
+
         $current_user=WYSIJA::wp_get_userdata();
         $mailer->testemail=true;
         $mailer->wp_user=&$current_user->data;
+
         $res=$mailer->sendSimple($current_user->data->user_email,str_replace('[send_method]',$send_method,__('[send_method] works with Wysija',WYSIJA)),$content_email);
+
         if($res){
             $this->notice(sprintf(__('Test email successfully sent to %s',WYSIJA),'<b><i>'.$current_user->data->user_email.'</i></b>'));
             return true;
         }else{
-            $config=&WYSIJA::get('config','model');
+            $config=WYSIJA::get('config','model');
             $bounce = $config->getValue('bounce_email');
             if(in_array($config->getValue('sending_method'),array('smtp','gmail')) && $config->getValue('smtp_secure')=='ssl' && !function_exists('openssl_sign')){
                 $this->error(__('The PHP Extension openssl is not enabled on your server. Ask your host to enable it if you want to use an SSL connection.',WYSIJA));
             }elseif(!empty($bounce) AND !in_array($config->getValue('sending_method'),array('smtp_com','elasticemail'))){
                 $this->error(sprintf(__('The bounce email address "%1$s" might actually cause the problem. Leave the field empty and try again.',WYSIJA),$bounce));
-
+            //Case 2 : you are using SMTP but you didn't add an authentification
             }elseif(in_array($config->getValue('sending_method'),array('smtp','gmail')) AND !$config->getValue('smtp_auth') AND strlen($config->getValue('smtp_password')) > 1){
                 $this->error(__('You specified an SMTP password but you don\'t require an authentification, you might want to turn the SMTP authentification ON.',WYSIJA));
-
+            //Case 3 : you are on localhost!
             }elseif((strpos(WYSIJA_URL,'localhost') || strpos(WYSIJA_URL,'127.0.0.1')) && in_array($config->getValue('sending_method'),array('sendmail','qmail','mail'))){
                 $this->error(__('Your localhost may not have a mail server. To verify, please log out and click on the "Lost your password?" link on the login page. Do you receive the reset password email from your WordPress?',WYSIJA));
             }
+
             $this->error($mailer->reportMessage);
             return false;
         }
     }
-    
+
+    /**
+     * get view in browser link
+     * @param array $dataEmail
+     * @return string url
+     */
     function getVIB($dataEmail){
         if(false && isset($dataEmail['params']['vib_id'])) return WYSIJA::get_permalink($dataEmail['params']['vib_id'],false);
         else{
@@ -97,16 +130,24 @@ class WYSIJA_help_email extends WYSIJA_object{
                 'action'=>'view',
                 'email_id'=>$dataEmail['email_id']
                 );
-            $modelConf=&WYSIJA::get('config','model');
+
+            $modelConf=WYSIJA::get('config','model');
             return WYSIJA::get_permalink($modelConf->getValue('confirm_email_link'),$paramsurl);
         }
     }
-    
+
+    /**
+     * return an array of active follow_ups
+     * @param type $data
+     * @param boolean $delay calculate delay and add it to the result
+     */
     function get_active_follow_ups($data=array('subject','params'),$delay=false){
-        if($delay)  $model_queue=&WYSIJA::get('queue','model');
-        $model_email=&WYSIJA::get('email','model');
+        if($delay)  $model_queue=WYSIJA::get('queue','model');
+
+        $model_email=WYSIJA::get('email','model');
         $model_email->setConditions(array('type'=>2,'status'=>99));
         $automatic_emails=$model_email->getRows($data);
+
         $follow_ups_per_list=array();
         foreach($automatic_emails as &$auto_email){
             $model_email->getParams($auto_email);
@@ -116,6 +157,7 @@ class WYSIJA_help_email extends WYSIJA_object{
                 $follow_ups_per_list[$auto_email['params']['autonl']['subscribetolist']][]=$auto_email;
             }
         }
+
         return $follow_ups_per_list;
     }
 }

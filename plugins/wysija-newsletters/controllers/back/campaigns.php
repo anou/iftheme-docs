@@ -8,6 +8,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
     var $list_columns=array('campaign_id','name', 'description');
     var $searchable=array('name', 'description');
     var $filters=array();
+    var $base_url = 'admin.php';
 
     function WYSIJA_control_back_campaigns(){
 
@@ -22,39 +23,67 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
     function welcome_new(){
         $this->title=$this->viewObj->title=__('Welcome Page!',WYSIJA);
         $this->jsTrans['instalwjp']=__('Installing Wysija Newsletter Premium plugin',WYSIJA);
-        $hReadme=&WYSIJA::get('readme','helper');
-        $hReadme->scan();
+        $helper_readme=WYSIJA::get('readme','helper');
+        $helper_readme->scan();
         $this->data=array();
-        $this->data['abouttext']=__('A Brand New Wysija. Let the Fun Begin.',WYSIJA);
+        $this->data['abouttext'] = __('A Brand New Wysija. Let the Fun Begin.',WYSIJA);
 
-        $mConfig=&WYSIJA::get('config','model');
+        $model_config=WYSIJA::get('config','model');
         $is_multisite=is_multisite();
         $is_network_admin=WYSIJA::current_user_can('manage_network');
         if($is_multisite && $is_network_admin){
-            $mConfig->save(array('ms_wysija_whats_new'=>WYSIJA::get_version()));
+            $model_config->save(array('ms_wysija_whats_new'=>WYSIJA::get_version()));
         }else{
-            $mConfig->save(array('wysija_whats_new'=>WYSIJA::get_version()));
+            $model_config->save(array('wysija_whats_new'=>WYSIJA::get_version()));
         }
 
         //add a new language code with a new video
         $video_language=array();
-        $video_language['en_EN']='http://www.youtube.com/embed/pYzaHDTg5Jk';
-        $video_language['fr_FR']='http://www.youtube.com/embed/W5EyW5w7aWQ';
-        $video_language['sv_SE']='http://www.youtube.com/embed/O8_t_dekx74';
-        $video_language['ar']='http://www.youtube.com/embed/cyDHlX_qgOo';
+        $video_language['en_EN'] = '<iframe width="853" height="480" src="http://www.youtube.com/embed/pYzaHDTg5Jk" frameborder="0" allowfullscreen></iframe>';
+        $video_language['en_EN'] = '<iframe src="//player.vimeo.com/video/81479899" width="500" height="281" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>';
+        $video_language['fr_FR'] = '<iframe width="853" height="480" src="http://www.youtube.com/embed/W5EyW5w7aWQ" frameborder="0" allowfullscreen></iframe>';
+        $video_language['sv_SE']='<iframe width="853" height="480" src="http://www.youtube.com/embed/O8_t_dekx74" frameborder="0" allowfullscreen></iframe>';
+        $video_language['ar']='<iframe width="853" height="480" src="http://www.youtube.com/embed/cyDHlX_qgOo" frameborder="0" allowfullscreen></iframe>';
 
-        if(defined('WPLANG') && WPLANG!='' && isset($video_language[WPLANG])){
-            $welcome_video_link=$video_language[WPLANG];
+        $wp_lang = get_locale();
+        if(!empty($wp_lang) && isset($video_language[$wp_lang])){
+            $welcome_video_link = $video_language[$wp_lang];
         }else{
-            $welcome_video_link=$video_language['en_EN'];
+            $welcome_video_link = $video_language['en_EN'];
         }
+
+        $this->data['sections'][]=array(
+            'title'=>__('Hey, we\'re curious! How did you find out about us?',WYSIJA).'<span id="poll_result"></span>',
+            'format'=>'normal',
+            'paragraphs'=>array(
+                    '<ul class="welcome_poll">
+                        <li>
+                            <input type="radio" id="how_did_you_find_us_1" value="repository" name="how_did_you_find_us">
+                            <label value="lab1" for="how_did_you_find_us_1">'.__('WordPress.org plugin repository',WYSIJA).'</label>
+                        </li>
+                        <li>
+                            <input type="radio" id="how_did_you_find_us_2" value="search_engine" name="how_did_you_find_us">
+                            <label value="lab2" for="how_did_you_find_us_2">'.__('Google or other search engine',WYSIJA).'</label>
+                        </li>
+                        <li>
+                            <input type="radio" id="how_did_you_find_us_3" value="friend" name="how_did_you_find_us">
+                            <label value="lab3" for="how_did_you_find_us_3">'.__('Friend recommendation',WYSIJA).'</label>
+                        </li>
+                        <li>
+                            <input type="radio" id="how_did_you_find_us_4" value="url" name="how_did_you_find_us">
+                            <label value="lab4" for="how_did_you_find_us_4">'.__('Blog post, online review, forum:',WYSIJA).'</label>
+                            <input type="text" id="how_did_you_find_us_4_url"  name="how_did_you_find_us_url" placeholder="'.__('Please enter the address where you\'ve found out about us',WYSIJA).'">
+                        </li>
+                    </ul>'
+                )
+            );
 
         $this->data['sections'][]=array(
             'title'=>__('First Time? See it in Action',WYSIJA),
             'format'=>'normal',
             'paragraphs'=>array(
                     __('You can start by watching this video by one of our users.',WYSIJA),
-                    '<iframe width="853" height="480" src="'.$welcome_video_link.'" frameborder="0" allowfullscreen></iframe>'
+                    $welcome_video_link
                 )
             );
 
@@ -64,22 +93,22 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
                  array(
                     'title'=>__('5 minute newbie guide',WYSIJA),
                     'content'=>__('Your Wysija comes with an example newsletter. You\'ll see it when you close this welcome page. Edit it to start playing with it.',WYSIJA)
-            ),
+                    ),
                 array(
                     'title'=>__('Share your data',WYSIJA),
                     'content'=>  str_replace(
                             array('[link]', '[/link]', '[ajaxlink]', '[/ajaxlink]'),
-                            array('<a title="Anonymous Data" target="_blank" href="http://support.wysija.com/knowledgebase/share-your-data/">', '</a>', '<a id="share_analytics" href="javascript:;">', '</a>'),
+                            array('<a title="Anonymous Data" target="_blank" href="http://support.mailpoet.com/knowledgebase/share-your-data/?utm_source=wpadmin&utm_campaign=welcome_page">', '</a>', '<a id="share_analytics" href="javascript:;">', '</a>'),
                             __("We know too little about our users. We're looking for [link]anonymous data[/link] to build a better plugin. [ajaxlink]Yes, count me in![/ajaxlink]",WYSIJA))
-            ),
+                    ),
                 array(
                     'title'=>__('Help yourself. Or let us help you.',WYSIJA),
                     'content'=>  str_replace(
                             array('[link]','[/link]'),
-                            array('<a href="http://support.wysija.com/" target="_blank" title="On our blog!">','</a>'),
-                            __('We got documentation and a ticket system on [link]support.wysija.com[/link]. We answer within 24h.',WYSIJA))
-            )
-            ),
+                            array('<a href="http://support.mailpoet.com/" target="_blank" title="On our blog!">','</a>'),
+                            __('We got documentation and a ticket system on [link]support.mailpoet.com[/link]. We answer within 24h.',WYSIJA))
+                    )
+                ),
             'format'=>'three-col',
         );
 
@@ -89,7 +118,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
             'paragraphs'=>array(
             str_replace(
                     array('[link]','[/link]'),
-                    array('<a href="http://www.wysija.com/you-want-to-help-us-out/" target="_blank">','</a>'),
+                    array('<a href="http://www.mailpoet.com/you-want-to-help-us-out/" target="_blank">','</a>'),
                     __('So who are we? We\'re 4 guys who decided in 2011 that WordPress needed a better emailing solution. The tag line <em>What You Send Is Just Awesome</em> was born and the acronym Wysija became our name. If you like what we do, make sure [link]you spread the good word[/link].',WYSIJA))
                 )
         );
@@ -97,16 +126,6 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         $this->viewObj->skip_header=true;
 
         return true;
-    }
-
-    /**
-     * Sometimes our users have a bug where not all of the users from their list are showing up when sending, this is the action to call to fix it
-     * this is very rare.
-     */
-    function fix_lists(){
-        $hUpdate=&WYSIJA::get('update','helper');
-        $hUpdate->customerRequestMissingSubscriber();
-        exit;
     }
 
 
@@ -118,14 +137,16 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
 
         $this->title=$this->viewObj->title=__('What\'s new?',WYSIJA);
         $this->jsTrans['instalwjp']=__('Installing Wysija Newsletter Premium plugin',WYSIJA);
-        $helper_readme=&WYSIJA::get('readme','helper');
+        $helper_readme=WYSIJA::get('readme','helper');
         $helper_readme->scan();
         $this->data=array();
         $this->data['abouttext']=__('You updated! It\'s like having the next gadget, but better.',WYSIJA);
+        // this is a flag to have a pretty clean update page where teh only call to action is our survey
+        $show_survey=false;
 
         $is_multisite=is_multisite();
         $is_network_admin=WYSIJA::current_user_can('manage_network');
-        $model_config=&WYSIJA::get('config','model');
+        $model_config=WYSIJA::get('config','model');
 
         if($is_multisite){
             if($is_network_admin){
@@ -137,28 +158,32 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
 
 
         $major_release=true;
+
+        // those are point release exceptions for which we were advertising the features. we probably can remove that now
         $except_version=array('2.4.1', '2.4.2');
         $wysija_version=WYSIJA::get_version();
         if(!in_array($wysija_version,$except_version) && count(explode('.', $wysija_version))>2) $major_release=false;
+
+
 
         if($major_release){
            $this->data['sections'][]=array(
                 'title'=>__('Added',WYSIJA),
                 'cols'=>array(
                 	array(
-                        'title'=>__('Your data... tada!',WYSIJA),
+                        'title'=>__('Better subscriber management',WYSIJA),
+                        'content'=>__('New batch actions: move, add & remove from lists. Confirm the unconfirmed. Select all subscribers in 1 click. Powerful.',WYSIJA)
+                	),
+                    array(
+                        'title'=>__('Undo unsubscribe',WYSIJA),
+                        'content'=>__('A subscriber mistakenly hit the unsubscribe link in your newsletter? He can now undo this in 1 click. Hurray.',WYSIJA)
+                	),
+                    array(
+                        'title'=>__('Switch to beta',WYSIJA),
                         'content'=>  str_replace(
-                                array('[link]', '[/link]', '[ajaxlink]', '[/ajaxlink]'),
-                                array('<a title="Open in new tab" target="_blank" href="http://support.wysija.com/knowledgebase/share-your-data/">', '</a>', '<a id="share_analytics" href="javascript:;">', '</a>'),
-                                __("We're looking for [link]anonymous data[/link] to build a better plugin. [ajaxlink]<strong>Yes, count me in!</strong>[/ajaxlink]",WYSIJA))
-                	),
-                    array(
-                        'title'=>__('Edit the HTML of your text blocks',WYSIJA),
-                        'content'=>__('You can now edit the HTML of text blocks in the visual editor. Activate this option in the Settings first.',WYSIJA)
-                	),
-                    array(
-                        'title'=>__('Improving the forms',WYSIJA),
-                        'content'=>__('This is a first step in several improvements to the subscription forms. Find your forms in your Settings.',WYSIJA)
+                                array('[link]', '[/link]'),
+                                array('<a href="admin.php?page=wysija_config&amp;scroll_to=beta_mode_setting#tab-advanced">', '</a>'),
+                                __('And make a difference. We\'re looking for feedback and bug reports on our upcoming features. [link]Activate the beta in your settings.[/link]',WYSIJA))
                 	),
                 ),
                 'format'=>'three-col',
@@ -169,34 +194,99 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
                 'title'=>__('Improved',WYSIJA),
                 'cols'=>array(
                     array(
-                        'title'=>__('Timely autoresponders',WYSIJA),
-                        'content'=>"Send an email to a new subscriber... now works with imported subscribers. Moreover, it works retroactively as well."
+                        'title'=>__('MS: bounce, only once',WYSIJA),
+                        'content'=>__( 'Premium user on Multisite? Enjoy configuring the automated bounce for all sites, once. Too easy.', WYSIJA)
                 	),
                 	array(
-                        'title'=>__('In your language',WYSIJA),
-                        'content'=>  str_replace(
-                                array('[link]', '[/link]'),
-                                array('<a title="Open in new tab" target="_blank" href="https://www.transifex.com/projects/p/wysija/">', '</a>'),
-                                __('Our translations are getting better. But we\'re always looking for experienced translators. We give out Wysija Premium in exchange. [link]Join the translation teams[/link].',WYSIJA))
+                        'title'=>__('Don\'t like my style?',WYSIJA),
+                        'content'=>__('Well too bad! Remove the Styles and Themes tab in the visual editor for your site\'s other users. See the Advanced Settings.',WYSIJA)
                 	),
                     array(
-                        'title'=>__('Dozen of bug fixes',WYSIJA),
-                        'content'=>__('Thanks to all for your feedback. We\'re able to improve our plugin for everybody. Keep it coming.',WYSIJA)
-                	)
+                        'title'=>__('Share your data, help Wysija',WYSIJA),
+                        'content'=>  str_replace(
+                                array('[link]', '[/link]', '[ajaxlink]', '[/ajaxlink]'),
+                                array('<a title="Open in new tab" target="_blank" href="http://support.mailpoet.com/knowledgebase/share-your-data/?utm_source=wpadmin&utm_campaign=update_page">', '</a>', '<a id="share_analytics" href="javascript:;">', '</a>'),
+                                __("We're looking for [link]anonymous data[/link] to build a better plugin. [ajaxlink]<strong>Yes, count me in!</strong>[/ajaxlink]",WYSIJA))
+                	),
                 ),
                 'format'=>'three-col',
             );
+        }elseif($show_no_survey_or_poll = false){ //turn that into a simple else when you want to use the survey or polls again
+            $show_survey=true;
+
+            if($show_survey){
+                $this->data['sections'][] = array(
+                    'title' => __('4 min survey to better understand what you need',WYSIJA),
+                    'type' => 'survey'
+                );
+            }else{ // this is the part about the survey
+                // list of polls from poll daddy
+                $polls=array();
+                $polls[7177099]=__('Where do you send your newsletters?', WYSIJA);
+                $polls[7199642]=__('How many users on this site create and send newsletters?', WYSIJA);
+                $polls[7199625]=__('You\'re installing this plugin for...', WYSIJA);
+                $polls[7196766]=__('How would you feel if you could no longer use us?', WYSIJA);
+                $polls[7196752]=__('Pick one improvement which is an absolute must', WYSIJA);
+                $polls[7196784]=__('If our Premium was sold as a monthly payment, instead of a yearly payment, would you consider purchasing it?', WYSIJA);
+                $polls[7196911]=__('On how many sites have you installed our plugin in the last year?', WYSIJA);
+                $polls[7196646]=__('How many WordPress sites do you create every year?', WYSIJA);
+                $polls[7196742]=__('When you installed our plugin, it was to...', WYSIJA);
+                $polls[7196756]=__('How did you find out about Wysija?', WYSIJA);
+                $polls[7196770]=__('How much money did you spend on Premium themes or plugins in the past year?', WYSIJA);
+                $polls[7196783]=__('What other emailing solutions do you use?', WYSIJA);
+                $polls[7196798]=__('What\'s the most annoying thing with our current version?', WYSIJA);
+                $polls[7196805]=__('Have you had problems with your newsletters being marked as spam?', WYSIJA);
+
+                // get the list of polls with the number of views for each
+                $polls_views=get_option('wysija_polls_views');
+                if(empty($polls_views)){
+                    $polls_views=array();
+                    // this one has been the first poll we've used so we consider that everyone viewed it already once
+                    $polls_views[7177099]=1;
+                }
+
+
+                // make sure that we record each poll
+                foreach($polls as $poll_id => $poll_title){
+                    if(!isset($polls_views[$poll_id])) $polls_views[$poll_id]=0;
+                }
+
+                // group polls by total view
+                $polls_grouped_by_total_view = array();
+                foreach($polls_views as $pollid =>$views){
+                    $polls_grouped_by_total_view[$views][]=$pollid;
+                }
+                // order them
+                ksort($polls_grouped_by_total_view);
+
+                // get the series of polls that has been viewed the least
+                $polls_with_least_views = array_shift($polls_grouped_by_total_view);
+
+                // pull one poll out of that array
+                $random_key = array_rand($polls_with_least_views);
+                $poll_id_selected = $polls_with_least_views[$random_key];
+                $polls_views[$poll_id_selected]++;
+
+                WYSIJA::update_option('wysija_polls_views', $polls_views);
+
+                $this->data['polls'][$poll_id_selected]= $polls[$poll_id_selected];
+                // poll
+                $this->data['sections'][] = array(
+                    'title' => __('A new poll to get to know you better', WYSIJA),
+                    'type' => 'poll'
+                );
+            }
         }
 
         $msg=$model_config->getValue('ignore_msgs');
-        if(!isset($msg['ctaupdate'])){
+        if(!isset($msg['ctaupdate']) && !$show_survey){
             $this->data['sections'][]=array(
                 'title'=>__('Keep this plugin essentially free',WYSIJA),
                 'review'=>array(
                         'title'=>'1. '.__('Love kittens?',WYSIJA).' '.__('We love stars...',WYSIJA),
                         'content'=>str_replace(
                                 array('[link]','[/link]'),
-                                array('<a href="http://wordpress.org/support/view/plugin-reviews/wysija-newsletters" target="_blank" title="On wordpress.org">','</a>'),
+                                array('<a href="http://goo.gl/D52CBL" target="_blank" title="On wordpress.org">','</a>'),
                                 __('Each time one of our users forgets to write a review, a kitten dies. It\'s sad and breaks our hearts. [link]Add your own review[/link] and save a kitten today.',WYSIJA))
 
 
@@ -215,11 +305,15 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
 
 
 
-        $this->data['sections'][]=array(
-            'title'=>'Change log',
+        if(isset($helper_readme->changelog[WYSIJA::get_version()])){
+            $this->data['sections'][]=array(
+            'title'=>__('Change log', WYSIJA),
             'format'=>'bullets',
             'paragraphs'=>$helper_readme->changelog[WYSIJA::get_version()]
             );
+        }
+
+
 
 
         $this->viewObj->skip_header=true;
@@ -227,7 +321,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
     }
 
     /* START prem check hook */
-    // when curl or any php remote function not available wysija.com returns lcheck to that function
+    // when curl or any php remote function not available mailpoet.com returns lcheck to that function
     function licok() {
         parent::WYSIJA_control_back();
         $dt = get_option('wysijey');
@@ -238,14 +332,14 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         } else {
             $dataconf = array('premium_key' => '', 'premium_val' => '');
 
-            $helper_licence=&WYSIJA::get('licence','helper');
-            $url_premium = 'http://www.wysija.com/checkout/?wysijadomain='.$dt.'&nc=1&utm_source=wpadmin&utm_campaign=error_licence_activation';
+            $helper_licence=WYSIJA::get('licence','helper');
+            $url_premium = 'http://www.mailpoet.com/checkout/?wysijadomain='.$dt.'&nc=1&utm_source=wpadmin&utm_campaign=error_licence_activation';
 
             $this->error(str_replace(array('[link]','[/link]'),array('<a href="'.$url_premium.'" target="_blank">','</a>'),
             __('Premium licence does not exist for your site. Purchase it [link]here[/link].',WYSIJA)), 1);
         }
         WYSIJA::update_option('wysicheck',false);
-        $modelConf=&WYSIJA::get('config','model');
+        $modelConf=WYSIJA::get('config','model');
         $modelConf->save($dataconf);
 
         $this->redirect('admin.php?page=wysija_config#tab-premium');
@@ -253,7 +347,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
     /* END prem check hook */
 
     function validateLic(){
-        $helpLic=&WYSIJA::get('licence','helper');
+        $helpLic=WYSIJA::get('licence','helper');
         $res = $helpLic->check();
 
         $this->redirect();
@@ -264,11 +358,11 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
      * @param type $dataPost
      */
     function manual_send($dataPost=false){
-        $modelQ=&WYSIJA::get('queue','model');
-        $config=&WYSIJA::get('config','model');
-        if((int)$config->getValue('total_subscribers')<2000  ){
+        $modelQ=WYSIJA::get('queue','model');
+        $config=WYSIJA::get('config','model');
+        if( (int) $config->getValue('total_subscribers') < 2000  ){
             if($modelQ->count()>0){
-                $helperQ=&WYSIJA::get('queue','helper');
+                $helperQ=WYSIJA::get('queue','helper');
                 $emailid=false;
                 if($_REQUEST['emailid']){
                     $emailid=$_REQUEST['emailid'];
@@ -292,38 +386,20 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
      * test the bounce handling maybe this should move somewhere else like config controller
      * @return boolean
      */
-    function test(){
-        @ini_set('max_execution_time',0);
+    function test_bounce(){
+        // bounce handling
+        $helper_bounce = WYSIJA::get('bounce','helper');
 
-        $config = &WYSIJA::get('config','model');
-        $bounceClass = &WYSIJA::get('bounce','helper');
-        $bounceClass->report = true;
-        if(!$bounceClass->init()){
-                $res['result']=false;
-                return $res;
-        }
-        if(!$bounceClass->connect()){
-                $this->error($bounceClass->getErrors());
-                $res['result']=false;
-                return $res;
-        }
-        $this->notice(sprintf(__('Successfully connected to %1$s',WYSIJA),$config->getValue('bounce_login')));
-        $nbMessages = $bounceClass->getNBMessages();
+        // in a multisite case we process first the bounce recording into the bounce table
+        if(is_multisite()){
+            $helper_bounce->record_bounce_ms();
 
-
-        if(empty($nbMessages)){
-            $this->error(__('There are no messages',WYSIJA),true);
-            $res['result']=false;
-            return $res;
+            // then we take actions from what has been returned by the bounce
+            $helper_bounce->process_bounce_ms();
         }else{
-            $this->notice(sprintf(__('There are %1$s messages in your mailbox',WYSIJA),$nbMessages));
+           $helper_bounce->process_bounce();
         }
-
-
-        $bounceClass->handleMessages();
-        $bounceClass->close();
         exit;
-        return true;
     }
 
     function add($dataPost=false){
@@ -339,7 +415,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         $this->viewShow='add';
         $this->data=array();
         $this->data['campaign']=array('name'=>'','description'=>'');
-        $modelConfig=&WYSIJA::get('config','model');
+        $modelConfig=WYSIJA::get('config','model');
         $this->data['email']=array('subject'=>'','from_email'=>$modelConfig->getValue('from_email'),'from_name'=>$modelConfig->getValue('from_name'));
         $this->data['lists']=$this->__getLists(false,true,true);
 
@@ -362,7 +438,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
 
         $times = array();
         $time = strtotime('00:00:00');
-        $toolboxH=&WYSIJA::get('toolbox','helper');
+        $toolboxH=WYSIJA::get('toolbox','helper');
         $times['00:00:00']=$toolboxH->localtime($time);
 
         for($i = 1;$i < 24;$i++) {
@@ -384,7 +460,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         }
 
         // Get all available roles
-        $wptoolsH =& WYSIJA::get('wp_tools','helper');
+        $wptoolsH = WYSIJA::get('wp_tools','helper');
         $roles = $wptoolsH->wp_get_all_roles();
         $available_roles = array('any'=>__('in any role,',WYSIJA));
         foreach ($roles as $role => $name) {
@@ -459,7 +535,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
                 'type'=>'checkbox'
                 ),*/
         );
-        $helpersEvent=&WYSIJA::get('autonews','helper');
+        $helpersEvent=WYSIJA::get('autonews','helper');
         $extraEvents=$helpersEvent->events();
 
         /*if there are plugin to add autonewsletter event they are adding their customized field over here*/
@@ -479,7 +555,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
 
 
     function __getLists($enabled=true,$count=false,$notgetalllistid=false){
-        $modelList=&WYSIJA::get('list','model');
+        $modelList=WYSIJA::get('list','model');
         //get lists which have users  and are enabled */
         if($enabled) $enabledstrg=' is_enabled>0 and';
         else $enabledstrg='';
@@ -490,7 +566,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         $listres=$modelList->query('get_res',$query);
 
         if($count){
-          $mConfig =& WYSIJA::get('config','model');
+          $mConfig = WYSIJA::get('config','model');
           $condit = '>=';
           if($mConfig->getValue('confirm_dbleoptin')) $condit='>';
           $qry1="SELECT count(distinct A.user_id) as nbsub,A.list_id FROM `[wysija]user_list` as A LEFT JOIN `[wysija]user` as B on A.user_id=B.user_id WHERE B.status $condit 0 and A.sub_date>0 and A.unsub_date=0 GROUP BY list_id";
@@ -513,7 +589,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         if(!$this->_checkEmailExists($_REQUEST['id'])) return;
         $this->add();
 
-        $modelEmail=&WYSIJA::get('email','model');
+        $modelEmail=WYSIJA::get('email','model');
 
         $this->data['email']=$modelEmail->getOne(false,array('email_id'=>$_REQUEST['id']));
 
@@ -521,10 +597,10 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
             $this->redirect();
         }
         $this->title=sprintf(__('Step %1$s',WYSIJA),1).' | '.$this->data['email']['subject'];
-        $modelCamp=&WYSIJA::get('campaign','model');
+        $modelCamp=WYSIJA::get('campaign','model');
         $this->data['campaign']=$modelCamp->getOne(false,array('campaign_id'=>$this->data['email']['campaign_id']));
 
-        $modelCL=&WYSIJA::get('campaign_list','model');
+        $modelCL=WYSIJA::get('campaign_list','model');
         $this->data['campaign_list']=$modelCL->get(false,array('campaign_id'=>$this->data['email']['campaign_id']));
     }
 
@@ -539,7 +615,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
 
         wp_enqueue_style('thickbox');
 
-        $wjEngine =& WYSIJA::get('wj_engine', 'helper');
+        $wjEngine = WYSIJA::get('wj_engine', 'helper');
         /* WJ editor translations */
         $this->jsTrans = array_merge($this->jsTrans, $wjEngine->getTranslations());
 
@@ -556,7 +632,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         $this->js[]='wysija-base-script-64';
         $this->js[]='media-upload';
         $this->js['admin-campaigns-editDetails']='admin-campaigns-editDetails';
-        $modelEmail=&WYSIJA::get('email','model');
+        $modelEmail=WYSIJA::get('email','model');
         $this->data=array();
         $this->data['email']=$modelEmail->getOne(false,array('email_id'=>$_REQUEST['id']));
 
@@ -566,7 +642,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         $this->title=sprintf(__('Step %1$s',WYSIJA),2)." | ".$this->data['email']['subject'];
 
         // check if html source is enabled in the config (this will add the "html source" button in tinymce)
-        $model_config =& WYSIJA::get('config', 'model');
+        $model_config = WYSIJA::get('config', 'model');
         $this->jsTrans['html_source_enabled'] = (int)$model_config->getValue('html_source');
     }
 
@@ -582,7 +658,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
     function pause(){
         /* pause the campaign entry */
         if(isset($_REQUEST['id']) && $_REQUEST['id']){
-            $modelEmail=&WYSIJA::get('email','model');
+            $modelEmail=WYSIJA::get('email','model');
             $myemail=$modelEmail->getOne(false,array('email_id'=>$_REQUEST['id']));
             $modelEmail->reset();
             $modelEmail->columns['modified_at']['autoup']=1;
@@ -601,7 +677,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
     function resume(){
         /* pause the campaign entry */
         if(isset($_REQUEST['id']) && $_REQUEST['id']){
-            $modelEmail=&WYSIJA::get('email','model');
+            $modelEmail=WYSIJA::get('email','model');
             $modelEmail->columns['modified_at']['autoup']=1;
             $modelEmail->update(array('status'=>99),array('email_id'=>$_REQUEST['id']));
             $this->notice(__('Sending has resumed.',WYSIJA));
@@ -614,7 +690,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
 
         /* 1 - copy the campaign entry */
 
-        $model=&WYSIJA::get('campaign','model');
+        $model=WYSIJA::get('campaign','model');
         $query='INSERT INTO `[wysija]campaign` (`name`,`description`)
             SELECT concat("'.stripslashes(__('Copy of ',WYSIJA)).'",`name`),`description` FROM [wysija]campaign
             WHERE campaign_id='.(int)$_REQUEST['id'];
@@ -627,7 +703,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         $emailid=$model->query($query);
 
         //let's reset the count of total childs for auto newsletter
-        $mEmail=&WYSIJA::get('email','model');
+        $mEmail=WYSIJA::get('email','model');
         $emailData=$mEmail->getOne(false,array('email_id'=>$emailid));
 
         if($emailData['type']==2){
@@ -655,7 +731,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
     function duplicateEmail(){
         if(!$this->_checkEmailExists($_REQUEST['id'])) return;
 
-        $model=&WYSIJA::get('campaign','model');
+        $model=WYSIJA::get('campaign','model');
         /* 2 - copy the email entry */
         $query='INSERT INTO `[wysija]email` (`campaign_id`,`subject`,`body`,`params`,`wj_data`,`wj_styles`,`from_email`,`from_name`,`replyto_email`,`replyto_name`,`attachments`,`status`,`created_at`,`modified_at`)
             SELECT `campaign_id`, concat("'.stripslashes(__("Copy of ",WYSIJA)).'",`subject`),`body`,`params`,`wj_data`,`wj_styles`,`from_email`,`from_name`,`replyto_email`,`replyto_name`,`attachments`,0,'.time().','.time().' FROM [wysija]email
@@ -668,23 +744,22 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
     }
 
     function immediateWarning(){
-        $mConfig=&WYSIJA::get('config','model');
-
-        $is_multisite=is_multisite();
+        $model_config = WYSIJA::get('config','model');
+        $is_multisite = is_multisite();
 
         //$is_multisite=true;//PROD comment that line
-        if($is_multisite && $mConfig->getValue('sending_method')=='network'){
-           $sending_emails_each=$mConfig->getValue('ms_sending_emails_each');
-           $number=$mConfig->getValue('ms_sending_emails_number');
+        if($is_multisite && $model_config->getValue('sending_method') == 'network'){
+           $sending_emails_each = $model_config->getValue('ms_sending_emails_each');
+           $number = $model_config->getValue('ms_sending_emails_number');
         }else{
-           $sending_emails_each=$mConfig->getValue('sending_emails_each');
-           $number=$mConfig->getValue('sending_emails_number');
+           $sending_emails_each = $model_config->getValue('sending_emails_each');
+           $number = $model_config->getValue('sending_emails_number');
         }
 
-        $formsHelp=&WYSIJA::get('forms','helper');
+        $formsHelp=WYSIJA::get('forms','helper');
 
         $timespan=$formsHelp->eachValuesSec[$sending_emails_each];
-        $tb=&WYSIJA::get('toolbox','helper');
+        $tb=WYSIJA::get('toolbox','helper');
 
         $this->immediatewarning=str_replace(
                 array('[link]','[/link]','[settings]'),
@@ -725,13 +800,21 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
 
         $this->js[]='jquery-ui-datepicker';
 
-        $modelList=&WYSIJA::get('list','model');
-        $modelList->limitON=false;
+        $model_list=WYSIJA::get('list','model');
+        $model_list->limitON=false;
         $this->data=array();
         $this->data['lists']=$this->__getLists(false,true,true);
 
-        $modelEmail=&WYSIJA::get('email','model');
-        $this->data['email']=$modelEmail->getOne(false,array('email_id'=>$_REQUEST['id']));
+        $model_email=WYSIJA::get('email','model');
+        $this->data['email']=$model_email->getOne(false,array('email_id'=>$_REQUEST['id']));
+
+        // The first newsletter, we don't have replyto_email and replyto_name
+        if(empty($this->data['email']['replyto_email']) || empty($this->data['email']['replyto_name'])){
+            $current_user = wp_get_current_user();
+            $this->data['email']['replyto_email'] = $current_user->data->user_email;
+            $this->data['email']['replyto_name'] = $current_user->data->display_name;
+        }
+
 
         if((int)$this->data['email']['type']==2){
             $this->js['wysija-edit-autonl']='wysija-edit-autonl';
@@ -746,8 +829,18 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
 
         if((int)$this->data['email']['type']==1){
             $this->jsTrans['alertsend']=__('You are about to send this newsletter. Please confirm.',WYSIJA);
+        }else{
+            if(isset($this->data['email']['params']['autonl']['event']) && $this->data['email']['params']['autonl']['event']=='subs-2-nl'){
+                $this->data['autoresponder']=1;
+                foreach($this->data['lists'] as $list){
+                    if($list['list_id']==$this->data['email']['params']['autonl']['subscribetolist']){
+                        break;
+                    }
+                }
+
+                $this->jsTrans['ignoreprevious']=sprintf(__('Are you sure you want to ignore the %1$s subscribers of the list %2$s?', WYSIJA),'"'.$list['count'].'"','"'.$list['name'].'"');
+            }
         }
-        //$modelEmail->getParams($this->data['email']);
 
         $this->checkIsEditable();
 
@@ -756,23 +849,21 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
 
         $this->jsLoc['wysija-edit-autonl']['autofields']=$this->data['autonl']['fields'];
 
-        $modelCL=&WYSIJA::get('campaign_list','model');
+        $modelCL=WYSIJA::get('campaign_list','model');
         $this->data['campaign_list']=$modelCL->get(false,array('campaign_id'=>$this->data['email']['campaign_id']));
-        //dbg($this->data);
-
     }
 
     function delete(){
         $this->requireSecurity();
 
         if(isset($_REQUEST['id'])){
-            $modelCampaign=&WYSIJA::get('campaign','model');
+            $modelCampaign=WYSIJA::get('campaign','model');
             $modelCampaign->delete(array('campaign_id'=>$_REQUEST['id']));
 
-            $modelCampaignL=&WYSIJA::get('campaign_list','model');
+            $modelCampaignL=WYSIJA::get('campaign_list','model');
             $modelCampaignL->delete(array('campaign_id'=>$_REQUEST['id']));
 
-            $modelEmail=&WYSIJA::get('email','model');
+            $modelEmail=WYSIJA::get('email','model');
             $modelEmail->delete(array('campaign_id'=>$_REQUEST['id']));
 
             $this->notice(__('Newsletter deleted.',WYSIJA));
@@ -782,7 +873,12 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
             $this->notice(__("Newsletter can't be deleted.",WYSIJA));
         }
 
-        $this->redirect();
+        // retrieve saved filter
+        if(!empty($_REQUEST['action'])) unset($_REQUEST['action']);
+        if(!empty($_REQUEST['id'])) unset($_REQUEST['id']);
+        if(!empty($_REQUEST['_wpnonce'])) unset($_REQUEST['_wpnonce']);
+        $redirect = $this->base_url.'?'.http_build_query($_REQUEST);
+        $this->redirect($redirect);
     }
 
     function deleteEmail(){
@@ -790,7 +886,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         if(!$this->_checkEmailExists($_REQUEST['id'])) return;
 
         if(isset($_REQUEST['id'])){
-            $modelEmail=&WYSIJA::get('email','model');
+            $modelEmail=WYSIJA::get('email','model');
             $modelEmail->delete(array('email_id'=>$_REQUEST['id']));
             $this->notice(__('Newsletter deleted.',WYSIJA));
         }else{
@@ -809,11 +905,11 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
 
         if(isset($_REQUEST['id'])){
 
-            $modelEmail=&WYSIJA::get('email','model');
+            $modelEmail=WYSIJA::get('email','model');
             $modelEmail->fieldValid=false;
             $emaildataarr=$modelEmail->getOne(array('email_id'=>$_REQUEST['id']));
 
-            $modelCampaign=&WYSIJA::get('campaign','model');
+            $modelCampaign=WYSIJA::get('campaign','model');
             $modelCampaign->update(array('name'=>$_POST['wysija']['email']['subject'],'description'=>''),array('campaign_id'=>$emaildataarr['campaign_id']));
             $campaign_id=$emaildataarr['campaign_id'];
             $email_id=$emaildataarr['email_id'];
@@ -845,10 +941,10 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
 
             $data['email']['email_id']=$modelEmail->update($dataEmail,array('email_id'=>$_REQUEST['id']));
         } else {
-            $modelCampaign=&WYSIJA::get('campaign','model');
+            $modelCampaign=WYSIJA::get('campaign','model');
             $campaign_id = $modelCampaign->insert(array('name' => $_POST['wysija']['email']['subject'], 'description' => ''));
 
-            $modelEmail=&WYSIJA::get('email','model');
+            $modelEmail=WYSIJA::get('email','model');
             $modelEmail->fieldValid=false;
             $emaildata=array(
                 'campaign_id' => $campaign_id,
@@ -976,11 +1072,11 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
                         )
                 );
                 // get solid divider
-                $hDividers =& WYSIJA::get('dividers', 'helper');
+                $hDividers = WYSIJA::get('dividers', 'helper');
                 $defaultDivider = $hDividers->getDefault();
 
                 // get bookmarks from iconset 2
-                $hBookmarks =& WYSIJA::get('bookmarks', 'helper');
+                $hBookmarks = WYSIJA::get('bookmarks', 'helper');
                 $bookmarks = $hBookmarks->getAllByIconset('medium', '02');
 
                 // sample data for regular newsletter
@@ -989,14 +1085,15 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
                     'header' => array(
                         'text' => null,
                         'image' => array(
-                            'src' => WYSIJA_EDITOR_IMG.'default-newsletter/newsletter/header.png',
+                            // 'src' => WYSIJA_EDITOR_IMG.'default-newsletter/newsletter/header.png',
+                            'src' => WYSIJA_EDITOR_IMG.'transparent.png',
                             'width' => 600,
-                            'height' => 72,
+                            'height' => 86,
                             'alignment' => 'center',
-                            'static' => false
+                            'static' => true
                         ),
                         'alignment' => 'center',
-                        'static' => false,
+                        'static' => true,
                         'type' => 'header'
                     ),
                     'body' => array(
@@ -1104,66 +1201,40 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
                     'footer' => array(
                         'text' => NULL,
                         'image' => array(
-                            'src' => WYSIJA_EDITOR_IMG.'default-newsletter/newsletter/footer.png',
+                            // 'src' => WYSIJA_EDITOR_IMG.'default-newsletter/newsletter/footer.png',
+                            'src' => WYSIJA_EDITOR_IMG.'transparent.png',
                             'width' => 600,
-                            'height' => 46,
+                            'height' => 86,
                             'alignment' => 'center',
-                            'static' => false,
+                            'static' => true,
                         ),
                         'alignment' => 'center',
-                        'static' => false,
+                        'static' => true,
                         'type' => 'footer'
                     )
                 );
             }
 
-            $emaildata['wj_data'] = base64_encode(serialize($newwjdata));
-
             // set default styles
-            $emaildata['wj_styles'] = base64_encode(serialize(array(
-                'html' => array(
-                    'background' => 'e8e8e8'
-                ),
-                'header' => array(
-                    'background' => 'e8e8e8'
-                ),
-                'body' => array(
-                    'color' => '000000',
-                    'family' => 'Arial',
-                    'size' => 16,
-                    'background' => 'ffffff'
-                ),
-                'footer' => array(
-                    'background' => 'e8e8e8'
-                ),
-                'h1' => array(
-                    'color' => '000000',
-                    'family' => 'Trebuchet MS',
-                    'size' => 40
-                ),
-                'h2' => array(
-                    'color' => '424242',
-                    'family' => 'Trebuchet MS',
-                    'size' => 30
-                ),
-                'h3' => array(
-                    'color' => '424242',
-                    'family' => 'Trebuchet MS',
-                    'size' => 24
-                ),
-                'a' => array(
-                    'color' => '0000FF',
-                    'underline' => false
-                ),
-                'unsubscribe' => array(
-                    'color' => '000000'
-                ),
-                'viewbrowser' => array(
-                    'color' => '000000',
-                    'family' => 'Arial',
-                    'size' => 12
-                )
-            )));
+            $helper_engine = WYSIJA::get('wj_engine', 'helper');
+            $styles = $helper_engine->getDefaultStyles();
+
+            $model_config = WYSIJA::get('config', 'model');
+            $default_theme = $model_config->getValue('newsletter_default_theme', 'default');
+
+            $helper_themes = WYSIJA::get('themes', 'helper');
+            $theme_data = $helper_themes->getData($default_theme);
+
+            if($theme_data['header'] !== null) {
+                $newwjdata['header'] = $theme_data['header'];
+            }
+            if($theme_data['footer'] !== null) {
+                $newwjdata['footer'] = $theme_data['footer'];
+            }
+            // end - set default styles
+
+            $emaildata['wj_data'] = base64_encode(serialize($newwjdata));
+            $emaildata['wj_styles'] = base64_encode(serialize($styles));
 
             $email_id=$data['email']['email_id']=$modelEmail->insert($emaildata);
 
@@ -1181,7 +1252,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
     function saveemail(){
         $this->redirectAfterSave=false;
         //$this->requireSecurity();
-        $modelEmail=&WYSIJA::get("email","model");
+        $modelEmail=WYSIJA::get("email","model");
         $modelEmail->fieldValid=false;
         $emaildataarr=$modelEmail->getOne(array('email_id'=>$_REQUEST['id']));
 
@@ -1207,14 +1278,13 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
             $this->error(__('Information is missing.',WYSIJA));
             return $this->editDetails();
         }
-
         if(isset($_REQUEST['wysija']['email']['params']['googletrackingcode']) && $_REQUEST['wysija']['email']['params']['googletrackingcode'] &&
                 (!is_string($_REQUEST['wysija']['email']['params']['googletrackingcode'])
                 OR
-                preg_match('#[^a-z0-9_]#i',$_REQUEST['wysija']['email']['params']['googletrackingcode']) !== 0 )){
+                preg_match('#[^a-z0-9_-\s]#i',$_REQUEST['wysija']['email']['params']['googletrackingcode']) !== 0 )){
             //force to simple text
-            $_REQUEST['wysija']['email']['params']['googletrackingcode']=preg_replace('#[^a-z0-9_]#i', '_',$_REQUEST['wysija']['email']['params']['googletrackingcode']);
-            $this->error(__('The Google Campaign name needs to be only letters and number, with no spaces allowed. We\'ll improve this in the future!',WYSIJA),1);
+            $_REQUEST['wysija']['email']['params']['googletrackingcode']=preg_replace('#[^a-z0-9_-\s]#i', '_',$_REQUEST['wysija']['email']['params']['googletrackingcode']);
+            $this->error(__('The Google Campaign name needs to be only letters, number, spaces and hyphens. We\'ll improve this in the future!',WYSIJA),1);
             return $this->editDetails();
         }
 
@@ -1226,7 +1296,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
             'replyto_email'=>$_POST['wysija']['email']['replyto_email'],
             'subject'=>$_POST['wysija']['email']['subject'],
         );
-        $model_email=&WYSIJA::get('email','model');
+        $model_email=WYSIJA::get('email','model');
         if(isset($_POST['wysija']['email']['params']))  $update_email['params']=$_POST['wysija']['email']['params'];
 
         //insert into campaigns lists
@@ -1248,6 +1318,11 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
                 }else $email_data[$ki]=$vi;
             }
 
+            // if the checkbox to ignore retroactivity is  here we just tell the class
+            if(isset($_POST['wysija']['email']['ignore_subscribers'])){
+                $model_email->retro_active_autoresponders=false;
+            }
+
             // activate or send the email depending on the typ
             $model_email->send_activate($email_data);
         }
@@ -1256,7 +1331,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         $update_email['type']=$email_data['type'];
 
         if($post_notification){
-            $helper_autonews=&WYSIJA::get('autonews','helper');
+            $helper_autonews=WYSIJA::get('autonews','helper');
             $update_email['params']['autonl']['nextSend']=$helper_autonews->getNextSend($update_email);
         }
 
@@ -1267,7 +1342,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         $model_email->update($update_email);
 
         // update the campaign subject which ispretty much useless but good to keep in sync with the email
-        $model_campaign=&WYSIJA::get('campaign','model');
+        $model_campaign=WYSIJA::get('campaign','model');
         $model_campaign->reset();
         $update_campaign=array('campaign_id'=>$_REQUEST['id'],'name'=>$_POST['wysija']['email']['subject']);
         $model_campaign->update($update_campaign);
@@ -1280,14 +1355,14 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
 
     function _saveLists($campaignId,$flagup=false){
         //record the list that we have in that campaign
-        $modelCampL=&WYSIJA::get('campaign_list','model');
+        $modelCampL=WYSIJA::get('campaign_list','model');
         if($flagup || (int)$campaignId>0){
             $modelCampL->delete(array('equal'=>array('campaign_id'=>$campaignId)));
             $modelCampL->reset();
         }
 
         if(isset($_POST['wysija']['campaign_list']['list_id'])){
-            //$modelCampL=&WYSIJA::get("campaign_list","model");
+            //$modelCampL=WYSIJA::get("campaign_list","model");
             foreach($_POST['wysija']['campaign_list']['list_id'] as $listid){
                 $modelCampL->insert(array('campaign_id'=>$campaignId,"list_id"=>$listid));
             }
@@ -1330,7 +1405,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
     }
 
     function defaultDisplay(){
-
+        $this->data['base_url'] = $this->base_url.'?'.http_build_query($_REQUEST); // saved filter
         $this->title=__('Newsletters',WYSIJA);
         $this->viewShow=$this->action='main';
         $this->js[]='wysija-admin-list';
@@ -1340,17 +1415,11 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         $this->jsTrans['viewnews']=__('View newsletter',WYSIJA);
         $this->jsTrans['confirmpauseedit']=__('The newsletter will be deactivated, you will need to reactivate it once you\'re over editing it. Do you want to proceed?',WYSIJA);
 
-        //make sure that there is no late scheduled or automatic newsletter
-        $autoNL=&WYSIJA::get('autonews','helper');
-        $autoNL->checkPostNotif();
-        $autoNL->checkScheduled();
-
-        $config=&WYSIJA::get('config','model');
         //get the filters
         if(isset($_REQUEST['search']) && $_REQUEST['search']){
-            $this->filters["like"]=array();
+            $this->filters['like']=array();
             foreach($this->searchable as $field)
-                $this->filters["like"][$field]=$_REQUEST['search'];
+                $this->filters['like'][$field]=$_REQUEST['search'];
         }
 
         if(isset($_REQUEST['filter-list']) && $_REQUEST['filter-list']){
@@ -1358,9 +1427,12 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         }
 
         if(isset($_REQUEST['filter-date']) && $_REQUEST['filter-date']){
-            $this->filters["greater_eq"]=array('created_at'=>$_REQUEST['filter-date']);
-            $this->filters["less_eq"]=array('created_at'=>strtotime("+1 month",$_REQUEST['filter-date']));
+            $this->filters['greater_eq']=array('created_at'=>$_REQUEST['filter-date']);
+            $this->filters['less_eq']=array('created_at'=>strtotime('+1 month',$_REQUEST['filter-date']));
         }
+
+        $this->filters['is'] = array('type'=>'IS NOT NULL');
+
 
         if(isset($_REQUEST['link_filter']) && $_REQUEST['link_filter']){
             $linkfilters=explode('-',$_REQUEST['link_filter']);
@@ -1370,7 +1442,6 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
             }else{
                 $this->_addLinkFilter($_REQUEST['link_filter']);
             }
-
         }
 
         $this->modelObj->noCheck=true;
@@ -1429,7 +1500,6 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         $counts['all']=$total;
 
         $this->modelObj->reset();
-
         if($this->filters)  $this->modelObj->setConditions($this->filters);
 
         // 1 - campaign request
@@ -1477,7 +1547,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         foreach($this->data['campaigns'] as $emailcamp){
             if(in_array($emailcamp['status'], array(1,3,99))) $emailids[]=$emailcamp['email_id'];
         }
-        $modelQ=&WYSIJA::get('queue','model');
+        $modelQ=WYSIJA::get('queue','model');
         $modelQ->setConditions(array("email_id"=>$emailids));
         $modelQ->groupBy('email_id');
         $queue=$modelQ->count();
@@ -1510,7 +1580,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         }
 
         //make the data object for the listing view*/
-        $modelList=&WYSIJA::get('list','model');
+        $modelList=WYSIJA::get('list','model');
 
         // 2 - list request */
         $query='SELECT A.list_id, A.name,A.is_enabled, count( B.campaign_id ) AS users FROM `[wysija]'.$modelList->table_name.'` as A';
@@ -1528,18 +1598,18 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         $campaign_ids_sent=$campaign_ids=array();
         foreach($this->data['campaigns'] as &$campaign){
             $campaign_ids[]=$campaign['campaign_id'];
-            $modelEmail=&WYSIJA::get('email','model');
+            $modelEmail=WYSIJA::get('email','model');
             $modelEmail->getParams($campaign);
             if(in_array((int)$campaign['status'],array(-1,1,2,3,99)))  $campaign_ids_sent[]=$campaign['campaign_id'];
         }
 
         // 3 - campaign_list request & count request for queue */
         if($campaign_ids){
-            $modeluList=&WYSIJA::get('campaign_list','model');
+            $modeluList=WYSIJA::get('campaign_list','model');
             $userlists=$modeluList->get(array('list_id','campaign_id'),array('campaign_id'=>$campaign_ids));
 
             if($campaign_ids_sent){
-                $modeluList=&WYSIJA::get("email_user_stat","model");
+                $modeluList=WYSIJA::get("email_user_stat","model");
                 $statstotal=$modeluList->getResults("SELECT COUNT(A.user_id) as count,B.email_id FROM `[wysija]queue` as A
                      JOIN `[wysija]email` as B on A.email_id=B.email_id
                         WHERE B.campaign_id IN (".implode(",",$campaign_ids_sent).") group by B.email_id");
@@ -1561,7 +1631,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
                     }
                 }
 
-                $modelEmail=&WYSIJA::get('email','model');
+                $modelEmail=WYSIJA::get('email','model');
 
                 foreach($updateEmail as $emailid=>$update){
 
@@ -1575,7 +1645,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
 
 
                 /**/
-                $modelC=&WYSIJA::get('config','model');
+                $modelC=WYSIJA::get('config','model');
                 $running=false;
 
                 $is_multisite=is_multisite();
@@ -1588,7 +1658,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
                 }
 
                 if($modelC->getValue('cron_manual')){
-                    $formsHelp=&WYSIJA::get('forms','helper');
+                    $formsHelp=WYSIJA::get('forms','helper');
                     $queue_frequency=$formsHelp->eachValuesSec[$sending_emails_each];
                     $queue_scheduled=WYSIJA::get_cron_schedule('queue');
 
@@ -1596,7 +1666,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
                     $running=$queue_scheduled['running'];
 
                     if($running){
-                        $helperToolbox=&WYSIJA::get('toolbox','helper');
+                        $helperToolbox=WYSIJA::get('toolbox','helper');
                         $running=time()-$running;
                         $running=$helperToolbox->duration($running,true,4);
 
@@ -1660,7 +1730,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
 
                 /* status update to sent for the one that are sent*/
                 if(count($status_sent_complete)>0){
-                    $modelEmail=&WYSIJA::get('email','model');
+                    $modelEmail=WYSIJA::get('email','model');
                     $modelEmail->noCheck=true;
                     $modelEmail->reset();
                     $modelEmail->update(array('status'=>2),array('equal'=>array('email_id'=>$status_sent_complete)));
@@ -1706,7 +1776,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
 
         $this->dataAutoNl();
         if(!$this->data['campaigns']){
-            $this->notice(__("We looked everywhere, but we couldn't find the newsletter you're looking for.",WYSIJA));
+            $this->notice(__('There are no newsletters.',WYSIJA));
         }
 
     }
@@ -1726,29 +1796,35 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         $this->statusemail='B.status as umstatus';
         if(isset($_REQUEST['link_filter']) && $_REQUEST['link_filter']){
             switch($_REQUEST['link_filter']){
-                case "inqueue":
+                case 'inqueue':
                     $this->tableQuery='queue';
-                    $this->statusemail="-2 as umstatus";
+                    $this->statusemail='-2 as umstatus';
                     break;
-                case "sent":
-                    $this->filters["equal"]=array('B.status'=>0);
+                case 'sent':
+                    $this->filters['equal']=array('B.status'=>0);
                     break;
-                case "bounced":
-                    $this->filters["equal"]=array('B.status'=>-1);
+                case 'bounced':
+                    $this->filters['equal']=array('B.status'=>-1);
                     break;
-                case "opened":
-                    $this->filters["equal"]=array('B.status'=>1);
+                case 'opened':
+                    $this->filters['equal']=array('B.status'=>1);
                     break;
-                case "clicked":
-                    $this->filters["equal"]=array('B.status'=>2);
+                case 'clicked':
+                    $this->filters['equal']=array('B.status'=>2);
                     break;
-                case "unsubscribe":
-                    $this->filters["equal"]=array('B.status'=>3);
+                case 'unsubscribe':
+                    $this->filters['equal']=array('B.status'=>3);
                     break;
                 case 'notsent':
-                    $this->filters["equal"]=array('B.status'=>-2);
+                    $this->filters['equal']=array('B.status'=>-2);
                     break;
             }
+        }
+        // filter by url id
+        if(isset($_REQUEST['url_id']) && (int)$_REQUEST['url_id'] > 0){
+            $this->tableQuery='email_user_url';
+            $this->filters['equal']=array('B.url_id'=>(int)$_REQUEST['url_id']);
+            $this->statusemail = '2 as umstatus'; //by default, when filter by url_id, all subscribers had clicked
         }
     }
 
@@ -1757,7 +1833,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         $this->js[]='wysija-charts';
         $this->viewShow='viewstats';
 
-        $this->modelObj=&WYSIJA::get("email","model");
+        $this->modelObj=WYSIJA::get("email","model");
         $this->modelObj->limitON=false;
 
         $emailObj=$this->modelObj->getOne(false,array("email_id"=>$_REQUEST['id']));
@@ -1765,7 +1841,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         $this->viewObj->namecampaign=$emailObj['subject'];
         $this->viewObj->title=sprintf(__('Stats : %1$s',WYSIJA),$emailObj['subject']);
 
-        $modelObjCamp=&WYSIJA::get("campaign","model");
+        $modelObjCamp=WYSIJA::get("campaign","model");
         $limit_pp=false;
         if(isset($modelObjCamp->limit_pp)) $limit_pp = $modelObjCamp->limit_pp;
        $modelObjCamp->limitON=false;
@@ -1835,8 +1911,8 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
 
         //$this->modelObj->setConditions(array("equal"=>array("B.email_id"=>$emailObj['email_id'])));
 
-        /* 1 - user request */
-        $query='SELECT A.user_id, A.firstname, A.lastname,A.status as ustatus,'.$this->statusemail.' , A.email, A.created_at FROM `[wysija]user` as A';
+        /* 1 - subscriber request */
+        $query='SELECT A.user_id, A.firstname, A.lastname,A.status as ustatus,'.$this->statusemail.' , A.email, B.* FROM `[wysija]user` as A';
         $query.=' LEFT JOIN `[wysija]'.$this->tableQuery.'` as B on A.user_id=B.user_id';
         $queryFinal=$this->modelObj->makeWhere();
 
@@ -1845,18 +1921,47 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         else $this->modelObj->countRows=$counts['all'];
 
         $orderby=" ORDER BY ";
+        /**
+         * Until now, we have
+         * - 3 possible values of $this->tableQuery (queue, email_user_url, email_user_stat), set by $this->setviewStatsfilter()
+         * - 2 possible values of $_REQUEST['orderby']
+         * => 3x2 = 6 cases
+         */
         if(isset($_REQUEST['orderby'])){
-            $orderby.=$_REQUEST['orderby']." ".$_REQUEST['ordert'];
-        }else{
-            $orderby.=$this->modelObj->pk." desc";
-        }
-        $this->modelObj->limitON=true;
+            switch ($this->tableQuery){
+                case 'email_user_url':
+                case 'email_user_stat':
+                    $orderby .= 'B.'.$_REQUEST['orderby']." ".$_REQUEST['ordert'];
+                    break;
 
+                case 'queue':
+                default:
+                    $orderby .= 'A.user_id DESC';
+                   break;
+            }
+        }else{
+            switch ($this->tableQuery){
+                case 'email_user_url':
+                    $orderby .= 'B.clicked_at DESC, B.number_clicked DESC'; // by default, sort by last clicked and biggest hit
+                    break;
+
+                case 'email_user_stat':
+                    $orderby .= 'B.opened_at DESC, B.status DESC'; // by default, sort by last open and its staus value
+                    break;
+
+                case 'queue':
+                default:
+                    $orderby .= 'A.user_id DESC';
+                   break;
+            }
+        }
+        $this->data['tableQuery'] = $this->tableQuery;
+        $this->modelObj->limitON=true;
         $this->data['subscribers']=$this->modelObj->getResults($query.$queryFinal." GROUP BY A.user_id".$orderby.$this->modelObj->setLimit(0,$limit_pp));
         $this->modelObj->reset();
 
         /*make the data object for the listing view*/
-        $modelList=&WYSIJA::get("list","model");
+        $modelList=WYSIJA::get("list","model");
 
         /* 2 - list request */
         $query="SELECT A.list_id, A.name,A.is_enabled, count( B.user_id ) AS users FROM `[wysija]".$modelList->table_name."` as A";
@@ -1878,7 +1983,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
 
         /* 3 - user_list request */
         if($user_ids){
-            $modeluList=&WYSIJA::get("user_list","model");
+            $modeluList=WYSIJA::get("user_list","model");
             $userlists=$modeluList->get(array("list_id","user_id"),array("user_id"=>$user_ids));
         }
 
@@ -1927,7 +2032,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
             }
         }
 
-        $modelEUU=&WYSIJA::get('email_user_url',"model");
+        $modelEUU=WYSIJA::get('email_user_url',"model");
         $modelEUU->colCheck=false;
         $modelEUU->setConditions(array("equal"=>array("A.email_id"=>$emailObj['email_id'])));
         $query="SELECT count(A.user_id) as count,A.*,B.*,C.subject as name FROM `[wysija]".$modelEUU->table_name."` as A JOIN `[wysija]url` as B on A.url_id=B.url_id JOIN `[wysija]email` as C on C.email_id=A.email_id ";
@@ -1936,9 +2041,8 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         $query.=" ORDER BY count Desc";
         $this->data['clicks']=$modelEUU->query("get_res",$query,ARRAY_A);
 
-
         foreach($this->data['clicks'] as $k => &$v){
-            $this->data['clicks'][$k]['name']="<strong>".sprintf(_n('%1$s hit', '%1$s hits', $v['count'],WYSIJA), $v['count'])."</strong> ";
+            $this->data['clicks'][$k]['name']="<strong>".sprintf(_n('%1$s click', '%1$s clicks', $v['count'],WYSIJA), $v['count'])."</strong> ";
             $v['url']=urldecode(utf8_encode($v['url']));
         }
 
@@ -1949,11 +2053,10 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         if(!$this->data['subscribers']){
             $this->notice(__("Your request can't retrieve any subscribers. Change your filters!",WYSIJA));
         }
-
     }
 
     function getListSubscriberQry($selectcolumns){
-        $this->modelObj=&WYSIJA::get("email","model");
+        $this->modelObj=WYSIJA::get("email","model");
         $this->emailObj=$this->modelObj->getOne(false,array('email_id' => $_REQUEST['id']));
 
         /* use the filter if there is */
@@ -1982,7 +2085,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
 
     function createnewlist(){
         /* get the email subject */
-        $emailModel =& WYSIJA::get('email', 'model');
+        $emailModel = WYSIJA::get('email', 'model');
         $email = $emailModel->getOne(array('subject'), array('email_id' => $_REQUEST['id']));
 
         $this->modelObj->reset();
@@ -1993,7 +2096,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         $listname=sprintf(__('Segment of %1$s',WYSIJA), $email['subject'].$prefix);
 
         /*insert new list*/
-        $modelL=&WYSIJA::get('list','model');
+        $modelL=WYSIJA::get('list','model');
         $listid=$modelL->insert(array('is_enabled'=>1,'name'=>$listname,'description'=>__('List created based on a newsletter segment.',WYSIJA)));
 
         /* get list of subscribers filtered or not */
@@ -2033,7 +2136,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
             $uids[]=$data['user_id'];
         }
 
-        $helperUser=&WYSIJA::get('user','helper');
+        $helperUser=WYSIJA::get('user','helper');
         $helperUser->sendConfirmationEmail($uids);
         $this->redirect('admin.php?page=wysija_campaigns&action=viewstats&id='.$_REQUEST['id']);
     }
@@ -2056,7 +2159,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         $user_ids=array();
         foreach($result as $user) $user_ids[]=$user['user_id'];
 
-        $fileHelp=&WYSIJA::get('file','helper');
+        $fileHelp=WYSIJA::get('file','helper');
         $tempfilename=$fileHelp->temp(implode(',',$user_ids),'export_userids','.txt');
 
         //$this->redirect("admin.php?page=wysija_campaigns&action=viewstats&id=".$_REQUEST['id']."&user_ids=".serialize($result));
@@ -2067,7 +2170,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
 
     function unsubscribelist($data){
 
-        $modelL=&WYSIJA::get('list','model');
+        $modelL=WYSIJA::get('list','model');
         $list=$modelL->getOne(false,array('list_id'=>$data['listid']));
         if($list['is_enabled']){
             /* delete from user_lists where select from email_user_stat */
@@ -2095,7 +2198,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
     }
 
     function themeupload(){
-        $helperNumbers=&WYSIJA::get('numbers','helper');
+        $helperNumbers=WYSIJA::get('numbers','helper');
         $bytes=$helperNumbers->get_max_file_upload();
 
         if(isset($_SERVER['CONTENT_LENGTH']) && $_SERVER['CONTENT_LENGTH']>$bytes['maxbytes']){
@@ -2114,7 +2217,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
 
         $ZipfileResult=trim(file_get_contents($_FILES['my-theme']['tmp_name']));
 
-        $themesHelp=&WYSIJA::get('themes','helper');
+        $themesHelp=WYSIJA::get('themes','helper');
         $result=$themesHelp->installTheme($_FILES['my-theme']['tmp_name'],true);
         $this->redirect('admin.php?page=wysija_campaigns&action=themes&reload=1');
 
@@ -2132,15 +2235,16 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
        $this->jsTrans['reinstall'] = __('Reinstall', WYSIJA);
        $this->jsTrans['premiumonly'] = __('Premium', WYSIJA);
 
-        $model_config=&WYSIJA::get('config','model');
+        $model_config=WYSIJA::get('config','model');
         //change the translation of the button when it's premium
         if($model_config->getValue('premium_key'))$this->jsTrans['ispremium']=1;
         else $this->jsTrans['ispremium']=0;
 
         $this->jsTrans['premiumfiles']=__('Photoshop file available as part of [link]Premium features[/link].',WYSIJA);
-        $helper_licence=&WYSIJA::get('licence','helper');
 
-        $this->jsTrans['premiumfiles']=str_replace(array('[link]','[/link]'),array('<a class="premium-tab ispopup" href="javascript:;" >','</a>'),$this->jsTrans['premiumfiles']);
+        $helper_licence = WYSIJA::get('licence','helper');
+        $url_checkout = $helper_licence->get_url_checkout('themes');
+        $this->jsTrans['premiumfiles']=str_replace(array('[link]','[/link]'),array('<a href="'.$url_checkout.'" target="_blank" >','</a>'),$this->jsTrans['premiumfiles']);
 
         $this->jsTrans['showallthemes']=__('Show all themes',WYSIJA);
         $this->jsTrans['totalvotes']=__('(%1$s votes)',WYSIJA);
@@ -2151,6 +2255,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
 
         $this->jsTrans['viewallthemes']=__('View all themes by %1$s',WYSIJA);
         $this->jsTrans['downloadpsd']=__("Download original Photoshop file",WYSIJA);
+        $this->jsTrans['downloadzip']=__("Download as .zip",WYSIJA);
         $this->jsTrans['viewauthorsite']=__("View author's website",WYSIJA);
         $this->jsTrans['stars']=__('Average rating: %1$s',WYSIJA);
         $this->jsTrans['starsyr']=__('My rating: %1$s',WYSIJA);
@@ -2159,12 +2264,12 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         $this->jsTrans['lastupdated']=__('Last updated: %1$s',WYSIJA);
         $this->jsTrans['includes']=__('Includes: %1$s',WYSIJA);
 
-        $helper_themes=&WYSIJA::get('themes','helper');
+        $helper_themes=WYSIJA::get('themes','helper');
 
         $this->jsTrans['installedthemes']=$helper_themes->getInstalled();
 
         $url=admin_url('admin.php');
-        $helper_toolbox=&WYSIJA::get("toolbox","helper");
+        $helper_toolbox=WYSIJA::get("toolbox","helper");
         $domain_name=$helper_toolbox->_make_domain_name($url);
         $this->jsTrans['domainname']=$domain_name;
 
@@ -2199,7 +2304,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         );
 
         // get networks' url from config
-        $model_config=&WYSIJA::get('config', 'model');
+        $model_config=WYSIJA::get('config', 'model');
         $urls = $model_config->getValue('social_bookmarks');
 
         // set url from config for each network if specified
@@ -2223,16 +2328,16 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
 
         $_GET['tab']='dividers';
 
-        $model_email =& WYSIJA::get('email', 'model');
+        $model_email = WYSIJA::get('email', 'model');
         $this->data['email'] = $email = $model_email->getOne(false, array('email_id' => $_REQUEST['emailId']));
 
         // get dividers
-        $helper_dividers =& WYSIJA::get('dividers', 'helper');
+        $helper_dividers = WYSIJA::get('dividers', 'helper');
         $dividers = $helper_dividers->getAll();
 
         // get theme divider if it's not the default theme
         if(isset($email['params']['theme'])) {
-            $helper_themes =& WYSIJA::get('themes', 'helper');
+            $helper_themes = WYSIJA::get('themes', 'helper');
             $themeDivider = $helper_themes->getDivider($email['params']['theme']);
             if($themeDivider !== NULL) {
                 array_unshift($dividers, $themeDivider);
@@ -2243,7 +2348,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         if(isset($email['params']['divider'])) {
             $selected_divider = $email['params']['divider'];
         } else {
-            $helper_dividers =& WYSIJA::get('dividers', 'helper');
+            $helper_dividers = WYSIJA::get('dividers', 'helper');
             $selected_divider = $helper_dividers->getDefault();
         }
 
@@ -2474,7 +2579,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
 
     function _checkEmailExists($emailId){
         $result=false;
-        $modelEmail=&WYSIJA::get('email','model');
+        $modelEmail=WYSIJA::get('email','model');
         if($modelEmail->exists(array('email_id'=>$emailId))) $result= true;
 
         if(!$result){
@@ -2483,7 +2588,70 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
         }else return true;
     }
 
+    /**
+     * action to reinstall the latest package from WordPress repository
+     */
+    function switch_to_package(){
+        $this->requireSecurity();
+        if((is_multisite() && !WYSIJA::current_user_can('manage_network')) || (!is_multisite() && !WYSIJA::current_user_can('switch_themes'))) return false;
 
+        switch($_REQUEST['plugin']){
+            case 'wysija-newsletters':
+                $package_to_reinstall='wysija-newsletters/index.php';
+                $plugin=$_REQUEST['plugin'];
+                break;
+            case 'wysija-newsletters-premium':
+                $package_to_reinstall='wysija-newsletters-premium/index.php';
+                $plugin=$_REQUEST['plugin'];
+                break;
+        }
+
+        $beta_mode=true;
+        if(isset($_REQUEST['stable'])){
+            $beta_mode=false;
+
+            // we only need to emulate a downgrade if we move back to stable
+            $helper_package = WYSIJA::get('package','helper');
+            $helper_package->emulate_downgrade_plugin($package_to_reinstall);
+        }
+
+        $model_config = WYSIJA::get('config','model');
+        $model_config->save(array('beta_mode'=>$beta_mode));
+
+
+
+        // modify the version in the index.php
+        set_site_transient( 'update_plugins', '' );
+
+        $this->redirect('admin.php?page=wysija_campaigns&action=switch_to_package_step2&plugin='.$plugin);
+
+    }
+
+    /**
+     * we need to do that in two steps
+     */
+    function switch_to_package_step2(){
+        if((is_multisite() && !WYSIJA::current_user_can('manage_network')) || (!is_multisite() && !WYSIJA::current_user_can('switch_themes'))) return false;
+        switch($_REQUEST['plugin']){
+            case 'wysija-newsletters':
+                $package_to_reinstall='wysija-newsletters/index.php';
+                break;
+            case 'wysija-newsletters-premium':
+                $package_to_reinstall='wysija-newsletters-premium/index.php';
+                break;
+        }
+
+        $helper_package = WYSIJA::get('package','helper');
+
+        echo '<html><head></head><body style="font-family: sans-serif;font-size: 12px;line-height: 1.4em;">';
+        $helper_package->re_install($package_to_reinstall);
+        echo '</body></html>';
+        exit;
+    }
+
+    /**
+     * install the premium package from wysija's remote server
+     */
     function install_wjp(){
         $premiumpluginname='wysija-newsletters-premium/index.php';
         echo '<html><head></head><body style="font-family: sans-serif;font-size: 12px;line-height: 1.4em;">';
@@ -2503,12 +2671,8 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back{
             echo '<p>'.__('Your Premium features are now activated. Happy emailing!',WYSIJA).'</p>';
 
         }else{
-            //we need to download it
-            include_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
-            include_once WYSIJA_INC . 'wp-special'.DS.'wp-upgrader-skin.php';
-
-            $upgrader = new Plugin_Upgrader( new WysijaPlugin_Upgrader_Skin( compact('title', 'url', 'nonce', 'plugin', 'api') ));
-            $response=$upgrader->install('http://packager.wysija.com/download/zip?key=wysija-newsletters-premium');
+            $helper_package=WYSIJA::get('package','helper');
+            $helper_package->install('wysija-newsletters-premium',true);
         }
         echo '</body></html>';
         exit;

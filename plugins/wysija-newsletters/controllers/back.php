@@ -10,6 +10,8 @@ class WYSIJA_control_back extends WYSIJA_control{
     var $pref=array();
     var $statuses=array();
     var $viewShow=null;
+    var $_affected_rows = 0; //affected rows by batch select
+    var $target_action_form = ''; // default target of a form
 
     function WYSIJA_control_back(){
         parent::WYSIJA_control();
@@ -64,30 +66,28 @@ class WYSIJA_control_back extends WYSIJA_control{
         add_action('wysija_various_check',array($this,'variousCheck'));
         do_action('wysija_various_check');
 
-        /*check if the plugin has an update available */
-        $updateH=&WYSIJA::get('update','helper');
+        // check if the plugin has an update available
+        $updateH=WYSIJA::get('update','helper');
         $updateH->checkForNewVersion();
-
+        $this->target_action_form = $this->data['target_action_form'] = $this->_getTargetActionForm(); // set default value of any form action
     }
 
 
     function variousCheck(){
-        $modelC=&WYSIJA::get('config','model');
+        $model_config=WYSIJA::get('config','model');
         if(get_option('wysicheck')){
-            //$this->notice('licence check');
-            $onedaysec=7*24*3600;
-            $helpLic=&WYSIJA::get('licence','helper');
-            $res=$helpLic->check(true);
-            if($res['nocontact']){
-                /* redirect instantly to a page with a javascript file  where we check the domain is ok */
+            $helper_licence=WYSIJA::get('licence','helper');
+            $result=$helper_licence->check(true);
+            if($result['nocontact']){
+                // redirect instantly to a page with a javascript file  where we check the domain is ok
                 $data=get_option('wysijey');
-                /* remotely connect to host */
-                wp_enqueue_script('wysija-verif-licence', 'http://www.wysija.com/?wysijap=checkout&wysijashop-page=1&controller=customer&action=checkDomain&js=1&data='.$data, array( 'jquery' ), time());
+                // remotely connect to host
+                wp_enqueue_script('wysija-verif-licence', 'http://www.mailpoet.com/?wysijap=checkout&wysijashop-page=1&controller=customer&action=checkDomain&js=1&data='.$data, array( 'jquery' ), time());
             }
         }
 
-        //check if the name of the site or the upload folder has changed of name :
-        if(WYSIJA_UPLOADS_URL!=$modelC->getValue('uploadurl')){
+        // check if the name of the site or the upload folder has changed of name :
+        if(WYSIJA_UPLOADS_URL!=$model_config->getValue('uploadurl')){
 
         }
 
@@ -180,13 +180,7 @@ class WYSIJA_control_back extends WYSIJA_control{
      * by default this is the first method called from a controller this is from where we route to other methods
      */
     function main(){
-        global $wysija_installing;
-        if($wysija_installing===true){
-            $_REQUEST['action']='installation';
-        }
-
         $this->WYSIJA_control_back();
-
         if($this->model){
             if(isset($_REQUEST['action']))  $action=$_REQUEST['action'];
             else  $action='defaultDisplay';
@@ -195,7 +189,6 @@ class WYSIJA_control_back extends WYSIJA_control{
             if($action){
                 $this->_tryAction($action);
             }
-
         }else{
             $this->error('No Model is linked to this controller : '. get_class($this));
             return false;
@@ -204,6 +197,18 @@ class WYSIJA_control_back extends WYSIJA_control{
         return true;
     }
 
+    function _getTargetActionForm(){
+        $url = parse_url($_SERVER['REQUEST_URI']);
+        $target_action_form = $url['path'];
+        if(!empty($url['query'])){
+            parse_str($url['query'], $params);
+            if(isset($params['redirect']))
+                unset($params['redirect']);
+            $url['query'] = http_build_query($params);
+            $target_action_form = $url['path'].'?'.$url['query'];
+        }
+        return $target_action_form;
+    }
     function __setMetaTitle(){
         global $title;
 
@@ -216,10 +221,11 @@ class WYSIJA_control_back extends WYSIJA_control{
         $_REQUEST   = stripslashes_deep($_REQUEST);
         $_POST   = stripslashes_deep($_POST);
 
+        $is_batch_select = $this->_batchSelect();
+        $this->_affected_rows = $is_batch_select ? $this->_batch_select['count'] : (!empty($_REQUEST['wysija']['user']['user_id']) ? count($_REQUEST['wysija']['user']['user_id']) : 0);
         if(method_exists($this, $action)){
             /* in some bulk actions we need to specify the action name and one or few variables*/
             $this->action=$action;
-
             $this->viewShow=$this->action;
             if(!$this->viewShow) $this->viewShow='defaultDisplay';
 
@@ -246,7 +252,6 @@ class WYSIJA_control_back extends WYSIJA_control{
 
                 if(method_exists($this, $this->action)){
                     $this->viewShow=$this->action;
-
                     $this->$action($datas);
                     $this->__setMetaTitle();
 
@@ -273,22 +278,78 @@ class WYSIJA_control_back extends WYSIJA_control{
         do_action('wysija_check_total_subscribers');
     }
 
+    /**
+     * Batch select process
+     * - Currently, is for subscribers only
+     * - Get all matched subscribers and override to $_REQUEST['wysija']['user']['user_id']
+     */
+    function _batchSelect(){
+        if(empty($_REQUEST['wysija']['user']['force_select_all']))
+            return FALSE;
+        if (!(bool)$_REQUEST['wysija']['user']['force_select_all'])
+            return FALSE;
+        if(empty($_REQUEST['wysija']['user']['timestamp']))
+            return FALSE;
+        //$_POST['wysija']['filter'] = array(
+        //  link_filter => '', //[subscribed, unsubscribed, unsubscribed, all]
+        //  filter_list => int
+        //);
+        //
+        //$_POST['wysija']['user']['timestamp'] = int
+        //
+        //select all users which match to $_POST['wysija']['filter'] and create_at <= $_POST['wysija']['user']['timestamp']
+        // - build query
+
+        $select = array( '[wysija]user.user_id');
+
+        // filters for unsubscribed
+        $filters = $this->modelObj->detect_filters();
+
+
+        $this->_batch_select = array();
+
+
+        $this->_batch_select['query'] = $this->modelObj->get_subscribers( $select, $filters, '', true );
+        $this->_batch_select['query_count'] = $this->modelObj->get_subscribers( array( 'COUNT(DISTINCT([wysija]user.user_id))'), $filters, '', true );
+
+        //Create a temporary table
+        $temp_table_name = 'user'. time();
+        $temp_table_create = 'CREATE TEMPORARY TABLE '.$temp_table_name . ' (user_id int (10) NOT NULL, PRIMARY KEY (user_id)) ENGINE=MyISAM';
+        $temp_table_insert = 'INSERT INTO '.$temp_table_name.' ' . $this->_batch_select['query'];
+        $model_user = WYSIJA::get('user','model');
+        $model_user->query($temp_table_create);
+        $model_user->query($temp_table_insert);
+
+        //Override the queres with temporary table
+        unset($this->_batch_select['where']);
+        $row_count = $model_user->query('get_row', 'SELECT ROW_COUNT() as row_count');
+        $this->_batch_select['original_query'] = $this->_batch_select['query']; // useful for export feature; in this case, we don't use temporary table
+        $this->_batch_select['select'] = 'SELECT DISTINCT user_id';
+        $this->_batch_select['from'] = 'FROM '.$temp_table_name . ' A';
+        $this->_batch_select['query'] = 'SELECT user_id FROM '.$temp_table_name;
+        $this->_batch_select['count'] = $row_count['row_count'];
+        return true;
+    }
+
 
 
     function _checkTotalSubscribers(){
 
-        $config=&WYSIJA::get('config','model');
+        $config=WYSIJA::get('config','model');
         $totalSubscribers=$config->getValue('total_subscribers');
+        $helper_licence = WYSIJA::get('licence','helper');
 
         if((int)$totalSubscribers>1900){
             if((int)$totalSubscribers>2000){
+                $url_checkout = $helper_licence->get_url_checkout('over200');
                 $this->error(str_replace(array('[link]','[/link]'),
-                    array('<a title="'.__('Get Premium now',WYSIJA).'" class="premium-tab" href="javascript:;">','</a>'),
+                    array('<a title="'.__('Get Premium now',WYSIJA).'" target="_blank" href="'.$url_checkout.'">','</a>'),
                     sprintf(__('Yikes. You\'re over the limit of 2000 subscribers for the free version of Wysija (%1$s in total). Sending is disabled now. Please upgrade your version to [link]premium[/link] to send without limits.',WYSIJA)
                             ,$totalSubscribers)),true);
             }else{
+                $url_checkout = $helper_licence->get_url_checkout('near200');
                 $this->notice(str_replace(array('[link]','[/link]'),
-                    array('<a title="'.__('Get Premium now',WYSIJA).'" class="premium-tab" href="javascript:;">','</a>'),
+                    array('<a title="'.__('Get Premium now',WYSIJA).'" target="_blank" href="'.$url_checkout.'">','</a>'),
                     sprintf(__('Yikes! You\'re near the limit of %1$s subscribers for Wysija\'s free version. Upgrade to [link]Premium[/link] to send without limits, and more.',WYSIJA)
                             ,"2000")));
             }
@@ -446,6 +507,17 @@ class WYSIJA_control_back extends WYSIJA_control{
     function redirect($location=false){
         global $wysi_location;
         define('WYSIJA_REDIRECT',true);
+        if($location)
+        {
+            $url = parse_url($location);
+            if(!empty($url['query'])) {
+                $location .= '&';
+            } else {
+                $location .= '?';
+            }
+
+            $location .= 'redirect=1';
+        }
         $wysi_location=$location;
     }
 
@@ -473,7 +545,7 @@ class WYSIJA_control_back extends WYSIJA_control{
         $viewMedia=$this->viewObj;
         $_GET['type']=$_REQUEST['type']='image';
 
-        $config=&WYSIJA::get('config','model');
+        $config=WYSIJA::get('config','model');
         $_GET['post_id']=$_REQUEST['post_id']=$config->getValue('confirm_email_link');
         $post_id = isset($_GET['post_id'])? (int) $_GET['post_id'] : 0;
         if(file_exists(ABSPATH.'wp-admin'.DS.'admin.php')) require_once(ABSPATH.'wp-admin'.DS.'admin.php');
@@ -575,9 +647,9 @@ class WYSIJA_control_back extends WYSIJA_control{
           js.src = "//connect.facebook.net/en_US/all.js#xfbml=1";
           fjs.parentNode.insertBefore(js, fjs);
         }(document, \'script\', \'facebook-jssdk\'));</script>
-        <div class="fb-like" data-href="http://www.facebook.com/wysija" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div></div>
+        <div class="fb-like" data-href="http://www.facebook.com/mailpoetplugin" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div></div>
         <div class="twitter">
-        <a href="https://twitter.com/wysija" class="twitter-follow-button" data-show-count="true">Follow @wysija</a>
+        <a href="https://twitter.com/mail_poet" class="twitter-follow-button" data-show-count="true">Follow us</a>
         <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
         </div>
         <div class="gplus">

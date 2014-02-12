@@ -94,22 +94,31 @@
 
 
 
-#lang_sel_list {height:32px; position:relative; z-index:99;  font-family: verdana, arial, sans-serif; width:149px;}
+#lang_sel_list {height:32px; position:relative; z-index:99;  font-family: verdana, arial, sans-serif;}
+#lang_sel_list.lang_sel_list_vertical{width:149px;}
+
 /* hack to correct IE5.5 faulty box model */
 * html #lang_sel_list {width:12em; w\idth:12em;}
 /* remove all the bullets, borders and padding from the default list styling */
 #lang_sel_list ul, #lang_sel_list li {padding:0 !important; margin:0 !important; list-style-type:none !important;}
 #lang_sel_list li:before{content:'' !important;}
-#lang_sel_list ul {width:149px;}
+#lang_sel_list ul.lang_sel_list_vertical {width:149px;}
 /* float the list to make it horizontal and a relative positon so that you can control the dropdown menu positon */
-#lang_sel_list li {float:left;width:149px;position:relative;}
+#lang_sel_list li {float:left;position:relative;}
+#lang_sel_list.lang_sel_list_vertical li {width:149px;}
+
 /* style the links for the top level */
-#lang_sel_list a, #lang_sel_list a:visited {display:block;font-size:11px;text-decoration:none !important; color:#444444; border:1px solid #cdcdcd; border-width:0 1px 1px 1px; background:#fff; padding-left:10px; line-height:18px;}
+#lang_sel_list a, #lang_sel_list a:visited {display:block;font-size:11px;text-decoration:none !important; color:#444444; background:#fff;  line-height:18px;padding-left:5px;}
+#lang_sel_list.lang_sel_list_vertical a, #lang_sel_list.lang_sel_list_vertical a:visited{border:1px solid #cdcdcd; border-width:0 1px 1px 1px;padding-left:10px;}
+
+
 /* a hack so that IE5.5 faulty box model is corrected */
 * html #lang_sel_list a, * html #lang_sel_list a:visited {width:149px; w\idth:138px;}
 
 /* hide the sub levels and give them a positon absolute so that they take up no room */
-#lang_sel_list ul {/*visibility:hidden;position:absolute;*/height:0;top:19px;left:0; width:149px;border-top:1px solid #cdcdcd;}
+#lang_sel_list.lang_sel_list_vertical ul {/*visibility:hidden;position:absolute;*/height:0;top:19px;left:0; border-top:1px solid #cdcdcd;}
+
+
 /* another hack for IE5.5 */
 * html #lang_sel_list ul {top:18px;t\op:19px;}
 
@@ -117,7 +126,9 @@
 #lang_sel_list table {position:absolute; top:0; left:0; border-collapse:collapse;}
 
 /* style the second level links */
-#lang_sel_list ul a, #lang_sel_list_list ul a:visited {background:#ffffff; color:#444444; height:auto; line-height:1em; padding:3px 10px;}
+#lang_sel_list ul a, #lang_sel_list_list ul a:visited {background:#ffffff; color:#444444; height:auto; line-height:1em;}
+#lang_sel_list.lang_sel_list_vertical ul a, #lang_sel_list_list ul a:visited {padding:3px 10px;}
+
 /* yet another hack for IE5.5 */
 * html #lang_sel_list ul a, * html #lang_sel_list ul a:visited {width:150px;w\idth:128px;}
 

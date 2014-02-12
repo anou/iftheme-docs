@@ -1,7 +1,7 @@
 jQuery(document).ready(function(){
     jQuery('#icl_ct_user_pref').submit(iclSaveForm);
     
-    jQuery('.icl_original_comment_link').live('click', iclShowOriginalComment);
+    jQuery(document).delegate('.icl_original_comment_link', 'click', iclShowOriginalComment);
     var icl_preload_ajx_img = new Image(16,16);
     icl_preload_ajx_img.src = icl_ajxloaderimg_src;
 });

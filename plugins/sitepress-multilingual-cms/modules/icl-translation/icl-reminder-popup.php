@@ -140,12 +140,20 @@
     
     $support_mode = isset($_GET['support']) ? $_GET['support'] : '';
     
+    /*
     if ($support_mode == '1') {
         $iclq = new ICanLocalizeQuery($this->settings['support_site_id'], $this->settings['support_access_key']);
     } else {
         $iclq = new ICanLocalizeQuery($this->settings['site_id'], $this->settings['access_key']);
     }
     $session_id = $iclq->get_current_session(true, $support_mode == '1');
+    */
+    if(isset($this->settings['site_id']) && isset($this->settings['access_key'])){
+        $iclq = new ICanLocalizeQuery($this->settings['site_id'], $this->settings['access_key']);
+        $session_id = $iclq->get_current_session(true, $support_mode == '1');
+    }else{
+        $session_id = '';
+    }
     
     $admin_lang = $this->get_admin_language();
     

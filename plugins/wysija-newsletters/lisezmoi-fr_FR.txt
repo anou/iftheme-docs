@@ -10,7 +10,7 @@ Envoyez facilement et joliment vos articles et newsletters directement de WordPr
 
 == Description ==
 
-Glissez/déposez vos articles, images, liens sociaux et séparateurs dans votre newsletter. Choisissez parmi un des 30 thèmes intégrés. Modifier les polices et les couleurs à la volée. La configuration est simplifiée. Et si vous êtes encore perdu [nous sommes là](http://support.wysija.com/) pour vous aider. Envoyer des newsletters avec WordPress devient un jeu d'enfant.
+Glissez/déposez vos articles, images, liens sociaux et séparateurs dans votre newsletter. Choisissez parmi un des 30 thèmes intégrés. Modifier les polices et les couleurs à la volée. La configuration est simplifiée. Et si vous êtes encore perdu [nous sommes là](http://support.mailpoet.com/) pour vous aider. Envoyer des newsletters avec WordPress devient un jeu d'enfant.
 
 
 = Video de demonstration d'une minute =

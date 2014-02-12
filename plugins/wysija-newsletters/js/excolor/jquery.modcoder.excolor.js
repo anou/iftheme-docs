@@ -391,6 +391,7 @@ jQuery.fn.modcoder_excolor = function (C) {
                 jQuery(slider).css('left', pos_huebox.left + 'px').css('top', (pos_huebox.top + hue) + 'px');
                 init_positions();
                 init_colors();
+
                 if (hexistr == '') {
                     jQuery(colsample).css('background-image', 'url(' + root_path + 'transp.gif)').css('background-repeat', 'repeat');
                     jQuery(isample).val('').css('background', 'url(' + root_path + 'transp.gif) repeat');
@@ -402,7 +403,7 @@ jQuery.fn.modcoder_excolor = function (C) {
 
         function update_inputs() {
             // set color_has_changed to true
-            C.color_has_changed = true;
+            if(C.color_has_changed === false) C.color_has_changed = true;
 
             var a = hsb2rgb_hex(-1 * (hue - 119) * 3, saturation, brightness, 'rgb');
             jQuery(inp_r).val(Math.round(a['r']) * 1);
@@ -764,6 +765,9 @@ jQuery.fn.modcoder_excolor = function (C) {
                 e.preventDefault()
             });
             jQuery(wrapper).find('input.modcoder_input').keypress(function (a) {
+                // set color has changed flag
+                if(C.color_has_changed === false) C.color_has_changed = true;
+
                 if (jQuery(this).hasClass('modcoder_rgb')) {
                     if (!((String.fromCharCode(a.which) * 1) in w) && !(a.which in z)) {
                         a.preventDefault()

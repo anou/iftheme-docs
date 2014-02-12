@@ -145,13 +145,15 @@ class ICanLocalizeQuery{
                 
         return $results;
     }
-    
-    function _request_gz($request_url){
-        $gzipped = true;
-        return $this->_request($request_url, 'GET', null, null, $gzipped);
-    }   
-       
-    function build_cms_request_xml($data, $orig_lang) {
+
+	function _request_gz( $request_url )
+	{
+		$gzipped = true; //function_exists( 'gzinflate' ) && is_callable( 'gzinflate' );
+
+		return $this->_request( $request_url, 'GET', null, null, $gzipped );
+	}
+
+	function build_cms_request_xml($data, $orig_lang) {
         global $wp_taxonomies;
         $taxonomies = array_diff(array_keys((array)$wp_taxonomies), array('post_tag','category'));
         

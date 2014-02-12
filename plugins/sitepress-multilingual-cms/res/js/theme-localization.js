@@ -4,7 +4,7 @@ addLoadEvent(function(){
     jQuery('#icl_theme_localization_type :radio[name="icl_theme_localization_type"]').change(iclEditThemeLocalizationType);
     jQuery('#icl_theme_localization_type :checkbox[name="icl_theme_localization_load_td"]').change(iclToggleTextDoomainInput);
     
-    jQuery('.check-column :checkbox').live('change', iclCheckColumn);
+    jQuery(document).delegate('.check-column :checkbox', 'change', iclCheckColumn);
 });
 
 function iclSaveThemeLocalization(){

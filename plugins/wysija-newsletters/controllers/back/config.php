@@ -23,6 +23,9 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
         $this->jsTrans['processbounce'] = __('Process bounce handling now!', WYSIJA);
         $this->jsTrans['errorbounceforward'] = __('When setting up the bounce system, you need to have a different address for the bounce email and the forward to address', WYSIJA);
 
+        $this->jsTrans['premium_activate'] = __('Already paid? Click here to activate', WYSIJA);
+        $this->jsTrans['premium_activating'] = __('Checking license', WYSIJA);
+
         // form list
         $this->jsTrans['suredelete'] = __('Are you sure you want to delete this form?', WYSIJA);
 
@@ -30,7 +33,8 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
             case 'log':
             case 'save':
             case 'clearlog':
-                wp_enqueue_script('wysija-config-settings', WYSIJA_URL.'js/admin-config-settings.js', array('jquery'), WYSIJA::get_version());
+                wp_enqueue_script('wysija-config-settings', WYSIJA_URL.'js/admin-config-settings.js', array('wysija-admin-js-global'), WYSIJA::get_version());
+                wp_enqueue_script('jquery-cookie', WYSIJA_URL.'js/jquery/jquery.cookie.js', array('jquery'), WYSIJA::get_version());
             case 'form_add':
             case 'form_edit':
             case 'form_duplicate':
@@ -57,7 +61,8 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
                 return;
                 break;
             default:
-                wp_enqueue_script('wysija-config-settings', WYSIJA_URL.'js/admin-config-settings.js', array('jquery'), WYSIJA::get_version());
+                wp_enqueue_script('wysija-config-settings', WYSIJA_URL.'js/admin-config-settings.js', array('wysija-admin-js-global'), WYSIJA::get_version());
+                wp_enqueue_script('jquery-cookie', WYSIJA_URL.'js/jquery/jquery.cookie.js', array('jquery'), WYSIJA::get_version());
         }
 
         if(WYSIJA_DBG > 1) {
@@ -69,7 +74,7 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
 
         if(isset($_REQUEST['validate'])){
             $this->notice(str_replace(array('[link]','[/link]'),
-            array('<a title="'.__('Get Premium now',WYSIJA).'" class="premium-tab" href="javascript:;">','</a>'),
+            array('<a title="'.__('Get Premium now',WYSIJA).'" class="premium-activate" href="javascript:;">','</a>'),
             __('You\'re almost there. Click this [link]link[/link] to activate the licence you have just purchased.',WYSIJA)));
 
         }
@@ -82,7 +87,7 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
 
             $dataconf=json_decode(base64_decode($_POST['xtz']));
             if(isset($dataconf->dkim_pubk->key) && isset($dataconf->dkim_privk)){
-                $modelConf=&WYSIJA::get('config','model');
+                $modelConf=WYSIJA::get('config','model');
                 $dataconfsave=array('dkim_pubk'=>$dataconf->dkim_pubk->key, 'dkim_privk'=>$dataconf->dkim_privk,'dkim_1024'=>1);
 
                 $modelConf->save($dataconfsave);
@@ -110,7 +115,7 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
     }
 
     function changeMode(){
-        $helperFile=&WYSIJA::get('file','helper');
+        $helperFile=WYSIJA::get('file','helper');
         $helperFile->chmodr(WYSIJA_UPLOADS_DIR, 0666, 0777);
         $this->redirect('admin.php?page=wysija_config');
         return true;
@@ -119,7 +124,7 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
     function doreinstall(){
 
         if(isset($_REQUEST['postedfrom']) && $_REQUEST['postedfrom'] === 'reinstall') {
-            $uninstaller=&WYSIJA::get('uninstall','helper');
+            $uninstaller=WYSIJA::get('uninstall','helper');
             $uninstaller->reinstall();
         }
         $this->redirect('admin.php?page=wysija_config');
@@ -145,7 +150,7 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
 
     // WYSIJA Form Editor
     function form_add() {
-        $helper_form_engine =& WYSIJA::get('form_engine', 'helper');
+        $helper_form_engine = WYSIJA::get('form_engine', 'helper');
         // set default form data
         $helper_form_engine->set_data();
 
@@ -156,7 +161,7 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
         );
 
         // insert into form table
-        $model_forms =& WYSIJA::get('forms', 'model');
+        $model_forms = WYSIJA::get('forms', 'model');
         $form_id = $model_forms->insert($form);
 
         if($form_id !== null && (int)$form_id > 0) {
@@ -174,7 +179,7 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
         if(isset($_GET['id']) && (int)$_GET['id'] > 0) {
             $form_id = (int)$_GET['id'];
 
-            $model_forms =& WYSIJA::get('forms', 'model');
+            $model_forms = WYSIJA::get('forms', 'model');
 
             // get form data
             $form = $model_forms->getOne(array('name', 'data', 'styles'), array('form_id' => $form_id));
@@ -186,7 +191,7 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
                 $model_forms->reset();
 
                 // add "copy" to the name
-                $form['name'] = $form['name'].' '.__('Copy', WYSIJA);
+                $form['name'] = $form['name'].' - '.__('Copy', WYSIJA);
 
                 // insert form (duplicated)
                 $model_forms->insert($form);
@@ -206,7 +211,7 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
         if(isset($_GET['id']) && (int)$_GET['id'] > 0) {
             $form_id = (int)$_GET['id'];
 
-            $model_forms =& WYSIJA::get('forms', 'model');
+            $model_forms = WYSIJA::get('forms', 'model');
 
             // get form data
             $form = $model_forms->getOne(array('name'), array('form_id' => $form_id));
@@ -244,7 +249,7 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
         // if no form id was specified, then it's a new form
         if($form_id !== null) {
             // try to get form data based on form id
-            $model_forms =& WYSIJA::get('forms', 'model');
+            $model_forms = WYSIJA::get('forms', 'model');
             $form = $model_forms->getOne($form_id);
 
             // if the form does not exist
@@ -260,7 +265,7 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
         // pass form to the view
         $this->data['form'] = $form;
 
-        $helper_form_engine =& WYSIJA::get('form_engine', 'helper');
+        $helper_form_engine = WYSIJA::get('form_engine', 'helper');
         $lists = $helper_form_engine->get_lists();
 
         // select default list
@@ -275,7 +280,7 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
         $this->data['lists'] = $lists;
 
         // get available custom fields
-        $model_user_field =& WYSIJA::get('user_field', 'model');
+        $model_user_field = WYSIJA::get('user_field', 'model');
         $model_user_field->orderBy('field_id');
         $custom_fields = $model_user_field->getRows(false);
 
@@ -286,16 +291,16 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
                 'column_name' => 'list',
                 'column_type' => 'list',
                 'params' => array(
-                    'label' => __('Select a list:', WYSIJA),
+                    'label' => __('Select list(s):', WYSIJA),
                     'values' => $default_list
                 )
             ),
             array(
-                'name' => __('Random text or instructions', WYSIJA),
-                'column_name' => 'text',
-                'column_type' => 'text',
+                'name' => __('Random text or HTML', WYSIJA),
+                'column_name' => 'html',
+                'column_type' => 'html',
                 'params' => array(
-                    'text' => __('Random text or instructions', WYSIJA)
+                    'text' => __('Random text or HTML', WYSIJA)
                 )
             ),
             array(
@@ -303,6 +308,13 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
                 'column_name' => 'divider',
                 'column_type' => 'divider'
             )
+            // array(
+            //     'name' => __('HTML code', WYSIJA),
+            //     'column_name' => 'html',
+            //     'column_type' => 'html',
+            //     'params' => array(
+            //         'text' => __('HTML code', WYSIJA)
+            //     )
         );
 
         // set data to be passed to the view
@@ -355,7 +367,7 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
         switch($this->data['type']) {
             // in case of the list widget, we need to pass an array of all available lists
             case 'list':
-                $model_list =& WYSIJA::get('list', 'model');
+                $model_list = WYSIJA::get('list', 'model');
 
                 // get lists users can subscribe to (aka "enabled list")
                 $extra['lists'] = $model_list->get(array('name', 'list_id', 'is_public'), array('is_enabled' => 1));

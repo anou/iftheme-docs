@@ -18,28 +18,29 @@ class WYSIJA_control extends WYSIJA_object{
     function WYSIJA_control(){
         //setup some required objects for the request
         if(!defined('DOING_AJAX')){
-            if($this->view) $this->viewObj=&WYSIJA::get($this->view,"view",false,$this->extension);
+            if($this->view) $this->viewObj = WYSIJA::get($this->view,"view",false,$this->extension);
+            if(empty($this->viewObj)) $this->viewObj = new stdClass (); // In some cases, viewObj can not be created
             if($this->model){
-                $this->modelObj=&WYSIJA::get($this->model,"model",false,$this->extension);
-                $this->viewObj->model=&WYSIJA::get($this->model,"model",false,$this->extension);
+                $this->modelObj=WYSIJA::get($this->model,"model",false,$this->extension);
+                $this->viewObj->model=WYSIJA::get($this->model,"model",false,$this->extension);
             }
         }
 
         //test for security, some actions require security some others don't
-        if(isset($_REQUEST['_wpnonce'])){
+        if(!empty($_REQUEST['_wpnonce'])){
             $_REQUEST['wpnonceback']=$_REQUEST['_wpnonce'];
 
             if($_REQUEST['action']=='wysija_ajax'){
                 $actionnonce='wysija_ajax';
             }else{
                 //backend case
-                if(isset($_REQUEST['page'])){
+                if(!empty($_REQUEST['page'])){
                     $actionnonce=$_REQUEST['page'].'-action_'.$_REQUEST['action'];
-                    if(isset($_REQUEST['id'])) $actionnonce.='-id_'.$_REQUEST['id'];
+                    if(!empty($_REQUEST['id'])) $actionnonce.='-id_'.$_REQUEST['id'];
                 //frontend case
-                }elseif(isset($_REQUEST['controller'])){
+                }elseif(!empty($_REQUEST['controller'])){
                     $actionnonce=$_REQUEST['controller'].'-action_'.$_REQUEST['action'];
-                    if(isset($_REQUEST['id'])) $actionnonce.='-id_'.$_REQUEST['id'];
+                    if(!empty($_REQUEST['id'])) $actionnonce.='-id_'.$_REQUEST['id'];
                 }
             }
 
@@ -48,8 +49,12 @@ class WYSIJA_control extends WYSIJA_object{
            //if the wp_nonce has been set up then we test it against the one here if it fails we just die
            $nonce=$_REQUEST['_wpnonce'];
 
-           if(!function_exists('wp_verify_nonce')) include(ABSPATH.'wp-includes'.DS.'pluggable.php');
-           if(!wp_verify_nonce($nonce, $actionnonce) ) die('Security failure during request.');
+           if(!function_exists('wp_verify_nonce')){
+                include(ABSPATH.'wp-includes'.DS.'pluggable.php');
+           }
+           if(!wp_verify_nonce($nonce, $actionnonce) ){
+               die('Security failure during request.');
+           }
         }
     }
 

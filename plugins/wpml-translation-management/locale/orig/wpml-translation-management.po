@@ -84,13 +84,19 @@ msgstr ""
 msgid "Private"
 msgstr ""
 
-msgid "Need translators?"
+msgid "Get quote"
+msgstr ""
+
+msgid "Add translators from ICanLocalize"
+msgstr ""
+
+msgid "Contact ICanLocalize"
 msgstr ""
 
 msgid "Hide this"
 msgstr ""
 
-msgid "Get quote"
+msgid "Need translators?"
 msgstr ""
 
 msgid "Show documents in:"
@@ -222,6 +228,15 @@ msgstr ""
 msgid "Translation options"
 msgstr ""
 
+msgid "Translate all"
+msgstr ""
+
+msgid "Update none"
+msgstr ""
+
+msgid "Duplicate all"
+msgstr ""
+
 msgid "Translate by"
 msgstr ""
 
@@ -307,6 +322,12 @@ msgid "Are you sure you want to cancel these jobs?"
 msgstr ""
 
 msgid "WARNING: %s job(s) are currently being translated."
+msgstr ""
+
+msgid "Are you sure you want to abort this translation?"
+msgstr ""
+
+msgid "Abort translation"
 msgstr ""
 
 msgid "Same as the original document"
@@ -427,6 +448,9 @@ msgid "Choose"
 msgstr ""
 
 msgid "To language:"
+msgstr ""
+
+msgid "(only for strings)"
 msgstr ""
 
 msgid "Select translation service"

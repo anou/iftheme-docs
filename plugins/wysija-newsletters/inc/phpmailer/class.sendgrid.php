@@ -59,6 +59,8 @@ class acymailingSendgrid {
             $header=array();
             $header['Content-Type']='application/x-www-form-urlencoded';
             $header['Connection']='Keep-Alive';
+            $header['Message-ID']=$object->MessageID;
+
 
             $params['headers']=json_encode($header);
             $request = $url.'api/mail.send.json';

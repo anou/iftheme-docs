@@ -13,7 +13,7 @@
 if ( !defined( 'ABSPATH' ) ) exit;
 
 __( 'Wysija Newsletters', 'wysija-newsletters' );
-__( 'Create and send newsletters. Import and manage your lists. Add subscription forms in widgets, articles and pages. Wysija is a freemium plugin updated regularly.', 'wysija-newsletters' );
+__( 'Create and send newsletters. Import and manage your lists. Add subscription forms in widgets, articles and pages. Wysija is a freemium plugin updated regularly with new features.', 'wysija-newsletters' );
 __( 'Extended functionalities to the free version', 'wysija-newsletters' );
 __( 'Wysija', 'wysija-newsletters' );
 ?> 

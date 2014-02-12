@@ -384,7 +384,7 @@ For each language, you need to enter the following information:
 		if (!$this->add_validation_failed) {
 			unset($_POST['icl_edit_languages']['add']);
 		}
-			// Reser active languages.
+			// Reset active languages.
 		$this->get_active_languages();
 	}
 
@@ -547,11 +547,11 @@ For each language, you need to enter the following information:
                 
                 $translation_ids = $wpdb->get_col($wpdb->prepare("SELECT translation_id FROM {$wpdb->prefix}icl_translations WHERE language_code=%s", $lang->code));
                 if($translation_ids){
-                    $rids = $wpdb->get_col("SELECT rid FROM {$wpdb->prefix}icl_translation_status WHERE translation_id IN (" . join($translation_ids) . ")");
+                    $rids = $wpdb->get_col("SELECT rid FROM {$wpdb->prefix}icl_translation_status WHERE translation_id IN (" . join(',', $translation_ids) . ")");
                     if($rids){
-                        $job_ids = $wpdb->get_col("SELECT job_id FROM {$wpdb->prefix}icl_translate_job WHERE rid IN (" . join($rids) . ")");    
+                        $job_ids = $wpdb->get_col("SELECT job_id FROM {$wpdb->prefix}icl_translate_job WHERE rid IN (" . join(',', $rids) . ")");
                         if($job_ids){
-                            $wpdb->query("DELETE FROM {$wpdb->prefix}icl_translate WHERE job_id IN (" . join($job_ids) . ")");    
+                            $wpdb->query("DELETE FROM {$wpdb->prefix}icl_translate WHERE job_id IN (" . join(',', $job_ids) . ")");
                         }
                     }    
                 }
@@ -617,10 +617,10 @@ For each language, you need to enter the following information:
 		foreach ($data as $key => $value) {
 			if (is_array($value)) {
 				foreach ($value as $k => $v) {
-					$data[$key][$k] = $wpdb->escape($v);
+					$data[$key][$k] = esc_sql($v);
 				}
 			}
-			$data[$key] = $wpdb->escape($value);
+			$data[$key] = esc_sql($value);
 		}
 		return $data;
 	}
@@ -651,6 +651,15 @@ For each language, you need to enter the following information:
         $validated = is_array($fileinfo) && in_array($fileinfo['mime'], array('image/gif', 'image/jpeg', 'image/png')) && $fileinfo['0'] > 0;
         
 		if ($validated && move_uploaded_file($_FILES['icl_edit_languages']['tmp_name'][$id]['flag_file'], $target_path) ) {
+            
+            if(function_exists('wp_get_image_editor')){
+                $image = wp_get_image_editor( $target_path );
+                if ( ! is_wp_error( $image ) ) {
+                    $image->resize( 18, 12, true );
+                    $image->save( $target_path );
+                }                
+            }
+            
     		return $filename;
 		} else {
     		$this->error(__('There was an error uploading the file, please try again!','sitepress'));

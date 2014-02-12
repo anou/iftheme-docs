@@ -1,6 +1,6 @@
 .icl_tm_wrap{
     border: 1px solid #CCCCCC;
-    padding:10px;    
+    padding:10px;
     background-color:#ffffff;
 }
 
@@ -8,7 +8,7 @@
     margin-top: 4px;
 }
 #icl_tm_adduser .icl_tm_lang_pairs{
-    display: none;    
+    display: none;
     padding:5px;
 }
 
@@ -27,7 +27,7 @@
 .icl_tm_no_to{
     display: none;
     background-color: pink;
-    padding:5px;    
+    padding:5px;
     -moz-border-radius: 4px;
     margin-bottom: 5px;
 }
@@ -40,7 +40,7 @@
     background-color: #fff;
 }
 .nav-tab-active{
-    font-weight: bold;        
+    font-weight: bold;
     background-color: #fff;
     border-bottom-color: #fff;
 }
@@ -53,13 +53,14 @@
     display: none;
 }
 
-#icl_custom_posts_sync_options, #icl_custom_tax_sync_options{
+/*#icl_custom_posts_sync_options, #icl_custom_tax_sync_options{
     width:49%;
-    float:left;    
+    float:left;
 }
 #icl_custom_posts_sync_options{
     margin-right:2%;
 }
+*/
 
 .icl_tm_admin_options li ul{
     margin-left:20px;

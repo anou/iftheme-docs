@@ -24,7 +24,10 @@ class WYSIJA_model extends WYSIJA_object{
     var $columns=array();
     var $joins=array();
     var $ignore = false;
-    var $comparisonKeys = array('equal', 'notequal', 'like', 'greater', 'less', 'greater_eq', 'less_eq');
+    var $sql_error=false;
+    var $comparisonKeys = array('equal', 'notequal', 'like', 'greater', 'less', 'greater_eq', 'less_eq', 'is');
+    var $time_start = 0;
+    var $query_duration = 0;
 
     function WYSIJA_model($extensions=''){
         if(defined('WYSIJA_DBG') && WYSIJA_DBG>0) $this->dbg=true;
@@ -46,6 +49,7 @@ class WYSIJA_model extends WYSIJA_object{
         $this->getFormat=ARRAY_A;
         $this->getOne=false;
         $this->limitON=false;
+        $this->sql_error=false;
     }
 
     /**
@@ -67,7 +71,6 @@ class WYSIJA_model extends WYSIJA_object{
             $conditions=array('equal'=>array($this->pk=>$conditions));
         }
         if($this->setConditions($conditions)){
-
             if($this->getOne)   $results=$this->getRows($columnsOrPKval,0,1);
             else $results=$this->getRows($columnsOrPKval);
             //$this->escapeQuotesFromRes($results);
@@ -83,8 +86,6 @@ class WYSIJA_model extends WYSIJA_object{
             }
             else return $results;
         }
-
-
 
         return false;
     }
@@ -158,7 +159,7 @@ class WYSIJA_model extends WYSIJA_object{
         if(!$limit){
             if(isset($this->limit_pp)) $limit=$this->limit_pp;
             else{
-                $config=&WYSIJA::get('config','model');
+                $config=WYSIJA::get('config','model');
                 $limit=$config->getValue('limit_listing');
             }
         }
@@ -205,9 +206,18 @@ class WYSIJA_model extends WYSIJA_object{
             $query.=$groupBy;
         }
 
-        if($this->dbg) $this->keepQry($query,'count');
 
+        // if dbg is on we track the duration of the query
+        if($this->dbg){
+            $this->timer_start();
+        }
         $results=$this->query('get_res',$query,$this->getFormat);
+
+        // if dbg is on we track the duration of the query
+        if($this->dbg){
+            $this->timer_stop();
+            $this->keepQry('count');
+        }
 
         if(!$results || count($results)>1) return $results;
         else {
@@ -306,10 +316,15 @@ class WYSIJA_model extends WYSIJA_object{
                             if(is_numeric($condVal) === false) $condVal = '"'.$condVal.'"';
                             $conditions[]=$condK.' <= '.$condVal;
                             break;
+                        case 'is':
+
+                            $conditions[]=$condK.' '.$condVal;
+                            break;
                     }
                 }
 
             }
+
             $query.=' WHERE '.implode(' AND ',$conditions);
         }
 
@@ -553,7 +568,7 @@ class WYSIJA_model extends WYSIJA_object{
                                 $this->values[$key]=time();
                                 break;
                             case 'ip':
-                                $userHelper=&WYSIJA::get("user","helper");
+                                $userHelper=WYSIJA::get("user","helper");
                                 /*record the ip and save the user*/
                                 $this->values[$key]=$userHelper->getIP();
                                 break;
@@ -609,6 +624,11 @@ class WYSIJA_model extends WYSIJA_object{
 
         global $wpdb;
 
+        // if dbg is on we track the duration of the query
+        if($this->dbg){
+            $this->timer_start();
+        }
+
         if($update){
 
             if( $this->specialUpdate || isset($this->conditions['equal']) || isset($this->conditions['notequal']) || isset($this->conditions['like'])){
@@ -636,8 +656,11 @@ class WYSIJA_model extends WYSIJA_object{
             }
 
         }
+
+        // if dbg is on we track the duration of the query
         if($this->dbg){
-            $this->keepQry();
+            $this->timer_stop();
+            $this->keepQry('save');
         }
 
         if(!$resultSave){
@@ -700,7 +723,7 @@ class WYSIJA_model extends WYSIJA_object{
             /* let's correct the type of the values based on the one defined in the model*/
             switch($this->columns[$key]['type']){
                 case "email":
-                    $userHelper = &WYSIJA::get('user','helper');
+                    $userHelper = WYSIJA::get('user','helper');
                     if(!$userHelper->validEmail($val)){
                         $this->error(sprintf(__('Field "%1$s" needs to be a valid Email.',WYSIJA), $key),true);
                         $error=true;
@@ -810,7 +833,7 @@ class WYSIJA_model extends WYSIJA_object{
                 }
             } else {
                 foreach($conditions as $key => $cond) {
-                    if(!in_array($key, array('like','equal','notequal','greater','less','greater_eq','less_eq'))){
+                    if(!in_array($key, $this->comparisonKeys /*array('like','equal','notequal','greater','less','greater_eq','less_eq')*/)){
                         if($this->colCheck && !$this->checkAreColumns($conditions)) return false;
                         if(array_key_exists('equal', $this->conditions) === false) $this->conditions['equal'] = array();
                         $this->conditions['equal'][$key] = $cond;
@@ -846,58 +869,75 @@ class WYSIJA_model extends WYSIJA_object{
         return true;
     }
 
-    function query($query,$arg2="",$arg3=ARRAY_A){
-        global $wpdb;
+    function timer_start() {
+        $this->query_duration = 0;
+        $this->time_start = microtime( true );
+        return true;
+    }
 
-       if(!$arg2) $query=str_replace(array('[wysija]','[wp]'),array($this->getPrefix(),$wpdb->prefix),$query);
-       else $arg2=str_replace(array('[wysija]','[wp]'),array($this->getPrefix(),$wpdb->prefix),$arg2);
+    function timer_stop() {
+        $this->query_duration = ( microtime( true ) - $this->time_start );
+    }
+
+    function query($query,$arg2='',$arg3=ARRAY_A){
+        global $wpdb;
+        $this->sql_error = false;
+       if(!$arg2) $query = str_replace(array('[wysija]','[wp]'),array($this->getPrefix(),$wpdb->prefix),$query);
+       else $arg2 = str_replace(array('[wysija]','[wp]'),array($this->getPrefix(),$wpdb->prefix),$arg2);
+
+       // if dbg is on we track the duration of the query
+       if($this->dbg){
+           $this->timer_start();
+       }
 
         switch($query){
             case 'get_row':
-                if($this->dbg) $this->keepQry($arg2,'query');
-
-                $resultss=$wpdb->get_row($arg2,$arg3);
+                $result = $wpdb->get_row($arg2,$arg3);
                 $this->logError();
-                return $resultss;
                 break;
             case 'get_res':
-                if($this->dbg) $this->keepQry($arg2,'query');
-                $results=$wpdb->get_results($arg2,$arg3);
+                $result = $wpdb->get_results($arg2,$arg3);
                 //$this->escapeQuotesFromRes($results);
                 $this->logError();
-                return $results;
                 break;
             default:
-                if($this->dbg) $this->keepQry($query,'query');
-
-                $result=$wpdb->query($query);
+                $result = $wpdb->query($query);
                 $this->logError();
-                if(substr($query, 0, 6)=='INSERT') return $wpdb->insert_id;
-                else return $result;
-        }
 
+                // get the last insert id if it's an insert query
+                if(substr($query, 0, 6) == 'INSERT') $result = $wpdb->insert_id;
+
+        }
+        // if dbg is on we track the duration of the query
+        if($this->dbg){
+           $this->timer_stop();
+           $this->keepQry('query');
+       }
+       return $result;
     }
 
     function logError(){
         if(defined('WYSIJA_DBG') && WYSIJA_DBG>1){
             global $wysija_queries_errors, $wpdb;
             if(!$wysija_queries_errors) $wysija_queries_errors=array();
-            $mysqlerror=mysql_error($wpdb->dbh);
-           /* dbg($wpdb->last_query,0);
-            dbg($wpdb,0);*/
-            if($mysqlerror) {
-                $wysija_queries_errors[]=$mysqlerror;
-                WYSIJA::log('queries_errors',$mysqlerror,'query_errors');
+
+            $this->sql_error=mysql_error($wpdb->dbh);
+
+            if($this->sql_error) {
+                $wysija_queries_errors[]=$this->sql_error;
+                WYSIJA::log('queries_errors',$this->sql_error,'query_errors');
             }
 
         }
 
     }
 
-    function keepQry($qry=false,$from='wpdb'){
+    function keepQry($from='wpdb'){
         global $wpdb,$wysija_queries;
-        if($qry)    $wysija_queries[]='[FROM '.$from.']'.$qry;
-        else    $wysija_queries[$from][]='[FROM '.$from.']'.$wpdb->last_query;
+
+        //if($qry)    $wysija_queries['[FROM '.$from.']'] = array('duration' => $this->query_duration , 'query' => $qry);
+        //else
+        $wysija_queries[$from][] = array('duration' => $this->query_duration , 'query' => $wpdb->last_query);
     }
 
     function getAffectedRows(){
@@ -917,7 +957,22 @@ class WYSIJA_model extends WYSIJA_object{
      */
     function getPrefix(){
         if($this->tableWP) return $this->wpprefix.$this->table_prefix;
-        else return $this->wpprefix.$this->table_prefix."_";
+        else return $this->wpprefix.$this->table_prefix.'_';
+    }
+
+    /**
+     * this function allows you to get the prefix from the main site on a multisite
+     * @return type
+     */
+    function get_site_prefix($blog_id=1){
+
+        switch_to_blog( $blog_id );
+        global $wpdb;
+        $main_site_prefix=$wpdb->prefix;
+        restore_current_blog();
+
+        if($this->tableWP) return $main_site_prefix.$this->table_prefix;
+        else return $main_site_prefix.$this->table_prefix.'_';
     }
 
     function beforeInsert(){
@@ -927,7 +982,7 @@ class WYSIJA_model extends WYSIJA_object{
     function afterInsert($resultSaveID){
         return true;
     }
-    function beforeDelete(){
+    function beforeDelete($conditions){
         return true;
     }
 

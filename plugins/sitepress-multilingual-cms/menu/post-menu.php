@@ -1,10 +1,13 @@
 <?php $this->noscript_notice() ?>
 
-<?php if(get_post_meta($post->ID, '_icl_lang_duplicate_of', true)): ?>
+<?php
+$icl_lang_duplicate_of = get_post_meta($post->ID, '_icl_lang_duplicate_of', true);
+
+if($icl_lang_duplicate_of): ?>
 <div class="icl_cyan_box"><?php 
     printf(__('This document is a duplicate of %s and it is maintained by WPML.', 'sitepress'), 
-        '<a href="'.get_edit_post_link($translations[$this->get_default_language()]->element_id).'">' . 
-        $translations[$this->get_default_language()]->post_title . '</a>');
+        '<a href="'.get_edit_post_link($icl_lang_duplicate_of).'">' .
+		get_the_title($icl_lang_duplicate_of) . '</a>');
 ?>    
     <p><input id="icl_translate_independent" class="button-secondary" type="button" value="<?php _e('Translate independently', 'sitepress') ?>" /></p>
     <?php wp_nonce_field('reset_duplication_nonce', '_icl_nonce_rd') ?>
@@ -32,7 +35,7 @@
         <div id="icl_translation_of_panel" class="icl_box_paragraph">
         <?php echo __('This is a translation of', 'sitepress') ?>&nbsp;
         <select name="icl_translation_of" id="icl_translation_of"<?php if((empty($_GET['action']) || $_GET['action'] != 'edit') && $trid) echo ' disabled="disabled"';?>>
-            <?php if($source_language == null || $source_language == $default_language): ?>
+            <?php if(!$source_language || $source_language == $default_language): ?>
                 <?php if($trid): ?>
                     <option value="none"><?php echo __('--None--', 'sitepress') ?></option>                    
                     <?php
@@ -166,6 +169,9 @@
                                 if($current_user_is_translator){
                                     $add_link = admin_url('admin.php?page='.WPML_TM_FOLDER.'/menu/translations-queue.php&icl_tm_action=create_job&iclpost[]='.
                                     $post->ID.'&translate_to['.$lang['code'].']=1&iclnonce=' . wp_create_nonce('pro-translation-icl'));
+                                    if($this->get_current_language() != $this->get_default_language()){
+                                        $add_link .= '&translate_from=' . $this->get_current_language();   
+                                    }
                                 }else{
                                     $add_link = '#';
                                     $img = 'add_translation_disabled.png';
@@ -177,6 +183,7 @@
                             $trid . "&lang=" . $lang['code'] . "&source_lang=" . $selected_language);    
                     }                                        
                 ?>
+                <?php  $add_link = apply_filters('wpml_post_edit_page_link_to_translation',$add_link); ?>
                 <td align="right">
                 <?php if($add_link == '#'): 
                     icl_pop_info($add_anchor, ICL_PLUGIN_URL . '/res/img/' .$img, array('icon_size' => 16, 'but_style'=>array('icl_pop_info_but_noabs')));                    
@@ -310,6 +317,10 @@
                             }
                             break;
                         default:
+							if($needs_update){
+							   $img = 'needs-update.png';
+						   	}
+
                             $edit_link = get_edit_post_link($translations[$lang['code']]->element_id);    
                     }
                 ?>
@@ -317,6 +328,7 @@
                     <?php echo $lang['display_name'] ?>
                     <?php if(isset($dupes[$lang['code']])) echo ' (' . __('duplicate', 'sitepress') . ')'; ?>
                 </td>
+                <?php  $edit_link = apply_filters('wpml_post_edit_page_link_to_translation',$edit_link); ?>
                 <td align="right" >
                 
                 <?php if($edit_link == '#'): 
@@ -349,30 +361,33 @@
 <?php else: ?>
 
 
-<?php 
+<?php
 $show_dup_button = false;
 $tr_original_id = 0;
-if(!empty($translations)) foreach($translations as $lang=>$tr){
-    if($tr->original){
-        $lang_details = $this->get_language_details($lang);
-        $original_language = $lang_details['display_name'];
-        $tr_original_id = $tr->element_id;
-    } 
-    if($tr->element_id == $post->ID){
-        $show_dup_button = true;
-    }
-}        
-
+$original_language = false;
+if(!empty($translations))
+{
+	foreach($translations as $lang=>$tr){
+		if($tr->original){
+			$lang_details = $this->get_language_details($lang);
+			$original_language = $lang_details['display_name'];
+			$tr_original_id = $tr->element_id;
+		}
+		if($tr->element_id == $post->ID){
+			$show_dup_button = true;
+		}
+	}
+}
 ?>
-<?php if($tr_original_id != $post->ID && $show_dup_button): ?>
+<?php if($original_language && $tr_original_id != $post->ID && $show_dup_button): ?>
     <?php wp_nonce_field('set_duplication_nonce', '_icl_nonce_sd') ?>
     <input id="icl_set_duplicate" type="button" class="button-secondary" value="<?php printf(__('Overwrite with %s content.', 'sitepress'), $original_language) ?>" style="float: left;" />
     <span style="display: none;"><?php echo esc_js(sprintf(__('The current content of this %s will be permanently lost. WPML will copy the %s content and replace the current content.', 'sitepress'), $post->post_type, $original_language)); ?></span>
     <?php icl_pop_info(__("This operation will synchronize this translation with the original language. When you edit the original, this translation will update immediately. It's meant when you want the content in this language to always be the same as the content in the original language.", 'sitepress'), 'question'); ?>
     <br clear="all" />
     
+<?php
+endif;
     
-<?php endif; ?>
-    
-<?php endif; ?>
+endif;
 

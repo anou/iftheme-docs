@@ -16,7 +16,9 @@ add_action('network_admin_edit_activatewpml', 'icl_network_activate_wpml');
 
 add_action('wpmuadminedit', 'icl_wpmuadminedit');
 function icl_wpmuadminedit(){
-    switch($_REQUEST['action']){
+    if(!isset($_REQUEST['action'])) return;
+
+	switch($_REQUEST['action']){
         case 'resetwpml':  icl_reset_wpml(); break;
         case 'deactivatewpml':  icl_network_deactivate_wpml(); break;
         case 'activatewpml':  icl_network_activate_wpml(); break;

@@ -39,6 +39,8 @@ class WYSIJA_model_email extends WYSIJA_model{
         'wj_styles' => array()
     );
 
+    var $retro_active_autoresponders=true;
+
     function WYSIJA_model_email(){
         $this->WYSIJA_model();
     }
@@ -49,12 +51,12 @@ class WYSIJA_model_email extends WYSIJA_model{
      */
     function beforeInsert(){
         $this->checkParams();
-        $modelConfig=&WYSIJA::get('config','model');
-        if(!isset($this->values['from_email'])) $this->values['from_email']=$modelConfig->getValue('from_email');
-        if(!isset($this->values['from_name'])) $this->values['from_name']=$modelConfig->getValue('from_name');
-        if(!isset($this->values['replyto_email'])) $this->values['replyto_email']=$modelConfig->getValue('replyto_email');
-        if(!isset($this->values['replyto_name'])) $this->values['replyto_name']=$modelConfig->getValue('replyto_name');
-        if(!isset($this->values['modified_at'])) $this->values['modified_at']=time();
+        $model_config = WYSIJA::get('config','model');
+        if(!isset($this->values['from_email'])) $this->values['from_email'] = $model_config->getValue('from_email');
+        if(!isset($this->values['from_name'])) $this->values['from_name'] = $model_config->getValue('from_name');
+        if(!isset($this->values['replyto_email'])) $this->values['replyto_email'] = $model_config->getValue('replyto_email');
+        if(!isset($this->values['replyto_name'])) $this->values['replyto_name'] = $model_config->getValue('replyto_name');
+        if(!isset($this->values['modified_at'])) $this->values['modified_at'] = time();
 
         return true;
     }
@@ -69,13 +71,13 @@ class WYSIJA_model_email extends WYSIJA_model{
             return true;
         }else $emailid=$conditions['email_id'];
 
-        $modelQ=&WYSIJA::get('queue','model');
+        $modelQ=WYSIJA::get('queue','model');
         $modelQ->delete(array('email_id'=>$conditions['email_id']));
         return true;
     }
 
     /**
-     * validation before updatin the data
+     * validation before updating the data
      * @return boolean
      */
     function beforeUpdate(){
@@ -84,7 +86,7 @@ class WYSIJA_model_email extends WYSIJA_model{
 
             //update the nextSend value
             if(!isset($this->values['params']['autonl']['nextSend']) && isset($this->values['type']) && $this->values['type']=='2'){
-                $auton=&WYSIJA::get('autonews','helper');
+                $auton=WYSIJA::get('autonews','helper');
                 $this->values['params']['autonl']['nextSend']=$auton->getNextSend($this->values);
             }
         }
@@ -93,6 +95,22 @@ class WYSIJA_model_email extends WYSIJA_model{
         $this->checkParams();
 
 
+        return true;
+    }
+
+    /**
+     * trigger on Update
+     */
+    function afterUpdate($result_save_id){
+        //First reply-to address (name + email) is a default value for next newsletter
+        $model_config=WYSIJA::get('config','model');
+        if(!$model_config->getValue('replyto_name') || !$model_config->getValue('replyto_email')){
+            $email = $this->getOne(false,array('email_id'=>$result_save_id));
+            $model_config->save(array(
+                'replyto_name' => $email['replyto_name'],
+                'replyto_email' => $email['replyto_email']
+            ));
+        }
         return true;
     }
 
@@ -108,7 +126,7 @@ class WYSIJA_model_email extends WYSIJA_model{
         if(!$text) $text=__('View',WYSIJA);
 
         $this->reset();
-        $modelConf=&WYSIJA::get('config','model');
+        $modelConf=WYSIJA::get('config','model');
 
         $params=array(
             'wysija-page'=>1,
@@ -139,19 +157,24 @@ class WYSIJA_model_email extends WYSIJA_model{
 
         // we go through that queuing function which will check if it is necessary to queue the email
         // depending on the type of email we're dealing with there will be no queuing
-        $model_queue=&WYSIJA::get('queue','model');
-        $email_have_been_queued = $model_queue->queue_email($email);
+        if($this->retro_active_autoresponders){
+            $model_queue = WYSIJA::get('queue','model');
+            $emails_have_been_queued = $model_queue->queue_email($email);
+        }
 
         //set the email status based on parameters and also return a message
         $email_status=99;
+        $sent_status = array();
+
         if((int)$email['type']===1)  {
-            if(isset($email['params']['schedule']['isscheduled']) && !$email_have_been_queued){
+            if(isset($email['params']['schedule']['isscheduled']) && !$emails_have_been_queued){
                 $email_status=4;
                 $this->notice(__('Newsletter has been scheduled.',WYSIJA));
             } else $this->notice(__('Your latest newsletter is being sent.',WYSIJA));
+            $sent_status['sent_at'] = time();
         } else $this->notice(__('Your auto newsletter has been activated.',WYSIJA));
+        $sent_status['status'] = $email_status;
 
-        $sent_status=array('status'=>$email_status,'sent_at'=>time());
 
         $this->reset();
         $this->update($sent_status,array('email_id'=>$email['email_id']));
@@ -190,6 +213,7 @@ class WYSIJA_model_email extends WYSIJA_model{
         // build autonl articles params for child
         $emailChild['params']['autonl']['articles'] = array('ids' => $ids, 'count' => 0, 'first_subject' => '');
         if(isset($email['params']['autonl']['firstSend']))  $emailChild['params']['autonl']['firstSend'] = $email['params']['autonl']['firstSend'];
+        if(isset($email['params']['autonl']['lastSend']))  $emailChild['params']['autonl']['lastSend'] = $email['params']['autonl']['lastSend'];
 
         //if it's an immediate post notif let know the render email
         if($immediatePostNotif) {
@@ -198,7 +222,7 @@ class WYSIJA_model_email extends WYSIJA_model{
             if(isset($email['params']['autonl']['articles']['ids']) && in_array($immediatePostNotif, $email['params']['autonl']['articles']['ids'])) return false;
         }
 
-        $wjEngine =& WYSIJA::get('wj_engine', 'helper');
+        $wjEngine = WYSIJA::get('wj_engine', 'helper');
         // set data & styles
         if(isset($emailChild['wj_data'])) { $wjEngine->setData($emailChild['wj_data'], true); } else { $wjEngine->setData(); }
         if(isset($emailChild['wj_styles'])) { $wjEngine->setStyles($emailChild['wj_styles'], true); } else { $wjEngine->setStyles(); }
@@ -212,6 +236,13 @@ class WYSIJA_model_email extends WYSIJA_model{
 
         // update parent email articles' ids to reflect the ones added in the child email
         $paramsVal['autonl']['articles']['ids'] = $emailChild['params']['autonl']['articles']['ids'];
+
+//        $count_array_ids = count($paramsVal['autonl']['articles']['ids']);
+//        if($count_array_ids > 200){
+//            $offset = $count_array_ids - 50;
+//            $paramsVal['autonl']['articles']['ids'] = array_slice($paramsVal['autonl']['articles']['ids'], $offset, -1);
+//        }
+
 
         $donotsend=false;
         // if there's no article, do not send
@@ -229,16 +260,16 @@ class WYSIJA_model_email extends WYSIJA_model{
                         (int)$paramsVal['autonl']['total_child'],
                         $emailChild['params']['autonl']['articles']['first_subject']),
                     $emailChild['subject']);
-
+            $emailChild['params']['autonl']['total_child']=(int)$paramsVal['autonl']['total_child'];
             // Get the email object, needed for the shortcode class.
             $current_email_object = (object) $emailChild;
 
             // Parse subject shortcodes.
-            $helper_mailer =& WYSIJA::get('mailer','helper');
+            $helper_mailer = WYSIJA::get('mailer','helper');
             $helper_mailer->parseSubjectUserTags($current_email_object);
 
             // Replace subject shortcodes.
-            $helper_shortcodes =& WYSIJA::get('shortcodes','helper');
+            $helper_shortcodes = WYSIJA::get('shortcodes','helper');
             $emailChild['subject'] = $helper_shortcodes->replace_subject($current_email_object);
 
             // save the child email
@@ -252,7 +283,7 @@ class WYSIJA_model_email extends WYSIJA_model{
         }
         WYSIJA::log('prev_send_value_give_birth', $email['params']['autonl']['nextSend'], 'post_notif');
         // update the parent with the new nextSend date
-        $auton=&WYSIJA::get('autonews','helper');
+        $auton=WYSIJA::get('autonews','helper');
         $nextSendValue=$auton->getNextSend($email);
 
         WYSIJA::log('next_send_value_give_birth', $nextSendValue, 'post_notif');
@@ -275,11 +306,11 @@ class WYSIJA_model_email extends WYSIJA_model{
 
     /**
      * special get overriding the model class in order to load the params of the email
-     * @param type $columns
-     * @param type $conditions
+     * @param array $columns
+     * @param array $conditions
      * @return type
      */
-    function get($columns,$conditions){
+    function get($columns=array(),$conditions=array()){
 
         $results=parent::get($columns,$conditions);
 

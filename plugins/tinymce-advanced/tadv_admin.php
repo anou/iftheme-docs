@@ -24,10 +24,10 @@ if ( isset( $_POST['tadv_uninstall'] ) ) {
 	return;
 }
 
-if ( ! isset($GLOBALS['wp_version']) || version_compare($GLOBALS['wp_version'], '3.1', '<') ) { // if less than ...
+if ( ! isset( $GLOBALS['wp_version'] ) || version_compare( $GLOBALS['wp_version'], '3.6', '<' ) ) {
 	?>
 	<div class="error" style="margin-top:30px;">
-	<p><?php _e('This plugin requires WordPress version 3.1 or newer. Please upgrade your WordPress installation or download an', 'tadv'); ?> <a href="http://wordpress.org/extend/plugins/tinymce-advanced/download/"><?php _e('older version of the plugin.', 'tadv'); ?></a></p>
+	<p><?php _e('This plugin requires WordPress version 3.6 or newer. Please upgrade your WordPress installation or download an', 'tadv'); ?> <a href="http://wordpress.org/extend/plugins/tinymce-advanced/download/"><?php _e('older version of the plugin.', 'tadv'); ?></a></p>
 	</div>
 	<?php
 
@@ -190,9 +190,6 @@ $tadv_allbtns = array_values($buttons);
 $tadv_allbtns[] = 'separator';
 $tadv_allbtns[] = '|';
 
-for ( $i = 1; $i < 21; $i++ )
-	$buttons["s$i"] = "separator$i";
-
 if ( isset($_POST['tadv-save']) ) {
 	update_option( 'tadv_plugins', $plugins );
 	update_option( 'tadv_btns1', $toolbar_1 );
@@ -205,191 +202,253 @@ if ( isset($_POST['tadv-save']) ) {
 <?php } ?>
 
 <div class="wrap" id="contain">
+<h2><?php _e('TinyMCE Buttons Arrangement', 'tadv'); ?></h2>
+<form id="tadvadmin" method="post" action="" onsubmit="">
+<p><?php _e('Drag and drop buttons onto the toolbars below.', 'tadv'); ?></p>
 
-	<h2><?php _e('TinyMCE Buttons Arrangement', 'tadv'); ?></h2>
+<div id="tadvzones">
+<input id="toolbar_1order" name="toolbar_1order" value="" type="hidden" />
+<input id="toolbar_2order" name="toolbar_2order" value="" type="hidden" />
+<input id="toolbar_3order" name="toolbar_3order" value="" type="hidden" />
+<input id="toolbar_4order" name="toolbar_4order" value="" type="hidden" />
+<input name="tadv-save" value="1" type="hidden" />
 
-	<form id="tadvadmin" method="post" action="" onsubmit="">
-	<p><?php _e('Drag and drop buttons onto the toolbars below.', 'tadv'); ?></p>
-
-	<div id="tadvzones">
-		<input id="toolbar_1order" name="toolbar_1order" value="" type="hidden" />
-		<input id="toolbar_2order" name="toolbar_2order" value="" type="hidden" />
-		<input id="toolbar_3order" name="toolbar_3order" value="" type="hidden" />
-		<input id="toolbar_4order" name="toolbar_4order" value="" type="hidden" />
-		<input name="tadv-save" value="1" type="hidden" />
-
-	<div class="tadvdropzone">
-	<ul style="position: relative;" id="toolbar_1" class="container">
+<div class="tadvdropzone">
+<ul style="position: relative;" id="toolbar_1" class="container">
 <?php
+
 if ( is_array($tadv_toolbars['toolbar_1']) ) {
 	$tb1 = array();
+	
 	foreach( $tadv_toolbars['toolbar_1'] as $k ) {
 		$t = array_intersect( $buttons, (array) $k );
 		$tb1 += $t;
 	}
 
 	foreach( $tb1 as $name => $btn ) {
-		if ( strpos( $btn, 'separator' ) !== false ) { ?>
-
-	<li class="separator" id="pre_<?php echo $btn; ?>">
-	<div class="tadvitem"> </div></li>
-<?php	} else { ?>
-
-	<li class="tadvmodule" id="pre_<?php echo $btn; ?>">
-	<div class="tadvitem"><div id="<?php echo $btn; ?>" title="<?php echo $name; ?>"></div>
-	<span class="descr"> <?php echo $name; ?></span>
-	</div></li>
-<?php   }
+		if ( strpos( $btn, 'separator' ) !== false )
+			continue;
+		
+		?>
+		<li class="tadvmodule" id="pre_<?php echo $btn; ?>">
+		<div class="tadvitem"><div id="<?php echo $btn; ?>" title="<?php echo $name; ?>"></div>
+		<span class="descr"> <?php echo $name; ?></span>
+		</div></li>
+		<?php
 	}
-	$buttons = array_diff( $buttons, $tb1 );
-} ?>
-	</ul></div>
-	<br class="clear" />
 
-	<div class="tadvdropzone">
-	<ul style="position: relative;" id="toolbar_2" class="container">
+	$buttons = array_diff( $buttons, $tb1 );
+}
+
+?>
+</ul></div>
+<br class="clear" />
+
+<div class="tadvdropzone">
+<ul style="position: relative;" id="toolbar_2" class="container">
 <?php
+
 if ( is_array($tadv_toolbars['toolbar_2']) ) {
 	$tb2 = array();
+	
 	foreach( $tadv_toolbars['toolbar_2'] as $k ) {
 		$t = array_intersect( $buttons, (array) $k );
 		$tb2 = $tb2 + $t;
 	}
+
 	foreach( $tb2 as $name => $btn ) {
-		if ( strpos( $btn, 'separator' ) !== false ) { ?>
+		if ( strpos( $btn, 'separator' ) !== false )
+			continue;
 
-	<li class="separator" id="pre_<?php echo $btn; ?>">
-	<div class="tadvitem"> </div></li>
-<?php	} else { ?>
-
-	<li class="tadvmodule" id="pre_<?php echo $btn; ?>">
-	<div class="tadvitem"><div id="<?php echo $btn; ?>" title="<?php echo $name; ?>"></div>
-	<span class="descr"> <?php echo $name; ?></span></div></li>
-<?php   }
+		?>
+		<li class="tadvmodule" id="pre_<?php echo $btn; ?>">
+		<div class="tadvitem"><div id="<?php echo $btn; ?>" title="<?php echo $name; ?>"></div>
+		<span class="descr"> <?php echo $name; ?></span></div></li>
+		<?php
 	}
-	$buttons = array_diff( $buttons, $tb2 );
-} ?>
-	</ul></div>
-	<br class="clear" />
 
-	<div class="tadvdropzone">
-	<ul style="position: relative;" id="toolbar_3" class="container">
+	$buttons = array_diff( $buttons, $tb2 );
+}
+
+?>
+</ul></div>
+<br class="clear" />
+
+<div class="tadvdropzone">
+<ul style="position: relative;" id="toolbar_3" class="container">
 <?php
+
 if ( is_array($tadv_toolbars['toolbar_3']) ) {
 	$tb3 = array();
+	
 	foreach( $tadv_toolbars['toolbar_3'] as $k ) {
 		$t = array_intersect( $buttons, (array) $k );
 		$tb3 += $t;
 	}
+
 	foreach( $tb3 as $name => $btn ) {
-		if ( strpos( $btn, 'separator' ) !== false ) { ?>
-
-	<li class="separator" id="pre_<?php echo $btn; ?>">
-	<div class="tadvitem"> </div></li>
-<?php	} else { ?>
-
-	<li class="tadvmodule" id="pre_<?php echo $btn; ?>">
-	<div class="tadvitem"><div id="<?php echo $btn; ?>" title="<?php echo $name; ?>"></div>
-	<span class="descr"> <?php echo $name; ?></span></div></li>
-<?php   }
+		if ( strpos( $btn, 'separator' ) !== false )
+			continue;
+		
+		?>
+		<li class="tadvmodule" id="pre_<?php echo $btn; ?>">
+		<div class="tadvitem"><div id="<?php echo $btn; ?>" title="<?php echo $name; ?>"></div>
+		<span class="descr"> <?php echo $name; ?></span></div></li>
+		<?php
 	}
-	$buttons = array_diff( $buttons, $tb3 );
-} ?>
-	</ul></div>
-	<br class="clear" />
 
-	<div class="tadvdropzone">
-	<ul style="position: relative;" id="toolbar_4" class="container">
+	$buttons = array_diff( $buttons, $tb3 );
+}
+
+?>
+</ul></div>
+<br class="clear" />
+
+<div class="tadvdropzone">
+<ul style="position: relative;" id="toolbar_4" class="container">
 <?php
+
 if ( is_array($tadv_toolbars['toolbar_4']) ) {
 	$tb4 = array();
+	
 	foreach( $tadv_toolbars['toolbar_4'] as $k ) {
 		$t = array_intersect( $buttons, (array) $k );
 		$tb4 += $t;
 	}
+
 	foreach( $tb4 as $name => $btn ) {
-		if ( strpos( $btn, 'separator' ) !== false ) { ?>
-
-	<li class="separator" id="pre_<?php echo $btn; ?>">
-	<div class="tadvitem"> </div></li>
-<?php	} else { ?>
-
-	<li class="tadvmodule" id="pre_<?php echo $btn; ?>">
-	<div class="tadvitem"><div id="<?php echo $btn; ?>" title="<?php echo $name; ?>"></div>
-	<span class="descr"> <?php echo $name; ?></span></div></li>
-<?php   }
+		if ( strpos( $btn, 'separator' ) !== false )
+			continue;
+		
+		?>
+		<li class="tadvmodule" id="pre_<?php echo $btn; ?>">
+		<div class="tadvitem"><div id="<?php echo $btn; ?>" title="<?php echo $name; ?>"></div>
+		<span class="descr"> <?php echo $name; ?></span></div></li>
+		<?php
 	}
+
 	$buttons = array_diff( $buttons, $tb4 );
-} ?>
-	</ul></div>
-	<br class="clear" />
-	</div>
+}
 
-	<div id="tadvWarnmsg">&nbsp;
+?>
+</ul></div>
+<br class="clear" />
+</div>
+
+<div id="tadvWarnmsg">&nbsp;
 	<span id="too_long" style="display:none;"><?php _e('Adding too many buttons will make the toolbar too long and will not display correctly in TinyMCE!', 'tadv'); ?></span>
-	</div>
+</div>
 
-	<div id="tadvpalettediv">
-	<ul style="position: relative;" id="tadvpalette">
+<div id="tadvpalettediv">
+<ul style="position: relative;" id="tadvpalette">
 <?php
+
 if ( is_array($buttons) ) {
 	foreach( $buttons as $name => $btn ) {
-		if ( strpos( $btn, 'separator' ) !== false ) { ?>
-
-	<li class="separator" id="pre_<?php echo $btn; ?>">
-	<div class="tadvitem"> </div></li>
-<?php	} else { ?>
-
-	<li class="tadvmodule" id="pre_<?php echo $btn; ?>">
-	<div class="tadvitem"><div id="<?php echo $btn; ?>" title="<?php echo $name; ?>"></div>
-	<span class="descr"> <?php echo $name; ?></span></div></li>
-<?php   }
+		if ( strpos( $btn, 'separator' ) !== false )
+			continue;
+		
+		?>
+		<li class="tadvmodule" id="pre_<?php echo $btn; ?>">
+		<div class="tadvitem"><div id="<?php echo $btn; ?>" title="<?php echo $name; ?>"></div>
+		<span class="descr"> <?php echo $name; ?></span></div></li>
+		<?php
 	}
-} ?>
-	</ul>
-	</div>
+}
 
-	<table class="clear" style="margin:10px 0"><tr><td style="padding:2px 12px 8px;">
-		Also enable:
-		
-		<label for="advimage" class="tadv-box"><?php _e('Advanced Image', 'tadv'); ?> &nbsp;
-		<input type="checkbox" class="tadv-chk"  name="advimage" id="advimage" <?php if ( !empty($tadv_options['advimage']) ) echo ' checked="checked"'; ?> /></label> &bull;
-		
-		<label for="advlist" class="tadv-box"><?php _e('Advanced List Options', 'tadv'); ?> &nbsp;
-		<input type="checkbox" class="tadv-chk"  name="advlist" id="advlist" <?php if ( !empty($tadv_options['advlist']) ) echo ' checked="checked"'; ?> /></label> &bull;
-
-		<label for="contextmenu" class="tadv-box"><?php _e('Context Menu', 'tadv'); ?> &nbsp;
-		<input type="checkbox" class="tadv-chk"  name="contextmenu" id="contextmenu" <?php if ( !empty($tadv_options['contextmenu']) ) echo ' checked="checked"'; ?> /></label>
-		<?php _e('(to show the browser context menu in Firefox, hold down the Ctrl key).', 'tadv'); ?>
-		</td></tr>
-
-		<tr><td style="border:1px solid #CD0000;padding:2px 12px 8px;">
-		<p style="font-weight:bold;color:#CD0000;"><?php _e('Advanced Options', 'tadv'); ?></p>
-
-		<p><input type="checkbox" class="tadv-chk"  name="advlink1" id="advlink1" <?php if ( !empty($tadv_options['advlink1']) ) echo ' checked="checked"'; ?> /> <label for="advlink1" class="tadv-box"><?php _e('Advanced Link', 'tadv'); ?></label> <?php _e('Enabling this TinyMCE plugin will overwrite the internal links feature in WordPress 3.1 and newer. Cuttently there is no way to enable both of them at the same time.', 'tadv'); ?></p>
-		
-<?php	if ( ! current_theme_supports( 'editor-style' ) ) { ?>
-		<p><?php _e('It seems your theme (still) doesn\'t support customised styles for the editor. If you would like to use that, you can create a file named <i>editor-style.css</i> and add it to your theme\'s directory. You can use the editor-style.css from the Twenty Ten theme as a template.', 'tadv'); ?></p>
-
-		<p><input type="checkbox" class="tadv-chk"  name="editorstyle" id="editorstyle" <?php if ( !empty($tadv_options['editorstyle']) ) echo ' checked="checked"'; ?> /> <label for="editorstyle" class="tadv-box"><?php _e('Import editor-style.css.', 'tadv'); ?></label> <?php _e('This is only needed if you created that file. Themes that style the editor will import the stylesheet automatically.', 'tadv'); ?></p>
-<?php	} ?>
-
-		<p><input type="checkbox" class="tadv-chk"  name="hideclasses" id="hideclasses" <?php if ( !empty($tadv_options['hideclasses']) ) echo ' checked="checked"'; ?> /> <label for="hideclasses" class="tadv-box"><?php _e('Hide all CSS classes in the editor menus.', 'tadv'); ?></label> <?php _e('Note that selecting this will also disable the Styles drop-down menu.', 'tadv'); ?></p>
-
-		<p><input type="checkbox" class="tadv-chk"  name="no_autop" id="no_autop" <?php if ( !empty($tadv_options['no_autop']) ) echo ' checked="checked"'; ?> /> <label for="no_autop" class="tadv-box"><?php _e('Stop removing the &lt;p&gt; and &lt;br /&gt; tags when saving and show them in the HTML editor', 'tadv'); ?></label> <?php _e('This will make it possible to use more advanced coding in the HTML editor without the back-end filtering affecting it much. However it may behave unexpectedly in rare cases, so test it thoroughly before enabling it permanently. Also line breaks in the HTML editor would still affect the output, in particular do not use empty lines, line breaks inside HTML tags or multiple &lt;br /&gt; tags.', 'tadv'); ?></p>
-		</td></tr>
-<?php
-	$mce_locale = ( '' == get_locale() ) ? 'en' : strtolower( substr(get_locale(), 0, 2) );
-	if ( $mce_locale != 'en' ) {
-		if ( ! @file_exists(TADV_PATH . 'mce/advlink/langs/' . $mce_locale . '_dlg.js') ) { ?>
-		<tr><td style="padding:2px 12px 8px;">
-		<p style="font-weight:bold;"><?php _e('Language Settings', 'tadv'); ?></p>
-		<p><?php _e('Your WordPress language is set to', 'tadv'); ?> <strong><?php echo get_locale(); ?></strong>. <?php _e('However there is no matching language installed for TinyMCE plugins. This plugin includes several translations: German, French, Italian, Spanish, Portuguese, Russian, Japanese and Chinese. More translations are available at the', 'tadv'); ?> <a href="http://www.tinymce.com/i18n/index.php?ctrl=lang&act=download&pr_id=1"><?php _e('TinyMCE web site.', 'tadv'); ?></a></p>
-		</td></tr>
-<?php	}
-	} // end mce_locale
 ?>
-	</table>
+</ul>
+</div>
+
+<table class="clear" style="margin:10px 0">
+	<tr><td style="padding:2px 12px 8px;">
+	<?php _e('Also enable:', 'tadv'); ?>
+	
+	<label for="advimage" class="tadv-box">
+	<input type="checkbox" class="tadv-chk"  name="advimage" id="advimage" <?php if ( !empty($tadv_options['advimage']) ) echo ' checked="checked"'; ?> />
+	<?php _e('Advanced Image', 'tadv'); ?>
+	</label>
+	
+	<label for="advlist" class="tadv-box">
+	<input type="checkbox" class="tadv-chk"  name="advlist" id="advlist" <?php if ( !empty($tadv_options['advlist']) ) echo ' checked="checked"'; ?> />
+	<?php _e('Advanced List Options', 'tadv'); ?>
+	</label>
+
+	<label for="contextmenu" class="tadv-box">
+	<input type="checkbox" class="tadv-chk"  name="contextmenu" id="contextmenu" <?php if ( !empty($tadv_options['contextmenu']) ) echo ' checked="checked"'; ?> />
+	<?php _e('Context Menu', 'tadv'); ?>
+	</label>
+	</td></tr>
+<?php
+
+$mce_locale = get_locale();
+$mce_locale = empty( $mce_locale ) ? 'en' : strtolower( substr( $mce_locale, 0, 2 ) );
+
+if ( $mce_locale != 'en' && ! @file_exists( TADV_PATH . 'mce/advlink/langs/' . $mce_locale . '_dlg.js' ) ) {
+	if ( in_array( $mce_locale, array( 'ar', 'be', 'nb', 'bg', 'ca', 'cn', 'cs', 'da', 'nl', 'fa', 'fi', 'gl', 'el', 'he', 'hi', 'hu', 'id', 'km', 'ko', 'lv', 'lt', 'mk', 'no', 'pl', 'ro', 'sk', 'sl', 'sv', 'tr', 'uk', 'cy' ), true ) ) {
+		?>
+		<tr><td style="padding:2px 12px 8px;">
+			<p><b><?php _e('Language Options'); ?></b></p>
+			<p>
+			<?php
+
+			printf( __('Your WordPress language is set to <b>%1$s</b>, however there is no matching language installed for the TinyMCE components added from this plugin. You can install the <a href="%2$s">TnyMCE Advanced Language Pack</a> plugin to add it.', 'tadv'), esc_html( get_locale() ), esc_url('http://wordpress.org/plugins/tinymce-advanced-language-pack/') );
+
+			?>
+			</p>
+		</td></tr>
+		<?php
+	}
+} // end mce_locale
+
+?>
+	<tr><td style="border:1px solid #CD0000;padding:2px 12px 8px;">
+	<p style="font-weight:bold;color:#CD0000;"><?php _e('Advanced Options', 'tadv'); ?></p>
+
+	<p>
+		<label for="advlink1" class="tadv-box">
+		<input type="checkbox" class="tadv-chk"  name="advlink1" id="advlink1" <?php if ( !empty($tadv_options['advlink1']) ) echo ' checked="checked"'; ?> />
+		<?php _e('Advanced Link', 'tadv'); ?>
+		</label>
+		<?php _e('Enabling this TinyMCE plugin will overwrite the internal links feature in WordPress 3.1 and newer. Cuttently there is no way to enable both of them at the same time.', 'tadv'); ?>
+	</p>
+	
+<?php
+
+if ( ! current_theme_supports( 'editor-style' ) ) {
+
+	?>
+	<p>
+		<?php _e('It seems your theme (still) doesn\'t support customised styles for the editor. If you would like to use that, you can create a file named <i>editor-style.css</i> and add it to your theme\'s directory. You can use the editor-style.css from the Twenty Ten theme as a template.', 'tadv'); ?>
+	</p>
+
+	<p>
+		<label for="editorstyle" class="tadv-box"><input type="checkbox" class="tadv-chk"  name="editorstyle" id="editorstyle" <?php if ( !empty($tadv_options['editorstyle']) ) echo ' checked="checked"'; ?> />
+		<?php _e('Import editor-style.css.', 'tadv'); ?>
+		</label>
+		<?php _e('This is only needed if you created that file. Themes that style the editor will import the stylesheet automatically.', 'tadv'); ?>
+	</p>
+	<?php
+}
+
+?>
+	<p>
+		<label for="hideclasses" class="tadv-box">
+		<input type="checkbox" class="tadv-chk"  name="hideclasses" id="hideclasses" <?php if ( !empty($tadv_options['hideclasses']) ) echo ' checked="checked"'; ?> />
+		<?php _e('Hide all CSS classes in the editor menus.', 'tadv'); ?>
+		</label>
+		<?php _e('Note that selecting this will also disable the Styles drop-down menu.', 'tadv'); ?>
+	</p>
+
+	<p>
+		<label for="no_autop" class="tadv-box">
+		<input type="checkbox" class="tadv-chk"  name="no_autop" id="no_autop" <?php if ( !empty($tadv_options['no_autop']) ) echo ' checked="checked"'; ?> />
+		<?php _e('Stop removing the &lt;p&gt; and &lt;br /&gt; tags when saving and show them in the HTML editor', 'tadv'); ?>
+		</label>
+		<?php _e('This will make it possible to use more advanced coding in the HTML editor without the back-end filtering affecting it much. However it may behave unexpectedly in rare cases, so test it thoroughly before enabling it permanently. Also line breaks in the HTML editor would still affect the output, in particular do not use empty lines, line breaks inside HTML tags or multiple &lt;br /&gt; tags.', 'tadv'); ?>
+	</p>
+	</td></tr>
+</table>
 
 <p>
 	<?php wp_nonce_field( 'tadv-save-buttons-order' ); ?>

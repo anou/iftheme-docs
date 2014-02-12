@@ -97,7 +97,9 @@ class acymailingElasticemail {
 		$header .= "Host: api.elasticemail.com\r\n";
 		$header .= "Content-Type: application/x-www-form-urlencoded\r\n";
 		$header .= "Connection: Keep-Alive\r\n";
-		$header .= "Content-Length: " . strlen($data) . "\r\n\r\n";
+		$header .= "Content-Length: " . strlen($data) . "\r\n";
+                $header .= "Message-ID: " . $object->MessageID . "\r\n\r\n";
+
 		$info = $header . $data;
 		$result = $this->sendinfo($info);
 

@@ -1,32 +1,40 @@
 <?php
 defined('WYSIJA') or die('Restricted access');
 class WYSIJA_help_campaigns extends WYSIJA_object{
+    
         
     function WYSIJA_help_campaigns(){
+
     }
+
     function saveParameters($email_id, $key, $value)
     {
-
-        $modelEmail =& WYSIJA::get('email', 'model');
+        // 1. get params field for given campaign
+        $modelEmail = WYSIJA::get('email', 'model');
         $email = $modelEmail->getOne('params', array('email_id' => $email_id));
         $params = $email['params'];
+
         if(!is_array($params)) {
             $params = array();
         }
-
+    
+        // 2 update data for given key
         if(array_key_exists($key, $params)) {
             $params[$key] = $value;
         } else {
             $params = array_merge($params, array($key => $value));
         }
-
+    
+        // 3. update campaign
         return $modelEmail->update(array('params' => $params), array('email_id' => $email_id));
     }
+    
     function getParameters($email_id, $key = null) {
-
-        $modelEmail =& WYSIJA::get('email', 'model');
+        // 1. get params field for given campaign
+        $modelEmail = WYSIJA::get('email', 'model');
         $email = $modelEmail->getOne('params', array('email_id' => $email_id));
         $params = $email['params'];
+
         if($key === null) {
             return $params;
         } else {

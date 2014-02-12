@@ -20,7 +20,8 @@
             </thead>  
             <tbody>
                 <?php foreach($sitepress_settings['st']['theme_localization_domains'] as $tl_domain): ?>
-                <?php 
+                <?php                     
+                    if(empty($tl_domain)) continue;
                     $_tmpcomp = $theme_localization_stats[$tl_domain ? 'theme ' . $tl_domain : 'theme']['complete'];
                     $_tmpinco = $theme_localization_stats[$tl_domain ? 'theme ' . $tl_domain : 'theme']['incomplete'];
                 ?>

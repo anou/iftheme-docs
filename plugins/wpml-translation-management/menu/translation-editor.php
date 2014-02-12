@@ -11,6 +11,10 @@ $rtl_translation = $sitepress->is_rtl($job->language_code);
 $rtl_original_attribute = $rtl_original ? ' dir="rtl"' : ' dir="ltr"';
 $rtl_translation_attribute = $rtl_translation ? ' dir="rtl"' : ' dir="ltr"';
 
+require_once(ABSPATH . 'wp-admin/includes/image.php');
+require_once(ABSPATH . 'wp-admin/includes/file.php');
+require_once(ABSPATH . 'wp-admin/includes/media.php');
+
 ?>
 <div class="wrap icl-translation-editor">
     <div id="icon-wpml" class="icon32"><br /></div>
@@ -19,6 +23,7 @@ $rtl_translation_attribute = $rtl_translation ? ' dir="rtl"' : ' dir="ltr"';
     <?php do_action('icl_tm_messages'); ?>
     <?php 
     $opost = get_post($job->original_doc_id);
+    
     if(!empty($opost) && ($opost->post_status == 'draft' || $opost->post_status == 'private') && $opost->post_author != $current_user->data->ID){
         $elink1 = '<i>';
         $elink2 = '</i>';
@@ -111,7 +116,7 @@ $rtl_translation_attribute = $rtl_translation ? ' dir="rtl"' : ' dir="ltr"';
                             <div id="poststuff">
                             <?php 
                                 global $post;
-                                if(is_null($post)) $post = clone $opost;
+                                if(is_null($post) && !is_null($opost)) $post = clone $opost;
                                 if(version_compare($wp_version, '3.3', '>=')){
                                     $settings = array(
                                         'media_buttons'     => false,
@@ -203,7 +208,7 @@ $rtl_translation_attribute = $rtl_translation ? ' dir="rtl"' : ' dir="ltr"';
                                             "SELECT t.name, x.description FROM {$wpdb->terms} t 
                                                 JOIN {$wpdb->term_taxonomy} x ON  x.term_id = t.term_id
                                             WHERE description<>'' && x.taxonomy=%s 
-                                                AND t.name IN ('".join("','", $wpdb->escape($icl_tm_original_content))."')",
+                                                AND t.name IN ('".join("','", esc_sql($icl_tm_original_content))."')",
                                             $term_taxonomy
                                         ));
                                         $term_descriptions = array();

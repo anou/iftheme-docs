@@ -44,6 +44,7 @@ foreach ($icl_post_types as $id => $type_info) {
 
         // this is an external type returned by WPML_get_translatable_types
         $new_type = new stdClass();
+		$new_type->labels = new stdClass();
         $new_type->labels->singular_name = $type_info;
         $new_type->labels->name = $type_info;
 
@@ -70,7 +71,7 @@ foreach ($icl_post_types as $id => $type_info) {
     }
 }
 
-$icl_translators = $iclTranslationManagement->get_blog_translators();
+$icl_translators = TranslationManagement::get_blog_translators();
 
 $icl_selected_posts         = array();
 $icl_selected_languages     = array();
@@ -79,6 +80,9 @@ if(!empty($iclTranslationManagement->dashboard_select)){
     $icl_selected_posts = $iclTranslationManagement->dashboard_select['post'];
     $icl_selected_languages = $iclTranslationManagement->dashboard_select['translate_to'];
     $icl_selected_translators = $iclTranslationManagement->dashboard_select['translator'];
+}
+if(isset($icl_translation_filter['icl_selected_posts'])){
+    parse_str($icl_translation_filter['icl_selected_posts'], $icl_selected_posts);
 }
 
 if(!empty($sitepress_settings['default_translators'][$icl_translation_filter['from_lang']])){
@@ -104,15 +108,16 @@ if(!defined('ICL_DONT_PROMOTE') || !ICL_DONT_PROMOTE){
     $icl_translation_services = array_merge($icl_translation_services, TranslationManagement::icanlocalize_service_info());
     if (!empty($icl_translation_services)) {
         $icls_output = '';
+        
         if(empty($icl_dashboard_settings['hide_icl_promo'])){
-            $nt_visible = ' ="hidden"';
-            $nt_show = '';
+            $exp_hidden = '';
+            $col_hidden = ' hidden';
         }else{
-            $nt_visible =  '';
-            $nt_show = 'hidden';
+            $exp_hidden = ' hidden';
+            $col_hidden = '';
         }
-
-        $icls_output .= '<div class="icl-translation-services '.$nt_show.'">';
+        
+        $icls_output .= '<div class="icl-translation-services'.$exp_hidden.'">';        
         foreach ($icl_translation_services as $key => $service) {
 			$icls_output .= '<div class="icl-translation-services-inner">';
 				$icls_output .= '<p class="icl-translation-services-logo"><span><img src="' . $service['logo'] . '" alt="' . $service['name'] . '" /></span></p>';
@@ -121,14 +126,18 @@ if(!defined('ICL_DONT_PROMOTE') || !ICL_DONT_PROMOTE){
 			$icls_output .= '</div>';
 			$icls_output .= '<p class="icl-translation-buttons">';
 				$icls_output .= '<a href="' . admin_url( 'index.php?icl_ajx_action=quote-get&_icl_nonce=' . wp_create_nonce( 'quote-get_nonce' ) ) . '" class="button-primary thickbox">' . __( 'Get quote', 'wpml-translation-management' ) . '</a>';
-				$icls_output .= '<a href="admin.php?page=wpml-translation-management/menu/main.php&sm=translators&icl_lng=' . $sitepress->get_current_language() . '&service=icanlocalize" class="button-secondary"><span>' . __( 'Add translators from ICanLocalize', 'wpml-translation-management' ) . '</span></a>';
+				$icls_output .= '<a href="admin.php?page=' . WPML_TM_FOLDER . '/menu/main.php&sm=translators&icl_lng=' . $sitepress->get_current_language() . '&service=icanlocalize" class="button-secondary"><span>' . __( 'Add translators from ICanLocalize', 'wpml-translation-management' ) . '</span></a>';
 			$icls_output .= '</p>';
 			$icls_output .= '<p class="icl-translation-links">';
 				$icls_output .= '<a class="icl-mail-ico" href="http://www.icanlocalize.com/site/about-us/contact-us/?utm_source=WPML&utm_medium=dashboard&utm_term=contact-icanlocalize&utm_content=dashboard-message&utm_campaign=WPML" target="_blank">' . __('Contact ICanLocalize', 'wpml-translation-management') . '</a>';
 				$icls_output .= '<a id="icl_hide_promo" href="#">' . __('Hide this', 'wpml-translation-management') . '</a>';
 			$icls_output .= '</p>';
         }
-        $icls_output .= '</div>';
+        $icls_output .= '</div>';    
+        
+        $icls_output .= '<a class="'.$col_hidden.'" id="icl_show_promo" href="#">' . __('Need translators?', 'wpml-translation-management') . '</a>';
+               
+        
     }
 
 }else{
@@ -349,8 +358,8 @@ if(!defined('ICL_DONT_PROMOTE') || !ICL_DONT_PROMOTE){
                 <td scope="row" class="post-title column-title">
                     <?php echo TranslationManagement::tm_post_link($doc->post_id); ?>
                     <?php
-                        $wc = $iclTranslationManagement->estimate_word_count($doc, $icl_translation_filter['from_lang']);
-                        $wc += $iclTranslationManagement->estimate_custom_field_word_count($doc->post_id, $icl_translation_filter['from_lang']);
+                        $wc = TranslationManagement::estimate_word_count($doc, $icl_translation_filter['from_lang']);
+                        $wc += TranslationManagement::estimate_custom_field_word_count($doc->post_id, $icl_translation_filter['from_lang']);
                     ?>
                     <span id="icl-cw-<?php echo $doc->post_id ?>" style="display:none"><?php echo $wc; $wctotal+=$wc; ?></span>
                     <span class="icl-tr-details">&nbsp;</span>
@@ -499,45 +508,54 @@ if(!defined('ICL_DONT_PROMOTE') || !ICL_DONT_PROMOTE){
             <tr>
                 <td>
                     <table id="icl_tm_languages" class="widefat" style="width:auto;border: none;">
-                        <?php foreach($sitepress->get_active_languages()as $lang):?>
-                        <?php
-                            if($lang['code'] == $icl_translation_filter['from_lang']) continue;
-                            $tr_checked = isset($icl_selected_languages[$lang['code']]) ? 'checked="checked"' : '';
-                            $du_checked = '';
-                            $no_checked = empty($tr_checked) && empty($du_checked) ? 'checked="checked"' : '';
-                        ?>
-                        <tr>
-                            <td><strong><?php echo $lang['display_name'] ?></strong></td>
-                            <td>
-                                <label>
-                                    <input type="radio" name="tr_action[<?php echo $lang['code']; ?>]" value="1" <?php echo $tr_checked ?>/>
-                                    <?php _e('Translate by', 'wpml-translation-management'); ?>
-                                 </label>
-                                <?php $iclTranslationManagement->translators_dropdown(array(
-                                                'from'          => $icl_translation_filter['from_lang'],
-                                                'to'            => $lang['code'],
-                                                'name'          => 'translator['.$lang['code'].']',
-                                                'selected'      =>  isset($icl_selected_translators[$lang['code']]) ? $icl_selected_translators[$lang['code']] : 0,
-                                                'services'      => array('local', 'icanlocalize')
-                                                ));
-                                ?>
-                                &nbsp;<a href="admin.php?page=<?php echo WPML_TM_FOLDER ?>/menu/main.php&sm=translators"><?php _e('Manage translators', 'wpml-translation-management'); ?></a>&nbsp;&nbsp;|
-                            </td>
-                            <td>
-                                <label>
-                                    <input type="radio" name="tr_action[<?php echo $lang['code']; ?>]" value="0" <?php echo $no_checked ?>/>
-                                    <?php _e('Do not update', 'wpml-translation-management'); ?>&nbsp;&nbsp;|
-                                </label>
-                            </td>
-                            <td>
-                                <label>
-                                    <input type="radio" name="tr_action[<?php echo $lang['code']; ?>]" value="2" <?php echo $du_checked ?>/>
-                                    <?php _e('Duplicate content', 'wpml-translation-management'); ?>
-                                </label>
-                            </td>
-                        </tr>
-
-                        <?php endforeach; ?>
+                        <thead>
+                            <tr>
+                                <td>&nbsp;</td>
+                                <td><a href="#translate-all"><?php _e('Translate all', 'wpml-translation-management') ?></a></td>
+                                <td><a href="#update-none"><?php _e('Update none', 'wpml-translation-management') ?></a></td>
+                                <td><a href="#duplicate-all"><?php _e('Duplicate all', 'wpml-translation-management') ?></a></td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach($sitepress->get_active_languages()as $lang):?>
+                            <?php
+                                if($lang['code'] == $icl_translation_filter['from_lang']) continue;
+                                $tr_checked = isset($icl_selected_languages[$lang['code']]) ? 'checked="checked"' : '';
+                                $du_checked = '';
+                                $no_checked = empty($tr_checked) && empty($du_checked) ? 'checked="checked"' : '';
+                            ?>                        
+                            <tr>
+                                <td><strong><?php echo $lang['display_name'] ?></strong></td>
+                                <td>
+                                    <label>
+                                        <input type="radio" name="tr_action[<?php echo $lang['code']; ?>]" value="1" <?php echo $tr_checked ?>/>
+                                        <?php _e('Translate by', 'wpml-translation-management'); ?>
+                                     </label>
+                                    <?php $iclTranslationManagement->translators_dropdown(array(
+                                                    'from'          => $icl_translation_filter['from_lang'],
+                                                    'to'            => $lang['code'],
+                                                    'name'          => 'translator['.$lang['code'].']',
+                                                    'selected'      =>  isset($icl_selected_translators[$lang['code']]) ? $icl_selected_translators[$lang['code']] : 0,
+                                                    'services'      => array('local', 'icanlocalize')
+                                                    ));
+                                    ?>
+                                    &nbsp;<a href="admin.php?page=<?php echo WPML_TM_FOLDER ?>/menu/main.php&sm=translators"><?php _e('Manage translators', 'wpml-translation-management'); ?></a>&nbsp;&nbsp;|
+                                </td>
+                                <td>
+                                    <label>
+                                        <input type="radio" name="tr_action[<?php echo $lang['code']; ?>]" value="0" <?php echo $no_checked ?>/>
+                                        <?php _e('Do not update', 'wpml-translation-management'); ?>&nbsp;&nbsp;|
+                                    </label>
+                                </td>
+                                <td>
+                                    <label>
+                                        <input type="radio" name="tr_action[<?php echo $lang['code']; ?>]" value="2" <?php echo $du_checked ?>/>
+                                        <?php _e('Duplicate content', 'wpml-translation-management'); ?>
+                                    </label>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
                     </table>
                     <br />
 

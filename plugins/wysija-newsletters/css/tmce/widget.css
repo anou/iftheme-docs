@@ -5,6 +5,13 @@
     padding: 20px;
 }
 
+#subscriber-ccount-form{
+    width: 450px;
+    float:left;
+    margin: 5px;
+    padding: 20px;
+}
+
 body,html{
     margin:0 !important;
     overflow: hidden;

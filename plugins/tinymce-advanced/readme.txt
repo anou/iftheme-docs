@@ -1,38 +1,50 @@
 === TinyMCE Advanced ===
 Contributors: azaozz
-Donate link: 
 Tags: wysiwyg, formatting, tinymce, write, editor
-Requires at least: 3.5
-Tested up to: 3.5
-Stable tag: 3.5.8
+License: GPL v2
+Requires at least: 3.7
+Tested up to: 3.8
+Stable tag: 3.5.9
 
 Enables the advanced features of TinyMCE, the WordPress WYSIWYG editor. 
 
 == Description ==
 
-Attention: if you are using customized tadv-mce.css and are updating from version 3.3.9 or earlier to version 3.3.9.1 or newer, see the release notes.
-
-This plugin adds 16 plugins to [TinyMCE](http://tinymce.com/): Advanced HR, Advanced Image, Advanced Link, Advanced List, Context Menu, Emotions (Smilies), Date and Time, IESpell, Layer, Nonbreaking, Print, Search and Replace, Style, Table, Visual Characters and XHTML Extras. 
-
-**Language Support:** The plugin interface in only in English, but the TinyMCE plugins include several translations: German, French, Italian, Spanish, Portuguese, Russian, Chinese and Japanese. More translations are available at the [TinyMCE web site](http://tinymce.moxiecode.com/download_i18n.php).
-
+This plugin will let you add, remove and arrange the buttons that are shown on the Visual Editor toolbar.
+It includes 16 plugins for [TinyMCE](http://tinymce.com/) that are automatically enabled or disabled depending on what buttons are chosen.
 
 = Some of the features added by this plugin =
 
-* Imports the CSS classes from the theme stylesheet and add them to a drop-down list.
-* Support for making and editing tables.
-* Editing in-line css styles.
-* Advanced list and image dialogs that offer a lot of options.
+* Support for creating and editing tables.
+* More options when inserting lists.
 * Search and Replace in the editor.
-* Support for XHTML specific tags and for (div based) layers.
+* Editing in-line css styles.
+* Advanced image dialog that offer a lot of options.
+* Adding and removing HTML tag attributes.
+
+Included TinyMCE plugins: Advanced HR, Advanced Image, Advanced Link, Advanced List, Context Menu, Emotions (Smilies), Date and Time, IESpell, Layer, Nonbreaking, Print, Search and Replace, Style, Table, Visual Characters and XHTML Extras.
+
+= Language Support =
+
+The plugin includes several translations for the TinyMCE components: German, French, Italian, Spanish, Portuguese, Russian, Chinese and Japanese.
+
+More translations are available as a separate plugin: [TinyMCE Advanced Language Pack](http://wordpress.org/plugins/tinymce-advanced-language-pack/).
 
 
 == Installation ==
 
-Best is to install directly from WordPress. If manual installation is required, please make sure all of the plugin files are in a folder named "tinymce-advanced" (not two nested folders) in the plugin directory.
-
+Best is to install directly from WordPress. If manual installation is required, please make sure that the plugin files are in a folder named "tinymce-advanced" (not two nested folders) in the WordPress plugins folder, usually "wp-content/plugins".
 
 == Changelog ==
+
+= 3.5.9.1 =
+Updated for WordPress 3.8, fixed auto-embedding of single line URLs when not removing paragraph tags.
+
+= 3.5.9 =
+Updated for WordPress 3.7 and TinyMCE 3.5.9.
+
+= 3.5.8 =
+Updated for WordPress 3.5 and TinyMCE 3.5.8.
 
 = 3.4.9 =
 Updated for WordPress 3.4 and TinyMCE 3.4.9.
@@ -89,7 +101,7 @@ Includes an admin page for arranging the TinyMCE toolbar buttons, easy installat
 
 = No styles are imported in the Styles drop-down menu. =
 
-These styles (just the classes) are imported from your current theme editor-style.css file. However some themes do not have this functionality. For these themes TinyMCE Advanced has the option to let you add a customized editor-style.css and import it into the editor.
+These styles are imported from your current theme editor-style.css file. However some themes do not have this functionality. For these themes TinyMCE Advanced has the option to let you add a customized editor-style.css and import it into the editor.
 
 = I have just installed this plugin, but it does not do anything. =
 
@@ -109,7 +121,7 @@ Click the "Remove Settings" button on the plugin settings page and then set the 
 
 = Other questions? More screenshots? =
 
-Please visit the homepage for [TinyMCE Advanced](http://www.laptoptips.ca/projects/tinymce-advanced/). 
+Please post on the support forum or visit the homepage for [TinyMCE Advanced](http://www.laptoptips.ca/projects/tinymce-advanced/). 
 
 
 == Screenshots ==

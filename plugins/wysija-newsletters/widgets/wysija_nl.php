@@ -17,7 +17,7 @@ class WYSIJA_NL_Widget extends WP_Widget {
                     $controller='subscribers';
                 }else $controller=$_REQUEST['controller'];
 
-                $model_config=&WYSIJA::get('config','model');
+                $model_config=WYSIJA::get('config','model');
                 if(!$model_config->getValue('relative_ajax') && !empty($_SERVER['HTTP_HOST'])){
                     $site_url=get_site_url();
                     //try to find the domain part in the site url
@@ -95,14 +95,13 @@ class WYSIJA_NL_Widget extends WP_Widget {
         $this->name=__('Wysija Subscription',WYSIJA);
         $this->widget_options['description']=__('Subscription form for your newsletters.',WYSIJA);
 
-
         //if the js array for the ajax request is set we declare it
         if(isset($this->params_ajax)){
             $this->params_ajax['loadingTrans']  =__('Loading...',WYSIJA);
             wp_localize_script( 'wysija-front-subscribers', 'wysijaAJAX',$this->params_ajax );
         }
 
-        $config=&WYSIJA::get('config','model');
+        $config=WYSIJA::get('config','model');
         $this->successmsgconf=__('Check your inbox now to confirm your subscription.',WYSIJA);
         $this->successmsgsub=__("You've successfully subscribed.",WYSIJA);
         if($config->getValue('confirm_dbleoptin')){
@@ -113,7 +112,7 @@ class WYSIJA_NL_Widget extends WP_Widget {
         $this->fields=array(
             'title' =>array('label'=>__('Title:',WYSIJA),'default'=>__('Subscribe to our Newsletter',WYSIJA))
             ,'instruction' =>array('label'=>'','default'=>__('To subscribe to our dandy newsletter simply add your email below. A confirmation email will be sent to you!',WYSIJA))
-            ,'lists' =>array('core'=>1,'label'=>__('Select a list:',WYSIJA),'default'=>array(1))
+            ,'lists' =>array('core'=>1,'label'=>__('Select list(s):',WYSIJA),'default'=>array(1))
             ,'autoregister' =>array('core'=>1,'label'=>__('Let subscribers select their lists:',WYSIJA),'default'=>'not_auto_register')
             ,'customfields' =>array('core'=>1,'label'=>__('Ask for:',WYSIJA),'default'=>array('email'=>array('label'=>__('Email',WYSIJA))))
             ,'labelswithin'=>array('core'=>1,'default'=>true,'label'=>__('Display labels in inputs',WYSIJA),'hidden'=>1)
@@ -134,7 +133,7 @@ class WYSIJA_NL_Widget extends WP_Widget {
     }
 
     function form($instance) {
-        $helper_forms=&WYSIJA::get('forms','helper');
+        $helper_forms=WYSIJA::get('forms','helper');
 
         $html='<div class="wysija-widget-form">';
 
@@ -162,7 +161,7 @@ class WYSIJA_NL_Widget extends WP_Widget {
             if(isset($instance[$field]))  {
 
                 if($field === 'success' && $instance[$field]==$this->successmsgsub.' '.$this->successmsgconf){
-                    $config=&WYSIJA::get('config','model');
+                    $config=WYSIJA::get('config','model');
                     if(!$config->getValue('confirm_dbleoptin')){
                         $value_field=$this->successmsgsub;
                     }else{
@@ -177,7 +176,7 @@ class WYSIJA_NL_Widget extends WP_Widget {
             switch($field){
                 case 'select_form':
                     // offer the possibility to select a form
-                    $model_forms =& WYSIJA::get('forms', 'model');
+                    $model_forms = WYSIJA::get('forms', 'model');
                     $model_forms->reset();
                     $forms = $model_forms->getRows(array('form_id', 'name'));
 
@@ -228,11 +227,9 @@ class WYSIJA_NL_Widget extends WP_Widget {
             // we come here everywhere else
             if(isset($instance['form']) && isset($instance['form_type'])){
                 //make the id of the form truly unique
-                $instance['id_form']=str_replace('_','-','wysija-'.uniqid($instance['form_type']).'-'.$instance['form']);
+                $instance['id_form'] = str_replace('_','-','wysija-'.uniqid($instance['form_type']).'-'.$instance['form']);
             }
         }
-
-
 
         if(isset($instance['form']) && (int)$instance['form'] > 0) {
 
@@ -248,7 +245,7 @@ class WYSIJA_NL_Widget extends WP_Widget {
                 $title = $before_title.$title.$after_title;
             }
 
-            $view =& WYSIJA::get('widget_nl','view','front');
+            $view = WYSIJA::get('widget_nl','view','front');
 
             $output  = $before_widget;
             $output .= $view->display($title, $instance, false, $this->iFrame);
@@ -264,7 +261,7 @@ class WYSIJA_NL_Widget extends WP_Widget {
                 echo $output;
             }
         } else {
-            $model_config=&WYSIJA::get('config','model');
+            $model_config=WYSIJA::get('config','model');
             //if(!$config->getValue("sending_emails_ok")) return;
             foreach($this->fields as $field => $field_params){
                 if(isset($this->core_only) && $this->core_only && !isset($field_params['core'])) continue;
@@ -288,7 +285,7 @@ class WYSIJA_NL_Widget extends WP_Widget {
             else $title='';
 
 
-            $view =& WYSIJA::get('widget_nl','view','front');
+            $view = WYSIJA::get('widget_nl','view','front');
             $content_html.=$view->display($title,$instance,false,$this->iFrame);
 
             $content_html.= $after_widget;

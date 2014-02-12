@@ -39,7 +39,7 @@ class WYSIJA_view extends WYSIJA_object{
      * @global type $wysija_msg
      */
     function messages($noglobal=false){
-        $wysija_msg=$this->getMsgs();
+        $wysija_msg = $this->getMsgs();
 
         if(isset($wysija_msg['g-updated'])) {
            if(!$noglobal) {
@@ -56,12 +56,22 @@ class WYSIJA_view extends WYSIJA_object{
            unset($wysija_msg['g-error']);
         }
 
-        $wpnonce='<input type="hidden" value="'.wp_create_nonce("wysija_ajax").'" id="wysijax" />';
+        $wpnonce='<input type="hidden" value="'.wp_create_nonce('wysija_ajax').'" id="wysijax" />';
         if(!$wysija_msg) return '<div class="wysija-msg ajax"></div>'.$wpnonce;
         $html='<div class="wysija-msg">';
 
             foreach($wysija_msg as $level =>$messages){
-                $html.='<div class="'.$level.'">';
+                $msg_class = '';
+                switch($level){
+                    case 'updated':
+                        $msg_class = 'notice-msg';
+                        break;
+                    case 'error':
+                        $msg_class = 'error-msg';
+                        break;
+                }
+
+                $html.='<div class="'.$msg_class.'">';
                 $html.='<ul>';
 
                 if(count($messages)>0){
@@ -76,6 +86,7 @@ class WYSIJA_view extends WYSIJA_object{
             }
 
         $html.='</div><div class="wysija-msg ajax"></div>'.$wpnonce;
+
         return $html;
     }
 
@@ -87,21 +98,14 @@ class WYSIJA_view extends WYSIJA_object{
      * @return type
      */
     function secure($params=array(),$get=false,$echo=true){
+        $controller='';
         if(!is_array($params)) $action=$params;
         else{
             $action=$params['action'];
             if(isset($params['controller']))    $controller=$params['controller'];
+            elseif(isset($_REQUEST['page'])) $controller=$_REQUEST['page'];
         }
-        if(WYSIJA_SIDE=="front"){
-            $nonceaction=$controller.'-action_'.$action;
-        }else{
-            if(defined('DOING_AJAX')){
-               $nonceaction=$controller.'-action_'.$action;
-            }else{
-               $nonceaction=$_REQUEST['page'].'-action_'.$action;
-            }
-
-        }
+        $nonceaction=$controller.'-action_'.$action;
 
         if(is_array($params) && isset($params['id']) && $params['id']) $nonceaction.='-id_'.$params['id'];
 
@@ -120,23 +124,24 @@ class WYSIJA_view extends WYSIJA_object{
      * @return string
      */
     function getClassValidate($params,$returnAttr=false,$prefixclass=""){
-        $classValidate="";
-        $recognisedtypes=array("email","url");
+        $class_validate = '';
+        $recognised_types = array('email','url');
+
         if(isset($params['req'])){
-            $classValidate="required";
-            if(isset($params['type']) && in_array($params['type'], $recognisedtypes))  {
-                $classValidate.=",custom[".$params['type']."]";
+            $class_validate='required';
+            if(isset($params['type']) && in_array($params['type'], $recognised_types))  {
+                $class_validate.=',custom['.$params['type'].']';
             }
         }else{
-           if(isset($params['type']) && in_array($params['type'],$recognisedtypes ))  {
-                $classValidate.="custom[".$params['type']."]";
+           if(isset($params['type']) && in_array($params['type'],$recognised_types ))  {
+                $class_validate.='custom['.$params['type'].']';
             }
         }
 
-        if($prefixclass) $prefixclass.=" ";
-        if($classValidate) $classValidate="validate[".$classValidate."]";
-        if(!$returnAttr && $classValidate)  $classValidate= ' class="'.$prefixclass.$classValidate.'" ';
+        if($prefixclass) $prefixclass.=' ';
+        if($class_validate) $class_validate='validate['.$class_validate.']';
+        if(!$returnAttr && $class_validate)  $class_validate= ' class="'.$prefixclass.$class_validate.'" ';
 
-        return $classValidate;
+        return $class_validate;
     }
 }

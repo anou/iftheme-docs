@@ -22,7 +22,7 @@ class WYSIJA_model_campaign_list extends WYSIJA_model{
             $lists=$this->query("get_res",$query,OBJECT_K);
             //$lists  = $this->database->loadObjectList('listid');
             if(empty($lists) OR !$total) return $lists;
-            $config = &WYSIJA::get('config','model');
+            $config = WYSIJA::get('config','model');
             $confirmed = $config->getValue('confirm_dbleoptin') ? 'b.status = 1 AND' : '';
             $countQuery = 'SELECT a.listid, count(b.subid) as nbsub FROM `[wysija]user_list` as a LEFT JOIN `[wysija]user` as b ON a.user_id = b.user_id WHERE '.$confirmed.'  a.`list_id` IN ('.implode(',',array_keys($lists)).') GROUP BY a.`list_id`';
             //$this->database->setQuery($countQuery);

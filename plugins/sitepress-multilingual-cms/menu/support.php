@@ -12,25 +12,35 @@
     // Installer plugin active?
     $installer_on = defined('WPRC_VERSION') && WPRC_VERSION;
 
-    $wp_plugins = get_plugins();    
-    $wpml_plugins_list = array(
-                            'WPML Multilingual CMS'         => false,
-                            'WPML CMS Nav'                  => false,
-                            'WPML String Translation'       => false,
-                            'WPML Sticky Links'             => false,
-                            'WPML Translation Management'   => false
-                         );
-                      
-    foreach($wpml_plugins_list as $wpml_plugin_name => $v){
+    $wp_plugins = get_plugins();
+	$wpml_plugins_list = array(
+		'WPML Multilingual CMS'       => array( 'installed' => false,'active'=>false,'file'=>false, 'plugin'=>false, 'slug'=>'sitepress-multilingual-cms' ),
+		'WPML CMS Nav'                => array( 'installed' => false,'active'=>false,'file'=>false, 'plugin'=>false, 'slug'=>'wpml-cms-nav' ),
+		'WPML String Translation'     => array( 'installed' => false,'active'=>false,'file'=>false, 'plugin'=>false, 'slug'=>'wpml-string-translation' ),
+		'WPML Sticky Links'           => array( 'installed' => false,'active'=>false,'file'=>false, 'plugin'=>false, 'slug'=>'wpml-sticky-links' ),
+		'WPML Translation Management' => array( 'installed' => false,'active'=>false,'file'=>false, 'plugin'=>false, 'slug'=>'wpml-translation-management' ),
+		'WPML Translation Analytics'  => array( 'installed' => false,'active'=>false,'file'=>false, 'plugin'=>false, 'slug'=>'wpml-translation-analytics' ),
+		'WPML XLIFF'                  => array( 'installed' => false,'active'=>false,'file'=>false, 'plugin'=>false, 'slug'=>'wpml-xliff' ),
+		'WPML Media'                  => array( 'installed' => false,'active'=>false,'file'=>false, 'plugin'=>false, 'slug'=>'wpml-media' ),
+		'WooCommerce Multilingual'    => array( 'installed' => false,'active'=>false,'file'=>false, 'plugin'=>false, 'slug'=>'woocommerce-multilingual' ),
+		'JigoShop Multilingual'       => array( 'installed' => false,'active'=>false,'file'=>false, 'plugin'=>false, 'slug'=>'jigoshop-multilingual' ),
+		'Gravity Forms Multilingual'  => array( 'installed' => false,'active'=>false,'file'=>false, 'plugin'=>false, 'slug'=>'gravityforms-multilingual' ),
+		'CRED Frontend Translation'   => array( 'installed' => false,'active'=>false,'file'=>false, 'plugin'=>false, 'slug'=>'cred-frontend-translation' ),
+		'Installer'                   => array( 'installed' => false,'active'=>false,'file'=>false, 'plugin'=>false, 'slug'=>'installer' ),
+	);
+
+	$wpml_plugins = false;
+
+	foreach($wpml_plugins_list as $wpml_plugin_name => $v){
         $found = false;
         foreach($wp_plugins as $file => $plugin){
-            if($plugin['Name'] == $wpml_plugin_name){
-                $wpml_plugins[$plugin['Name'] . "#" . $file] = $plugin;    
+			$plugin_name = $plugin[ 'Name' ];
+			if( $plugin_name == $wpml_plugin_name){
+				$wpml_plugins_list[ $plugin_name ]['installed'] = true;
+				$wpml_plugins_list[ $plugin_name ]['plugin'] = $plugin;
+				$wpml_plugins_list[ $plugin_name ]['file'] = $file;
                 $found = true;
             }
-        }
-        if(!$found){
-            $wpml_plugins[$wpml_plugin_name . "#0"] = false;        
         }
     }
 
@@ -55,35 +65,40 @@
                 define('ICL_WPML_ORG_REPO_ID', $wpml_org_repo_id);
         }
     }
-    
-    foreach($wpml_plugins as $name => $p){
-        
-        $exp = explode('#', $name);
-        $plugin_name = $exp[0];
-        $file = !empty($exp[1]) ? $exp[1] : false;
-        
-        echo '<tr>';
-        echo '<td>' . $plugin_name . '</td>';
-        echo '<td align="right">';
-        if(empty($p)){
-            if(!$installer_on){                
-                echo __('Not installed');
-            }else{
-                echo '<a href="' . admin_url('plugin-install.php?repos[]='.ICL_WPML_ORG_REPO_ID.'&amp;tab=search&amp;s=') . urlencode($plugin_name) . '">' . __('Download', 'sitepress') . '</a>';
-            }
-        }else{
-            if(!$installer_on){                
-                echo __('Installed');
-            }else{
-                echo '<a href="' . admin_url('plugin-install.php?repos[]='.ICL_WPML_ORG_REPO_ID.'&amp;tab=search&amp;s=') . urlencode($plugin_name) . '">' . __('Installed', 'sitepress') . '</a>';
-            }
-        } 
-        echo '</td>';
-        echo '<td align="center">'; echo isset($file) && is_plugin_active($file) ? __('Yes', 'sitepress') : __('No', 'sitepress'); echo '</td>';
-        echo '<td align="right">'; echo isset($p['Version']) ? $p['Version'] : __('n/a', 'sitepress'); echo '</td>';
-        echo '</tr>';
-        
-    }
+
+	foreach ( $wpml_plugins_list as $name => $plugin_data ) {
+
+		$plugin_name = $name;
+		$file        = $plugin_data['file'];
+		$dir = dirname($file);
+
+		echo '<tr>';
+		echo '<td><i class="icon18 '. $plugin_data['slug'] . '"></i>' . $plugin_name . '</td>';
+		echo '<td align="right">';
+		if ( empty( $plugin_data['plugin'] ) ) {
+			if ( !$installer_on ) {
+				echo __( 'Not installed' );
+			} else {
+				echo '<a href="' . admin_url( 'plugin-install.php?repos[]=' . ICL_WPML_ORG_REPO_ID . '&amp;tab=search&amp;s=' ) . urlencode( $plugin_name ) . '">' . __( 'Download', 'sitepress' ) . '</a>';
+			}
+		} else {
+			if ( !$installer_on ) {
+				echo __( 'Installed' );
+			} else {
+				echo '<a href="' . admin_url( 'plugin-install.php?repos[]=' . ICL_WPML_ORG_REPO_ID . '&amp;tab=search&amp;s=' ) . urlencode( $plugin_name ) . '">' . __( 'Installed', 'sitepress' ) . '</a>';
+			}
+		}
+		echo '</td>';
+		echo '<td align="center">';
+		echo isset( $file ) && is_plugin_active( $file ) ? __( 'Yes', 'sitepress' ) : __( 'No', 'sitepress' );
+		echo '</td>';
+		echo '<td align="right">';
+		echo isset( $plugin_data['plugin']['Version'] ) ? $plugin_data['plugin']['Version'] : __( 'n/a', 'sitepress' );
+		echo '</td>';
+		echo '</tr>';
+
+	}
+
     echo '
             </tbody>
         </table>
