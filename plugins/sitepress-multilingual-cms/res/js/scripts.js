@@ -105,7 +105,8 @@ jQuery(document).ready(function($){
         jQuery.ajax({
             type: "POST",
             url: icl_ajx_url,data: "icl_ajx_action=make_duplicates&post_id=" + jQuery('#post_ID').val() + '&langs=' + langs + '&_icl_nonce=' + jQuery('#_icl_nonce_mdup').val(),
-            success: function(msg){location.reload()}});
+            success: function(msg){location.reload()}
+        });
     })
 
     jQuery(document).delegate('#wpml_als_help_link', 'click', function(){
@@ -476,8 +477,7 @@ function iclPostLanguageSwitch(){
             });
 
             ajaxurl = oldajaxurl;
-        });
-
+        })
     }
 }
 
@@ -654,43 +654,28 @@ function iclPTSend(){
 }
 
 function icl_pt_reload_translation_box(){
-    jQuery.ajax({
-        type: "POST",
-        url: icl_ajx_url,
-        dataType: 'json',
-        data: "icl_ajx_action=get_translator_status&_icl_nonce=" . jQuery('_icl_nonce_gts').val(),
-        success: function(){
-            jQuery('#icl_pt_hide').hide();
-            jQuery('#icl_pt_controls').html(icl_ajxloaderimg+'<br class="clear" />');
-            jQuery.get(location.href, {rands:Math.random()}, function(data){
-                jQuery('#icl_pt_controls').html(jQuery(data).find('#icl_pt_controls').html());
-                icl_tb_init('a.icl_thickbox');
-                icl_tb_set_size('a.icl_thickbox');
-                jQuery('#icl_pt_hide').show();
+	var _icl_nonce_gts = jQuery('#_icl_nonce_gts');
+	if(_icl_nonce_gts.length) {
+		var icl_nonce = _icl_nonce_gts.val();
+		jQuery.ajax({
+			type: "POST",
+			url: icl_ajx_url,
+			dataType: 'json',
+			data: "icl_ajx_action=get_translator_status&_icl_nonce=" + icl_nonce,
+			success: function(){
+				jQuery('#icl_pt_hide').hide();
+				jQuery('#icl_pt_controls').html(icl_ajxloaderimg+'<br class="clear" />');
+				jQuery.get(location.href, {rands:Math.random()}, function(data){
+					jQuery('#icl_pt_controls').html(jQuery(data).find('#icl_pt_controls').html());
+					icl_tb_init('a.icl_thickbox');
+					icl_tb_set_size('a.icl_thickbox');
+					jQuery('#icl_pt_hide').show();
 
-            })
-        }
-    });
+				})
+			}
+		});
+	}
 }
-
-/*
-function icl_pt_reload_translation_options(){
-    jQuery.ajax({
-        type: "POST",
-        url: icl_ajx_url,
-        dataType: 'json',
-        data: "icl_ajx_action=get_translator_status",
-        success: function(){
-            jQuery('#icl-tr-opt').html(icl_ajxloaderimg+'<br class="clear" />');
-            jQuery.get(location.href, {rands:Math.random()}, function(data){
-                jQuery('#icl-tr-opt').html(jQuery(data).find('#icl-tr-opt').html());
-                icl_tb_init('a.icl_thickbox');
-                icl_tb_set_size('a.icl_thickbox');
-            })
-        }
-    });
-}
-*/
 
 function icl_copy_from_original(lang, trid){
     jQuery('#icl_cfo').after(icl_ajxloaderimg).attr('disabled', 'disabled');

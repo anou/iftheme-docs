@@ -48,14 +48,15 @@ class WPML_Slug_Translation{
         global $sitepress, $sitepress_settings, $wpdb;
         
         $strings_language = $sitepress_settings['st']['strings_language'];
-        
-        if($sitepress->get_current_language() != $strings_language){
+
+		$current_language = $sitepress->get_current_language();
+		if( $current_language != $strings_language){
             
             $queryable_post_types = get_post_types( array('publicly_queryable' => true) );
                 
             foreach($queryable_post_types as $type){
                     
-                if(!$sitepress->is_translated_post_type($type)) continue;
+                if(!isset($sitepress_settings['posts_slug_translation']['types'][$type]) || !$sitepress_settings['posts_slug_translation']['types'][$type] || !$sitepress->is_translated_post_type($type)) continue;
                     
                 $post_type_obj = get_post_type_object($type);
                 $slug = isset($post_type_obj->rewrite['slug']) ? trim($post_type_obj->rewrite['slug'],'/') : false;
@@ -65,7 +66,7 @@ class WPML_Slug_Translation{
                             FROM {$wpdb->prefix}icl_string_translations t
                                 JOIN {$wpdb->prefix}icl_strings s ON t.string_id = s.id
                             WHERE t.language = %s AND s.name = %s AND s.value = %s
-                        ", $sitepress->get_current_language(), 'URL slug: ' . $slug, $slug));
+                        ", $current_language, 'URL slug: ' . $slug, $slug));
                 
                 $using_tags = false;
                 
@@ -106,11 +107,10 @@ class WPML_Slug_Translation{
                     $buff_value = array();                     
                     foreach($value as $k=>$v){            
                         
-                        if($slug && $slug != $slug_translation){                        
+                        if(trim($slug) && trim($slug_translation) && $slug != $slug_translation){
                             if(preg_match('#^[^/]*/?' . preg_quote($slug) . '/#', $k) && $slug != $slug_translation){
                                 $k = preg_replace('#^([^/]*)(/?)' . preg_quote($slug) . '/#',  '$1$2' . $slug_translation . '/' , $k);    
                             }
-                            
                         }
                         $buff_value[$k] = $v;
                     }
@@ -124,46 +124,67 @@ class WPML_Slug_Translation{
         }            
         
         return $value;
-    }  
-    
-    static function get_translated_slug($slug, $language){
-        global $wpdb, $sitepress_settings, $sitepress;
-        
-        static $cache = array();
-        
-        if(empty($cache[$slug][$language.$sitepress->get_current_language()])){
-        
-            if($sitepress_settings['st']['strings_language'] != $sitepress->get_current_language()){
-                $slug = $wpdb->get_var("
-                            SELECT s.value 
-                            FROM {$wpdb->prefix}icl_strings s    
-                            JOIN {$wpdb->prefix}icl_string_translations t ON t.string_id = s.id
-                            WHERE t.value='". esc_sql($slug)."' 
-                                AND t.language = '" . esc_sql($sitepress->get_current_language()) . "' 
-                                AND s.name LIKE 'URL slug:%' 
-                                AND s.language = '" . esc_sql($sitepress_settings['st']['strings_language']) . "'
-                ");
-            }
-
-            if($language != $sitepress_settings['st']['strings_language']){
-                $slug = $wpdb->get_var("
-                                    SELECT t.value 
-                                    FROM {$wpdb->prefix}icl_strings s    
-                                    JOIN {$wpdb->prefix}icl_string_translations t ON t.string_id = s.id
-                                    WHERE s.value='". esc_sql($slug)."' 
-                                        AND t.language = '" . esc_sql($language) . "' 
-                                        AND s.name LIKE 'URL slug:%' 
-                                        AND s.language = '" . esc_sql($sitepress_settings['st']['strings_language']) . "'
-                ");
-            }
-            
-            $cache[$slug][$language.$sitepress->get_current_language()] = $slug;
-            
-        }
-        
-        return $slug;
-        
     }
+
+	static function get_translated_slug( $slug, $language ) {
+		global $wpdb, $sitepress_settings, $sitepress;
+
+		$current_language = $sitepress->get_current_language();
+
+		// Pre cache all results -- BEGIN
+		$cache_key_args = array($slug, $current_language, $language);
+
+		$cache_key = implode(':', array_filter($cache_key_args));
+		$cache_group = 'get_translated_slug';
+
+		$slugs_translations = wp_cache_get($cache_key, $cache_group);
+
+		if(!$slugs_translations) {
+			$slugs_translations_sql = false;
+
+			if ( $language != $sitepress_settings[ 'st' ][ 'strings_language' ] ) {
+				$slugs_translations_sql = "
+												SELECT s.value as original, t.value
+												FROM {$wpdb->prefix}icl_strings s
+												JOIN {$wpdb->prefix}icl_string_translations t ON t.string_id = s.id
+												WHERE t.language = %s
+												AND s.name LIKE %s
+												AND s.language = %s
+							";
+			}else if ( $sitepress_settings[ 'st' ][ 'strings_language' ] != $current_language ) {
+				$slugs_translations_sql = "
+										SELECT t.value as original, s.value
+										FROM {$wpdb->prefix}icl_strings s
+										JOIN {$wpdb->prefix}icl_string_translations t ON t.string_id = s.id
+										WHERE t.language = %s
+										AND s.name LIKE %s
+										AND s.language = %s
+							";
+			}
+
+			if($slugs_translations_sql) {
+				$slugs_translations_prepared          = $wpdb->prepare( $slugs_translations_sql, array( $language, 'URL slug:%', $sitepress_settings[ 'st' ][ 'strings_language' ] ) );
+				$slugs_translations          = $wpdb->get_results( $slugs_translations_prepared, 'ARRAY_A' );
+				wp_cache_set($cache_key, $slugs_translations, $cache_group);
+			}
+		}
+		// Pre cache all results -- END
+
+		if($slugs_translations != null && $slugs_translations) {
+			$translated_slug = false;
+			foreach($slugs_translations as $slugs_row) {
+				if($slugs_row['original'] == $slug) {
+					$translated_slug = $slugs_row['value'];
+					break;
+				}
+			}
+
+			if ( $translated_slug ) {
+				return $translated_slug;
+			}
+		}
+		return $slug;
+	}
     
     static function _icl_before_archive_url($post_type, $language){
         global $sitepress_settings, $sitepress;

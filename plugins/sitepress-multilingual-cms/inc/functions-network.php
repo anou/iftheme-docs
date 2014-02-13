@@ -33,7 +33,7 @@ function icl_network_administration_menu(){
         basename(ICL_PLUGIN_PATH).'/menu/network.php', null, ICL_PLUGIN_URL . '/res/img/icon16.png');
     add_submenu_page(basename(ICL_PLUGIN_PATH).'/menu/network.php', 
         __('Network settings','sitepress'), __('Network settings','sitepress'),
-        'manage_sitess', basename(ICL_PLUGIN_PATH).'/menu/network.php');
+        'manage_sites', basename(ICL_PLUGIN_PATH).'/menu/network.php');
 }
 
 function icl_network_deactivate_wpml($blog_id = false){

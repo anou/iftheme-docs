@@ -1,16 +1,12 @@
 <?php
 function icl_sitepress_activate(){
-    
-    //if(isset($_REQUEST['action']) && $_REQUEST['action'] == 'error_scrape'){
-    //    return;
-    //}
-    
     global $wpdb;
 
-    require_once(ICL_PLUGIN_PATH . '/inc/lang-data.php');
-    //defines $langs_names
+	$langs_names  = icl_get_languages_names();
+	$lang_codes   = icl_get_languages_codes();
+	$lang_locales = icl_get_languages_locales();
 
-    $charset_collate = '';
+	$charset_collate = '';
     if ( method_exists($wpdb, 'has_cap') && $wpdb->has_cap( 'collation' ) ) {
             if ( ! empty($wpdb->charset) )
                     $charset_collate = "DEFAULT CHARACTER SET $wpdb->charset";
@@ -19,7 +15,6 @@ function icl_sitepress_activate(){
     }    
     
     try{
-    
         // languages table
         $table_name = $wpdb->prefix.'icl_languages';                            
         if(0 !== strcasecmp($wpdb->get_var("SHOW TABLES LIKE '{$table_name}'"), $table_name)){
@@ -35,13 +30,11 @@ function icl_sitepress_activate(){
                 `encode_url` TINYINT( 1 ) NOT NULL DEFAULT 0,
                 UNIQUE KEY `code` (`code`),
                 UNIQUE KEY `english_name` (`english_name`)
-            ) {$charset_collate}"; 
+            ) {$charset_collate}";
+
             $wpdb->query($sql);
             if($e = mysql_error()) throw new Exception($e);
             
-            //$langs_names is defined in ICL_PLUGIN_PATH . '/inc/lang-data.php'
-			/** @var $langs_names array */
-			/** @var $lang_codes array */
 			foreach($langs_names as $key=>$val){
                 if(strpos($key,'Norwegian Bokm')===0){ $key = 'Norwegian Bokmål'; $lang_codes[$key] = 'nb';} // exception for norwegian
                 $default_locale = isset($lang_locales[$lang_codes[$key]]) ? $lang_locales[$lang_codes[$key]] : '';
@@ -74,15 +67,7 @@ function icl_sitepress_activate(){
             if($e = mysql_error()) throw new Exception($e);
             $add_languages_translations = true;
         }
-        //else{
-            // this table will not be trucated on upgrade starting with WPML 1.7.3
-            // $add_languages_translations sticks to false;
-            //if(!defined('ICL_PRESERVE_LANGUAGES_TRANSLATIONS') || !ICL_PRESERVE_LANGUAGES_TRANSLATIONS){
-            //    mysql_query("TRUNCATE TABLE `{$table_name}`");
-            //    $add_languages_translations = true;
-            //}        
-        //}
-        
+
         if($add_languages_translations){
             foreach($langs_names as $lang=>$val){        
                 if(strpos($lang,'Norwegian Bokm')===0){ $lang = 'Norwegian Bokmål'; $lang_codes[$lang] = 'nb';}
@@ -98,7 +83,6 @@ function icl_sitepress_activate(){
             }        
         }
         
-
         // translations
         $table_name = $wpdb->prefix.'icl_translations';
         if(0 !== strcasecmp($wpdb->get_var("SHOW TABLES LIKE '{$table_name}'"), $table_name)){
@@ -173,8 +157,8 @@ function icl_sitepress_activate(){
                 `field_type` VARCHAR( 128 ) NOT NULL ,
                 `field_format` VARCHAR( 16 ) NOT NULL ,
                 `field_translate` TINYINT NOT NULL ,
-                `field_data` TEXT NOT NULL ,
-                `field_data_translated` TEXT NOT NULL ,
+                `field_data` longtext NOT NULL ,
+                `field_data_translated` longtext NOT NULL ,
                 `field_finished` TINYINT NOT NULL DEFAULT 0,
                 INDEX ( `job_id` )
                 ) {$charset_collate}
@@ -389,13 +373,57 @@ function icl_sitepress_activate(){
     }else{
         // reset ajx_health_flag
         $iclsettings['ajx_health_checked'] = 0;
+        $iclsettings['just_reactivated'] = 1;
         update_option('icl_sitepress_settings',$iclsettings);
-    }  
+    }
 	
+	//Set new caps for all administrator role
+	icl_enable_capabilities();
+
 }
 
 function icl_sitepress_deactivate(){
+	icl_disable_capabilities();
 } 
+
+function icl_enable_capabilities() {
+	$iclsettings = get_option('icl_sitepress_settings');
+
+	//Set new caps for all administrator role
+	$role          = get_role( 'administrator' );
+	$icl_capabilities = icl_sitepress_get_capabilities();
+	for ( $i = 0, $caps_limit = count( $icl_capabilities ); $i < $caps_limit; $i++ ) {
+		$role->add_cap( $icl_capabilities[ $i ] );
+	}
+
+	//Set new caps for all Super Admins
+	$super_admins = get_super_admins();
+	foreach ( $super_admins as $admin ) {
+		$user = new WP_User( $admin );
+		for ( $i = 0, $caps_limit = count( $icl_capabilities ); $i < $caps_limit; $i++ ) {
+			$user->add_cap( $icl_capabilities[ $i ] );
+		}
+	}
+	
+	$iclsettings['icl_capabilities_verified'] = true;
+	update_option('icl_sitepress_settings',$iclsettings);
+}
+
+function icl_disable_capabilities() {
+	$icl_capabilities = icl_sitepress_get_capabilities();
+	//Set new caps for all Super Admins
+	$super_admins = get_super_admins();
+	foreach ( $super_admins as $admin ) {
+		$user = new WP_User( $admin );
+		for ( $i = 0, $caps_limit = count( $icl_capabilities ); $i < $caps_limit; $i++ ) {
+			$user->remove_cap( $icl_capabilities[ $i ] );
+		}
+	}
+	$iclsettings = get_option( 'icl_sitepress_settings' );
+	$iclsettings['icl_capabilities_verified'] = false;
+	update_option('icl_sitepress_settings',$iclsettings);
+}
+
 
 // Changed to use lowercased wpdb prefix. Some users have table name in uppercase.
 // http://bugs.mysql.com/bug.php?id=39894
@@ -423,24 +451,3 @@ if(isset($_GET['activate'])){
         }
     }
 }
-
-/*
-function icl_cant_be_activated(){
-        echo '<div class="error"><ul><li><strong>';
-        echo sprintf(__('WPML cannot be acctivated because: %s', 'sitepress'), $GLOBALS['_icl_activation_error']);
-        echo '</strong></li></ul></div>';        
-        $active_plugins = get_option('active_plugins');
-        $icl_sitepress_idx = array_search(ICL_PLUGIN_FOLDER . '/sitepress.php', $active_plugins);
-        if(false !== $icl_sitepress_idx){
-            unset($active_plugins[$icl_sitepress_idx]);
-            update_option('active_plugins', $active_plugins);
-            unset($_GET['activate']);
-            $recently_activated = get_option('recently_activated');
-            if(!isset($recently_activated[ICL_PLUGIN_FOLDER.'/sitepress.php'])){
-                $recently_activated[ICL_PLUGIN_FOLDER.'/sitepress.php'] = time();
-                update_option('recently_activated', $recently_activated);
-            }
-        }                
-}
-*/
-

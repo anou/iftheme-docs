@@ -1,10 +1,15 @@
 <?php
 // renders WPML_Taxonomy_Translation objects
+global $sitepress, $sitepress_settings;
+
+$active_languages = $sitepress->get_active_languages();
+$default_language = $sitepress->get_default_language();
+$current_language = $sitepress->get_current_language();
+
+global $wp_taxonomies;
 ?>
 
 <div id="wpml_tt_taxonomy_translation_wrap">
-
-<?php global $wp_taxonomies; ?>
 
 <?php if ( $this->show_selector ): ?>
 	<label>
@@ -23,9 +28,6 @@
 <p><?php printf( __( 'This table summarizes all the terms for taxonomy %s and their translations. Click on any cell to translate.', 'sitepress' ), '<i>' . $this->taxonomy_obj->labels->singular_name . '</i>' ); ?></p>
 
 <div class="icl_tt_tools">
-
-	<p>
-
 	<form id="wpml_tt_filters">
 		<input type="hidden" name="taxonomy" value="<?php echo $this->taxonomy ?>"/>
 		<?php _e( 'Show', 'sitepress' ) ?>
@@ -48,7 +50,8 @@
 			<?php if ( count( $active_languages ) > 2 ): ?>
 				<option value=""><?php _e( 'any language', 'sitepress' ) ?></option>
 			<?php endif; ?>
-			<?php foreach ( $active_languages as $language ): if ( $language[ 'code' ] != $sitepress->get_current_language() ): ?>
+			<?php
+			foreach ( $active_languages as $language ): if ( $language[ 'code' ] != $current_language ): ?>
 				<option value="<?php echo $language[ 'code' ] ?>"
 						<?php if (count( $this->selected_languages ) == 1 && $language[ 'code' ] == $the_language[ 'code' ]): ?>selected="selected"<?php endif; ?>><?php echo $language[ 'display_name' ] ?></option>
 			<?php endif; endforeach; ?>
@@ -69,9 +72,6 @@
 		<img src="<?php echo ICL_PLUGIN_URL . '/res/img/ajax-loader.gif' ?>" alt="loading" height="16" width="16" class="wpml_tt_spinner"/>
 
 	</form>
-	</p>
-
-
 </div>
 
 <div class="icl_tt_main_top">
@@ -80,10 +80,10 @@
 		<thead>
 		<tr>
 			<?php
-			$current_language_name = $sitepress->get_display_language_name( $sitepress->get_default_language(), $sitepress->get_current_language() );
+			$current_language_name = $sitepress->get_display_language_name( $default_language, $current_language );
 			?>
 			<th><?php echo $this->taxonomy_obj->labels->singular_name . ' (' . $current_language_name . ')'; ?></th>
-			<?php foreach ( $this->selected_languages as $language ): if ( $language[ 'code' ] != $sitepress->get_current_language() ): ?>
+			<?php foreach ( $this->selected_languages as $language ): if ( $language[ 'code' ] != $current_language ): ?>
 				<th><?php echo $language[ 'display_name' ] ?></th>
 			<?php endif; endforeach; ?>
 		</tr>
@@ -98,7 +98,7 @@
 						echo $term->name
 						?>
 					</td>
-					<?php foreach ( $this->selected_languages as $language ): if ( $language[ 'code' ] != $sitepress->get_current_language() ): ?>
+					<?php foreach ( $this->selected_languages as $language ): if ( $language[ 'code' ] != $current_language ): ?>
 						<td>
 
 							<?php $class = isset( $term->translations ) && !empty( $term->translations[ $language[ 'code' ] ] ) ? '' : ' lowlight'; ?>
@@ -116,6 +116,7 @@
 								<input type="hidden" name="translation_of" value="<?php echo $term->term_taxonomy_id ?>"/>
 								<input type="hidden" name="taxonomy" value="<?php echo $this->taxonomy ?>"/>
 								<input type="hidden" name="language" value="<?php echo $language[ 'code' ] ?>"/>
+								<input type="hidden" name="term_leveled" value="<?php echo $pad; ?>"/>
 								<table class="icl_tt_popup">
 									<tr>
 										<th colspan="2"><?php printf( __( 'Translate %s in %s', 'sitepress' ), '<strong>' . $term->name . '</strong>', $this->selected_languages[ $language[ 'code' ] ][ 'display_name' ] ); ?></th>
@@ -190,7 +191,7 @@
 	<h3><?php printf( __( 'Translate the %s labels', 'sitepress' ), $this->taxonomy_obj->labels->name ) ?></h3>
 	<p><?php printf( __( 'This table lets you translate the labels for taxonomy %s. These translations will appear in the WordPress admin in different languages', 'sitepress' ), '<i>' . $this->taxonomy_obj->labels->singular_name . '</i>' ); ?></p>
 	<?php
-	if ( $sitepress->get_default_language() != $sitepress_settings[ 'st' ][ 'strings_language' ] ):
+	if ( $default_language != $sitepress_settings[ 'st' ][ 'strings_language' ] ):
 		$strings_lang = $sitepress->get_language_details( $sitepress_settings[ 'st' ][ 'strings_language' ] );
 		?>
 		<p>

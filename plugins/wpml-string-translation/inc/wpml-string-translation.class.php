@@ -296,13 +296,16 @@ class WPML_String_Translation
 
 	function menu()
 	{
+		global $sitepress;
+		if(!isset($sitepress) || !$sitepress->get_setting( 'setup_complete' )) return;
+
 		global $sitepress_settings, $wpdb;
 
 		if ( ( !isset( $sitepress_settings[ 'existing_content_language_verified' ] ) || !$sitepress_settings[ 'existing_content_language_verified' ] ) ) {
 			return;
 		}
 
-		if ( current_user_can( 'manage_options' ) ) {
+		if ( current_user_can( 'wpml_manage_string_translation' ) ) {
 			$top_page = apply_filters( 'icl_menu_main_page', basename( ICL_PLUGIN_PATH ) . '/menu/languages.php' );
 			if ( current_user_can( 'translate' ) ) {
 				$_cap = 'translate';
@@ -312,7 +315,7 @@ class WPML_String_Translation
 
 			add_submenu_page( $top_page,
 							  __( 'String Translation', 'wpml-string-translation' ), __( 'String Translation', 'wpml-string-translation' ),
-							  $_cap, WPML_ST_FOLDER . '/menu/string-translation.php' );
+							  'wpml_manage_string_translation', WPML_ST_FOLDER . '/menu/string-translation.php' );
 		} else {
 			$user_lang_pairs = get_user_meta( get_current_user_id(), $wpdb->prefix . 'language_pairs', true );
 			if ( isset( $sitepress_settings[ 'st' ][ 'strings_language' ] ) && !empty( $user_lang_pairs[ $sitepress_settings[ 'st' ][ 'strings_language' ] ] ) ) {

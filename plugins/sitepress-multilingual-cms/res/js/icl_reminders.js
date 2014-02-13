@@ -21,29 +21,33 @@ jQuery(document).ready(function(){
 
 var do_message_refresh = false;
 function show_messages() {
-    var command = "icl_ajx_action=icl_messages&_icl_nonce=" + jQuery('#_icl_nonce_m').val();
-    if (do_message_refresh) {
-        command += "&refresh=1";
-        do_message_refresh = false;
-    }
-    jQuery.ajax({
-        type: "POST",
-        url: icl_ajx_url,
-        data: command,
-        cache: false,
-        dataType: 'json',                
-        success: function(resp){ 
-            if(resp && resp.messages > 0){
-                jQuery('#icl_show_text').html(resp.reminder_text);
-                jQuery('#icl_reminder_list').html(resp.output);
-                jQuery('#icl_reminder_message').fadeIn();
-                icl_tb_init('a.icl_thickbox');
-                icl_tb_set_size('a.icl_thickbox');
-            } else {
-                jQuery('#icl_reminder_message').fadeOut();                
-            }  
-        }
-    }); 
+	var _icl_nonce_m = jQuery('#_icl_nonce_m');
+	if (!_icl_nonce_m.length) {
+		return;
+	}
+	var command = "icl_ajx_action=icl_messages&_icl_nonce=" + _icl_nonce_m.val();
+	if (do_message_refresh) {
+		command += "&refresh=1";
+		do_message_refresh = false;
+	}
+	jQuery.ajax({
+		type: "POST",
+		url: icl_ajx_url,
+		data: command,
+		cache: false,
+		dataType: 'json',
+		success: function (resp) {
+			if (resp && resp.messages > 0) {
+				jQuery('#icl_show_text').html(resp.reminder_text);
+				jQuery('#icl_reminder_list').html(resp.output);
+				jQuery('#icl_reminder_message').fadeIn();
+				icl_tb_init('a.icl_thickbox');
+				icl_tb_set_size('a.icl_thickbox');
+			} else {
+				jQuery('#icl_reminder_message').fadeOut();
+			}
+		}
+	});
 
 }
 

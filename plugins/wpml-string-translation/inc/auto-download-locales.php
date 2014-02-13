@@ -71,7 +71,6 @@ class WPML_ST_MO_Downloader{
                             $this->settings['translations'][$language['code']][$project]['installed'] != $this->translation_files[$language['code']][$project]['available']){
                                 $updates['languages'][$language['code']][$project] = $this->settings['translations'][$language['code']][$project]['available'];    
                             }
-                        
                     }
                 }
                 
@@ -177,18 +176,38 @@ class WPML_ST_MO_Downloader{
         $client = new WP_Http();
         $response = $client->request(self::LOCALES_XML_FILE, array('timeout'=>15, 'decompress'=>false));
         
-        if(is_wp_error($response)){
-            throw new Exception(__('Failed downloading the language information file. Please go back and try a little later.', 'wpml-string-translation'));     
-        }else{
-            if($response['response']['code'] == 200){
-                $this->xml = new SimpleXMLElement(icl_gzdecode($response['body']));
-                //$this->xml = new SimpleXMLElement($response['body']);
-            }
-        }
-        
+        if(is_wp_error($response) || !in_array($response['response']['code'], array(200, 301, 300))){
+			$load_xml_error_message = '';
+			if (isset($response->errors)){
+				$errors = '';
+				foreach($response->errors as $error => $error_messages) {
+					$errors .= $error . '<br/>';
+					foreach($error_messages as $error_message) {
+						$errors .= '- ' . $error_message . '<br/>';
+					}
+				}
+				$load_xml_error_message .= sprintf(__('Failed downloading the language information file.', 'wpml-string-translation'), $errors);
+				$load_xml_error_message .= '<br/>' . sprintf(__('Errors: %s', 'wpml-string-translation'), $errors);
+			} else {
+				$load_xml_error_message .= __('Failed downloading the language information file. Please go back and try a little later.', 'wpml-string-translation');
+			}
+
+			if(isset($response) && !is_wp_error($response) && isset($response['response'])) {
+				$load_xml_error_message .= '<br/>Response: ' . $response['response']['code'] . ' ('. $response['response']['message'] . ').';
+			}
+
+			$this->xml = false;
+
+			throw new Exception($load_xml_error_message);
+		} elseif($response['response']['code'] == 200){
+			$this->xml = new SimpleXMLElement(icl_gzdecode($response['body']));
+			//$this->xml = new SimpleXMLElement($response['body']);
+		}
     }
     
     function get_mo_file_urls($wplocale){
+		if(!$this->xml) return false;
+
         global $wp_version;        
         
         $wpversion = preg_replace('#-(.+)$#', '', $wp_version)   ;

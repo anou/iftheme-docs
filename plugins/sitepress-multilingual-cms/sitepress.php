@@ -5,14 +5,24 @@ Plugin URI: http://wpml.org/
 Description: WPML Multilingual CMS. <a href="http://wpml.org">Documentation</a>.
 Author: ICanLocalize
 Author URI: http://wpml.org
-Version: 3.0.2-a
+Version: 3.1
 */
 
+if(preg_match('#' . basename(__FILE__) . '#', $_SERVER['PHP_SELF'])) { die('You are not allowed to call this page directly.'); }
+
 if(defined('ICL_SITEPRESS_VERSION')) return;
-define('ICL_SITEPRESS_VERSION', '3.0.2-a');
+define('ICL_SITEPRESS_VERSION', '3.1');
 define('ICL_PLUGIN_PATH', dirname(__FILE__));
 define('ICL_PLUGIN_FOLDER', basename(ICL_PLUGIN_PATH));
-define('ICL_PLUGIN_URL', plugins_url() . '/' . ICL_PLUGIN_FOLDER );
+
+if((defined('FORCE_SSL_ADMIN') && FORCE_SSL_ADMIN) || is_ssl()){
+    define('ICL_PLUGIN_URL', rtrim(str_replace('http://','https://', WP_PLUGIN_URL), '/') . '/' . ICL_PLUGIN_FOLDER );
+}else{
+	define('ICL_PLUGIN_URL', rtrim(WP_PLUGIN_URL) . '/' . ICL_PLUGIN_FOLDER );
+}
+
+require ICL_PLUGIN_PATH . '/inc/lang-data.php';
+require ICL_PLUGIN_PATH . '/inc/sitepress-setup.class.php';
 
 define('ICL_ICON', ICL_PLUGIN_URL . '/res/img/icon.png');
 define('ICL_ICON16', ICL_PLUGIN_URL . '/res/img/icon16.png');

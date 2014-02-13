@@ -28,7 +28,8 @@ class WPSEO_XML_Sitemaps_Filter {
 		global $sitepress, $sitepress_settings, $wpdb;
 		$options = get_wpseo_options();
 		$default_language = $sitepress->get_default_language();
-		
+		$current_language = $sitepress->get_current_language();
+
 		foreach($sitepress->get_active_languages() as $lang_code => $array){
 			if(isset($sitepress_settings['language_domains'][$lang_code])){
 				$home_url = $sitepress_settings['language_domains'][$lang_code];
@@ -39,7 +40,7 @@ class WPSEO_XML_Sitemaps_Filter {
 			foreach (get_post_types(array('public' => true)) as $post_type) {
 				$sitepress->switch_lang($lang_code);
 				$count = get_posts(array('post_type' => $post_type, 'post_status' => 'publish', 'suppress_filters' => 0));
-				$sitepress->switch_lang(null);
+				$sitepress->switch_lang($current_language);
 
 				if(count($count) > 0 && $sitepress->is_translated_post_type($post_type)){
 					if (!isset($options['post_types-'.$post_type.'-not_in_sitemap']) && $lang_code !== $default_language){
@@ -56,7 +57,7 @@ class WPSEO_XML_Sitemaps_Filter {
 			foreach ( get_taxonomies( array('public' => true) ) as $tax ) {				
 				$sitepress->switch_lang($lang_code);
 				$count = get_terms($tax, array('suppress_filters' => 0));
-				$sitepress->switch_lang(null);
+				$sitepress->switch_lang($current_language);
 				
 				if ( count($count) > 0 && $sitepress->is_translated_taxonomy($tax)){
 					if (!isset($options['taxonomies-'.$tax.'-not_in_sitemap']) && $lang_code !== $default_language){

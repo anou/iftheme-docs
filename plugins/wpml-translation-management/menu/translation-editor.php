@@ -144,7 +144,7 @@ require_once(ABSPATH . 'wp-admin/includes/media.php');
                                     $icl_tm_f_translated = false;
                                 }
                             ?>
-                            <label><input class="icl_multiple" type="text" name="fields[<?php echo htmlspecialchars($element->field_type) 
+                            <label><input class="icl_multiple" type="text" name="fields[<?php echo esc_attr($element->field_type)
                                 ?>][data][<?php echo $k ?>]" value="<?php if(isset($icl_tm_translated_content[$k])) 
                                     echo esc_attr($icl_tm_translated_content[$k]); ?>"<?php echo $rtl_translation_attribute; ?> /></label>
                             <?php if($icl_tm_f_translated): ?>
@@ -154,7 +154,7 @@ require_once(ABSPATH . 'wp-admin/includes/media.php');
                             
                             <?php // CASE 3 - multiple lines *********************** ?>         
                             <?php elseif(0 === strpos($element->field_type, 'field-') && $element_field_style == 1): ?>
-                                <textarea style="width:100%;" name="fields[<?php echo htmlspecialchars($element->field_type) ?>][data]"<?php 
+                                <textarea style="width:100%;" name="fields[<?php echo esc_attr($element->field_type) ?>][data]"<?php
                                     echo $rtl_translation_attribute; ?>><?php echo esc_html($icl_tm_translated_content); ?></textarea>
 
                             <?php // CASE 4 - wysiwyg *********************** ?>         
@@ -168,19 +168,19 @@ require_once(ABSPATH . 'wp-admin/includes/media.php');
                                         wp_editor($icl_tm_translated_content, 'fields['.$element->field_type.'][data]', $settings);
                                     }else{                                        
                                         ?>
-                                        <textarea style="width:100%;" name="fields[<?php echo htmlspecialchars($element->field_type) ?>][data]"<?php 
+                                        <textarea style="width:100%;" name="fields[<?php echo esc_attr($element->field_type) ?>][data]"<?php
                                     echo $rtl_translation_attribute; ?>><?php echo esc_html($icl_tm_translated_content); ?></textarea>
                                         <?php 
                                     }
                             ?>
                             <?php // CASE 5 - one-liner *********************** ?>         
                             <?php else: ?>
-                            <label><input type="text" name="fields[<?php echo htmlspecialchars($element->field_type) ?>][data]" value="<?php 
+                            <label><input type="text" name="fields[<?php echo esc_attr($element->field_type) ?>][data]" value="<?php
                                 echo esc_attr($icl_tm_translated_content); ?>"<?php echo $rtl_translation_attribute; ?> /></label>
                             <?php endif; ?> 
                             
                             <p><label><input class="icl_tm_finished<?php if($element->field_format == 'csv_base64'): ?> icl_tmf_multiple<?php endif;
-                                ?>" type="checkbox" name="fields[<?php echo htmlspecialchars($element->field_type) ?>][finished]" value="1" <?php 
+                                ?>" type="checkbox" name="fields[<?php echo esc_attr($element->field_type) ?>][finished]" value="1" <?php
                                 if($element->field_finished): ?>checked="checked"<?php endif;?> />&nbsp;<?php 
                                 _e('This translation is finished.', 'wpml-translation-management')?></label>                                
                                 <span class="icl_tm_error" style="display: none;"><?php _e('This field cannot be empty', 'wpml-translation-management') ?></span>
@@ -256,8 +256,8 @@ require_once(ABSPATH . 'wp-admin/includes/media.php');
                             </div>
                             <?php /* ORIGINAL CONTENT */ ?>
                             
-                            <input type="hidden" name="fields[<?php echo htmlspecialchars($element->field_type) ?>][format]" value="<?php echo $element->field_format ?>" />
-                            <input type="hidden" name="fields[<?php echo htmlspecialchars($element->field_type) ?>][tid]" value="<?php echo $element->tid ?>" />
+                            <input type="hidden" name="fields[<?php echo esc_attr($element->field_type) ?>][format]" value="<?php echo $element->field_format ?>" />
+                            <input type="hidden" name="fields[<?php echo esc_attr($element->field_type) ?>][tid]" value="<?php echo $element->tid ?>" />
                             
                             <?php if(!$element->field_finished && !empty($job->prev_version)): ?>                            
                                 <?php 

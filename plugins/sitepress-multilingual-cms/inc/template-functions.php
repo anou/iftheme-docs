@@ -1,8 +1,29 @@
 <?php
+function icl_sitepress_get_capabilities() {
+	return array(
+		'wpml_manage_translation_management',
+		'wpml_manage_languages',
+		'wpml_manage_theme_and_plugin_localization',
+		'wpml_manage_support',
+		'wpml_manage_media_translation',
+		'wpml_manage_navigation',
+		'wpml_manage_sticky_links',
+		'wpml_manage_string_translation',
+		'wpml_manage_translation_analytics',
+		'wpml_manage_wp_menus_sync',
+		'wpml_manage_taxonomy_translation',
+		'wpml_manage_troubleshooting',
+		'wpml_manage_translation_options',
+		'wpml_manage_woocommerce_multilingual',
+		'wpml_operate_woocommerce_multilingual',
+	);
+}
 
 function icl_get_home_url() {
     global $sitepress;
-    return $sitepress->language_url($sitepress->get_current_language());
+	$current_language = $sitepress->get_current_language();
+
+	return $sitepress->language_url( $current_language );
 }
 
 // args:
@@ -174,10 +195,17 @@ function icl_object_id($element_id, $element_type='post', $return_original_if_mi
 
 	// special case of any - we assume it's a post type
     if($element_type == 'any' && $_dtype = $wpdb->get_var($wpdb->prepare("SELECT post_type FROM {$wpdb->posts} WHERE ID=%d", $element_id))){
-        $element_type = $_dtype;    
+        $element_type = $_dtype;
     }
-    // 
-    
+    //
+
+	$cache_key_args = array($element_id, $element_type, $return_original_if_missing, $ulanguage_code);
+	$cache_key = implode(':', array_filter($cache_key_args));
+	$cache_group = 'icl_object_id';
+
+	$ret_element_id = wp_cache_get($cache_key, $cache_group);
+	if($ret_element_id) return $ret_element_id;
+
     static $fcache = array();
     $fcache_key = $element_id . '#' . $element_type . '#' . intval($return_original_if_missing) . '#' . $ulanguage_code;
     if (isset($fcache[$fcache_key])) {
@@ -192,7 +220,7 @@ function icl_object_id($element_id, $element_type='post', $return_original_if_mi
     $taxonomies = array_keys((array) $wp_taxonomies);
     $element_types = array_merge($post_types, $taxonomies);
     $element_types[] = 'comment';
-    
+
     if (!in_array($element_type, $element_types)) {
         trigger_error(sprintf(__('Invalid object kind: %s', 'sitepress'), $element_type), E_USER_NOTICE);
         return null;
@@ -217,7 +245,7 @@ function icl_object_id($element_id, $element_type='post', $return_original_if_mi
     }
 
     $trid = $sitepress->get_element_trid($icl_element_id, $icl_element_type);
-    $translations = $sitepress->get_element_translations($trid, $icl_element_type);
+    $translations = $sitepress->get_element_translations($trid, $icl_element_type, false, false, true);
 
     if (isset($translations[$ulanguage_code]->element_id)) {
         $ret_element_id = $translations[$ulanguage_code]->element_id;
@@ -231,7 +259,13 @@ function icl_object_id($element_id, $element_type='post', $return_original_if_mi
 
     $fcache[$fcache_key] = $ret_element_id;
 
+	wp_cache_set($cache_key, $ret_element_id, $cache_group);
     return $ret_element_id;
+}
+
+function icl_get_current_language() {
+    global $sitepress;
+    return $sitepress->get_current_language();
 }
 
 function icl_get_default_language() {
@@ -284,7 +318,8 @@ function wpml_cf_translation_preferences($id, $custom_field = false,
             if (isset($iclTranslationManagement->settings['custom_fields_translation'][$custom_field])) {
                 $action = intval($iclTranslationManagement->settings['custom_fields_translation'][$custom_field]);
             }
-            $disabled = $xml_override = in_array($custom_field, (array)$iclTranslationManagement->settings['custom_fields_readonly_config']);
+			$xml_override = isset($iclTranslationManagement->settings['custom_fields_readonly_config']) ? in_array($custom_field, (array)$iclTranslationManagement->settings['custom_fields_readonly_config']) : false;
+            $disabled = $xml_override;
             if ($disabled) {
                 $output .= '<div style="color:Red;font-style:italic;margin: 10px 0 0 0;">' . __('The translation preference for this field are being controlled by a language configuration XML file. If you want to control it manually, remove the entry from the configuration file.', 'wpml') . '</div>';
             }
@@ -388,7 +423,7 @@ function wpml_cf_translation_preferences_store($id, $custom_field) {
  * This should be used to popupate any custom field controls when
  * a new translation is selected and the field is marked as "copy" (sync)
  * 
- * @param array fields
+ * @param array $fields
  */
 
 function wpml_get_copied_fields_for_post_edit( $fields = array() ) {
@@ -463,13 +498,14 @@ function wpml_get_language_information($post_id = null){
     
     $language = $sitepress->get_language_for_element($post_id, 'post_' . $post->post_type);
     $language_information = $sitepress->get_language_details($language);
-    
-    $info = array(
+
+	$current_language = $sitepress->get_current_language();
+	$info = array(
         'locale'                => $sitepress->get_locale($language),
         'text_direction'        => $sitepress->is_rtl($language),
-        'display_name'          => $sitepress->get_display_language_name($language, $sitepress->get_current_language()),
+        'display_name'          => $sitepress->get_display_language_name($language, $current_language ),
         'native_name'           => $language_information['display_name'],
-        'different_language'    => $language != $sitepress->get_current_language()    
+        'different_language'    => $language != $current_language
         
     );
     

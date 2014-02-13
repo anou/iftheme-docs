@@ -5,9 +5,7 @@
     <?php include dirname(__FILE__) . '/_posts_sync_options.php'; ?>
 
     <?php if(defined('WPML_ST_VERSION')): ?>
-    <div style="width:48%;float:right;margin-left:10px;">
     <?php  include WPML_ST_PATH . '/menu/_slug-translation-options.php'; ?>
-    </div>
     <?php endif; ?>
 
     <br clear="all" />

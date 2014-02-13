@@ -12,7 +12,9 @@ class SitePress_EditLanguages {
 
 	function __construct() {
         
-		require_once ICL_PLUGIN_PATH . '/inc/lang-data.php';
+		$langs_names = icl_get_languages_names();
+		$lang_codes = icl_get_languages_codes();
+        $lang_locales = icl_get_languages_locales();
         $this->built_in_languages = array_values($lang_codes);
         
         if(isset($_GET['action']) && $_GET['action'] == 'delete-language' && wp_create_nonce('delete-language' . @intval($_GET['id'])) == $_GET['icl_nonce']){
@@ -396,8 +398,10 @@ For each language, you need to enter the following information:
 			$this->error(__('Adding language failed.', 'sitepress'));
 			return false;
 		}
-        
-        // add locale map
+
+		$default_language = $sitepress->get_default_language();
+
+		// add locale map
         if($wpdb->get_var("SELECT code FROM {$wpdb->prefix}icl_locale_map WHERE code='{$data['code']}'")){
             $wpdb->update($wpdb->prefix.'icl_locale_map', array('locale'=>$data['default_locale']), array('code'=>$data['code']));
         }else{
@@ -479,8 +483,8 @@ For each language, you need to enter the following information:
 		$sitepress->set_default_categories($default_categories);
 		
 		//update translations table
-		$default_category_trid = $sitepress->get_element_trid($default_categories[$sitepress->get_default_language()], 'tax_category');
-        $sitepress->set_element_language_details($tmp['term_taxonomy_id'], 'tax_category', $default_category_trid, $data['code'], $sitepress->get_default_language());
+		$default_category_trid = $sitepress->get_element_trid($default_categories[ $default_language ], 'tax_category');
+        $sitepress->set_element_language_details($tmp['term_taxonomy_id'], 'tax_category', $default_category_trid, $data['code'], $default_language );
 		
 	}
 

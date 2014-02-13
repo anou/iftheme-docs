@@ -186,6 +186,14 @@
     <a id="icl_reminder_dismiss" href="#" onclick="<?php echo $on_click?>"><?php _e('Dismiss', 'sitepress')?></a>
     <br />
     <br />
-<?php endif; ?> 
-<iframe src="<?php echo $target;?>" style="width:100%; height:92%" onload="<?php if($auto_resize):?>jQuery('#TB_window').css('width','90%').css('margin-left', '-45%');<?php endif; ?><?php if($unload_cb):?>jQuery('#TB_window').unbind('unload').bind('tb_unload', <?php echo esc_js($unload_cb) ?>);<?php endif; ?>">
+<?php endif; ?>
+
+<iframe src="<?php echo $target;?>" style="width:100%; height:92%" onload="
+    <?php if($auto_resize):?>
+        jQuery('#TB_window').css('width','90%').css('margin-left', '-45%');
+    <?php endif; ?>
+    <?php if($unload_cb):?>
+        jQuery('#TB_window').unbind('unload').bind('tb_unload', function(){<?php echo esc_js($unload_cb)?>();});
+    <?php endif; ?>
+">
 

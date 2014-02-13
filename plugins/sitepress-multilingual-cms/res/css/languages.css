@@ -81,6 +81,10 @@
                 left: -18px;
                 display: none;
             }
+            .branch-3-8 .enabled-languages input[type="radio"] {
+            	left: -22px;
+            	top: 7px;
+            }
 
         .wpml-section-languages .available-languages li {
             display: inline-block;

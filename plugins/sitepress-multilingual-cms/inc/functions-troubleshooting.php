@@ -155,7 +155,7 @@ function _icl_ts_backup_table($table, $segment = 'none', $fp) {
                         $values = array();
                         foreach ($row as $key => $value) {
                             
-                            if ($ints[strtolower($key)]) {
+                            if (isset($ints[strtolower($key)]) && $ints[strtolower($key)]) {
                                 // make sure there are no blank spots in the insert syntax,
                                 // yet try to avoid quotation marks around integers
                                 $value = ( null === $value || '' === $value) ? $defs[strtolower($key)] : $value;

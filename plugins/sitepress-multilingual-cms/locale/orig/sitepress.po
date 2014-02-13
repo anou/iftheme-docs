@@ -549,7 +549,13 @@ msgstr ""
 msgid "translate"
 msgstr ""
 
+msgid "string not registered"
+msgstr ""
+
 msgid "Multiple options"
+msgstr ""
+
+msgid "some strings might be not registered"
 msgstr ""
 
 msgid "Looking for a quality translation service?"
@@ -882,6 +888,9 @@ msgstr ""
 msgid "Delete"
 msgstr ""
 
+msgid "%s Reminders"
+msgstr ""
+
 msgid "Click OK to confirm.\nYou can enable them back from Translation Management / Multilingual Content setup."
 msgstr ""
 
@@ -936,7 +945,7 @@ msgstr ""
 msgid "Each user can choose the admin language. You can edit your language preferences by visiting your <a href=\"%s\">profile page</a>."
 msgstr ""
 
-msgid "Remember visitors' language preference for %s hours."
+msgid "Remember visitors' language preference for %s hours (please enter 24 or multiples of it)."
 msgstr ""
 
 msgid "Tell the world your site is running multilingual with WPML (places a message in your site's footer) - <a href=\"%s\">read more</a>"
@@ -1236,6 +1245,9 @@ msgstr ""
 msgid "Add menu translation:  %s"
 msgstr ""
 
+msgid "Update %s menu option"
+msgstr ""
+
 msgid "Add %s"
 msgstr ""
 
@@ -1278,6 +1290,9 @@ msgstr ""
 msgid "Sync"
 msgstr ""
 
+msgid "Nothing Sync"
+msgstr ""
+
 msgid "Item will be added"
 msgstr ""
 
@@ -1288,6 +1303,9 @@ msgid "Item cannot be added (parent not translated)"
 msgstr ""
 
 msgid "Item changed position"
+msgstr ""
+
+msgid "Item will be copied"
 msgstr ""
 
 msgid "Strings for menus will be updated"
@@ -1767,6 +1785,12 @@ msgstr ""
 msgid "Sets source language to NULL in the icl_translations table."
 msgstr ""
 
+msgid "Assign translation status to duplicated content"
+msgstr ""
+
+msgid "Sets the translation status to DUPLICATE in the icl_translation_status table, for posts that are marked as duplicated."
+msgstr ""
+
 msgid "Check cancelled jobs on ICanLocalize"
 msgstr ""
 
@@ -1822,6 +1846,18 @@ msgid "Go to WPML Network settings."
 msgstr ""
 
 msgid "You are not allowed to manage the WPML Network settings."
+msgstr ""
+
+msgid "translation jobs updated"
+msgstr ""
+
+msgid "Partially done."
+msgstr ""
+
+msgid "There might be more content to fix: please repeat the process."
+msgstr ""
+
+msgid "Partially done"
 msgstr ""
 
 msgid "translation controls on posts and pages lists"
@@ -1909,6 +1945,9 @@ msgid "Custom post types"
 msgstr ""
 
 msgid "Not marked as 'complete'. Press 'Save' to enable."
+msgstr ""
+
+msgid "(original)"
 msgstr ""
 
 msgid "Do nothing"
@@ -2041,9 +2080,6 @@ msgid "Please provide a short description of the website so that translators kno
 msgstr ""
 
 msgid "Multilingual Content Setup"
-msgstr ""
-
-msgid "This post cannot be deleted or trashed: please delete translated versions first."
 msgstr ""
 
 msgid "Settings saved"

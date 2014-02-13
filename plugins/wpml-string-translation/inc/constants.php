@@ -1,7 +1,7 @@
 <?php
 define('WPML_ST_FOLDER', basename(WPML_ST_PATH));
 
-if(defined('WP_ADMIN') && defined('FORCE_SSL_ADMIN') && FORCE_SSL_ADMIN){
+if((defined('WP_ADMIN') && defined('FORCE_SSL_ADMIN') && FORCE_SSL_ADMIN) || is_ssl()){
     define('WPML_ST_URL', rtrim(str_replace('http://','https://', WP_PLUGIN_URL), '/') . '/' . WPML_ST_FOLDER );
 }else{
     define('WPML_ST_URL', WP_PLUGIN_URL . '/' . WPML_ST_FOLDER );
@@ -21,3 +21,5 @@ define('ICL_STRING_TRANSLATION_STRING_TRACKING_TYPE_PAGE', 1);
 define('ICL_STRING_TRANSLATION_STRING_TRACKING_THRESHOLD', 5);
 
 define('ICL_STRING_TRANSLATION_AUTO_REGISTER_THRESHOLD', 500);
+
+define('ICL_STRING_TRANSLATION_DYNAMIC_CONTEXT', 'wpml_string');

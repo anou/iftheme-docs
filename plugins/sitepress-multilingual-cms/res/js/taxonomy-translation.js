@@ -100,6 +100,7 @@ var WPML_Translate_taxonomy = {
     show_form: function(tt_id, language){
         
         jQuery('.icl_tt_form').hide();
+        jQuery('.icl_tt_form').prev().show();
         
         var form = jQuery('#icl_tt_form_' + tt_id+'_'+language);
         
@@ -109,7 +110,6 @@ var WPML_Translate_taxonomy = {
         }else{
             WPML_Translate_taxonomy.hide_form(form);    
         }
-        
         
         return false;
         
@@ -186,8 +186,9 @@ var WPML_Translate_taxonomy = {
                     }else{                        
                         this_form.find('input[name=slug]').val(ret.slug);                        
                         WPML_Translate_taxonomy.hide_form(this_form);
-                        this_form.prev().html(this_form.find('input[name=name]').val()).removeClass('lowlight');
-                        
+//                        this_form.prev().html(this_form.find('input[name=name]').val()).removeClass('lowlight');
+						this_form.prev().html(this_form.find('input[name=term_leveled]').val() + this_form.find('input[name=name]').val()).removeClass('lowlight');
+
                         WPML_Translate_taxonomy.callbacks.fire('wpml_tt_save_term_translation', this_form.find('input[name=taxonomy]').val());
                         
                     }

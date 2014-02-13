@@ -6,8 +6,9 @@ if(isset($_SESSION['translation_dashboard_filter'])){
     $icl_translation_filter = $_SESSION['translation_dashboard_filter'];
 }
 
+$current_language = $sitepress->get_current_language();
 if(!isset($icl_translation_filter['from_lang'])){
-    $icl_translation_filter['from_lang'] = isset($_GET['lang'])?$_GET['lang']:$sitepress->get_current_language();
+    $icl_translation_filter['from_lang'] = isset($_GET['lang'])?$_GET['lang']: $current_language;
 }
 
 if(!isset($icl_translation_filter['to_lang'])){
@@ -126,7 +127,7 @@ if(!defined('ICL_DONT_PROMOTE') || !ICL_DONT_PROMOTE){
 			$icls_output .= '</div>';
 			$icls_output .= '<p class="icl-translation-buttons">';
 				$icls_output .= '<a href="' . admin_url( 'index.php?icl_ajx_action=quote-get&_icl_nonce=' . wp_create_nonce( 'quote-get_nonce' ) ) . '" class="button-primary thickbox">' . __( 'Get quote', 'wpml-translation-management' ) . '</a>';
-				$icls_output .= '<a href="admin.php?page=' . WPML_TM_FOLDER . '/menu/main.php&sm=translators&icl_lng=' . $sitepress->get_current_language() . '&service=icanlocalize" class="button-secondary"><span>' . __( 'Add translators from ICanLocalize', 'wpml-translation-management' ) . '</span></a>';
+				$icls_output .= '<a href="admin.php?page=' . WPML_TM_FOLDER . '/menu/main.php&sm=translators&icl_lng=' . $current_language . '&service=icanlocalize" class="button-secondary"><span>' . __( 'Add translators from ICanLocalize', 'wpml-translation-management' ) . '</span></a>';
 			$icls_output .= '</p>';
 			$icls_output .= '<p class="icl-translation-links">';
 				$icls_output .= '<a class="icl-mail-ico" href="http://www.icanlocalize.com/site/about-us/contact-us/?utm_source=WPML&utm_medium=dashboard&utm_term=contact-icanlocalize&utm_content=dashboard-message&utm_campaign=WPML" target="_blank">' . __('Contact ICanLocalize', 'wpml-translation-management') . '</a>';
@@ -577,9 +578,9 @@ if(!defined('ICL_DONT_PROMOTE') || !ICL_DONT_PROMOTE){
     <br />
     <?php $ICL_Pro_Translation->get_icl_manually_tranlations_box('icl_cyan_box'); // shows only when translation polling is on and there are translations in progress ?>
 
-<?php if ($sitepress->icl_account_configured() && $sitepress_settings['icl_html_status']): ?>
+<?php if ($sitepress->icl_account_configured() && $sitepress->get_setting('icl_html_status')): ?>
     <div class="icl_cyan_box">
         <h3><?php _e('ICanLocalize account status', 'wpml-translation-management') ?></h3>
-    <?php echo $sitepress_settings['icl_html_status']; ?>
+    <?php echo $sitepress->get_setting('icl_html_status'); ?>
     </div>
 <?php endif; ?>

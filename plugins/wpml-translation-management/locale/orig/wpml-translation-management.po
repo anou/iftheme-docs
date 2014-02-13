@@ -330,22 +330,37 @@ msgstr ""
 msgid "Abort translation"
 msgstr ""
 
-msgid "Same as the original document"
+msgid "How to translate posts and pages"
 msgstr ""
 
-msgid "Choose if translations should be published when received. Note: If Publish is selected, the translation will only be published if the original node is published when the translation is received."
+msgid "Posts and pages synchronization"
 msgstr ""
 
-msgid "Auto-generate from title (default)"
+msgid "Translated documents options"
 msgstr ""
 
-msgid "Translate (this will include the slug in the translation and not create it automatically from the title)"
+msgid "Custom posts slug translation options"
 msgstr ""
 
-msgid "Copy from original language if translation language uses encoded URLs"
+msgid "Translation pickup mode"
 msgstr ""
 
-msgid "Send an email notification when translations complete"
+msgid "Custom fields translation"
+msgstr ""
+
+msgid "Custom posts"
+msgstr ""
+
+msgid "Custom taxonomies"
+msgstr ""
+
+msgid "Admin Strings to Translate"
+msgstr ""
+
+msgid "WPML can read a configuration file that tells it what needs translation in themes and plugins. The file is named wpml-config.xml and it's placed in the root folder of the plugin or theme."
+msgstr ""
+
+msgid "Learn more"
 msgstr ""
 
 msgid "How to translate posts and pages"
@@ -366,16 +381,25 @@ msgstr ""
 msgid "Learn more about the different translation options"
 msgstr ""
 
-msgid "Translated documents options"
-msgstr ""
-
 msgid "Document status"
 msgstr ""
 
-msgid "Page url"
+msgid "Same as the original document"
 msgstr ""
 
-msgid "Translation pickup mode"
+msgid "Choose if translations should be published when received. Note: If Publish is selected, the translation will only be published if the original node is published when the translation is received."
+msgstr ""
+
+msgid "Page URL"
+msgstr ""
+
+msgid "Auto-generate from title (default)"
+msgstr ""
+
+msgid "Translate (this will include the slug in the translation and not create it automatically from the title)"
+msgstr ""
+
+msgid "Copy from original language if translation language uses encoded URLs"
 msgstr ""
 
 msgid "How should the site receive completed translations from ICanLocalize?"
@@ -390,16 +414,13 @@ msgstr ""
 msgid "The site will fetch translations manually"
 msgstr ""
 
-msgid "WPML can read a configuration file that tells it what needs translation in themes and plugins. The file is named wpml-config.xml and it's placed in the root folder of the plugin or theme."
-msgstr ""
-
-msgid "Learn more"
-msgstr ""
-
-msgid "Custom fields translation"
+msgid "Send an email notification when translations complete"
 msgstr ""
 
 msgid "No custom fields found. It is possible that they will only show up here after you add more posts after installing a new plugin."
+msgstr ""
+
+msgid "Custom fields"
 msgstr ""
 
 msgid "Don't translate"
@@ -411,7 +432,7 @@ msgstr ""
 msgid "Translate"
 msgstr ""
 
-msgid "Admin Strings to Translate"
+msgid "Admin Strings"
 msgstr ""
 
 msgid "Edit translatable strings"

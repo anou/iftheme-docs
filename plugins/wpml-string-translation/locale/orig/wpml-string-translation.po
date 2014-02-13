@@ -21,6 +21,12 @@ msgstr ""
 msgid "No updates found."
 msgstr ""
 
+msgid "Failed downloading the language information file."
+msgstr ""
+
+msgid "Errors: %s"
+msgstr ""
+
 msgid "Failed downloading the language information file. Please go back and try a little later."
 msgstr ""
 
@@ -94,6 +100,12 @@ msgid "All strings were sent to translation."
 msgstr ""
 
 msgid "The string was sent to translation."
+msgstr ""
+
+msgid "You have been assigned to new translation job from %s to %s.\r\n\r\nStart editing: %s\r\n\r\nYou can view your other translation jobs here: %s\r\n\r\n This message was automatically sent by Translation Management running on WPML. To stop receiving these notifications contact the system administrator at %s.\r\n\r\n This email is not monitored for replies.\r\n\r\n - The folks at ICanLocalize\r\n 101 Convention Center Dr., Las Vegas, Nevada, 89109, USA\r\n"
+msgstr ""
+
+msgid "You have been assigned to new translation job on %s."
 msgstr ""
 
 msgid "In progress"
@@ -561,8 +573,8 @@ msgstr ""
 msgid "create PO file"
 msgstr ""
 
-msgid "Translate custom posts slugs (via WPML String Translation)."
+msgid "Custom posts slug translation options"
 msgstr ""
 
-msgid "Custom posts slug translation options"
+msgid "Translate custom posts slugs (via WPML String Translation)."
 msgstr ""

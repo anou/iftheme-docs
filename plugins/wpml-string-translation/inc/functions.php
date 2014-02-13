@@ -396,6 +396,27 @@ function icl_register_string($context, $name, $value, $allow_empty_value = false
     if($res){
         $string_id = $res->id;
         $update_string = array();
+        
+        
+        /*
+         * If Sticky Links plugin is active and set to change links in Strings,
+         * we need to process $value and change links into sticky before comparing
+         * with saved in DB $res->value. 
+         * Otherwise after every String Translation screen refresh status of this string
+         * will be changed into 'needs update'
+         */
+        global $active_plugins;
+        $alp_settings = get_option('alp_settings');
+        if (!empty($alp_settings['sticky_links_strings']) // do we have setting about sticky links in strings?
+                and $alp_settings['sticky_links_strings'] // is this set to TRUE?
+                and in_array('wpml-sticky-links/plugin.php', $active_plugins)) { // sticky links plugin is active?
+            require_once ICL_PLUGIN_PATH . '/inc/absolute-links/absolute-links.class.php';        
+            $absolute_links_object = new AbsoluteLinks;
+            $alp_broken_links = array();
+            $value = $absolute_links_object->_process_generic_text($value, $alp_broken_links);
+        }
+        
+        
         if($value != $res->value){
             $update_string['value'] = $value;
         }
@@ -543,7 +564,8 @@ function __icl_unregister_string_multi($arr){
 }  
 
 function icl_t($context, $name, $original_value=false, &$has_translation=null, $dont_auto_register = false){
-    global $wpdb, $sitepress, $sitepress_settings;
+    global $sitepress, $sitepress_settings;
+	static $front_end_language = false;
         
     // if the default language is not set up return
     if(!isset($sitepress_settings['existing_content_language_verified'])){        
@@ -556,7 +578,12 @@ function icl_t($context, $name, $original_value=false, &$has_translation=null, $
     }elseif(is_admin()){            
         $current_language = $sitepress->get_admin_language();                 
     }else{
+		if(!$front_end_language) {
         $current_language = $sitepress->get_current_language();     
+			$front_end_language = $current_language;
+		} else {
+			$current_language = $front_end_language;
+    }
     }
     $default_language = !empty($sitepress_settings['st']['strings_language']) ? $sitepress_settings['st']['strings_language'] : $sitepress->get_default_language();
     
@@ -745,10 +772,10 @@ function icl_get_string_translations($offset=0){
                              ";
                 $_joins[] = " LEFT JOIN {$wpdb->prefix}icl_string_translations str_{$lcode_alias} ON str_{$lcode_alias}.string_id = s.id AND str_{$lcode_alias}.language = '{$l['code']}'";    
             }
-                        
+
             $sql = "
                 SELECT SQL_CALC_FOUND_ROWS s.id AS string_id, s.language AS string_language, s.context, s.name, s.value, s.status,
-                    " . join(", ", $_sels) . "               
+                    " . join(", ", $_sels) . "
                 FROM  {$wpdb->prefix}icl_strings s 
                 " . join("\n", $_joins) . "
                 WHERE 
@@ -796,7 +823,7 @@ function icl_get_string_translations($offset=0){
                 
             }
             
-            
+
             $sql = "
                 SELECT SQL_CALC_FOUND_ROWS s.id AS string_id, s.language AS string_language, s.context, s.name, s.value, s.status, ".
                 join(', ', $_sels) . "
@@ -960,6 +987,40 @@ function icl_get_string_translations($offset=0){
     return $string_translations;
 }
 
+/**
+ * Returns indexed array with language code and value of string
+ *
+ * @param int         $string_id     ID of string in icl_strings DB table
+ * @param bool|string $language_code false, or language code
+ *
+ * @return string
+ */
+function icl_get_string_by_id( $string_id, $language_code = false ) {
+	global $wpdb, $sitepress_settings;
+
+	if ( !$language_code ) {
+		$language_code = $sitepress_settings[ 'st' ][ 'strings_language' ];
+	}
+
+	if ( $language_code == $sitepress_settings[ 'st' ][ 'strings_language' ] ) {
+
+		$result_prepared = $wpdb->prepare( "SELECT language, value FROM {$wpdb->prefix}icl_strings WHERE id=%d", $string_id );
+		$result = $wpdb->get_row( $result_prepared );
+
+		if ( $result ) {
+			return $result->value;
+		}
+
+	} else {
+		$translations = icl_get_string_translations_by_id( $string_id );
+		if ( isset( $translations[ $language_code ] ) ) {
+			return $translations[ $language_code ]['value'];
+		}
+	}
+
+	return false;
+}
+
 function icl_get_string_translations_by_id($string_id){
     global $wpdb;
     
@@ -1010,7 +1071,7 @@ function icl_get_relative_translation_status($string_id, $translator_id){
     
 }
 
-function icl_get_strigs_tracked_in_pages($string_translations){
+function icl_get_strings_tracked_in_pages($string_translations){
     global $wpdb;
     // get string position in page - if found
     $found_strings = $strings_in_page = array();
@@ -1045,9 +1106,18 @@ function icl_sw_filters_widget_text($val){
     return $val;
 }
 
+/**
+ * @param      $translation
+ * @param      $text
+ * @param      $domain
+ * @param bool $name
+ *
+ * @return bool|mixed|string
+ */
 function icl_sw_filters_gettext( $translation, $text, $domain, $name = false )
 {
 	global $sitepress_settings, $sitepress;
+	static $front_end_language = false;
 	$has_translation = 0;
 
 	if ( defined( 'DOING_AJAX' ) ) {
@@ -1055,13 +1125,30 @@ function icl_sw_filters_gettext( $translation, $text, $domain, $name = false )
 	} elseif ( is_admin() ) {
 		$current_language = $sitepress->get_admin_language();
 	} else {
+		if(!$front_end_language) {
 		$current_language = $sitepress->get_current_language();
+			$front_end_language = $current_language;
+		} else {
+			$current_language = $front_end_language;
+	}
+		if ($current_language == $sitepress_settings['default_language'] ) {
+			return $translation;
+		}
 	}
 
 	$cache_name      = $translation . $text . $domain . $current_language;
 	$ret_translation = wp_cache_get( $cache_name );
 	if ( $ret_translation ) {
 		return $ret_translation;
+	}
+
+	if(!defined('ICL_STRING_TRANSLATION_DYNAMIC_CONTEXT')) {
+		define('ICL_STRING_TRANSLATION_DYNAMIC_CONTEXT', 'wpml_string');
+	}
+
+	$register_dynamic_string = false;
+	if($domain == ICL_STRING_TRANSLATION_DYNAMIC_CONTEXT) {
+		$register_dynamic_string = true;
 	}
 
 	static $gettext_calls = array( '__', '_e', '_ex', '_n', '_n_noop', '_nx', '_nx_noop', '_x', 'esc_attr__', 'esc_attr_e', 'esc_attr_x', 'esc_html__', 'esc_html_e', 'esc_html_x', );
@@ -1096,9 +1183,14 @@ function icl_sw_filters_gettext( $translation, $text, $domain, $name = false )
 		$context = ( $domain != 'default' ) ? 'theme ' . $domain : 'WordPress';
 	}
 
-	// track strings if the user has enabled this and if it's and editor or admin
 	if ( isset( $sitepress_settings[ 'st' ][ 'track_strings' ] ) && $sitepress_settings[ 'st' ][ 'track_strings' ] && current_user_can( 'edit_others_posts' ) ) {
+		// track strings if the user has enabled this and if it's and editor or admin
 		icl_st_track_string( $text, $context, ICL_STRING_TRANSLATION_STRING_TRACKING_TYPE_PAGE );
+	}
+
+	if($register_dynamic_string) {
+		// register strings if the user has used ICL_STRING_TRANSLATION_DYNAMIC_CONTEXT (or it's value) as a text domain
+		icl_register_string($context, $name, $text);
 	}
 
 	if ( empty( $name ) ) {
@@ -1225,6 +1317,7 @@ function icl_st_translate_author_fields($field, $value, $user_id){
     $current_user = $sitepress->get_current_user();
     
     if(empty($user_id)) $user_id = $current_user->ID;
+	if(!isset($sitepress_settings['st']['translated-users'])) $sitepress_settings['st']['translated-users'] = array();
     
     $user = new WP_User($user_id);        
     if ( is_array( $user->roles ) && is_array($sitepress_settings['st']['translated-users'])  && array_intersect($user->roles, (array)$sitepress_settings['st']['translated-users'])){
@@ -1238,6 +1331,8 @@ function icl_st_register_user_strings($user_id){
     global $sitepress_settings;
     
     $user = new WP_User($user_id);        
+
+	if(!isset($sitepress_settings['st']['translated-users'])) $sitepress_settings['st']['translated-users'] = array();
 
     if ( is_array( $user->roles ) && is_array($sitepress_settings['st']['translated-users'])  && array_intersect($user->roles, (array)$sitepress_settings['st']['translated-users'])){
         $fields = array('first_name', 'last_name', 'nickname', 'description');                  
@@ -1346,7 +1441,8 @@ function icl_st_update_text_widgets_actions($old_options, $new_options){
 }
 
 function icl_t_cache_lookup($context, $name){
-    global $sitepress_settings, $sitepress, $wpdb;
+    global $sitepress, $wpdb;
+	static $front_end_language = false;
     
     static $icl_st_cache;
     $ret_value = false;
@@ -1357,9 +1453,13 @@ function icl_t_cache_lookup($context, $name){
     }elseif(is_admin()){            
         $current_language = $sitepress->get_admin_language();                 
     }else{
+		if ( !$front_end_language ) {
         $current_language = $sitepress->get_current_language();     
+			$front_end_language = $current_language;
+		} else {
+			$current_language = $front_end_language;
     }
-    $default_language = $sitepress->get_default_language();
+    }
     
     if(!isset($icl_st_cache[$current_language][$context])){  //CACHE MISS (context)    
         
@@ -1420,10 +1520,10 @@ function icl_st_get_contexts($status){
             $extra_cond .= " AND s.status IN (" . ICL_STRING_TRANSLATION_PARTIAL . "," . ICL_STRING_TRANSLATION_NEEDS_UPDATE . "," . ICL_STRING_TRANSLATION_NOT_TRANSLATED . ")";
         }        
     }
-    
+
     if(icl_st_is_translator()){
         $user_langs = get_user_meta($current_user->ID, $wpdb->prefix.'language_pairs', true);
-    
+
         $active_langs = $sitepress->get_active_languages();
         if(!empty($user_langs[$sitepress_settings['st']['strings_language']])){
             
@@ -1440,20 +1540,20 @@ function icl_st_get_contexts($status){
                 
             }            
             
-            $sql = "
+            $sql = $wpdb->prepare( "
                 SELECT s.context, COUNT(s.context) AS c FROM {$wpdb->prefix}icl_strings s
                 ".join("\n", $joins)."
                 WHERE 1 {$extra_cond} 
                 GROUP BY context
                 ORDER BY context ASC
-            ";
+            ", array());
             
             $results = $wpdb->get_results($sql);
         }
         
     }else{
         $results = $wpdb->get_results("
-            SELECT context, COUNT(context) AS c 
+            SELECT context, COUNT(context) AS c
             FROM {$wpdb->prefix}icl_strings s
             WHERE language='{$sitepress_settings['st']['strings_language']}' {$extra_cond}
             GROUP BY context 
@@ -1485,7 +1585,7 @@ function icl_st_scan_theme_files($dir = false, $recursion = 0){
                             
     $dh = opendir($dir);    
     while(false !== ($file = readdir($dh))){
-        if($file=="." || $file=="..") continue;
+		if(0 === strpos($file, '.')) continue;
         
         if(is_dir($dir . "/" . $file)){
             $recursion++;
@@ -1528,7 +1628,7 @@ function icl_st_scan_theme_files($dir = false, $recursion = 0){
 function __icl_st_scan_theme_files_store_results($string, $domain, $_gettext_context, $file, $line){
     
     global $icl_scan_theme_found_domains;
-    
+
     $string = str_replace(array('\"',"\\'"), array('"',"'"), $string);
     //replace extra backslashes added by _potx_process_file
     $string = str_replace(array('\\\\'), array('\\'), $string);
@@ -1837,18 +1937,19 @@ function icl_st_string_in_page($string_id){
         for($i = 0; $i < count($urls); $i++){
             $c = $i+1;
             if(strpos($urls[$i], '?') !== false){
-                $urls[$i] .= '&icl_string_track_value=' . urlencode($string->value);
+                $urls[$i] .= '&icl_string_track_value=' . $string->value;
             }else{
-                $urls[$i] .= '?icl_string_track_value=' . urlencode($string->value);
+                $urls[$i] .= '?icl_string_track_value=' . $string->value;
             }            
-            $urls[$i] .= '&icl_string_track_context=' . urlencode($string->context);            
-            echo '<a href="#" onclick="jQuery(\'#icl_string_track_frame_wrap iframe\').attr(\'src\',\''.$urls[$i].'\');jQuery(\'#icl_string_track_url a\').html(\''.$urls[$i].'\').attr(\'href\',  \''.$urls[$i].'\'); return false;">'.$c.'</a><br />';
+            $urls[$i] .= '&icl_string_track_context=' . $string->context;
+
+            echo '<a href="#" onclick="jQuery(\'#icl_string_track_frame_wrap iframe\').attr(\'src\',\''.esc_url($urls[$i]).'\');jQuery(\'#icl_string_track_url a\').html(\''.esc_url($urls[$i]).'\').attr(\'href\',  \''.esc_url($urls[$i]).'\'); return false;">'.$c.'</a><br />';
             
         }
         echo '</div>';
         echo '<div id="icl_string_track_frame_wrap">';        
         echo '<iframe onload="iclResizeIframe()" src="'.$urls[0].'" width="10" height="10" frameborder="0" marginheight="0" marginwidth="0"></iframe>';
-        echo '<div id="icl_string_track_url" class="icl_string_track_url"><a href="'.$urls[0].'">' . htmlspecialchars($urls[0]) . "</a></div>\n";
+        echo '<div id="icl_string_track_url" class="icl_string_track_url"><a href="'.esc_url($urls[0]).'">' . esc_html($urls[0]) . "</a></div>\n";
         echo '</div>';        
     }else{
         _e('No records found', 'wpml-string-translation');
@@ -1899,7 +2000,7 @@ function icl_st_string_in_source($string_id){
                 }else{
                     $hl = '';   
                 }
-                echo '<li id="icl_source_line_'.$i.'_'.$k.'"'.$hl.'">' . htmlspecialchars($l) . '&nbsp;</li>';
+                echo '<li id="icl_source_line_'.$i.'_'.$k.'"'.$hl.'">' . esc_html($l) . '&nbsp;</li>';
             }
             echo '</ol>';
             echo '</pre>';
@@ -2042,10 +2143,10 @@ function icl_st_render_option_writes($option_name, $option_value, $option_key=''
         }
         echo '<div class="icl_st_admin_string '.$class.'">';
         echo '<input'.$disabled.' type="hidden" name="icl_admin_options'.$option_key.'['.$option_name.']" value=""  />';
-        echo '<input'.$disabled.$has_translations.' type="checkbox" name="icl_admin_options'.$option_key.'['.$option_name.']" value="'.htmlspecialchars($option_value).'" 
+        echo '<input'.$disabled.$has_translations.' type="checkbox" name="icl_admin_options'.$option_key.'['.$option_name.']" value="'.esc_attr($option_value).'"
             '.$checked.' />';
         echo '<input type="text" readonly="readonly" value="'.$option_name.'" size="32" />'; 
-        echo '<input type="text" value="'.htmlspecialchars($option_value).'" readonly="readonly" size="48" />';        
+        echo '<input type="text" value="'.esc_attr($option_value).'" readonly="readonly" size="48" />';
         //echo '<br /><input type="text" size="100" value="icl_admin_options'.$option_key.'['.$option_name.']" />';
         echo '</div><br clear="all" />';
     }
@@ -2136,39 +2237,29 @@ function wpml_register_admin_strings($serialized_array){
 }
 
 add_action('plugins_loaded', 'icl_st_set_admin_options_filters', 10);
-function icl_st_set_admin_options_filters(){
-    static $option_names;
-    if(empty($option_names)) $option_names = get_option('_icl_admin_option_names');
-    
-    if(!empty($option_names['theme']) && !empty($option_names['theme'][basename(ICL_STRING_TRANSLATION_TEMPLATE_DIRECTORY)])){
-        foreach($option_names['theme'][basename(ICL_STRING_TRANSLATION_TEMPLATE_DIRECTORY)] as $option_key=>$option){
-            if(is_array($option) || is_object($option)){
-                add_filter('option_'.$option_key, 'icl_st_translate_admin_string');        
-            }else{
-                add_filter('option_'.$option, 'icl_st_translate_admin_string');        
-            }                
-        }
-        if(ICL_STRING_TRANSLATION_TEMPLATE_DIRECTORY != ICL_STRING_TRANSLATION_STYLESHEET_DIRECTORY && !empty($option_names['theme'][basename(ICL_STRING_TRANSLATION_STYLESHEET_DIRECTORY)])){                         
-            foreach((array)$option_names['theme'][basename(ICL_STRING_TRANSLATION_STYLESHEET_DIRECTORY)] as $option_key=>$option){
-                if(is_array($option) || is_object($option)){
-                    add_filter('option_'.$option_key, 'icl_st_translate_admin_string');        
-                }else{
-                    add_filter('option_'.$option, 'icl_st_translate_admin_string');        
-                }                
-            }
-        }
-    }
-    if(!empty($option_names['plugin'])){
-        foreach($option_names['plugin'] as $plugin => $options){            
-            foreach((array)$options as $option_key => $option){
-                if(is_array($option) || is_object($option)){
-                    add_filter('option_'.$option_key, 'icl_st_translate_admin_string');        
-                }else{
-                    add_filter('option_'.$option, 'icl_st_translate_admin_string');        
-                }                
-            }            
-        }
-    }
+function icl_st_set_admin_options_filters() {
+	static $option_names;
+	if ( empty( $option_names ) ) {
+		$option_names = get_option( '_icl_admin_option_names' );
+	}
+
+	if ( !empty( $option_names[ 'theme' ] ) && !empty( $option_names[ 'theme' ][ basename( ICL_STRING_TRANSLATION_TEMPLATE_DIRECTORY ) ] ) ) {
+		foreach ( $option_names[ 'theme' ][ basename( ICL_STRING_TRANSLATION_TEMPLATE_DIRECTORY ) ] as $option_key => $option ) {
+			add_filter( 'option_' . $option_key, 'icl_st_translate_admin_string' );
+		}
+		if ( ICL_STRING_TRANSLATION_TEMPLATE_DIRECTORY != ICL_STRING_TRANSLATION_STYLESHEET_DIRECTORY && !empty( $option_names[ 'theme' ][ basename( ICL_STRING_TRANSLATION_STYLESHEET_DIRECTORY ) ] ) ) {
+			foreach ( (array)$option_names[ 'theme' ][ basename( ICL_STRING_TRANSLATION_STYLESHEET_DIRECTORY ) ] as $option_key => $option ) {
+				add_filter( 'option_' . $option_key, 'icl_st_translate_admin_string' );
+			}
+		}
+	}
+	if ( !empty( $option_names[ 'plugin' ] ) ) {
+		foreach ( $option_names[ 'plugin' ] as $plugin => $options ) {
+			foreach ( (array)$options as $option_key => $option ) {
+				add_filter( 'option_' . $option_key, 'icl_st_translate_admin_string' );
+			}
+		}
+	}
 }
 
 function icl_st_translate_admin_string($option_value, $key="", $name="", $rec_level = 0){
@@ -2257,10 +2348,10 @@ function icl_st_translate_admin_string($option_value, $key="", $name="", $rec_le
         
         if(!empty($option_names['plugin'])){
             foreach((array)$option_names['plugin'] as $plugin => $options){
-                foreach($options as $kops=>$ops){                    
+                foreach($options as $kops=>$ops){             
                     if(is_array($ops)){
                         $arrkey = explode('][', trim($key, '[]'));
-                        $_val = $options;
+                        $_val = $options;                       
                         for($i=0; $i<count($arrkey); $i++){
                             if(isset($_val[$arrkey[$i]])){
                                 $_val = $_val[$arrkey[$i]];                                 
@@ -2268,11 +2359,17 @@ function icl_st_translate_admin_string($option_value, $key="", $name="", $rec_le
                                 break;
                             }
                         }
-                        if(in_array($name, $_val)){
+                        if(in_array($name, $_val)){ // seems not work since WPML 3.1, added next elseif which works
+                            $key_suff = 'plugin_' . $plugin;
+                            break;
+                        }elseif (in_array($name, array_keys($_val))) {
                             $key_suff = 'plugin_' . $plugin;
                             break;
                         }
-                    }elseif($ops == $name){
+                    }elseif($ops == $name){ // seems not work since WPML 3.1, added next elseif which works
+                        $key_suff = 'plugin_' . $plugin;
+                        break;
+                    }elseif ($kops == $name) {
                         $key_suff = 'plugin_' . $plugin;
                         break;
                     }
@@ -2298,6 +2395,19 @@ function icl_st_translate_admin_string($option_value, $key="", $name="", $rec_le
     // cache - phase 2 - set
     if($rec_level == 0){
         $__icl_st_cache[$name] = $option_value;
+    }
+    
+    /*
+     * if sticky links plugin is enabled and set to change links into sticky 
+     * in strings, change those links back into permalinks when displayed
+     */
+    if (is_string($option_value) and class_exists("WPML_Sticky_links")) {
+		global $WPML_Sticky_Links;
+		if(isset($WPML_Sticky_Links)) {
+			if ($WPML_Sticky_Links->settings['sticky_links_strings']) {
+				$option_value = $WPML_Sticky_Links->show_permalinks($option_value);
+			}
+		}
     }
     
     return $option_value;
@@ -2442,7 +2552,7 @@ function _icl_st_translator_notification($user, $source, $target){
     $_ldetails = $sitepress->get_language_details($target);
     $target_en = $_ldetails['english_name'];
     
-    $message = "You have been assigned to new translation job from %s to %s.
+    $message = __("You have been assigned to new translation job from %s to %s.
 
 Start editing: %s
 
@@ -2454,11 +2564,11 @@ You can view your other translation jobs here: %s
 
  - The folks at ICanLocalize
  101 Convention Center Dr., Las Vegas, Nevada, 89109, USA
-";
+", 'sitepress');
     
     
     $to = $user->user_email;
-    $subject = sprintf("You have been assigned to new translation job on %s.", get_bloginfo('name'));
+    $subject = sprintf(__("You have been assigned to new translation job on %s.", 'sitepress'), get_bloginfo('name'));
     $body = sprintf($message, 
         $source_en, $target_en, admin_url('admin.php?page='.WPML_ST_FOLDER.'/menu/string-translation.php'), 
             admin_url('admin.php?page='.WPML_TM_FOLDER.'/menu/translations-queue.php'), home_url());
@@ -2510,17 +2620,17 @@ function _icl_translation_send_strings_icanlocalize($string_ids, $target) {
             $string_values[$st_id] = $string->value;
             $data['contents']['string-'.$st_id.'-context'] = array(
                     'translate'=>0,
-                    'data'=>base64_encode(htmlspecialchars($string->context)),
+                    'data'=>base64_encode(esc_attr($string->context)),
                     'format'=>'base64',
             );
             $data['contents']['string-'.$st_id.'-name'] = array(
                     'translate'=>0,
-                    'data'=>base64_encode(htmlspecialchars($string->name)),
+                    'data'=>base64_encode(esc_attr($string->name)),
                     'format'=>'base64',
             );
             $data['contents']['string-'.$st_id.'-value'] = array(
                     'translate'=>1,
-                    'data'=>base64_encode(htmlspecialchars($string->value)),
+                    'data'=>base64_encode(esc_attr($string->value)),
                     'format'=>'base64',
             );
             

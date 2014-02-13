@@ -18,10 +18,12 @@ function icl_plugin_upgrade(){
     
     $iclsettings = get_option('icl_sitepress_settings');    
     
-    // upgrade actions 
+    // upgrade actions
+
     // 1. reset ajx_health_flag
-    $iclsettings['ajx_health_checked'] = 0;
-    update_option('icl_sitepress_settings',$iclsettings);
+	//@since 3.1 -> removed as this cause ajx_health_check on each request
+//    $iclsettings['ajx_health_checked'] = 0;
+//    update_option('icl_sitepress_settings',$iclsettings);
     
     // clear any caches
     require_once ICL_PLUGIN_PATH . '/inc/cache.php';
@@ -113,6 +115,8 @@ function icl_plugin_upgrade(){
     
     icl_upgrade_version('2.9.3');
     
+	icl_upgrade_version('3.1');
+
     if(version_compare(get_option('icl_sitepress_version'), ICL_SITEPRESS_VERSION, '<')){
         update_option('icl_sitepress_version', ICL_SITEPRESS_VERSION);
     }
@@ -143,7 +147,3 @@ function icl_plugin_too_old(){
     <?php
     
 }
-
-
-
-?>

@@ -53,9 +53,7 @@ class ICLMenusSync
 			}
 
 			$this->add_ghost_entries();
-
 			$this->set_new_menu_order();
-
 		}
 
 	}
@@ -112,7 +110,7 @@ class ICLMenusSync
 
 	function get_menu_item_translations( $item, $menu_id )
 	{
-		global $wpdb, $sitepress;
+		global $sitepress;
 
 		$current_language = $sitepress->get_current_language();
 		$languages        = $sitepress->get_active_languages();
@@ -187,12 +185,32 @@ class ICLMenusSync
 
 							$sitepress->switch_lang( $language[ 'code' ], false );
 
-							$menu_name                 = $this->get_menu_name( $menu_id );
-							if(function_exists('icl_t')) {
+							$menu_name = $this->get_menu_name( $menu_id );
+
+							$translated_object_title_t = '';
+							$translated_object_url_t = '';
+
+							if(function_exists('icl_t') && $this->string_translation_default_language_ok()) {
 								$translated_object_title_t = icl_t( $menu_name . ' menu', 'Menu Item Label ' . $item->ID, $item->post_title, $icl_st_label_exists, true );
 								$translated_object_url_t   = icl_t( $menu_name . ' menu', 'Menu Item URL ' . $item->ID, $item->url, $icl_st_url_exists, true );
+							} elseif($translated_object_id && isset($item_translations[$language[ 'code' ]])) {
+								$translated_menu_id = $this->get_translated_menu_id($menu_id, $language[ 'code' ]);
+								$translated_menu_items = wp_get_nav_menu_items($translated_menu_id);
+								$translated_menu_item_found = false;
+								foreach($translated_menu_items as $translated_menu_item) {
+									if($translated_menu_item->ID == $translated_object_id) {
+										$translated_object_title_t = $translated_menu_item->title;
+										$translated_object_url_t   = $translated_menu_item->url;
+										$translated_menu_item_found = true;
+										break;
+									}
+								}
+								if(!$translated_menu_item_found) {
+									$translated_object_title_t = $item->post_title . ' @' . $language[ 'code' ];
+									$translated_object_url_t   = $item->url;
+								}
 							} else {
-								$translated_object_title_t = $item->post_title;
+								$translated_object_title_t = $item->post_title . ' @' . $language[ 'code' ];
 								$translated_object_url_t   = $item->url;
 							}
 
@@ -202,8 +220,10 @@ class ICLMenusSync
 								$translated_object      = get_post( $translated_object_id );
 								$translated_object->url = get_post_meta( $translated_object_id, '_menu_item_url', true );
 
-								$label_changed = ( $translated_object_title_t != $translated_object->post_title );
-								$url_changed   = ( $translated_object_url_t != $translated_object->url );
+								if($this->string_translation_default_language_ok()) {
+									$label_changed = ( $translated_object_title_t != $translated_object->post_title );
+									$url_changed   = ( $translated_object_url_t != $translated_object->url );
+								}
 
 								if ( $icl_st_label_exists )
 									$translated_object_title = $translated_object_title_t;
@@ -271,6 +291,14 @@ class ICLMenusSync
 					$translation[ 'url_changed' ]   = $url_changed;
 					$translation[ 'label_missing' ] = !$icl_st_label_exists;
 					$translation[ 'url_missing' ]   = !$icl_st_url_exists;
+
+					if ( $this->string_translation_default_language_ok() ) {
+						$translation[ 'label_missing' ] = !$icl_st_label_exists;
+						$translation[ 'url_missing' ]   = !$icl_st_url_exists;
+					} else {
+						$translation[ 'label_missing' ] = false;
+						$translation[ 'url_missing' ]   = false;
+					}
 				}
 
 				$translations[ $language[ 'code' ] ] = $translation;
@@ -279,6 +307,18 @@ class ICLMenusSync
 		}
 
 		return $translations;
+	}
+
+	private function string_translation_default_language_ok() {
+		static $result = null;
+		if ( $result == null ) {
+			global $sitepress, $sitepress_settings;
+			$default_language           = $sitepress->get_default_language();
+			$string_translation_enabled = isset( $sitepress_settings[ 'st' ] ) && class_exists( 'WPML_String_Translation' );
+			$result                     = $string_translation_enabled && isset( $sitepress_settings[ 'st' ][ 'strings_language' ] ) && $sitepress_settings[ 'st' ][ 'strings_language' ] == $default_language;
+		}
+
+		return $result;
 	}
 
 	private function get_menu_name( $menu_id )
@@ -421,6 +461,7 @@ class ICLMenusSync
 	{
 		global $wpdb, $sitepress;
 		$current_language = $sitepress->get_current_language();
+		$default_language = $sitepress->get_default_language();
 
 		// menu translations
 		if ( !empty( $data[ 'menu_translation' ] ) ) {
@@ -494,7 +535,7 @@ class ICLMenusSync
 						wp_delete_post( $item_id, true );
 						$delete_trid = $sitepress->get_element_trid( $item_id, 'post_nav_menu_item' );
 						if ( $delete_trid ) {
-							$sitepress->delete_element_translation( $trid, 'post_nav_menu_item', $language_code );
+							$sitepress->delete_element_translation( $delete_trid, 'post_nav_menu_item', $language_code );
 						}
 					}
 				}
@@ -508,7 +549,7 @@ class ICLMenusSync
 				foreach ( $items as $item_id => $changes ) {
 					$trid = $sitepress->get_element_trid( $item_id, 'post_nav_menu_item' );
 					if ( !$trid ) {
-						$sitepress->set_element_language_details( $item_id, 'post_nav_menu_item', false, $sitepress->get_default_language() );
+						$sitepress->set_element_language_details( $item_id, 'post_nav_menu_item', false, $default_language );
 						$trid = $sitepress->get_element_trid( $item_id, 'post_nav_menu_item' );
 					}
 
@@ -555,7 +596,7 @@ class ICLMenusSync
 				foreach ( $items as $item_id => $translations ) {
 					$trid = $sitepress->get_element_trid( $item_id, 'post_nav_menu_item' );
 					if ( !$trid ) {
-						$sitepress->set_element_language_details( $item_id, 'post_nav_menu_item', false, $sitepress->get_default_language() );
+						$sitepress->set_element_language_details( $item_id, 'post_nav_menu_item', false, $default_language );
 						$trid = $sitepress->get_element_trid( $item_id, 'post_nav_menu_item' );
 					}
 
@@ -569,16 +610,19 @@ class ICLMenusSync
 						$object_url = $translated_object[ 'url' ];
 						$icl_st_label_exists = false;
 						$icl_st_url_exists = false;
-						if($object_type == 'custom' && function_exists('icl_t')) {
-							$sitepress->switch_lang($language, false );
-							$object_title =  icl_t($menu_name . ' menu', 'Menu Item Label ' . $item_id, $object_title, $icl_st_label_exists, false);
-							$object_url =  icl_t($menu_name . ' menu', 'Menu Item URL ' . $item_id, $object_url, $icl_st_url_exists, false);
+						if($object_type == 'custom' && (function_exists('icl_t') || !$this->string_translation_default_language_ok())) {
+							if ( function_exists( 'icl_t' ) && $this->string_translation_default_language_ok() ) {
+								$sitepress->switch_lang( $language, false );
+								$object_title = icl_t( $menu_name . ' menu', 'Menu Item Label ' . $item_id, $object_title, $icl_st_label_exists, false );
+								$object_url   = icl_t( $menu_name . ' menu', 'Menu Item URL ' . $item_id, $object_url, $icl_st_url_exists, false );
 
-							$sitepress->switch_lang( $current_language, false );
+								$sitepress->switch_lang( $current_language, false );
 
-							if(!$icl_st_label_exists) icl_register_string($menu_name . ' menu', 'Menu Item Label ' . $item_id, $object_title);
-							if(!$icl_st_url_exists) icl_register_string($menu_name . ' menu', 'Menu Item URL ' . $item_id, $object_url);
-
+								if(!$icl_st_label_exists) icl_register_string($menu_name . ' menu', 'Menu Item Label ' . $item_id, $object_title);
+								if(!$icl_st_url_exists) icl_register_string($menu_name . ' menu', 'Menu Item URL ' . $item_id, $object_url);
+							} else {
+								$object_title = $name;
+							}
 						}
 
 						$menudata = array(
@@ -606,12 +650,12 @@ class ICLMenusSync
 						// set language explicitly since the 'wp_update_nav_menu_item' is still TBD
 						$sitepress->set_element_language_details( $translated_item_id, 'post_nav_menu_item', $trid, $language );
 
-						//
-						$menu_tax_id = $wpdb->get_var( $wpdb->prepare( "
-                            SELECT term_taxonomy_id FROM {$wpdb->term_taxonomy} WHERE term_id=%d AND taxonomy='nav_menu'", $translated_menu_id ) );
+						$menu_tax_id_prepared = $wpdb->prepare( "SELECT term_taxonomy_id FROM {$wpdb->term_taxonomy} WHERE term_id=%d AND taxonomy='nav_menu'", $translated_menu_id );
+						$menu_tax_id = $wpdb->get_var( $menu_tax_id_prepared );
 
 						if ( $translated_item_id && $menu_tax_id ) {
-							$rel = $wpdb->get_var( $wpdb->prepare( "SELECT object_id FROM {$wpdb->term_relationships} WHERE object_id=%d AND term_taxonomy_id=%d", $translated_item_id, $menu_tax_id ) );
+							$rel_prepared = $wpdb->prepare( "SELECT object_id FROM {$wpdb->term_relationships} WHERE object_id=%d AND term_taxonomy_id=%d", $translated_item_id, $menu_tax_id );
+							$rel = $wpdb->get_var( $rel_prepared );
 							if ( !$rel ) {
 								$wpdb->insert( $wpdb->term_relationships, array( 'object_id' => $translated_item_id, 'term_taxonomy_id' => $menu_tax_id ) );
 							}
@@ -668,8 +712,6 @@ class ICLMenusSync
 								wp_update_post( $translated_item );
 							}
 						}
-
-
 					}
 				}
 			}
@@ -690,8 +732,6 @@ class ICLMenusSync
 								}
 							}
 						}
-
-
 					}
 				}
 			}
@@ -763,8 +803,9 @@ class ICLMenusSync
 	{
 		global $sitepress;
 
+		$need_sync = 0;
+		$default_language = $sitepress->get_default_language();
 		foreach ( $this->menus[ $menu_id ][ 'items' ] as $item ) {
-
 
 			// deleted items #2 (menu order beyond)
 			static $d2_items = array();
@@ -788,10 +829,11 @@ class ICLMenusSync
 				?>
 				<tr>
 					<td>&nbsp;</td>
-					<?php foreach ( $sitepress->get_active_languages() as $language ): if ( $language[ 'code' ] == $sitepress->get_default_language() )
+					<?php foreach ( $sitepress->get_active_languages() as $language ): if ( $language[ 'code' ] == $default_language )
 						continue; ?>
 						<td>
 							<?php if ( isset( $deleted_items[ $language[ 'code' ] ] ) ): ?>
+								<?php $need_sync++; ?>
 								<?php foreach ( $deleted_items[ $language[ 'code' ] ] as $deleted_item ): ?>
 									<?php echo str_repeat( ' - ', $depth ) ?><span class="icl_msync_item icl_msync_del"><?php echo $deleted_item[ 'title' ] ?></span>
 									<input type="hidden" name="sync[del][<?php echo $menu_id ?>][<?php echo $language[ 'code' ] ?>][<?php echo $deleted_item[ 'ID' ] ?>]" value="<?php echo esc_attr( $deleted_item[ 'title' ] ) ?>"/>
@@ -820,6 +862,7 @@ class ICLMenusSync
 						if ( !in_array( $item[ 'menu_order' ], $mo_added[ $language ] ) && $deleted_item[ 'menu_order' ] == $item[ 'menu_order' ] ) {
 							$deleted_items[ $language ] = $deleted_item;
 							$mo_added[ $language ][ ]   = $item[ 'menu_order' ];
+							$need_sync++;
 						}
 
 					}
@@ -830,10 +873,11 @@ class ICLMenusSync
 				?>
 				<tr>
 					<td>&nbsp;</td>
-					<?php foreach ( $sitepress->get_active_languages() as $language ): if ( $language[ 'code' ] == $sitepress->get_default_language() )
+					<?php foreach ( $sitepress->get_active_languages() as $language ): if ( $language[ 'code' ] == $default_language )
 						continue; ?>
 						<td>
 							<?php if ( isset( $deleted_items[ $language[ 'code' ] ] ) ): ?>
+								<?php $need_sync++; ?>
 								<?php echo str_repeat( ' - ', $depth ) ?><span class="icl_msync_item icl_msync_del"><?php echo $deleted_items[ $language[ 'code' ] ][ 'title' ] ?></span>
 								<input type="hidden" name="sync[del][<?php echo $menu_id ?>][<?php echo $language[ 'code' ] ?>][<?php echo $deleted_items[ $language[ 'code' ] ][ 'ID' ] ?>]"
 									   value="<?php echo esc_attr( $deleted_items[ $language[ 'code' ] ][ 'title' ] ) ?>"/>
@@ -853,12 +897,10 @@ class ICLMenusSync
 						echo str_repeat( ' - ', $depth ) . $item[ 'title' ];
 						?></td>
 					<?php foreach ( $sitepress->get_active_languages() as $language ) {
-						if ( $language[ 'code' ] == $sitepress->get_default_language() )
+						if ( $language[ 'code' ] == $default_language )
 							continue; ?>
 						<td>
 							<?php
-
-
 							$item_translation = $item[ 'translations' ][ $language[ 'code' ] ];
 							echo str_repeat( ' - ', $depth );
 
@@ -868,45 +910,56 @@ class ICLMenusSync
 									echo '<span class="icl_msync_item icl_msync_mov">' . $item_translation[ 'title' ] . '</span>';
 									echo '<input type="hidden" name="sync[mov][' . $menu_id . '][' . $item[ 'ID' ] . '][' . $language[ 'code' ] . '][' . $item_translation[ 'menu_order_new' ] . ']" value="' . esc_attr( $item_translation[ 'title' ] ) . '" />';
 									$this->operations[ 'mov' ] = empty( $this->operations[ 'mov' ] ) ? 1 : $this->operations[ 'mov' ]++;
+									$need_sync++;
 								} elseif ( $item_translation[ 'label_missing' ] ) {
 									// item translation does not exist but is a custom item that will be created
 									echo '<span class="icl_msync_item icl_msync_label_missing">' . $item_translation[ 'title' ] . '</span>';
 									echo '<input type="hidden" name="sync[label_missing][' . $menu_id . '][' . $item[ 'ID' ] . '][' . $language[ 'code' ] . ']" value="' . esc_attr( $item_translation[ 'title' ] ) . '" />';
 									$this->operations[ 'label_missing' ] = empty( $this->operations[ 'label_missing' ] ) ? 1 : $this->operations[ 'label_missing' ]++;
+									$need_sync++;
 								} elseif ( $item_translation[ 'label_changed' ] ) {
 									// item translation does not exist but is a custom item that will be created
 									echo '<span class="icl_msync_item icl_msync_label_changed">' . $item_translation[ 'title' ] . '</span>';
 									echo '<input type="hidden" name="sync[label_changed][' . $menu_id . '][' . $item[ 'ID' ] . '][' . $language[ 'code' ] . ']" value="' . esc_attr( $item_translation[ 'title' ] ) . '" />';
 									$this->operations[ 'label_changed' ] = empty( $this->operations[ 'label_changed' ] ) ? 1 : $this->operations[ 'label_changed' ]++;
+									$need_sync++;
 								} elseif ( $item_translation[ 'url_missing' ] ) {
 									// item translation does not exist but is a custom item that will be created
 									echo '<span class="icl_msync_item icl_msync_url_missing">' . $item_translation[ 'url' ] . '</span>';
 									echo '<input type="hidden" name="sync[url_missing][' . $menu_id . '][' . $item[ 'ID' ] . '][' . $language[ 'code' ] . ']" value="' . esc_attr( $item_translation[ 'url' ] ) . '" />';
 									$this->operations[ 'url_missing' ] = empty( $this->operations[ 'url_missing' ] ) ? 1 : $this->operations[ 'url_missing' ]++;
+									$need_sync++;
 								} elseif ( $item_translation[ 'url_changed' ] ) {
 									// item translation does not exist but is a custom item that will be created
 									echo '<span class="icl_msync_item icl_msync_url_changed">' . $item_translation[ 'url' ] . '</span>';
 									echo '<input type="hidden" name="sync[url_changed][' . $menu_id . '][' . $item[ 'ID' ] . '][' . $language[ 'code' ] . ']" value="' . esc_attr( $item_translation[ 'url' ] ) . '" />';
 									$this->operations[ 'url_changed' ] = empty( $this->operations[ 'url_changed' ] ) ? 1 : $this->operations[ 'url_changed' ]++;
+									$need_sync++;
 								} else { // NO CHANGE
 									echo $item_translation[ 'title' ];
 								}
 
 							} elseif ( $item_translation[ 'object_type' ] == 'custom' ) {
 								// item translation does not exist but is a custom item that will be created
-								echo '<span class="icl_msync_item icl_msync_add">' . $item_translation[ 'title' ] . '</span>';
-								echo '<input type="hidden" name="sync[add][' . $menu_id . '][' . $item[ 'ID' ] . '][' . $language[ 'code' ] . ']" value="' . esc_attr( $item_translation[ 'title' ] ) . '" />';
+								echo '<span class="icl_msync_item icl_msync_add">' . $item_translation[ 'title' ] . ' @' .  $language[ 'code' ] . '</span>';
+								echo '<input type="hidden" name="sync[add][' . $menu_id . '][' . $item[ 'ID' ] . '][' . $language[ 'code' ] . ']" value="' . esc_attr( $item_translation[ 'title' ] . ' @' .  $language[ 'code' ] ) . '" />';
 								$this->operations[ 'add' ] = empty( $this->operations[ 'add' ] ) ? 1 : $this->operations[ 'add' ]++;
+								$need_sync++;
 							} elseif ( !empty( $item_translation[ 'object_id' ] ) ) {
 								// item translation does not exist but translated object does
 								if ( $item_translation[ 'parent_not_translated' ] ) {
 									echo '<span class="icl_msync_item icl_msync_not">' . $item_translation[ 'title' ] . '</span>';
 									$this->operations[ 'not' ] = empty( $this->operations[ 'not' ] ) ? 1 : $this->operations[ 'not' ]++;
+									$need_sync++;
 								} else {
-									// item translation does not exist but translated object does
-									echo '<span class="icl_msync_item icl_msync_add">' . $item_translation[ 'title' ] . '</span>';
-									echo '<input type="hidden" name="sync[add][' . $menu_id . '][' . $item[ 'ID' ] . '][' . $language[ 'code' ] . ']" value="' . esc_attr( $item_translation[ 'title' ] ) . '" />';
-									$this->operations[ 'add' ] = empty( $this->operations[ 'add' ] ) ? 1 : $this->operations[ 'add' ]++;
+									$translated_id = icl_object_id( $item[ 'ID' ], 'nav_menu_item', false, $language[ 'code' ] );
+									if ( !$translated_id ) {
+										// item translation does not exist but translated object does
+										echo '<span class="icl_msync_item icl_msync_add">' . $item_translation[ 'title' ] . '</span>';
+										echo '<input type="hidden" name="sync[add][' . $menu_id . '][' . $item[ 'ID' ] . '][' . $language[ 'code' ] . ']" value="' . esc_attr( $item_translation[ 'title' ] ) . '" />';
+										$this->operations[ 'add' ] = empty( $this->operations[ 'add' ] ) ? 1 : $this->operations[ 'add' ]++;
+										$need_sync++;
+									}
 								}
 							} else {
 								// item translation and object translation do not exist
@@ -921,14 +974,14 @@ class ICLMenusSync
 				<?php
 
 				if ( $this->_item_has_children( $menu_id, $item[ 'ID' ] ) ) {
-					$this->render_items_tree_default( $menu_id, $item[ 'ID' ], $depth + 1 );
+					$need_sync += $this->render_items_tree_default( $menu_id, $item[ 'ID' ], $depth + 1 );
 				}
 
 			}
 
 		}
 
-
+		return $need_sync;
 	}
 
 	function _item_has_children( $menu_id, $item_id )

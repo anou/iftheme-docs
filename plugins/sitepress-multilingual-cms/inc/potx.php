@@ -114,7 +114,7 @@ define('POTX_CONTEXT_ERROR', FALSE);
  * Process a file and put extracted information to the given parameters.
  *
  * @param $file_path
- *   Comlete path to file to process.
+ *   Complete path to file to process.
  * @param $strip_prefix
  *   An integer denoting the number of chars to strip from filepath for output.
  * @param $save_callback

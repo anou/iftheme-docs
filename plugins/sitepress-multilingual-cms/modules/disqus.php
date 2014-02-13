@@ -55,7 +55,7 @@ class WPML_Disqus_Integration{
             ('Lithuanian', 'lt'),
             ('Macedonian', 'mk'),
             ('Malay (Bahasa Melayu)', 'ms'),
-            (u'Norwegian (Bokmål)', 'nb'),
+            (u'Norwegian (Bokmï¿½l)', 'nb'),
             ('Persian', 'fa'),
             ('Polish', 'pl'),
             ('Portuguese (Brazil)', 'pt_BR'),
@@ -145,8 +145,9 @@ class WPML_Disqus_Integration{
         );
         
         $map = apply_filters('wpml_disqus_language_map', $map);
-        
-        $lang = isset($map[$sitepress->get_current_language()]) ? $map[$sitepress->get_current_language()] : '';    
+
+		$current_language = $sitepress->get_current_language();
+		$lang = isset($map[ $current_language ]) ? $map[ $current_language ] : '';
             
         return $lang;
     }

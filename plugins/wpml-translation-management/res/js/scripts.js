@@ -360,22 +360,28 @@ jQuery(document).ready(function(){
     }
 
     var cache = '&cache=1';
-    if (location.href.indexOf("main.php&sm=translators") != -1 || location.href.indexOf('/post.php') != -1 || location.href.indexOf('/edit.php') != -1) {
+    if (location.href.indexOf("main.php&sm=translators") !== -1 || location.href.indexOf('/post.php') !== -1 || location.href.indexOf('/edit.php') != -1) {
         cache = '';
     }
-    jQuery.ajax({
-        type: "POST",
-        url: icl_ajx_url,
-        dataType: 'json',
-        data: "icl_ajx_action=get_translator_status" + cache + '&_icl_nonce=' + jQuery('#_icl_nonce_gts').val(),
-        success: function(msg){
-            if (cache == '') {
-            }
-        }
-    });
 
-    if(jQuery('#icl_tdo_options').length)
-    jQuery('#icl_tdo_options').submit(iclSaveForm);
+	var _icl_nonce_gts = jQuery('#_icl_nonce_gts');
+	if (_icl_nonce_gts.length) {
+		jQuery.ajax({
+			type: "POST",
+			url: icl_ajx_url,
+			dataType: 'json',
+			data: "icl_ajx_action=get_translator_status" + cache + '&_icl_nonce=' + _icl_nonce_gts.val(),
+			success: function (msg) {
+				if (cache === '') {
+				}
+			}
+		});
+	}
+
+	var icl_tdo_options = jQuery('#icl_tdo_options');
+	if (icl_tdo_options.length) {
+		icl_tdo_options.submit(iclSaveForm);
+	}
 
     jQuery('.icl_tm_copy_link').click(function(){
         var type = jQuery(this).attr('id').replace(/^icl_tm_copy_link_/,'');

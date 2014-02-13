@@ -28,9 +28,9 @@ class TM_Notification{
             // override locale
             $sitepress->switch_locale($user_language);
             
-            $lang_from = $wpdb->get_var($wpdb->prepare("SELECT name FROM {$wpdb->prefix}icl_languages_translations WHERE language_code='%s' AND display_language_code='%s'",
+            $lang_from = $wpdb->get_var($wpdb->prepare("SELECT name FROM {$wpdb->prefix}icl_languages_translations WHERE language_code=%s AND display_language_code=%s",
                 $job->source_language_code, $user_language));
-            $lang_to = $wpdb->get_var($wpdb->prepare("SELECT name FROM {$wpdb->prefix}icl_languages_translations WHERE language_code='%s' AND display_language_code='%s'",
+            $lang_to = $wpdb->get_var($wpdb->prepare("SELECT name FROM {$wpdb->prefix}icl_languages_translations WHERE language_code=%s AND display_language_code=%s",
                 $job->language_code, $user_language));
 
             $post_link = $iclTranslationManagement->tm_post_permalink($job->original_doc_id);
@@ -67,9 +67,9 @@ class TM_Notification{
         // override locale
         $sitepress->switch_locale($user_language);
 
-        $lang_from = $wpdb->get_var($wpdb->prepare("SELECT name FROM {$wpdb->prefix}icl_languages_translations WHERE language_code='%s' AND display_language_code='%s'",
+        $lang_from = $wpdb->get_var($wpdb->prepare("SELECT name FROM {$wpdb->prefix}icl_languages_translations WHERE language_code=%s AND display_language_code=%s",
             $job->source_language_code, $user_language));
-        $lang_to = $wpdb->get_var($wpdb->prepare("SELECT name FROM {$wpdb->prefix}icl_languages_translations WHERE language_code='%s' AND display_language_code='%s'",
+        $lang_to = $wpdb->get_var($wpdb->prepare("SELECT name FROM {$wpdb->prefix}icl_languages_translations WHERE language_code=%s AND display_language_code=%s",
             $job->language_code, $user_language));
 
         $post_link = $iclTranslationManagement->tm_post_permalink($job->original_doc_id);
@@ -111,9 +111,9 @@ class TM_Notification{
         // override locale
         $sitepress->switch_locale($user_language);
 
-        $lang_from = $wpdb->get_var($wpdb->prepare("SELECT name FROM {$wpdb->prefix}icl_languages_translations WHERE language_code='%s' AND display_language_code='%s'",
+        $lang_from = $wpdb->get_var($wpdb->prepare("SELECT name FROM {$wpdb->prefix}icl_languages_translations WHERE language_code=%s AND display_language_code=%s",
             $job->source_language_code, $user_language));
-        $lang_to = $wpdb->get_var($wpdb->prepare("SELECT name FROM {$wpdb->prefix}icl_languages_translations WHERE language_code='%s' AND display_language_code='%s'",
+        $lang_to = $wpdb->get_var($wpdb->prepare("SELECT name FROM {$wpdb->prefix}icl_languages_translations WHERE language_code=%s AND display_language_code=%s",
             $job->language_code, $user_language));
         
         $tj_url = admin_url('admin.php?page=' . WPML_TM_FOLDER . '/menu/main.php&sm=jobs');
@@ -152,9 +152,9 @@ class TM_Notification{
         // override locale
         $sitepress->switch_locale($user_language);
 
-        $lang_from = $wpdb->get_var($wpdb->prepare("SELECT name FROM {$wpdb->prefix}icl_languages_translations WHERE language_code='%s' AND display_language_code='%s'",
+        $lang_from = $wpdb->get_var($wpdb->prepare("SELECT name FROM {$wpdb->prefix}icl_languages_translations WHERE language_code=%s AND display_language_code=%s",
             $job->source_language_code, $user_language));
-        $lang_to = $wpdb->get_var($wpdb->prepare("SELECT name FROM {$wpdb->prefix}icl_languages_translations WHERE language_code='%s' AND display_language_code='%s'",
+        $lang_to = $wpdb->get_var($wpdb->prepare("SELECT name FROM {$wpdb->prefix}icl_languages_translations WHERE language_code=%s AND display_language_code=%s",
             $job->language_code, $user_language));        
         
         if($iclTranslationManagement->settings['notification']['resigned'] == ICL_TM_NOTIFICATION_IMMEDIATELY){
@@ -183,9 +183,9 @@ class TM_Notification{
         // override locale
         $sitepress->switch_locale($user_language);
         
-        $lang_from = $wpdb->get_var($wpdb->prepare("SELECT name FROM {$wpdb->prefix}icl_languages_translations WHERE language_code='%s' AND display_language_code='%s'",
+        $lang_from = $wpdb->get_var($wpdb->prepare("SELECT name FROM {$wpdb->prefix}icl_languages_translations WHERE language_code=%s AND display_language_code=%s",
             $job->source_language_code, $user_language));
-        $lang_to = $wpdb->get_var($wpdb->prepare("SELECT name FROM {$wpdb->prefix}icl_languages_translations WHERE language_code='%s' AND display_language_code='%s'",
+        $lang_to = $wpdb->get_var($wpdb->prepare("SELECT name FROM {$wpdb->prefix}icl_languages_translations WHERE language_code=%s AND display_language_code=%s",
             $job->language_code, $user_language));        
         
         $mail['to'] = $translator->display_name . ' <' . $translator->user_email . '>';
@@ -222,11 +222,12 @@ class TM_Notification{
                     foreach ($subjects as $subject => $content) {
                         $body = $content['body'];
                         $body_to_send .= $body_to_send . "\n\n" . implode("\n\n\n\n", $body) . "\n\n\n\n";
-                        if($type == 'translator'){
-                            $footer = sprintf(__('You can view your other translation jobs here: %s', 'sitepress'), $tj_url) . "\n\n--\n"
-                            . sprintf(__("This message was automatically sent by Translation Management running on %s. To stop receiving these notifications contact the system administrator at %s.\n\nThis email is not monitored for replies.", 'sitepress'), get_bloginfo('name'), get_option('home'));
+						$home_url = get_home_url();
+						if($type == 'translator'){
+                            $footer = sprintf(__('You can view your other translation jobs here: %s', 'sitepress'), $tj_url) . "\n\n--\n";
+							$footer .= sprintf(__("This message was automatically sent by Translation Management running on %s. To stop receiving these notifications contact the system administrator at %s.\n\nThis email is not monitored for replies.", 'sitepress'), get_bloginfo('name'), $home_url );
                         } else {
-                            $footer = "\n--\n" . sprintf(__("This message was automatically sent by Translation Management running on %s. To stop receiving these notifications, go to Notification Settings, or contact the system administrator at %s.\n\nThis email is not monitored for replies.", 'sitepress'), get_bloginfo('name'), get_option('home'));
+                            $footer = "\n--\n" . sprintf(__("This message was automatically sent by Translation Management running on %s. To stop receiving these notifications, go to Notification Settings, or contact the system administrator at %s.\n\nThis email is not monitored for replies.", 'sitepress'), get_bloginfo('name'), $home_url );
                         }
                         $body_to_send .= $footer;
                         

@@ -12,6 +12,11 @@ class WPML_Taxonomy_Translation{
     function __construct($taxonomy = '', $args = array()){
         global $wpdb, $sitepress, $sitepress_settings;
 
+		$default_language = $sitepress->get_default_language();
+		//$sitepress->switch_lang($default_language, true);
+		$current_language = $sitepress->get_current_language();
+		$_active_languages = $sitepress->get_active_languages();
+
         if(empty($taxonomy)){
             
             global $wp_taxonomies;
@@ -46,14 +51,13 @@ class WPML_Taxonomy_Translation{
                 }
             }
         }
-        $_active_languages = $sitepress->get_active_languages();
-        unset($_active_languages[$sitepress->get_current_language()]);
+		unset($_active_languages[ $current_language ]);
         $this->selected_languages = !empty($selected_languages) ? $selected_languages : $_active_languages;
-        
-        if(defined('WPML_ST_FOLDER')){        
+
+		if(defined('WPML_ST_FOLDER')){
             // get labels translations
 
-            if($sitepress_settings['st']['strings_language'] != $sitepress->get_default_language()){
+            if($sitepress_settings['st']['strings_language'] != $default_language ){
                 
                 $singular_original = $wpdb->get_var($wpdb->prepare("SELECT s.value FROM {$wpdb->prefix}icl_strings s 
                     JOIN {$wpdb->prefix}icl_string_translations t ON t.string_id = s.id 
@@ -78,7 +82,7 @@ class WPML_Taxonomy_Translation{
             $this->taxonomy_obj->labels_translations[$sitepress_settings['st']['strings_language']]['general']  = $general_original;
             
         
-            $languages_pool = array_diff(array_merge(array_keys($this->selected_languages), array($sitepress->get_default_language())), array($sitepress_settings['st']['strings_language']));
+            $languages_pool = array_diff(array_merge(array_keys($this->selected_languages), array( $default_language )), array($sitepress_settings['st']['strings_language']));
             
             foreach($languages_pool as $language){
                     
@@ -109,7 +113,7 @@ class WPML_Taxonomy_Translation{
                 FROM {$wpdb->prefix}icl_translations t
                     {$joins}
                 WHERE t.element_type = %s AND t.language_code = %s
-            ", 'tax_' . $this->taxonomy, $sitepress->get_default_language()));
+            ", 'tax_' . $this->taxonomy, $default_language ));
             
             foreach($res as $row){
                 $translations = 0;
@@ -221,9 +225,9 @@ class WPML_Taxonomy_Translation{
         // get translations for each term
         foreach($this->terms as $k => $term){
             foreach($terms_by_trid as $trid_group){
-                if($trid_group[$sitepress->get_current_language()] == $term->term_taxonomy_id){
+                if($trid_group[ $current_language ] == $term->term_taxonomy_id){
                     foreach($trid_group as $language => $element){
-                        if($language != $sitepress->get_current_language()){
+                        if($language != $current_language ){
                             $this->terms[$k]->translations[$language] = $wpdb->get_row($wpdb->prepare("
                                 SELECT t.term_id, t.name, t.slug, x.term_taxonomy_id, x.taxonomy, x.description, x.parent
                                 FROM {$wpdb->term_taxonomy} x JOIN {$wpdb->terms} t ON t.term_id = x.term_id 
@@ -289,8 +293,6 @@ class WPML_Taxonomy_Translation{
     
     
     function render(){
-        global $sitepress, $sitepress_settings;
-
         if(!empty($this->error)){
             
             echo '<div class="icl_error_text">' . $this->error . '</div>';            
@@ -301,9 +303,7 @@ class WPML_Taxonomy_Translation{
             echo '<div class="icl_error_text">' . sprintf(__('Unknown taxonomy: %s', 'sitepress'), $this->taxonomy ) . '</div>';            
             
         }else{
-            
-            $active_languages = $sitepress->get_active_languages();
-            
+
             include ICL_PLUGIN_PATH . '/menu/taxonomy-translation-content.php';
             
         }
@@ -429,31 +429,36 @@ class WPML_Taxonomy_Translation{
         exit;
         
     }
-    
-    public static function save_labels_translation(){
-        
-        $errors = '';
-        
-        if(empty($_POST['singular']) || empty($_POST['general'])){
-            $errors .= __('Please fill in all fields!', 'sitepress') . '<br />';
-        }
-        
-        
-        $string_id = icl_register_string('WordPress', 'taxonomy singular name: ' . $_POST['singular_original'], $_POST['singular_original']);
-        icl_add_string_translation($string_id, $_POST['language'], $_POST['singular'], ICL_STRING_TRANSLATION_COMPLETE);
-        
-        $string_id = icl_register_string('WordPress', 'taxonomy general name: ' . $_POST['general_original'], $_POST['general_original']);
-        icl_add_string_translation($string_id, $_POST['language'], $_POST['general'], ICL_STRING_TRANSLATION_COMPLETE);
-        
-        $html = '';
-                
-        echo json_encode(array('html' => $html, 'errors' => $errors));
-        exit;
-        
-        
-    }
-    
-    public static function sync_taxonomies_in_content_preview(){
+
+	public static function save_labels_translation() {
+
+		$errors = '';
+
+		if ( empty( $_POST[ 'singular' ] ) || empty( $_POST[ 'general' ] ) ) {
+			$errors .= __( 'Please fill in all fields!', 'sitepress' ) . '<br />';
+		}
+
+		$string_id = icl_st_is_registered_string( 'WordPress', 'taxonomy singular name: ' . $_POST[ 'singular_original' ] );
+		if ( !$string_id ) {
+			$string_id = icl_register_string( 'WordPress', 'taxonomy singular name: ' . $_POST[ 'singular_original' ], $_POST[ 'singular_original' ] );
+		}
+		icl_add_string_translation( $string_id, $_POST[ 'language' ], $_POST[ 'singular' ], ICL_STRING_TRANSLATION_COMPLETE );
+
+		$string_id = icl_st_is_registered_string( 'WordPress', 'taxonomy general name: ' . $_POST[ 'general_original' ] );
+		if ( !$string_id ) {
+			$string_id = icl_register_string( 'WordPress', 'taxonomy general name: ' . $_POST[ 'general_original' ], $_POST[ 'general_original' ] );
+		}
+		icl_add_string_translation( $string_id, $_POST[ 'language' ], $_POST[ 'general' ], ICL_STRING_TRANSLATION_COMPLETE );
+
+		$html = '';
+
+		echo json_encode( array( 'html' => $html, 'errors' => $errors ) );
+		exit;
+
+
+	}
+
+	public static function sync_taxonomies_in_content_preview(){
         global $wp_taxonomies;
         
         $html = $message = $errors = '';
@@ -500,11 +505,12 @@ class WPML_Taxonomy_Translation{
     
     
     public static function render_assignment_status($object_type, $taxonomy, $preview = true){
-        global $sitepress, $wp_post_types, $wp_taxonomies;
-        
-        $posts = get_posts(array('post_type' => $object_type, 'suppress_filters' => false));
-        
-        foreach($posts as $post){
+        global $sitepress, $wp_post_types, $wp_taxonomies,$wpdb;
+
+		$default_language = $sitepress->get_default_language();
+		$posts            = get_posts( array( 'post_type' => $object_type, 'suppress_filters' => false ) );
+
+		foreach($posts as $post){
             
             $terms = wp_get_post_terms($post->ID, $taxonomy);
             
@@ -517,15 +523,15 @@ class WPML_Taxonomy_Translation{
             $translations = $sitepress->get_element_translations($trid, 'post_' . $post->post_type, true, true);
             
             foreach($translations as $language => $translation){
-                
-                if($language != $sitepress->get_default_language() && $translation->element_id){
+
+				if($language != $default_language && $translation->element_id){
                     
                     $terms_of_translation =  wp_get_post_terms($translation->element_id, $taxonomy);
                     
                     $translation_term_ids = array();
                     foreach($terms_of_translation as $term){
                         
-                        $term_id_original = icl_object_id($term->term_id, $taxonomy, false, $sitepress->get_default_language());
+                        $term_id_original = icl_object_id($term->term_id, $taxonomy, false, $default_language );
                         if(!$term_id_original || !in_array($term_id_original, $term_ids)){
                             // remove term
                             
@@ -562,15 +568,21 @@ class WPML_Taxonomy_Translation{
                                 $needs_sync = true;    
                                 break(3);  
                             }
-                            
+                            $terms_array = array();
                             $term_id_translated = icl_object_id($term_id, $taxonomy, false, $language);
                             
-                            if(!is_taxonomy_hierarchical($taxonomy)){
-                                $term_details = get_term($term_id_translated, $taxonomy);
-                                $term_id_translated = $term_details->name;
+                            // not using get_term
+                            $translated_term = $wpdb->get_row($wpdb->prepare("
+                            SELECT * FROM {$wpdb->terms} t JOIN {$wpdb->term_taxonomy} x ON x.term_id = t.term_id WHERE t.term_id = %d AND x.taxonomy = %s", $term_id_translated, $taxonomy));
+
+                            if(is_taxonomy_hierarchical($taxonomy)){
+                                $terms_array[] = $translated_term->term_id;
+                            } else {
+                                $terms_array[] = $translated_term->name;
                             }
+
                             if(!$preview){
-                                wp_set_post_terms($translation->element_id, $term_id_translated, $taxonomy, true);
+                                wp_set_post_terms($translation->element_id, $terms_array, $taxonomy, true);
                             }
                             
                         }
@@ -621,8 +633,6 @@ class WPML_Taxonomy_Translation{
     }
     
     public static function render_parent_taxonomies_dropdown($taxonomy, $child_of = 0){
-        global $wpdb;
-                
         $args = array(
             'name'              => 'child_of',
             'selected'          => $child_of,
@@ -632,35 +642,30 @@ class WPML_Taxonomy_Translation{
             'hide_empty'        => 0,            
             );
         
-        $categories = get_categories($args);
-        $max_depth = 0;
-        
-        foreach($categories as $category){
-            $this_depth = 0;
-            while($category->category_parent > 0){
-                foreach($categories as $category2){
-                    if($category2->term_id == $category->category_parent){
-                        $category = $category2;
-                        break;
-                    }
-                }
-                $this_depth++;
-            }
-            if($this_depth > $max_depth){
-                $max_depth = $this_depth;
-            }
-        }
-        
-        $args['depth'] = $max_depth;    
+//        $categories = get_categories($args);
+//        $max_depth = 0;
+//
+//        foreach($categories as $category){
+//            $this_depth = 0;
+//            while($category->category_parent > 0){
+//                foreach($categories as $category2){
+//                    if($category2->term_id == $category->category_parent){
+//                        $category = $category2;
+//                        break;
+//                    }
+//                }
+//                $this_depth++;
+//            }
+//            if($this_depth > $max_depth){
+//                $max_depth = $this_depth;
+//            }
+//        }
+//
+//        $args['depth'] = $max_depth;
         
         wp_dropdown_categories($args); 
-                
-        
-    } 
-    
-    
-    
-}  
+    }
+}
 
 
 add_action('wp_ajax_wpml_tt_show_terms', array('WPML_Taxonomy_Translation', 'show_terms'));
