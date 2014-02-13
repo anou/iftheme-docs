@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<title><![CDATA[Trivia Game]]></title>
+<questions>
+	<question1>
+		<line1><![CDATA[Which U.S. city has been the]]></line1>
+		<line2><![CDATA[largest since the passage of the]]></line2>
+		<line3><![CDATA[Immigration and Nationality Act?]]></line3>
+	</question1>
+</questions>
+<answersets>
+	<answerset1>
+		<answer1><![CDATA[New York]]></answer1>
+		<answer2><![CDATA[Houston]]></answer2>
+		<answer3><![CDATA[Carlsbad]]></answer3>
+		<answer4><![CDATA[Chicago]]></answer4>
+	</answerset1>
+</answersets>
