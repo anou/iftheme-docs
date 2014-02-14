@@ -2,7 +2,9 @@ document.observe("dom:loaded", function() {
 	Event.observe('displayOption0', 'click', displayOption0Checked);
 	Event.observe('displayOption1', 'click', displayOption1Checked);
 	Event.observe('displayOption2', 'click', displayOption2Checked);
+	Event.observe('displayOption3', 'click', displayOption3Checked);
 });
+
 function displayOption0Checked() {
 	document.getElementById('customText').style.display = 'none';
 	document.getElementById('customHTML').style.display = 'none';
@@ -16,6 +18,11 @@ function displayOption1Checked() {
 function displayOption2Checked() {
 	document.getElementById('customText').style.display = 'none';
 	document.getElementById('customHTML').style.display = 'block';
+}
+
+function displayOption3Checked() {
+	document.getElementById('customText').style.display = 'none';
+	document.getElementById('customHTML').style.display = 'none';
 }
 
 jQuery(function($) {

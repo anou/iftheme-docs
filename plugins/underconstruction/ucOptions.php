@@ -59,14 +59,11 @@ if (isset($_POST['display_options']))
 			update_option('underConstructionDisplayOption', 2);
 		}
 	}
-
-	if ($_POST['display_options'] == 3) //they want to use their own TEMPLATE FILE
-	{
-		$display_tpl = !isset($_POST['display_tpl']) ? 0 : $_POST['display_tpl'];
-		
-		update_option('underConstructionTPL', $display_tpl);
+	
+	if ($_POST['display_options'] == 3){ //they want to use the under construction page in their theme
 		update_option('underConstructionDisplayOption', 3);
 	}
+
 }
 
 // ======================================
@@ -148,6 +145,8 @@ if(isset($_POST['remove_selected_ip_btn'])){
 if(isset($_POST['required_role'])){
 	update_option('underConstructionRequiredRole', $_POST['required_role']);
 }
+
+$current_theme_has_uc_page = file_exists(get_template_directory() . '/under-construction.php');
 ?>
 <noscript>
 	<div class='updated' id='javascriptWarn'>
@@ -254,11 +253,11 @@ if(isset($_POST['required_role'])){
 						<?php endfor;?>
           </select><br />
 
-          <input type="submit" value="<?php _e('Remove Selected IP Address', 'underconstruction'); ?>" name="remove_selected_ip_btn" id="remove_selected_ip_btn" /> <br /> <br /> 
+          <input type="submit" value="<?php _e('Remove Selected IP Address', 'underconstruction'); ?>" name="remove_selected_ip_btn" class="button" id="remove_selected_ip_btn" /> <br /> <br /> 
         <?php endif; ?> 
         <label><?php _e('IP Address:', 'underconstruction');?> <input type="text" name="ip_address" id="ip_address" /> </label>
-					<a id="add_current_address_btn" style="cursor: pointer;"><?php _e('Add Current Address', 'underconstruction');?></a>
-					<img id="loading_current_address" class="hidden" src="<?php echo plugins_url( 'ajax-loader.gif' , __FILE__ ); ?>" />
+					<a id="add_current_address_btn" style="cursor: pointer;" class="button"><?php _e('Add Current Address', 'underconstruction');?></a>
+					<span id="loading_current_address" class="hidden">Loading...</span>
 					<br />
 				</td>
 			</tr>
@@ -273,24 +272,29 @@ if(isset($_POST['required_role'])){
 						<legend class="screen-reader-text">
 							<span><?php _e('Display Options', 'underconstruction');?> </span>
 						</legend>
-						<label title="defaultPage">
+						<label title="<?php _e('Display the default under construction page', 'underconstruction');?>">
 						  <input type="radio" name="display_options" value="0" id="displayOption0"<?php if ($this->displayStatusCodeIs(0)) { echo ' checked="checked"'; } ?>>&nbsp;<?php _e('Display the default under construction page', 'underconstruction');?>
+						</label> <br />
+						<label title="<?php _e('Display the under construction page that is part of the active theme', 'underconstruction');?>">
+						  <input <?php if(!$current_theme_has_uc_page): ?>disabled="disabled" <?php endif; ?> type="radio" name="display_options" value="3" id="displayOption3"<?php if ($this->displayStatusCodeIs(3)) { echo ' checked="checked"'; } ?>>&nbsp;<?php _e('Display the under construction page that is part of the active theme', 'underconstruction');?>
+						  
+						  <?php if(!$current_theme_has_uc_page): ?>
+						  <br /> <em style="margin-left: 24px;"><?php _e('Only available for themes with an under-construction.php file', 'underconstruction');?></em>
+						  <?php endif; ?>
+						  
 						</label> <br /> 
-						<label title="defaultPage-customText"> 
+						<label title="<?php _e('Display the default under construction page, but use custom text', 'underconstruction');?>"> 
 						  <input type="radio" name="display_options" value="1" id="displayOption1"<?php if ($this->displayStatusCodeIs(1)) { echo ' checked="checked"'; } ?>>&nbsp;<?php _e('Display the default under construction page, but use custom text', 'underconstruction');?>
 						</label> <br /> 
-						<label title="customPage-customHTML"> 
+						<label title="<?php _e('Display a custom page using your own HTML', 'underconstruction');?>"> 
 						  <input type="radio" name="display_options" value="2" id="displayOption2"<?php if ($this->displayStatusCodeIs(2)) { echo ' checked="checked"'; } ?>>&nbsp;<?php _e('Display a custom page using your own HTML', 'underconstruction');?>
 						</label> <br /> 
-						<label title="customTemplate"> 
-						  <input type="radio" name="display_options" value="3" id="displayOption3"<?php if ($this->displayStatusCodeIs(3)) { echo ' checked="checked"'; } ?>>&nbsp;<?php _e('Display a custom page using your own Template file', 'underconstruction');?>
-						</label>
 					</fieldset>
 				</td>
 			</tr>
 		</table>
 		
-		<div id="customText"<?php if (!$this->displayStatusCodeIs(1) && !$this->displayStatusCodeIs(3)) { echo ' style="display: none;"'; } ?>>
+		<div id="customText"<?php if (!$this->displayStatusCodeIs(1) && !$this->displayStatusCodeIs(2)) { echo ' style="display: none;"'; } ?>>
 			<h3><?php _e('Display Custom Text', 'underconstruction');?></h3>
 			<p><?php _e('The text here will replace the text on the default page', 'underconstruction');?></p>
 			<table>
@@ -315,19 +319,6 @@ if(isset($_POST['required_role'])){
 			<?php echo '<textarea name="ucHTML" rows="15" cols="75">'.$this->getCustomHTML().'</textarea>'; ?>
 		</div>
 		
-		<div id="customTemplate"<?php if (!$this->displayStatusCodeIs(3)) { echo ' style="display: none;"'; } ?>>
-			<h3><?php _e('Choose your template file', 'underconstruction');?></h3>
-			<p><?php _e('The files listed here are the files from the <em>/templates</em> folder of the plugin.<br />If you want to add one, duplicate the <em>defaultMessage.php</em> file, rename it and modify it as per your needs.', 'underconstruction');?></p>
-      <p><?php $files = getTemplatesFiles();
-        foreach($files as $k => $name) :?>
-        <label>
-          <input type="radio" name="display_tpl" value="<?php echo $k;?>" id="displayTpl<?php echo $k?>" <?php echo $this->displayStatusCodeIs(3) && $this->displayTemplateIs($k) ? 'checked="checked"' : '';?>>&nbsp;<?php echo $name; ?>
-        </label><br /> 
-        <?php endforeach;?>
-			  <!-- <input name="customTPL" type="text" id="pageTitle" value="<?php echo $this->getCustomPageTitle(); ?>" class="regular-text" size="50"> -->
-      </p>
-		</div>
-
 		<p class="submit">
 		<?php wp_nonce_field('save_options','save_options_field'); ?>
 			<input type="submit" name="Submit" class="button-primary" value="<?php _e('Save Changes', 'underconstruction'); ?>" id="submitChangesToUnderConstructionPlugin" />

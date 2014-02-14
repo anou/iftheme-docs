@@ -13,17 +13,16 @@
  along with underConstruction.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-function displayDefaultComingSoonPage() {
-    $title = sprintf(__('%d is coming soon', 'underconstruction'), get_bloginfo('title'));
-    $headerText = get_bloginfo('url');
-    $bodyText = __(' is coming soon', 'underconstruction');
-    
-    displayComingSoonPage(trim($title), $headerText, $bodyText);
+function displayDefaultComingSoonPage()
+{
+    displayComingSoonPage(trim(get_bloginfo('title')).' is coming soon', get_bloginfo('url'), 'is coming soon');
 }
 
-function displayComingSoonPage($title, $headerText, $bodyText) { ?>
-
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+function displayComingSoonPage($title, $headerText, $bodyText)
+{
+    
+?>
+ <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
@@ -66,12 +65,12 @@ function displayComingSoonPage($title, $headerText, $bodyText) { ?>
         </style>
     </head>
     <body>
-        <h1 class="headerText">
+        <span class="headerText">
             <?php echo $headerText; ?>
-        </h1>
+        </span>
         <br/>
         <span class="bodyText">
-            <?php echo html_entity_decode(nl2br($bodyText)); ?>
+            <?php echo $bodyText; ?>
         </span>
     </body>
 </html>
