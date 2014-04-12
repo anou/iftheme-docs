@@ -7,15 +7,16 @@ since *iftheme v3.0.0*, if you activate *GitHub Updater* plugin, you'll receive 
 
 
 
-
+================
 == Change Log ==
-(this a try to have one)
 
-= 2014/04/13 =
+*(this a try to have one)*
+
+**2014/04/13**
 * Updated Mailpoet
 * Update and introducing fantastic [**GitHub Updater**](https://github.com/afragen/github-updater).
 
-= 2014/04/12 =
+**2014/04/12**
 * French doc *IF-theme_base.pdf* updated.
 
 [...]
