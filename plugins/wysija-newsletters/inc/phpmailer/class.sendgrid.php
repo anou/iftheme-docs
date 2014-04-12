@@ -82,10 +82,6 @@ class acymailingSendgrid {
             $result = curl_exec($session);
             curl_close($session);
 
-            // print everything out
-//            print_r($result);
-//            exit;
-
             //We take the last value of the server's response which correspond of the file's ID.
             $result=json_decode($result);
 

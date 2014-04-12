@@ -1040,7 +1040,7 @@ class acymailingSMTP
 
         function get_lines() {
             $data = "";
-            while(!feof($this->smtp_conn)) {
+            while(is_resource($this->smtp_conn) && !feof($this->smtp_conn)) {
                 $str = @fgets($this->smtp_conn,515);
                 if($this->do_debug >= 4) {
                     echo "SMTP -> get_lines(): \$data was \"$data\"" . $this->CRLF;

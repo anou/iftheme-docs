@@ -1,4 +1,7 @@
 <?php 
+/**
+ * Since 2.7, this feature is no longer in use and will be remove in 3.0
+ */
 $data=json_decode(base64_decode($_REQUEST['data']),true);
 
 ?>

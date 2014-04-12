@@ -431,6 +431,7 @@ class acymailingPHPMailer extends WYSIJA_OBJECT{
 		}
 
 		// digitally sign with DKIM if enabled
+                // we don't sign emails with DKIM if we cannot
 		if(!empty($this->DKIM_domain) && !empty($this->DKIM_private)) {
 			$header_dkim = $this->DKIM_Add($body);
 			$header = str_replace("\r\n",$this->LE,$header_dkim) . $header;
@@ -456,7 +457,7 @@ class acymailingPHPMailer extends WYSIJA_OBJECT{
                         case 'wpmail' :
                                 $to = array_filter($this->to[0]);
                                 add_filter('phpmailer_init',array($this,'wpmail_init'),90);
-                                $result = wp_mail($to, $this->Subject, $body, $header);
+                                $result = wp_mail($to[0], $this->Subject, $this->Body, $header);
 
 				break;
 			default:

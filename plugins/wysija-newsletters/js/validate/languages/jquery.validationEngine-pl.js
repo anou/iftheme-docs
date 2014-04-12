@@ -10,6 +10,12 @@
                     "alertTextCheckboxMultiple": "* Proszę wybrać opcję",
                     "alertTextCheckboxe": "* Pole wymagane"
                 },
+                "requiredInFunction": { 
+                    "func": function(field, rules, i, options){
+                        return (field.val() == "test") ? true : false;
+                    },
+                    "alertText": "* Field must equal test"
+                },
                 "minSize": {
                     "regex": "none",
                     "alertText": "* Minimalna liczba znaków to ",
@@ -20,9 +26,9 @@
                     "alertText": "* Maksymalna liczba znaków to ",
                     "alertText2": ""
                 },
-				"groupRequired": {
+	     "groupRequired": {
                     "regex": "none",
-                    "alertText": "* You must fill one of the following fields"
+                   "alertText": "* Proszę wypełnić wymienione opcje"
                 },
                 "min": {
                     "regex": "none",
@@ -53,9 +59,13 @@
                     "regex": "none",
                     "alertText": "* Pola nie są jednakowe"
                 },
+                "creditCard": {
+                    "regex": "none",
+                    "alertText": "* Nieprawidłowy numer karty kredytowej"
+                },
                 "phone": {
                     // credit: jquery.h5validate.js / orefalo
-                    "regex": /^([\+][0-9]{1,3}[ \.\-])?([\(]{1}[0-9]{2,6}[\)])?([0-9 \.\-\/]{3,20})((x|ext|extension)[ ]?[0-9]{1,4})?$/,
+                    "regex": /^([\+][0-9]{1,3}([ \.\-])?)?([\(][0-9]{1,6}[\)])?([0-9 \.\-]{1,32})(([A-Za-z \:]{1,11})?[0-9]{1,4}?)$/,
                     "alertText": "* Nieprawidłowy numer telefonu"
                 },
                 "email": {
@@ -69,7 +79,7 @@
                 },
                 "number": {
                     // Number, including positive, negative, and floating decimal. credit: orefalo
-                    "regex": /^[\-\+]?(([0-9]+)([\.,]([0-9]+))?|([\.,]([0-9]+))?)$/,
+                    "regex": /^[\-\+]?((([0-9]{1,3})([,][0-9]{3})*)|([0-9]+))?([\.]([0-9]+))?$/,
                     "alertText": "* Nieprawidłowa liczba dziesiętna"
                 },
                 "CZdate": {

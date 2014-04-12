@@ -17,6 +17,14 @@ class WYSIJA_help_shortcodes extends WYSIJA_object {
     function WYSIJA_help_shortcodes() {
     }
 
+    /**
+     * This serves for custom: shortcodes only
+     * @return type
+     */
+    function getReceiver() {
+        return $this->receiver;
+    }
+
     // Main function. Call it assigning an Email object and a Receiver object.
     private function initialize($email, $receiver) {
 
@@ -52,20 +60,41 @@ class WYSIJA_help_shortcodes extends WYSIJA_object {
 
     }
 
-    private function loop_tags($tags) {
 
+    /**
+     * Loop through tags and fetch data (replacement) of each tag
+     * @param array $tags
+     * [[user:displayname | default:myvalue]] => Array <br/>
+        (<br/>
+            [0] => Array<br/>
+                (<br/>
+                    [0] => user<br/>
+                    [1] => displayname<br/>
+                )<br/>
+            [1] => Array<br/>
+                (<br/>
+                    [0] => default<br/>
+                    [1] => myvalue<br/>
+                )<br/>
+        )<br/>
+     */
+    private function loop_tags(Array $tags) {
         $this->find = array();
         $this->replace = array();
 
         // Loop through the shortcodes array and call private group functions.
         foreach($tags as $tag_find => $tag_replace){
             foreach($tag_replace as $couple_value){
-
+                $couple_value[0] = strip_tags($couple_value[0]);// strip html tags
+                $couple_value[1] = strip_tags($couple_value[1]);// strip html tags
                 switch ($couple_value[0]) {
 
                     // [user:xxx | default:xxx]
                     case 'user':
                         $replacement = $this->replace_user_shortcodes($couple_value[1]);
+                        // "subscriber" or "member" means: we don't find out a right value for the tag.
+			// The next loop should be the tag "default".
+			// Let's "continue" and get the default value instead.
                         if ($replacement === 'subscriber' || $replacement === 'member') {
                             continue;
                         }
@@ -94,13 +123,23 @@ class WYSIJA_help_shortcodes extends WYSIJA_object {
                         $replacement = $this->replace_custom_shortcodes($couple_value[1]);
                         break;
 
+                    // [field:xxx]
+                    case 'field':
+                      $replacement = $this->replace_cfield_shortcodes($couple_value[1]);
+                      break;
+
                     default:
                         break;
                 }
             }
 
-            $this->find[] = $tag_find;
-            $this->replace[] = $replacement;
+            if (isset($replacement)){
+                $this->find[] = $tag_find;
+                $this->replace[] = $replacement;
+            } else {
+                $this->find[] = $tag_find;
+                $this->replace[] = do_shortcode($tag_find);
+            }
             $replacement = '';
 
         }
@@ -118,11 +157,20 @@ class WYSIJA_help_shortcodes extends WYSIJA_object {
             if(isset($this->receiver->$tag_value) && $this->receiver->$tag_value) {
                 // uppercase the initials of the first name and last name when replacing it
                 if (($tag_value === 'firstname') || ($tag_value === 'lastname')){
-                    $replacement = ucwords(strtolower($this->receiver->$tag_value));
+		    $use_default_case = apply_filters('mpoet_shortcode_names_default_case', false);
+		    if ($use_default_case) {
+			$replacement = $this->receiver->$tag_value;
+		    } else {
+			if (function_exists('mb_convert_case') && function_exists('mb_strtolower')) {
+			    // http://stackoverflow.com/questions/9823703/using-ucwords-for-non-english-characters
+			    $replacement = mb_convert_case(mb_strtolower($this->receiver->$tag_value),MB_CASE_TITLE, 'UTF-8');
+			} else {
+			    $replacement = ucwords(strtolower($this->receiver->$tag_value));
+			}
+		    }
                 }else{
                     $replacement = $this->receiver->$tag_value;
                 }
-
              } else {
                 $replacement = 'subscriber';
              }
@@ -132,7 +180,7 @@ class WYSIJA_help_shortcodes extends WYSIJA_object {
             $replacement = 'member';
             if(!empty($this->receiver->wpuser_id))
             {
-                $user_info = get_userdata();
+                $user_info = get_userdata($this->receiver->wpuser_id);
                 if(!empty($user_info->display_name) && $user_info->display_name != false) {
                     $replacement = $user_info->display_name;
                  } elseif(!empty($user_info->user_nicename) && $user_info->user_nicename != false) {
@@ -141,7 +189,8 @@ class WYSIJA_help_shortcodes extends WYSIJA_object {
             }
         }
         if ($tag_value === 'count') {
-            $replacement = $this->userM->count();
+            $model_config = WYSIJA::get('config', 'model');
+            $replacement = $model_config->getValue('total_subscribers');
         }
 
         return $replacement;
@@ -184,22 +233,27 @@ class WYSIJA_help_shortcodes extends WYSIJA_object {
     // [newsletter:post_title]
     // [newsletter:number]
     private function replace_newsletter_shortcodes($tag_value) {
+        $replacement = '';
         switch ($tag_value) {
             case 'subject':
                 $replacement = $this->email->subject;
                 break;
 
             case 'total':
-                $replacement = $this->email->params['autonl']['articles']['count'];
+                if(isset($this->email->params['autonl']['articles']['count'])) {
+                    $replacement = $this->email->params['autonl']['articles']['count'];
+                }
                 break;
 
             case 'post_title':
-                $replacement = $this->email->params['autonl']['articles']['first_subject'];
+                if(isset($this->email->params['autonl']['articles']['first_subject'])) {
+                    $replacement = $this->email->params['autonl']['articles']['first_subject'];
+                }
                 break;
 
             case 'number':
                 // number is the issue number not the number of articles that were sent since the beginning.
-                $replacement = (int)$this->email->params['autonl']['total_child'];
+                $replacement = (isset($this->email->params['autonl']['total_child']) ? (int)$this->email->params['autonl']['total_child'] : 1);
                 break;
 
             default:
@@ -261,11 +315,50 @@ class WYSIJA_help_shortcodes extends WYSIJA_object {
      */
     // [custom:xxx]
     private function replace_custom_shortcodes($tag_value) {
+        $user_id = 0;
 
-        $replacement = apply_filters('wysija_shortcodes', $tag_value);
+        if (!empty($this->receiver) && isset($this->receiver->user_id)) {
+            $user_id = (int) $this->receiver->user_id;
+        }
 
+        return apply_filters('wysija_shortcodes', $tag_value, $user_id);
+    }
+
+    // [field:1]
+    private function replace_cfield_shortcodes($tag_value) {
+        $replacement = '';
+        if (isset($tag_value)) {
+          $user_id = (int) $this->receiver->user_id;
+          $field_id = (int) $tag_value;
+          $field_user = new WJ_FieldUser();
+          $field_user->set(array(
+            'user_id' =>  $user_id,
+            'field_id' => $field_id
+          ));
+          $value = $field_user->value();
+          // If we don't have a value, we return the empty string.
+          if (isset($value)) {
+            // Check if the field value needs formatting output.
+            switch ($field_user->field->type) {
+              case 'checkbox':
+                if ($value == 1) {
+                  $value = "Yes";
+                } else {
+                  $value ="No";
+                }
+                break;
+              case 'date':
+                $value = date('F j, Y', $value);
+                break;
+              default:
+                break;
+            }
+            $replacement = $value;
+          } else {
+            $replacement = '';
+          }
+        }
         return $replacement;
-
     }
 
 }

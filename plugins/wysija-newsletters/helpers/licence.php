@@ -15,7 +15,12 @@ class WYSIJA_help_licence extends WYSIJA_help{
      * @return string
      */
     function get_url_checkout($source = 'not_specified'){
-        return 'http://www.mailpoet.com/checkout/?wysijadomain='.$this->getDomainInfo(true).'&nc=1&utm_source=wpadmin&utm_campaign='.$source;
+        $helper_toolbox = WYSIJA::get('toolbox' , 'helper');
+        $currency = 'USD';
+        if($helper_toolbox->is_european()){
+            $currency = 'EUR';
+        }
+        return 'http://www.mailpoet.com/checkout/?wysijadomain='.$this->getDomainInfo(true).'&nc=1&utm_source=wpadmin&utm_campaign='.$source.'&currency='.$currency;
     }
 
     /**
@@ -104,7 +109,9 @@ class WYSIJA_help_licence extends WYSIJA_help{
                         $response['code'] = $decoded['code'];
                         switch($response['code']){
                             case 1: //Domain \'%1$s\' does not exist.
-                                $error_msg=__('\'%1$s\' does not exist!',WYSIJA);
+                                //$error_msg=__('\'%1$s\' does not exist!',WYSIJA);
+
+                                $error_msg=__('Your website doesn\'t seem to have a license! Log in to your [link]account manager[/link] to add a license for this website.',WYSIJA);
                                 break;
                             case 2: //'Licence (id: %d) does not exist for domain "%s"
                                 $error_msg=__('There\'s no license for "%1$s". If you\'re Premium, add this domain in your [link]account manager[/link].',WYSIJA);

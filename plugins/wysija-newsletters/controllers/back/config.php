@@ -14,7 +14,6 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
 
         if(!isset($_REQUEST['action'])) $this->action='main';
         else $this->action=$_REQUEST['action'];
-
         $this->jsTrans['testemail'] = __('Sending a test email', WYSIJA);
         $this->jsTrans['bounceconnect'] = __('Bounce handling connection test', WYSIJA);
         $this->jsTrans['processbounceT'] = __('Bounce handling processing', WYSIJA);
@@ -23,9 +22,6 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
         $this->jsTrans['processbounce'] = __('Process bounce handling now!', WYSIJA);
         $this->jsTrans['errorbounceforward'] = __('When setting up the bounce system, you need to have a different address for the bounce email and the forward to address', WYSIJA);
 
-        $this->jsTrans['premium_activate'] = __('Already paid? Click here to activate', WYSIJA);
-        $this->jsTrans['premium_activating'] = __('Checking license', WYSIJA);
-
         // form list
         $this->jsTrans['suredelete'] = __('Are you sure you want to delete this form?', WYSIJA);
 
@@ -33,13 +29,18 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
             case 'log':
             case 'save':
             case 'clearlog':
+
+                wp_enqueue_script('jquery-qtip', WYSIJA_URL.'js/qtip2/jquery.qtip.min.js', array('jquery'), WYSIJA::get_version());
+                wp_enqueue_style('jquery-qtip-css', WYSIJA_URL.'css/qtip2/jquery.qtip.min.css');
                 wp_enqueue_script('wysija-config-settings', WYSIJA_URL.'js/admin-config-settings.js', array('wysija-admin-js-global'), WYSIJA::get_version());
+                wp_localize_script('wysija-config-settings', 'mpEmailCheck', WJ_Utils::get_tip_data());
                 wp_enqueue_script('jquery-cookie', WYSIJA_URL.'js/jquery/jquery.cookie.js', array('jquery'), WYSIJA::get_version());
             case 'form_add':
             case 'form_edit':
             case 'form_duplicate':
             case 'form_delete':
             case 'form_widget_settings':
+            case 'form_add_field':
                 return $this->{$this->action}();
                 break;
             case 'reinstall':
@@ -61,7 +62,10 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
                 return;
                 break;
             default:
-                wp_enqueue_script('wysija-config-settings', WYSIJA_URL.'js/admin-config-settings.js', array('wysija-admin-js-global'), WYSIJA::get_version());
+                wp_enqueue_script( 'jquery-qtip', WYSIJA_URL.'js/qtip2/jquery.qtip.min.js', array('jquery'), WYSIJA::get_version());
+                wp_enqueue_style('jquery-qtip-css', WYSIJA_URL.'css/qtip2/jquery.qtip.min.css');
+                wp_enqueue_script('wysija-config-settings', WYSIJA_URL.'js/admin-config-settings.js', array('wysija-admin-js-global', 'jquery-qtip'), WYSIJA::get_version());
+                wp_localize_script('wysija-config-settings', 'mpEmailCheck', WJ_Utils::get_tip_data());
                 wp_enqueue_script('jquery-cookie', WYSIJA_URL.'js/jquery/jquery.cookie.js', array('jquery'), WYSIJA::get_version());
         }
 
@@ -69,7 +73,9 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
             $this->viewObj->arrayMenus = array('log' => 'View log');
         }
 
-        $this->data=array();
+        $this->data = array();
+        $hook_settings_super_advanced_params = array();
+        $this->data['hooks']['hook_settings_super_advanced'] = apply_filters('hook_settings_super_advanced',WYSIJA_module::execute_hook('hook_settings_super_advanced', $hook_settings_super_advanced_params), $hook_settings_super_advanced_params);
         $this->action='main';
 
         if(isset($_REQUEST['validate'])){
@@ -103,14 +109,22 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
         $_REQUEST   = stripslashes_deep($_REQUEST);
         $_POST   = stripslashes_deep($_POST);
         $this->requireSecurity();
+
+        $hook_settings_before_save = array(
+            'REQUEST' =>& $_REQUEST
+        );
+        apply_filters('hook_settings_before_save',WYSIJA_module::execute_hook('hook_settings_before_save', $hook_settings_before_save),$hook_settings_before_save);
+
         $this->modelObj->save($_REQUEST['wysija']['config'],true);
 
-        //wp_redirect('admin.php?page=wysija_config'.$_REQUEST['redirecttab']);
-
+        $hook_settings_super_advanced_params = array();
+        $this->data['hooks']['hook_settings_super_advanced'] = apply_filters('hook_settings_super_advanced',WYSIJA_module::execute_hook('hook_settings_super_advanced', $hook_settings_super_advanced_params),$hook_settings_super_advanced_params);
+        // redirect so that javascript values get updated
+        wp_redirect('admin.php?page=wysija_config'.$_REQUEST['redirecttab']);
     }
 
     function reinstall(){
-        $this->viewObj->title=__('Reinstall Wysija?',WYSIJA);
+        $this->viewObj->title=__('Reinstall MailPoet?',WYSIJA);
         return true;
     }
 
@@ -138,7 +152,7 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
 
     function log(){
         $this->viewObj->arrayMenus=array('clearlog'=>'Clear log');
-        $this->viewObj->title='Wysija\'s log';
+        $this->viewObj->title='MailPoet\'s log';
         return true;
     }
 
@@ -155,18 +169,21 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
         $helper_form_engine->set_data();
 
         // create form in database with default data
-        $form = array(
-            'name' => __('New Form', WYSIJA),
-            'data' => $helper_form_engine->get_encoded('data')
-        );
+        $form = array('name' => __('New Form', WYSIJA));
 
         // insert into form table
         $model_forms = WYSIJA::get('forms', 'model');
         $form_id = $model_forms->insert($form);
 
         if($form_id !== null && (int)$form_id > 0) {
+            // merge form_id into form data for later use
+            $data = array_merge(array('form_id' => $form_id), $helper_form_engine->get_data());
+            // update form data in form engine
+            $helper_form_engine->set_data($data);
+            // update form data in database
+            $model_forms->update(array('data' => $helper_form_engine->get_encoded('data')), array('form_id' => (int)$form_id));
+
             // redirect to form editor, passing along the newly created form id
-            //$this->redirect('admin.php?page=wysija_config&action=form_edit&id='.$form_id);
             WYSIJA::redirect('admin.php?page=wysija_config&action=form_edit&id='.$form_id);
         } else {
             WYSIJA::redirect('admin.php?page=wysija_config#tab-forms');
@@ -232,11 +249,15 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
     }
 
     function form_edit() {
+        // define whether the form can be edited
+        $this->data['can_edit'] = true;
+
         // wysija form editor javascript files
         $this->js[]='wysija-form-editor';
         $this->js[]='wysija-admin-ajax-proto';
-        $this->js[]='wysija-admin-ajax';
+        // $this->js[]='wysija-admin-ajax';
         $this->js[]='wysija-base-script-64';
+        $this->js[] = 'mailpoet-select2';
 
         // make sure the editor content is not cached
         //header('Cache-Control: no-cache, max-age=0, must-revalidate, no-store'); // HTTP/1.1
@@ -267,64 +288,18 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
 
         $helper_form_engine = WYSIJA::get('form_engine', 'helper');
         $lists = $helper_form_engine->get_lists();
-
-        // select default list
-        $default_list = array();
-        if(!empty($lists)) {
-            $default_list[] = array(
-                'list_id' => $lists[0]['list_id'],
-                'is_checked' => 0
-            );
-        }
-
         $this->data['lists'] = $lists;
 
-        // get available custom fields
-        $model_user_field = WYSIJA::get('user_field', 'model');
-        $model_user_field->orderBy('field_id');
-        $custom_fields = $model_user_field->getRows(false);
+        // disable editing capability when there is no list
+        if(empty($lists)) {
+            $this->data['can_edit'] = false;
+        }
 
-        // extra widgets that can be added more than once
-        $extra_fields = array(
-            array(
-                'name' => __('List selection', WYSIJA),
-                'column_name' => 'list',
-                'column_type' => 'list',
-                'params' => array(
-                    'label' => __('Select list(s):', WYSIJA),
-                    'values' => $default_list
-                )
-            ),
-            array(
-                'name' => __('Random text or HTML', WYSIJA),
-                'column_name' => 'html',
-                'column_type' => 'html',
-                'params' => array(
-                    'text' => __('Random text or HTML', WYSIJA)
-                )
-            ),
-            array(
-                'name' => __('Divider', WYSIJA),
-                'column_name' => 'divider',
-                'column_type' => 'divider'
-            )
-            // array(
-            //     'name' => __('HTML code', WYSIJA),
-            //     'column_name' => 'html',
-            //     'column_type' => 'html',
-            //     'params' => array(
-            //         'text' => __('HTML code', WYSIJA)
-            //     )
-        );
-
-        // set data to be passed to the view
-        $this->data['custom_fields'] = array_merge($custom_fields, $extra_fields);
+        // get custom fields
+        $this->data['custom_fields'] = $helper_form_engine->get_custom_fields();
 
         // translations
         $this->jsTrans = array_merge($this->jsTrans, $helper_form_engine->get_translations());
-
-        // This should be the title of the page but I don't know how to make it happen...
-        // __('Edit', WYSIJA).' '.$this->data['form']['name'];
     }
 
     /*
@@ -334,47 +309,75 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
         $this->iframeTabs = array('form_widget_settings' => __('Widget Settings', WYSIJA));
         $this->js[] = 'wysija-admin-ajax';
         $this->js[] = 'wysija-base-script-64';
-        $this->js[] = 'wysija-form-widget-settings';
+        $this->js[] = 'wysija-scriptaculous';
 
         $_GET['tab'] = 'form_widget_settings';
 
-        // extract parameters from url
-        $params = array();
-        foreach(explode('|', $_REQUEST['params']) as $pair) {
-            // extract both key and value
-            list($key, $value) = explode(':', $pair);
+        // if there is a field id, let's get all that from this field
+        if(isset($_REQUEST['field_id'])) {
+            $field_id = ((int)$_REQUEST['field_id'] > 0) ? (int)$_REQUEST['field_id'] : 0;
 
-            // decode value
-            $value = base64_decode($value);
-            // unserialize if necessary (using is_serialized from WordPress)
-            if(is_serialized($value) === true) {
-                $value = unserialize($value);
+            // if the id is positive then try to fetch field data
+            $custom_field = WJ_Field::get($field_id);
+
+            // if field has been found
+            if($custom_field !== NULL) {
+                $this->data['name'] = (isset($_REQUEST['name'])) ? $_REQUEST['name'] : $custom_field->name;
+                $this->data['type'] = (isset($_REQUEST['type'])) ? $_REQUEST['type'] : $custom_field->type;
+                $this->data['field'] = $custom_field->user_column_name();
+                $this->data['params'] = $custom_field->settings;
+            } else {
+                $this->data['name'] = (isset($_REQUEST['name'])) ? $_REQUEST['name'] : null;
+                $this->data['type'] = (isset($_REQUEST['type'])) ? $_REQUEST['type'] : null;
+                $this->data['field'] = null;
+                $this->data['params'] = null;
             }
-            $params[$key] = $value;
+
+            $this->data['field_id'] = $field_id;
+        } else {
+            // extract parameters from url
+            $params = array();
+            if(isset($_REQUEST['params']) && trim(strlen($_REQUEST['params'])) > 0) {
+                $pairs = explode('|', $_REQUEST['params']);
+                if(count($pairs) > 0) {
+                    foreach($pairs as $pair) {
+                        // extract both key and value
+                        list($key, $value) = explode(':', $pair);
+
+                        // decode value
+                        $value = base64_decode($value);
+                        // unserialize if necessary (using is_serialized from WordPress)
+                        if(is_serialized($value) === true) {
+                            $value = unserialize($value);
+                        }
+                        $params[$key] = $value;
+                    }
+                }
+            }
+
+            // common widget data
+            $this->data['name'] = (isset($_REQUEST['name'])) ? $_REQUEST['name'] : null;
+            $this->data['type'] = (isset($_REQUEST['type'])) ? $_REQUEST['type'] : null;
+            $this->data['field'] = (isset($_REQUEST['field'])) ? $_REQUEST['field'] : null;
+
+            // widget params
+            $this->data['params'] = $params;
+
+            // extra data that needs to be fetched for some widget
+            $extra = array();
+
+            switch($this->data['type']) {
+                // in case of the list widget, we need to pass an array of all available lists
+                case 'list':
+                    $model_list = WYSIJA::get('list', 'model');
+
+                    // get lists users can subscribe to (aka "enabled list")
+                    $extra['lists'] = $model_list->get(array('name', 'list_id', 'is_public'), array('is_enabled' => 1));
+                    break;
+            }
+
+            $this->data['extra'] = $extra;
         }
-
-        // common widget data
-        $this->data['name'] = $_REQUEST['name'];
-        $this->data['type'] = $_REQUEST['type'];
-        $this->data['field'] = $_REQUEST['field'];
-
-        // widget params
-        $this->data['params'] = $params;
-
-        // extra data that needs to be fetched for some widget
-        $extra = array();
-
-        switch($this->data['type']) {
-            // in case of the list widget, we need to pass an array of all available lists
-            case 'list':
-                $model_list = WYSIJA::get('list', 'model');
-
-                // get lists users can subscribe to (aka "enabled list")
-                $extra['lists'] = $model_list->get(array('name', 'list_id', 'is_public'), array('is_enabled' => 1));
-                break;
-        }
-
-        $this->data['extra'] = $extra;
 
         return $this->popupContent();
         exit;

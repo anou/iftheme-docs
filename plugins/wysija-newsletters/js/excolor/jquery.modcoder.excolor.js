@@ -136,7 +136,7 @@ jQuery.fn.modcoder_excolor = function (C) {
         var w = new Array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
         w[8] = 8;
         w[46] = 46;
-        var y = new Array();
+        var y = [];
         y['0'] = 1;
         y['1'] = 1;
         y['2'] = 1;
@@ -159,7 +159,7 @@ jQuery.fn.modcoder_excolor = function (C) {
         y['d'] = 1;
         y['e'] = 1;
         y['f'] = 1;
-        var z = new Array();
+        var z = [];
         z[0] = 'system keys';
         z[8] = 'backspace';
         z[118] = 'ctrl v';
@@ -175,25 +175,25 @@ jQuery.fn.modcoder_excolor = function (C) {
         setTimeout(function () {
             var a = jQuery('body > .mds' + A);
             //jQuery(aitem).parent().find('#' + A).css('width', (jQuery(a).outerHeight() - 2) + 'px');
-            jQuery(a).remove()
+            jQuery(a).remove();
         }, 300);
         isample = jQuery(aitem).parent().find('#' + A).mouseenter(function () {
             clearTimeout(click_to);
             click_to = setTimeout(function () {
-                click_flag = true
-            }, 50)
+                click_flag = true;
+            }, 50);
         }).mouseleave(function () {
             clearTimeout(click_to);
             click_to = setTimeout(function () {
-                click_flag = false
-            }, 50)
+                click_flag = false;
+            }, 50);
         }).focus(function () {
             jQuery(aitem).focus();
         });
         if (C.color_box) {
-            setTimeout(function () {
-                jQuery(isample).show()
-            }, 150)
+            setTimeout(function() {
+                jQuery(isample).show();
+            }, 150);
         }
         init_color();
 
@@ -211,29 +211,33 @@ jQuery.fn.modcoder_excolor = function (C) {
                 for (var i = 0; i < parsex.length; i++) {
                     if (parsex.charAt(i) != '#' && (parsex.charAt(i) + '') in y) {
                         if (inputhex.length < 6) {
-                            inputhex += parsex.charAt(i) + ''
+                            inputhex += parsex.charAt(i) + '';
                         }
                     }
                 }
                 switch (inputhex.length) {
-                case 0:
-                    inputhex = '000000' + inputhex;
+                    case 0:
+                        inputhex = '000000' + inputhex;
                     break;
-                case 1:
-                    inputhex = '00000' + inputhex;
+                    case 1:
+                        inputhex = '00000' + inputhex;
                     break;
-                case 2:
-                    inputhex = '0000' + inputhex;
+                    case 2:
+                        inputhex = '0000' + inputhex;
                     break;
-                case 3:
-                    inputhex = '000' + inputhex;
+                    case 3:
+                        inputhex = '000' + inputhex;
                     break;
-                case 4:
-                    inputhex = '00' + inputhex;
+                    case 4:
+                        inputhex = '00' + inputhex;
                     break;
-                case 5:
-                    inputhex = '0' + inputhex;
-                    break
+                    case 5:
+                        inputhex = '0' + inputhex;
+                    break;
+                    case 7:
+                        // remove # from hex color
+                        inputhex = inputhex.substring(1);
+                    break;
                 }
                 parsex = hex2rgb(inputhex);
                 parsex = rgb2hsv(parsex['r'], parsex['g'], parsex['b']);
@@ -255,11 +259,11 @@ jQuery.fn.modcoder_excolor = function (C) {
             if(C.show_input === false) {
                 jQuery(aitem).css('display', 'none');
             }
-        };
+        }
 
         function action_exit() {
             if (!opened) {
-                return false
+                return false;
             }
             jQuery(slider).remove();
             jQuery(sb_sel).remove();
@@ -272,28 +276,28 @@ jQuery.fn.modcoder_excolor = function (C) {
                     height: '0px'
                 }, C.anim_speed, function () {
                     action_ok();
-                    jQuery(wrapper).remove()
+                    jQuery(wrapper).remove();
                 });
                 break;
             case 'slide':
                 jQuery(wrapper).slideUp(C.anim_speed, function () {
                     action_ok();
-                    jQuery(wrapper).remove()
+                    jQuery(wrapper).remove();
                 });
                 break;
             case 'fade':
                 jQuery(wrapper).fadeTo(C.anim_speed, 0, function () {
                     action_ok();
-                    jQuery(wrapper).remove()
+                    jQuery(wrapper).remove();
                 });
                 break;
             default:
                 action_ok();
                 jQuery(wrapper).remove();
-                break
+                break;
             }
             opened = false
-        };
+        }
 
         function action_ok() {
             if (userok || C.ok_on_exit === true) {
@@ -320,24 +324,24 @@ jQuery.fn.modcoder_excolor = function (C) {
 
                 C.callback_on_ok(color, C.color_has_changed);
             }
-        };
+        }
 
         function draw_rgb() {
             var a = rgb2hsv(jQuery(inp_r).val() * 1, jQuery(inp_g).val() * 1, jQuery(inp_b).val() * 1);
             hue = -1 * (Math.round(a['h'] * 1 / 3) - 120);
             if (hue < 0) {
-                hue = 0
+                hue = 0;
             }
             if (hue > 119) {
-                hue = 119
+                hue = 119;
             }
             saturation = a['s'];
             brightness = a['v'];
             jQuery(slider).css('left', pos_huebox.left + 'px').css('top', (pos_huebox.top + hue) + 'px');
             init_positions();
             init_colors();
-            jQuery(inp_hex).val(rgb2hex(jQuery(inp_r).val() * 1, jQuery(inp_g).val() * 1, jQuery(inp_b).val() * 1))
-        };
+            jQuery(inp_hex).val(rgb2hex(jQuery(inp_r).val() * 1, jQuery(inp_g).val() * 1, jQuery(inp_b).val() * 1));
+        }
 
         function hex_valid_and_draw() {
             var a = true,
@@ -358,12 +362,18 @@ jQuery.fn.modcoder_excolor = function (C) {
                 break;
             case 5:
                 hexistr = '0' + hexistr;
-                break
+                break;
+            case 7:
+                // remove # from hex color
+                hexistr = hexistr.substring(1);
+                // update input value
+                jQuery(inp_hex).val(hexistr);
+                break;
             }
             if (hexistr.length > 0) {
                 for (var i = 0; i < hexistr.length; i++) {
                     if (!((hexistr.charAt(i) + '') in y)) {
-                        a = false
+                        a = false;
                     }
                 }
             }
@@ -418,7 +428,7 @@ jQuery.fn.modcoder_excolor = function (C) {
             var h = a / 360;
             var s = b / 100;
             var v = c / 100;
-            var e = new Array();
+            var e = [];
             var f, var_i, var_1, var_2, var_3, var_r, var_g;
             if (s == 0) {
                 e['r'] = v * 255;
@@ -475,7 +485,7 @@ jQuery.fn.modcoder_excolor = function (C) {
             h = a;
             var i, x = '0123456789ABCDEF',
                 c = '';
-            var b = new Array();
+            var b = [];
             if (h) {
                 h = h.toUpperCase();
                 for (i = 0; i < 6; i += 2) {
@@ -502,7 +512,7 @@ jQuery.fn.modcoder_excolor = function (C) {
                 h = 0,
                 s = 0,
                 b = 0;
-            var f = new Array();
+            var f = [];
             h = 0.0;
             e = Math.min(Math.min(a, c), d);
             maxrgb = Math.max(Math.max(a, c), d);
@@ -548,7 +558,7 @@ jQuery.fn.modcoder_excolor = function (C) {
         };
 
         function rgb2hex(r, g, b) {
-            var a = new Array();
+            var a = [];
             a[0] = r;
             a[1] = g;
             a[2] = b;
@@ -596,7 +606,7 @@ jQuery.fn.modcoder_excolor = function (C) {
             }
             var c = '<div id="modcoder_sample_wrapper" style="width:62px;height:30px;float:left;background:none;border:1px solid ' + C.border_color + ';margin:0;padding:0;' + u + '"><div id="modcoder_sample" style="width:60px;height:28px;border:1px solid white;float:left;padding:0;margin:0;' + u + '"></div></div>';
             init_color();
-            jQuery('body').append('<div style="display:none;' + zindex1 + 'width:265px;height:162px;position:absolute;overflow:hidden;padding:0;margin:0;' + radwrap + shadow + '" id="modcoder_colorpicker" id="modcoder_colorpicker_class"><div id="modcoder_colorpicker_wrapper" style="height:140px;width:244px;margin:0;padding:10px 9px 10px 10px;float:left;overflow:hidden;background-color:' + C.background_color + ';border:1px solid ' + C.border_color + ';' + backlight + radwrap + '"><div id="modcoder_grad_wrap" style="width:140px;height:140px;float:left;background:none;padding:0;margin:0;border:none;"><div id="modcoder_grad" style="width:132px;height:132px;border:4px solid ' + C.sb_border_color + ';padding:0;margin:0;' + u + '"><div style="width:130px;height:130px;float:left;background-image:url(' + root_path + 'bg.png);background-position:0 0;background-repeat:no-repeat;border:1px solid white;padding:0;margin:0;"></div></div></div><div id="modcoder_hue_wrap" style="width:20px;height:130px;float:left;padding:15px 8px 0px 10px;margin:0;border:none;"><div id="modcoder_hue" style="width:20px;height:130px;float:left;background:url(' + root_path + 'hue.png) ' + b + 'px 0 no-repeat;margin:0;padding:0;border:none;"></div></div><div id="modcoder_data" style="float:left;font-size:10px;font-family: Verdana, Arial, Helvetica, Sans-serif;width:66px;height:140px;margin:0;padding:0;border:none;">' + c + '<div class="modcoder_dataitem" style="float:left;padding:6px 0 0 0;margin:0;border:none;"><b style="display:inline-block;width:13px;text-align:left;font-size:10px;font-family: Verdana, Arial, Helvetica, Sans-serif;font-weight:bold;color:' + C.label_color + ';line-height:13px;">R</b><input style="line-height:13px;padding:1px 0;margin:0;color:' + C.input_text_color + ';border:1px solid ' + C.border_color + ';background:' + C.input_background_color + ';width:49px;font-size:10px;text-align:center;' + rad3px + '" id="modcoder_r" class="modcoder_input modcoder_rgb" type="text" size="3" maxlength="3" /></div><div class="modcoder_dataitem" style="float:left;padding:3px 0 0 0;margin:0;border:none;"><b style="display:inline-block;width:13px;text-align:left;font-size:10px;font-family: Verdana, Arial, Helvetica, Sans-serif;font-weight:bold;color:' + C.label_color + ';line-height:13px;">G</b><input style="line-height:13px;padding:1px 0;margin:0;color:' + C.input_text_color + ';border:1px solid ' + C.border_color + ';background:' + C.input_background_color + ';width:49px;font-size:10px;text-align:center;' + rad3px + '" id="modcoder_g" class="modcoder_input modcoder_rgb" type="text" size="3" maxlength="3" /></div><div class="modcoder_dataitem" style="float:left;padding:3px 0 0 0;margin:0;border:none;"><b style="display:inline-block;width:13px;text-align:left;font-size:10px;font-family: Verdana, Arial, Helvetica, Sans-serif;font-weight:bold;color:' + C.label_color + ';line-height:13px;">B</b><input style="padding:1px 0;margin:0;color:' + C.input_text_color + ';border:1px solid ' + C.border_color + ';background:' + C.input_background_color + ';width:49px;font-size:10px;text-align:center;' + rad3px + '" id="modcoder_b" class="modcoder_input modcoder_rgb" type="text" size="3" maxlength="3" /></div><div class="modcoder_dataitem" style="float:left;padding:6px 0;margin:0;border:none;"><b style="display:inline-block;width:13px;text-align:left;font-size:10px;font-family: Verdana, Arial, Helvetica, Sans-serif;font-weight:bold;color:' + C.label_color + ';line-height:13px;">#</b><input style="padding:1px 0;margin:0;color:' + C.input_text_color + ';border:1px solid ' + C.border_color + ';background:' + C.input_background_color + ';width:49px;font-size:10px;text-align:center;' + rad3px + '" id="modcoder_hex" class="modcoder_input" type="text" size="6" maxlength="6" /></div><div style="width:68px;height:17px;padding:0;margin:0;border:none;float:left;"><div id="modcoder_ok" style="margin:0;padding:0;width:50px;height:17px;float:left;cursor:pointer;background-image:url(' + root_path + 'ok.png);background-position: 0 0;background-repeat:no-repeat;"></div><div id="modcoder_close" style="margin:0;padding:0;width:17px;height:17px;float:right;cursor:pointer;background-image:url(' + root_path + 'close.png);background-position: 0 0;background-repeat:no-repeat;"></div></div></div></div></div><div style="display:none;' + zindex2 + 'width:11px;height:11px;position:absolute;background: url(' + root_path + 'sel.gif) ' + (-1 * C.sb_slider * 11) + 'px 0 no-repeat;margin:0;padding:0;border:none;" id="modcoder_picker"></div><div style="display:none;' + zindex2 + 'width:20px;height:11px;position:absolute;background: url(' + root_path + 'slider.gif) ' + (-1 * C.hue_slider * 20) + 'px 0 no-repeat;margin:0;padding:0;border:none;cursor:n-resize;" id="modcoder_slider"></div><div id="modcoder_switcher" style="border:1px solid ' + C.border_color + ';display:none;' + zindex2 + 'padding:0;margin:0;font-size:1px;line-height:1px;width:20px;height:12px;background:url(' + root_path + 'transp0.gif) 0 0 no-repeat;position:absolute;cursor:pointer;' + rad3px + '"></div>');
+            jQuery('body').append('<div style="display:none;' + zindex1 + 'width:265px;height:162px;position:absolute;overflow:hidden;padding:0;margin:0;' + radwrap + shadow + '" id="modcoder_colorpicker" id="modcoder_colorpicker_class"><div id="modcoder_colorpicker_wrapper" style="height:140px;width:244px;margin:0;padding:10px 9px 10px 10px;float:left;overflow:hidden;background-color:' + C.background_color + ';border:1px solid ' + C.border_color + ';' + backlight + radwrap + '"><div id="modcoder_grad_wrap" style="width:140px;height:140px;float:left;background:none;padding:0;margin:0;border:none;"><div id="modcoder_grad" style="width:132px;height:132px;border:4px solid ' + C.sb_border_color + ';padding:0;margin:0;' + u + '"><div style="width:130px;height:130px;float:left;background-image:url(' + root_path + 'bg.png);background-position:0 0;background-repeat:no-repeat;border:1px solid white;padding:0;margin:0;"></div></div></div><div id="modcoder_hue_wrap" style="width:20px;height:130px;float:left;padding:15px 8px 0px 10px;margin:0;border:none;"><div id="modcoder_hue" style="width:20px;height:130px;float:left;background:url(' + root_path + 'hue.png) ' + b + 'px 0 no-repeat;margin:0;padding:0;border:none;"></div></div><div id="modcoder_data" style="float:left;font-size:10px;font-family: Verdana, Arial, Helvetica, Sans-serif;width:66px;height:140px;margin:0;padding:0;border:none;">' + c + '<div class="modcoder_dataitem" style="float:left;padding:6px 0 0 0;margin:0;border:none;"><b style="display:inline-block;width:13px;text-align:left;font-size:10px;font-family: Verdana, Arial, Helvetica, Sans-serif;font-weight:bold;color:' + C.label_color + ';line-height:13px;">R</b><input style="line-height:13px;padding:1px 0;margin:0;color:' + C.input_text_color + ';border:1px solid ' + C.border_color + ';background:' + C.input_background_color + ';width:49px;font-size:10px;text-align:center;' + rad3px + '" id="modcoder_r" class="modcoder_input modcoder_rgb" type="text" size="3" maxlength="3" /></div><div class="modcoder_dataitem" style="float:left;padding:3px 0 0 0;margin:0;border:none;"><b style="display:inline-block;width:13px;text-align:left;font-size:10px;font-family: Verdana, Arial, Helvetica, Sans-serif;font-weight:bold;color:' + C.label_color + ';line-height:13px;">G</b><input style="line-height:13px;padding:1px 0;margin:0;color:' + C.input_text_color + ';border:1px solid ' + C.border_color + ';background:' + C.input_background_color + ';width:49px;font-size:10px;text-align:center;' + rad3px + '" id="modcoder_g" class="modcoder_input modcoder_rgb" type="text" size="3" maxlength="3" /></div><div class="modcoder_dataitem" style="float:left;padding:3px 0 0 0;margin:0;border:none;"><b style="display:inline-block;width:13px;text-align:left;font-size:10px;font-family: Verdana, Arial, Helvetica, Sans-serif;font-weight:bold;color:' + C.label_color + ';line-height:13px;">B</b><input style="padding:1px 0;margin:0;color:' + C.input_text_color + ';border:1px solid ' + C.border_color + ';background:' + C.input_background_color + ';width:49px;font-size:10px;text-align:center;' + rad3px + '" id="modcoder_b" class="modcoder_input modcoder_rgb" type="text" size="3" maxlength="3" /></div><div class="modcoder_dataitem" style="float:left;padding:6px 0;margin:0;border:none;"><b style="display:inline-block;width:13px;text-align:left;font-size:10px;font-family: Verdana, Arial, Helvetica, Sans-serif;font-weight:bold;color:' + C.label_color + ';line-height:13px;">#</b><input style="padding:1px 0;margin:0;color:' + C.input_text_color + ';border:1px solid ' + C.border_color + ';background:' + C.input_background_color + ';width:49px;font-size:10px;text-align:center;' + rad3px + '" id="modcoder_hex" class="modcoder_input" type="text" size="7" maxlength="7" /></div><div style="width:68px;height:17px;padding:0;margin:0;border:none;float:left;"><div id="modcoder_ok" style="margin:0;padding:0;width:50px;height:17px;float:left;cursor:pointer;background-image:url(' + root_path + 'ok.png);background-position: 0 0;background-repeat:no-repeat;"></div><div id="modcoder_close" style="margin:0;padding:0;width:17px;height:17px;float:right;cursor:pointer;background-image:url(' + root_path + 'close.png);background-position: 0 0;background-repeat:no-repeat;"></div></div></div></div></div><div style="display:none;' + zindex2 + 'width:11px;height:11px;position:absolute;background: url(' + root_path + 'sel.gif) ' + (-1 * C.sb_slider * 11) + 'px 0 no-repeat;margin:0;padding:0;border:none;" id="modcoder_picker"></div><div style="display:none;' + zindex2 + 'width:20px;height:11px;position:absolute;background: url(' + root_path + 'slider.gif) ' + (-1 * C.hue_slider * 20) + 'px 0 no-repeat;margin:0;padding:0;border:none;cursor:n-resize;" id="modcoder_slider"></div><div id="modcoder_switcher" style="border:1px solid ' + C.border_color + ';display:none;' + zindex2 + 'padding:0;margin:0;font-size:1px;line-height:1px;width:20px;height:12px;background:url(' + root_path + 'transp0.gif) 0 0 no-repeat;position:absolute;cursor:pointer;' + rad3px + '"></div>');
 
             if(C.show_input === true) {
                 aitem_pos = jQuery(aitem).offset();

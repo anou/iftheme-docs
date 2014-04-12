@@ -53,12 +53,12 @@ class WYSIJA_help_cron extends WYSIJA_object{
                         $this->check_scheduled_task($cron_schedules,$processNK);
                     }
                     if($this->report) echo 'processed : All<br/>';
-                    if(!isset($_REQUEST['silent'])) echo 'Wysija\'s cron is ready. Simply setup a CRON job on your server (cpanel or other) to trigger this page.';
+                    if(!isset($_REQUEST['silent'])) echo 'MailPoet\'s cron is ready. Simply setup a CRON job on your server (cpanel or other) to trigger this page.';
                     exit;
                 }
             }
         }
-        if(!isset($_REQUEST['silent'])) echo '"Wysija\'s cron is ready. Simply setup a CRON job on your server (cpanel or other) to trigger this page.' ;
+        if(!isset($_REQUEST['silent'])) echo '"MailPoet\'s cron is ready. Simply setup a CRON job on your server (cpanel or other) to trigger this page.' ;
         if($process)    exit;
     }
 
@@ -71,7 +71,7 @@ class WYSIJA_help_cron extends WYSIJA_object{
         $helper_toolbox = WYSIJA::get('toolbox','helper');
         $time_passed = $time_left = 0;
         $run_scheduled = true;
-        $extra_text = '';
+        $extra_text = $multisite_prefix = '';
         // this is to display a different message whether we're dealing with bounce or not.
         if($processNK == 'bounce'){
              $model_config = WYSIJA::get( 'config' , 'model' );
@@ -92,10 +92,10 @@ class WYSIJA_help_cron extends WYSIJA_object{
         // calculate the time passed processing a scheduled task
         if(!empty($cron_schedules[$processNK]['running'])){
             $time_passed = time()- $cron_schedules[$processNK]['running'];
-            $time_passed = $helper_toolbox->duration($time_passed,true,2);
+            $time_passed = $helper_toolbox->duration_string($time_passed,true,2,5);
         }else{
             $time_left = $cron_schedules[$processNK]['next_schedule'] - time();
-            $time_left = $helper_toolbox->duration($time_left,true,2);
+            $time_left = $helper_toolbox->duration_string($time_left,true,2,5);
         }
 
         if($run_scheduled && $cron_schedules[$processNK]['next_schedule'] < time() && !$cron_schedules[$processNK]['running']){

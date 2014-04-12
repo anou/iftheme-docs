@@ -43,7 +43,7 @@
                     });
 
                     ed.addButton('wysija_register', {
-				title : 'Add Wysija newsletter subscription form',
+				title : 'Add MailPoet newsletter subscription form',
 				image : url+'/wysija_register.png',
                                 cmd: 'wysijaRegister'
 			});

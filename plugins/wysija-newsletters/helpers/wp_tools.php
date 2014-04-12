@@ -18,7 +18,7 @@ class WYSIJA_help_wp_tools extends WYSIJA_object{
             $role = get_role($roladm);
             if(!$role) continue;
             //add wysija's capabilities to it so that other widgets can reuse it
-            $arr=array('wysija_newsletters','wysija_subscribers','wysija_config','wysija_theme_tab','wysija_style_tab');
+            $arr=array('wysija_newsletters','wysija_subscribers','wysija_config','wysija_theme_tab','wysija_style_tab', 'wysija_stats_dashboard');
 
             foreach($arr as $arrkey){
                 if(!$role->has_cap($arrkey)) $role->add_cap( $arrkey );
@@ -193,7 +193,8 @@ class WYSIJA_help_wp_tools extends WYSIJA_object{
         //make a simple url leading to the home
         if($simple){
             $url=site_url();
-            if(array_pop(str_split($url))!='/') $url.='/';
+            // make sure we have a trailing slash at the end
+            if($url{strlen($url) - 1} !== '/') $url .= '/';
         }
 
         if(isset($paramsquery['query'])){
@@ -240,14 +241,14 @@ class WYSIJA_help_wp_tools extends WYSIJA_object{
      * return a list of post types
      * @return mixed
      */
-    function get_post_types(){
+    function get_post_types($return_type = 'objects') {
         $args=array(
           'public'   => true,
           '_builtin' => false,
           'show_in_menu'=>true,
           'show_ui'=>true,
         );
-        return get_post_types($args,'objects');
+        return get_post_types($args, $return_type);
     }
 
     /**
@@ -258,4 +259,82 @@ class WYSIJA_help_wp_tools extends WYSIJA_object{
         return array_merge(get_post_statuses(), array('future'=>__('Scheduled',WYSIJA)));
     }
 
+    /**
+     * get a multidimensionnal array that returns the categories per CPT
+     */
+    function get_categories($custom_post_type = null) {
+        if($custom_post_type === null) {
+            $post_types = array_merge(array('post', 'page'), array_keys($this->get_post_types('names')));
+        } else {
+            $post_types = array($post_type);
+        }
+
+        $cpt_categories = array();
+        $cpt_taxonomies = array();
+
+        foreach($post_types as $post_type) {
+            // get taxonomies for each post type
+            if($post_type === 'post') {
+                $cpt_taxonomies = array('category');
+            } else {
+                $cpt_taxonomies = get_object_taxonomies($post_type);
+            }
+
+            if(!empty($cpt_taxonomies)) {
+                 foreach($cpt_taxonomies as $taxonomy) {
+
+                    $post_type_categories = array();
+                    $args = array(
+                        'orderby' => 'name',
+                        'show_count' => 0,
+                        'pad_counts' => 0,
+                        'hierarchical' => 1,
+                        'taxonomy' => $taxonomy,
+                        'title_li' => '',
+                        'hide_empty' => 0
+                    );
+
+                    $post_type_categories = get_categories($args);
+
+                    if(!empty($post_type_categories)) {
+                        foreach($post_type_categories as $post_type_category) {
+                            $cpt_categories[$post_type][$post_type_category->cat_ID] = array('id' => $post_type_category->cat_ID, 'name' => $post_type_category->name);
+                        }
+                    }
+                }
+                $cpt_categories[$post_type] = array_values($cpt_categories[$post_type]);
+            }
+        }
+
+        if($custom_post_type === null) {
+            return $cpt_categories;
+        } else {
+            return $cpt_categories[$post_type];
+        }
+    }
+
+    function get_post_category_ids($post = null) {
+
+        $cpt_categories = array();
+        $cpt_taxonomies = array();
+
+        // get taxonomies for each post type
+        $post_type = 'post';
+        $cpt_taxonomies = get_object_taxonomies($post->post_type);
+
+        if(!empty($cpt_taxonomies)) {
+             foreach($cpt_taxonomies as $taxonomy) {
+                $post_type_categories = wp_get_post_terms($post->ID, $taxonomy);
+
+                if(!empty($post_type_categories)) {
+                    foreach($post_type_categories as $post_type_category) {
+                        $cpt_categories[] = $post_type_category->term_id;
+                    }
+                }
+            }
+            $cpt_categories = array_unique($cpt_categories);
+        }
+
+        return $cpt_categories;
+    }
 }

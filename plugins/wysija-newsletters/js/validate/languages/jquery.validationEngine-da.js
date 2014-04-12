@@ -6,9 +6,15 @@
             $.validationEngineLanguage.allRules = {
                 "required": { // Add your regex rules here, you can take telephone as an example
                     "regex": "none",
-                    "alertText": "* Dette felt kræves udfyldt",
+                    "alertText": "* Dette felt skal udfyldes",
                     "alertTextCheckboxMultiple": "* Vælg venligst en af mulighederne",
-                    "alertTextCheckboxe": "* Dette felt er krævet"
+                    "alertTextCheckboxe": "* Dette felt er påkrævet"
+                },
+                "requiredInFunction": { 
+                    "func": function(field, rules, i, options){
+                        return (field.val() == "test") ? true : false;
+                    },
+                    "alertText": "* Indholdet af feltet skal være lig med test"
                 },
                 "minSize": {
                     "regex": "none",
@@ -22,15 +28,15 @@
                 },
 				"groupRequired": {
                     "regex": "none",
-                    "alertText": "* You must fill one of the following fields"
+                    "alertText": "* Du skal udfylde mindst et af følgende felter"
                 },
                 "min": {
                     "regex": "none",
-                    "alertText": "* Den mindste værdi er "
+                    "alertText": "* Den mindst tilladte værdi er "
                 },
                 "max": {
                     "regex": "none",
-                    "alertText": "* Den maksimale værdi er "
+                    "alertText": "* Den maksimalt tilladte værdi er "
                 },
                 "past": {
                     "regex": "none",
@@ -42,7 +48,7 @@
                 },	
                 "maxCheckbox": {
                     "regex": "none",
-                    "alertText": "* Antallet af valg overskredet"
+                    "alertText": "* Antallet af tilladte valg er overskredet"
                 },
                 "minCheckbox": {
                     "regex": "none",
@@ -53,10 +59,14 @@
                     "regex": "none",
                     "alertText": "* Felterne er ikke ens"
                 },
+                "creditCard": {
+                    "regex": "none",
+                    "alertText": "* Ugyldigt kreditkortnummer"
+                },
                 "phone": {
                     // credit: jquery.h5validate.js / orefalo
-                    "regex": /^([\+][0-9]{1,3}[ \.\-])?([\(]{1}[0-9]{2,6}[\)])?([0-9 \.\-\/]{3,20})((x|ext|extension)[ ]?[0-9]{1,4})?$/,
-                    "alertText": "* Ikke gyldig telefonnummer"
+                    "regex": /^([\+][0-9]{1,3}([ \.\-])?)?([\(][0-9]{1,6}[\)])?([0-9 \.\-]{1,32})(([A-Za-z \:]{1,11})?[0-9]{1,4}?)$/,
+                    "alertText": "* Ikke gyldigt telefonnummer"
                 },
                 "email": {
                     // Shamelessly lifted from Scott Gonzalez via the Bassistance Validation plugin http://projects.scottsplayground.com/email_address_validation/
@@ -69,7 +79,7 @@
                 },
                 "number": {
                     // Number, including positive, negative, and floating decimal. credit: orefalo
-                    "regex": /^[\-\+]?(([0-9]+)([\.,]([0-9]+))?|([\.,]([0-9]+))?)$/,
+                    "regex": /^[\-\+]?((([0-9]{1,3})([,][0-9]{3})*)|([0-9]+))?([\.]([0-9]+))?$/,
                     "alertText": "* Ugyldig decimaltal"
                 },
                 "date": {

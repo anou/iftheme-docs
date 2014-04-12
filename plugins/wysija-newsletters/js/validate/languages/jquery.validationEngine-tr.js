@@ -10,6 +10,12 @@
                     "alertTextCheckboxMultiple": "* Lütfen bir seçeneği işaretleyiniz",
                     "alertTextCheckboxe": "* Bu onay kutusu zorunludur"
                 },
+                "requiredInFunction": { 
+                    "func": function(field, rules, i, options){
+                        return (field.val() == "test") ? true : false;
+                    },
+                    "alertText": "* Field must equal test"
+                },
                 "minSize": {
                     "regex": "none",
                     "alertText": "* Bu alana en az ",
@@ -57,9 +63,13 @@
                     "regex": "none",
                     "alertText": "* Değerler aynı olmalı"
                 },
+                "creditCard": {
+                    "regex": "none",
+                    "alertText": "* Geçersiz kredi kartı numarası"
+                },
                 "phone": {
                     // credit: jquery.h5validate.js / orefalo
-                    "regex": /^([\+][0-9]{1,3}[ \.\-])?([\(]{1}[0-9]{2,6}[\)])?([0-9 \.\-\/]{3,20})((x|ext|extension)[ ]?[0-9]{1,4})?$/,
+                    "regex": /^([\+][0-9]{1,3}([ \.\-])?)?([\(][0-9]{1,6}[\)])?([0-9 \.\-]{1,32})(([A-Za-z \:]{1,11})?[0-9]{1,4}?)$/,
                     "alertText": "* Geçersiz telefon numarası"
                 },
                 "email": {
@@ -73,7 +83,7 @@
                 },
                 "number": {
                     // Number, including positive, negative, and floating decimal. credit: orefalo
-                    "regex": /^[\-\+]?(([0-9]+)([\.,]([0-9]+))?|([\.,]([0-9]+))?)$/,
+                    "regex": /^[\-\+]?((([0-9]{1,3})([,][0-9]{3})*)|([0-9]+))?([\.]([0-9]+))?$/,
                     "alertText": "* Geçerli bir noktalı sayı değil"
                 },
                 "date": {

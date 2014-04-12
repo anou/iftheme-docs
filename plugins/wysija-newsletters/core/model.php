@@ -173,12 +173,22 @@ class WYSIJA_model extends WYSIJA_object{
     }
 
     /**
+     * DEPRECATED
      * to have a custom query through the model and get the result immediately
      * @param type $query
      * @return type
      */
     function getResults($query,$type=ARRAY_A){
         return $this->query('get_res',$query, $type);
+    }
+
+    /**
+     * to have a custom query through the model and get the result immediately
+     * @param type $query
+     * @return type
+     */
+    public function get_results($query,$type=ARRAY_A){
+        return $this->getResults($query,$type);
     }
 
 
@@ -459,10 +469,9 @@ class WYSIJA_model extends WYSIJA_object{
                 if(!$this->conditions){
                    if(isset($values[$this->pk]) && $values[$this->pk]){
 
-                        $this->setConditions(array($this->pk =>$values[$this->pk]),true);
+                        $this->setConditions(array($this->pk => $values[$this->pk]), true);
 
                         unset($values[$this->pk]);
-
 
                         return $this->save(true);
 
@@ -975,6 +984,34 @@ class WYSIJA_model extends WYSIJA_object{
         else return $main_site_prefix.$this->table_prefix.'_';
     }
 
+    /**
+     *
+     * @param type $field_name name of field which will become a key
+     * @param array $dataset list of records
+     * @param boolean $removing_field_name decide if we should remove field name from output dataset
+     * @param string $field_name_as_value a field in which we consider its value as value of $field_name
+     * @return array field based indexed dataset
+     */
+    protected function indexing_dataset_by_field($field_name, Array $dataset, $removing_field_name = false, $field_name_as_value = null){
+        if (empty($dataset))
+            return array();
+        $tmp = array();
+        foreach ($dataset as $record){
+            if (isset($record[$field_name]))
+            {
+                if (!empty($field_name_as_value)){
+                    $tmp[$record[$field_name]] = isset($record[$field_name_as_value]) ? $record[$field_name_as_value] : null;
+                    continue;
+                }
+                $tmp[$record[$field_name]] = $record;
+                if ($removing_field_name)
+                    unset($tmp[$record[$field_name]][$field_name]);
+            }
+
+        }
+        return $tmp;
+    }
+
     function beforeInsert(){
         return true;
     }
@@ -990,7 +1027,7 @@ class WYSIJA_model extends WYSIJA_object{
         return true;
     }
 
-    function beforeUpdate(){
+    function beforeUpdate($id = null){
         return true;
     }
 

@@ -30,6 +30,13 @@ class WYSIJA_help_front extends WYSIJA_help{
         // wysija total of subscribers shortcode
         add_shortcode('wysija_subscribers_count', array($this,'scan_subscribers_count_shortcode'));
 
+        // init shortcode [wysija_archive]
+        require_once(WYSIJA_CORE.'controller.php');
+        require_once(WYSIJA_CORE.'module'.DS.'module.php');// @todo: move to autoloader
+        $archive_std = WYSIJA_module::get_instance_by_name('archive_std');// implement hook "wysija_front_init()
+        if (!empty($archive_std) && is_a($archive_std, 'WYSIJA_module'))
+            $archive_std->front_init();
+
         /* We try to process the least possible code */
         if(isset($_REQUEST['wysija-page']) || isset($_REQUEST['wysija-launch'])){
 
@@ -45,7 +52,7 @@ class WYSIJA_help_front extends WYSIJA_help{
                     add_action('init',array($this->controller,$_REQUEST['action']));
                     //$this->controller->$_REQUEST['action']();
                 }else $this->error('Action does not exist.');
-                
+
                 if(isset($_REQUEST['wysija-page'])){
                     /* set the content filter to replace the shortcode */
                     add_filter('wp_title', array($this,'meta_page_title'));
@@ -59,31 +66,31 @@ class WYSIJA_help_front extends WYSIJA_help{
         }else{
             add_filter('the_content', array($this,'scan_content_NLform'),99 );
            //if the comment form checkbox option is activated we add some hooks to process it
-           $mConfig=WYSIJA::get('config','model');
-           if($mConfig->getValue('commentform')){
+           $model_config = WYSIJA::get('config','model');
+           if($model_config->getValue('commentform')){
                 add_action('comment_form', array($this,'comment_form_extend'));
                 add_action('comment_post',  array($this,'comment_posted'), 60,2);
            }
 
-           //if the register form checkbox option is activated we add some hooks to process it
-           if($mConfig->getValue('registerform')){
+           // if the register form checkbox option is activated we add some hooks to process it
+           if($model_config->getValue('registerform')){
                if(is_multisite()){
                    add_action('signup_extra_fields', array($this,'register_form_extend'));
                    // we need this condition otherwise we will send two confirmation emails when on ms with buddypress
                     if(!WYSIJA::is_plugin_active('buddypress/bp-loader.php')){
                         add_filter('wpmu_validate_user_signup',  array($this,'registerms_posted'), 60,3);
                     }
-
                }else{
                    add_action('register_form', array($this,'register_form_extend'));
                    add_action('register_post',  array($this,'register_posted'), 60,3);
                }
 
-                if(WYSIJA::is_plugin_active('buddypress/bp-loader.php')){
+               // special case when buddypress is activated
+               if(WYSIJA::is_plugin_active('buddypress/bp-loader.php')){
                     add_action('bp_after_signup_profile_fields', array($this,'register_form_bp_extend'));
                     add_action('bp_signup_validate', array($this,'register_bp'),60,3);
 
-                    // we can have just one activation for the wp user and the wysija confirmation when bp and multisite are activated
+                    // we can have just one confirmation email for the wp user and the wysija confirmation when bp and multisite are activated
                     if(is_multisite()){
                         add_action('wpmu_activate_user', array($this,'wpmu_activate_user'));
                     }
@@ -92,7 +99,11 @@ class WYSIJA_help_front extends WYSIJA_help{
         }
     }
 
-
+    /**
+     * In MS when user account is activated we auto confirm the subscriber
+     * @param type $wpuser_id
+     * @return boolean
+     */
     function wpmu_activate_user($wpuser_id){
         if((int)$wpuser_id>0){
             $model_user = WYSIJA::get('user','model');
@@ -106,9 +117,14 @@ class WYSIJA_help_front extends WYSIJA_help{
         return true;
     }
 
-    function meta_page_title(){
+    function meta_page_title($title){
         //Here I can echo the result and see that it's actually triggered
-        return $this->controller->title;
+        if($this->is_default_mailpoet_page()){
+            // when user have kept the default page we modify the title based on the controller
+            if(!empty($this->controller->title)) return $this->controller->title;
+        }
+
+        return $title;
     }
 
 
@@ -199,19 +215,44 @@ class WYSIJA_help_front extends WYSIJA_help{
         /*careful WordPress global*/
         global $post;
 
-        if(trim($title)==trim(single_post_title( '', false )) && !empty($this->controller->title)){
-            $post->comment_status='close';
-            $post->post_password='';
-            return $this->controller->title;
-        }else{
-            return $title;
+        if($this->is_default_mailpoet_page()){
+            // when user have kept the default page we modify the title based on the controller
+            if(trim($title)==trim(single_post_title( '', false )) && !empty($this->controller->title)){
+                $post->comment_status='close';
+                $post->post_password='';
+                return $this->controller->title;
+            }
         }
+
+        return $title;
+
     }
 
     function scan_content($content){
-        $wysija_content='';
-        if(isset($this->controller->subtitle) && !empty($this->controller->subtitle))  $wysija_content=$this->controller->subtitle;
-        return str_replace('[wysija_page]',$wysija_content,$content);
+        $wysija_content = $wysija_undo = '';
+        if(!empty($this->controller->subtitle))  $wysija_content = $this->controller->subtitle;
+        if(!empty($this->controller->optional_subtitle))    $wysija_content = $this->controller->optional_subtitle;
+        if(!empty($this->controller->undo_unsubscribe)){
+            $wysija_undo = $this->controller->undo_unsubscribe;
+        }
+
+        // only force our edit subscription screen at the bottom of the content of the page
+        // if it's the right action and there is no wysija_page shortcode in teh page
+        if(!empty($_REQUEST['action']) && $_REQUEST['action'] == 'subscriptions' && strpos($content, '[wysija_page]') == false){
+            // we append the subscription form at the bottom of the page if we can't detect it
+            return $content.'<div class="mpoet_profile_edit">'.$wysija_content.'</div>';
+        }else{
+            // we replace the shortcode by our automatic content, other wise if there is no shortcode the page stays the same
+            return str_replace('[wysija_page]', $wysija_content.$wysija_undo, $content);
+        }
+
+    }
+
+    function is_default_mailpoet_page(){
+        global $post;
+        $model_config = WYSIJA::get('config','model');
+        if($post->ID == $model_config->getValue('confirm_email_link')) return true;
+        else return false;
     }
 
     /**
@@ -220,7 +261,7 @@ class WYSIJA_help_front extends WYSIJA_help{
      * @return string html
      */
     function scan_form_shortcode($attributes) {
-        // this is to make sure MagicMember won't scan our form and find [user_list] as a code they should replace.
+        // IMPORTANT: this is to make sure MagicMember won't scan our form and find [user_list] as a code they should replace.
         remove_shortcode('user_list');
 
         if(isset($attributes['id']) && (int)$attributes['id']>0){
@@ -246,7 +287,6 @@ class WYSIJA_help_front extends WYSIJA_help{
         $list_ids = !empty($attributes['list_id']) ? explode(',', $attributes['list_id']) : array();
         $confirmed_subscribers = !empty($attributes['confirmed_subscribers']) ? (bool)$attributes['confirmed_subscribers'] : true;
         return $user->countSubscribers($list_ids, $confirmed_subscribers);
-
     }
 
     function scan_content_NLform($content){

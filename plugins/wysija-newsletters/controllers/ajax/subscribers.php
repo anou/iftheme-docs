@@ -36,11 +36,19 @@ class WYSIJA_control_back_subscribers extends WYSIJA_control_front{
 
         $helperUser=WYSIJA::get('user','helper');
         if(!$helperUser->checkData($data))return false;
-        $helperUser->addSubscriber($data);
+        $user_id = $helperUser->addSubscriber($data);
+
+        if((int)$user_id > 0) {
+             // Handle custom fields
+            if(isset($data['user_field'])) {
+                WJ_FieldHandler::handle_all($data['user_field'], $user_id);
+            }
+        }
 
         return true;
     }
 
+    // REFACTOR: Insanely complicated and inefficient
     function convertUserData($datarequested){
         $data=array();
 
@@ -60,22 +68,35 @@ class WYSIJA_control_back_subscribers extends WYSIJA_control_front{
         }
         $data['user_list']['list_ids']=$listids;
 
+        // define array for custom user fields
+        $data['user_field'] = array();
+
         //get the user info and the rest of the data posted
         foreach($datarequested as $key => $val){
-            if(strpos($key, 'wysija[user]')!== false){
+            if(strpos($key, 'wysija[user]')!== false) {
                 $keymodified=str_replace(array('wysija[','][',']'),array('','#',''),$key);
                 $keystabcol=explode('#',$keymodified);
                 switch(count($keystabcol)){
                     case 2:
                         $data[$keystabcol[0]][$keystabcol[1]]=$val;
-                        break;
+                    break;
                     case 3:
                         $data[$keystabcol[0]][$keystabcol[1]][$keystabcol[2]]=$val;
-                        break;
-                    default:
+                    break;
                 }
+            } else if(strpos($key, 'wysija[field]')!== false){
+                $keymodified=str_replace(array('wysija[','][',']'),array('','#',''),$key);
+                $keystabcol=explode('#',$keymodified);
 
-            }else{
+                switch(count($keystabcol)){
+                    case 2:
+                        $data['user_field'][$keystabcol[1]] = $val;
+                    break;
+                    case 3:
+                        $data['user_field'][$keystabcol[1]][$keystabcol[2]] = $val;
+                    break;
+                }
+            } else {
                 if(!isset($data[$key])) $data[$key]=$val;
             }
         }

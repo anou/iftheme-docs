@@ -170,13 +170,13 @@ class WYSIJA_help_render_engine extends WYSIJA_object {
 
                             # position in list
                             $i < $count-1 ? $line[self::_LAST] = false : $line[self::_LAST] = true;
-                            $i == 0 ? $line[self::_FIRST] = true : $line[self::_FIRST] = false;
+                            $i === 0 ? $line[self::_FIRST] = true : $line[self::_FIRST] = false;
 
                             # rows and columns infos
                             if ($loop_row_size) {
                                 # col position
                                 ($i+1)%$loop_row_size ? $line[self::_LAST_COL] = false : $line[self::_LAST_COL] = true;
-                                ($i+1)%$loop_row_size==1 ? $line[self::_FIRST_COL] = true : $line[self::_FIRST_COL] = false;
+                                ($i+1)%$loop_row_size === 1 ? $line[self::_FIRST_COL] = true : $line[self::_FIRST_COL] = false;
 
                                 # row position
                                 $i<$loop_row_size ? $line[self::_FIRST_ROW] = true : $line[self::_FIRST_ROW] = false;
@@ -845,6 +845,10 @@ class WYSIJA_help_render_engine extends WYSIJA_object {
                     }
                 break;
 
+                case 'includes':
+                    return (bool)(is_array($value) && in_array($arguments[0], $value));
+                break;
+
                 case 'color':
                     if($value !== 'transparent' && $value !== '') {
                         $value = '#'.$value;
@@ -867,7 +871,7 @@ class WYSIJA_help_render_engine extends WYSIJA_object {
                 break;
 
                 case 'ucfirst':
-                    $value = ucFirst ($value);
+                    $value = ucfirst ($value);
                 break;
 
                 case 'upper':

@@ -73,6 +73,12 @@ class WYSIJA_view_front_confirm extends WYSIJA_view_front {
             </td>
         </tr>';
 
+          /*
+          Custom Fields.
+          */
+          $content .=  WJ_FieldRender::render_all(
+            $data['user']['details']['user_id']
+          );
 
         //list subscriptions */
         if($data['list']){
@@ -142,7 +148,7 @@ class WYSIJA_view_front_confirm extends WYSIJA_view_front {
      *
      */
     function resend(){
-        $content.='<form id="wysija-subscriptions" method="post" action="#wysija-subscriptions" class="form-valid">';
+      $content.='<form id="wysija-subscriptions" method="post" action="#wysija-subscriptions" class="form-valid">';
         $content.='
                         '.$this->secure(array('controller'=>'confirm','action'=>'resendconfirm', 'id'=> (int)$_REQUEST['user_id']),false,false).'
                         <input type="hidden" name="id" id="id" value="'.(int)$_REQUEST['user_id'].'" />

@@ -91,7 +91,7 @@ class WYSIJA_help_email extends WYSIJA_object{
         $mailer->testemail=true;
         $mailer->wp_user=&$current_user->data;
 
-        $res=$mailer->sendSimple($current_user->data->user_email,str_replace('[send_method]',$send_method,__('[send_method] works with Wysija',WYSIJA)),$content_email);
+        $res=$mailer->sendSimple($current_user->data->user_email,str_replace('[send_method]',$send_method,__('[send_method] works with MailPoet',WYSIJA)),$content_email);
 
         if($res){
             $this->notice(sprintf(__('Test email successfully sent to %s',WYSIJA),'<b><i>'.$current_user->data->user_email.'</i></b>'));
@@ -118,17 +118,19 @@ class WYSIJA_help_email extends WYSIJA_object{
 
     /**
      * get view in browser link
-     * @param array $dataEmail
+     * @param array/stdClass $data_email
      * @return string url
      */
-    function getVIB($dataEmail){
-        if(false && isset($dataEmail['params']['vib_id'])) return WYSIJA::get_permalink($dataEmail['params']['vib_id'],false);
+    function getVIB($data_email){
+        if (!is_array($data_email) && is_object($data_email))
+            $data_email = (array) $data_email;
+        if(false && isset($data_email['params']['vib_id'])) return WYSIJA::get_permalink($data_email['params']['vib_id'],false);
         else{
            $paramsurl=array(
                 'wysija-page'=>1,
                 'controller'=>'email',
                 'action'=>'view',
-                'email_id'=>$dataEmail['email_id']
+                'email_id'=>$data_email['email_id']
                 );
 
             $modelConf=WYSIJA::get('config','model');
@@ -160,4 +162,5 @@ class WYSIJA_help_email extends WYSIJA_object{
 
         return $follow_ups_per_list;
     }
+
 }

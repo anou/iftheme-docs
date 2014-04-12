@@ -17,6 +17,7 @@ class WYSIJA_control_back extends WYSIJA_control{
         parent::WYSIJA_control();
         global $wysija_msg,$wysija_queries,$wysija_queries_errors;
         $wysija_msgTemp=get_option('wysija_msg');
+
         if(is_array($wysija_msgTemp) && count($wysija_msgTemp)>0){
             $wysija_msg=$wysija_msgTemp;
         }
@@ -66,9 +67,6 @@ class WYSIJA_control_back extends WYSIJA_control{
         add_action('wysija_various_check',array($this,'variousCheck'));
         do_action('wysija_various_check');
 
-        // check if the plugin has an update available
-        $updateH=WYSIJA::get('update','helper');
-        $updateH->checkForNewVersion();
         $this->target_action_form = $this->data['target_action_form'] = $this->_getTargetActionForm(); // set default value of any form action
     }
 
@@ -312,17 +310,19 @@ class WYSIJA_control_back extends WYSIJA_control{
         $this->_batch_select['query'] = $this->modelObj->get_subscribers( $select, $filters, '', true );
         $this->_batch_select['query_count'] = $this->modelObj->get_subscribers( array( 'COUNT(DISTINCT([wysija]user.user_id))'), $filters, '', true );
 
+
         //Create a temporary table
-        $temp_table_name = 'user'. time();
-        $temp_table_create = 'CREATE TEMPORARY TABLE '.$temp_table_name . ' (user_id int (10) NOT NULL, PRIMARY KEY (user_id)) ENGINE=MyISAM';
-        $temp_table_insert = 'INSERT INTO '.$temp_table_name.' ' . $this->_batch_select['query'];
+        $temp_table_name = '[wysija]user'. time();
+        $temp_table_create = 'CREATE TEMPORARY TABLE IF NOT EXISTS '.$temp_table_name . ' (user_id int (10) NOT NULL, PRIMARY KEY (user_id)) ENGINE=MyISAM';
+        $temp_table_insert = 'INSERT IGNORE INTO '.$temp_table_name.' ' . $this->_batch_select['query'];
         $model_user = WYSIJA::get('user','model');
-        $model_user->query($temp_table_create);
-        $model_user->query($temp_table_insert);
+
+	$model_user->query($temp_table_create);
+	$model_user->query($temp_table_insert);
 
         //Override the queres with temporary table
         unset($this->_batch_select['where']);
-        $row_count = $model_user->query('get_row', 'SELECT ROW_COUNT() as row_count');
+        $row_count = $model_user->query('get_row', 'SELECT COUNT(*) as row_count FROM '.$temp_table_name);
         $this->_batch_select['original_query'] = $this->_batch_select['query']; // useful for export feature; in this case, we don't use temporary table
         $this->_batch_select['select'] = 'SELECT DISTINCT user_id';
         $this->_batch_select['from'] = 'FROM '.$temp_table_name . ' A';
@@ -344,13 +344,13 @@ class WYSIJA_control_back extends WYSIJA_control{
                 $url_checkout = $helper_licence->get_url_checkout('over200');
                 $this->error(str_replace(array('[link]','[/link]'),
                     array('<a title="'.__('Get Premium now',WYSIJA).'" target="_blank" href="'.$url_checkout.'">','</a>'),
-                    sprintf(__('Yikes. You\'re over the limit of 2000 subscribers for the free version of Wysija (%1$s in total). Sending is disabled now. Please upgrade your version to [link]premium[/link] to send without limits.',WYSIJA)
+                    sprintf(__('Yikes. You\'re over the limit of 2000 subscribers for the free version of MailPoet (%1$s in total). Sending is disabled now. Please upgrade your version to [link]premium[/link] to send without limits.',WYSIJA)
                             ,$totalSubscribers)),true);
             }else{
                 $url_checkout = $helper_licence->get_url_checkout('near200');
                 $this->notice(str_replace(array('[link]','[/link]'),
                     array('<a title="'.__('Get Premium now',WYSIJA).'" target="_blank" href="'.$url_checkout.'">','</a>'),
-                    sprintf(__('Yikes! You\'re near the limit of %1$s subscribers for Wysija\'s free version. Upgrade to [link]Premium[/link] to send without limits, and more.',WYSIJA)
+                    sprintf(__('Yikes! You\'re near the limit of %1$s subscribers for MailPoet\'s free version. Upgrade to [link]Premium[/link] to send without limits, and more.',WYSIJA)
                             ,"2000")));
             }
         }
@@ -540,7 +540,12 @@ class WYSIJA_control_back extends WYSIJA_control{
     }
 
     function popupContent(){
+        // remove auth check
+        remove_action('admin_enqueue_scripts', 'wp_auth_check_load');
+
+        // add popup css
         wp_enqueue_style('custom_popup_css', WYSIJA_URL.'css/adminPopup.css');
+
         global $viewMedia;
         $viewMedia=$this->viewObj;
         $_GET['type']=$_REQUEST['type']='image';
@@ -628,41 +633,6 @@ class WYSIJA_control_back extends WYSIJA_control{
         }
 
         return $location;
-    }
-
-     function __get_social_buttons($inline=true){
-
-         if($inline){
-             $class=' class="socials removeme"';
-         }else{
-             $class=' id="socials-block"';
-         }
-         $wysijaversion='<div '.$class.'>
-        <div class="fb" >
-        <div id="fb-root"></div>
-        <script>(function(d, s, id) {
-          var js, fjs = d.getElementsByTagName(s)[0];
-          if (d.getElementById(id)) return;
-          js = d.createElement(s); js.id = id;
-          js.src = "//connect.facebook.net/en_US/all.js#xfbml=1";
-          fjs.parentNode.insertBefore(js, fjs);
-        }(document, \'script\', \'facebook-jssdk\'));</script>
-        <div class="fb-like" data-href="http://www.facebook.com/mailpoetplugin" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div></div>
-        <div class="twitter">
-        <a href="https://twitter.com/mail_poet" class="twitter-follow-button" data-show-count="true">Follow us</a>
-        <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
-        </div>
-        <div class="gplus">
-        <!-- Place this tag in your head or just before your close body tag -->
-        <script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
-        <!-- Place this tag where you want the +1 button to render -->
-        <g:plusone href="https://plus.google.com/104749849451537343615" size="medium"></g:plusone></div>
-        ';
-         if($inline) $wysijaversion.='<div id="hidesocials">
-        <a class="linkignore socialfoot" href="javascript:;">'.__('Hide!',WYSIJA).'</a>
-            </div>';
-            $wysijaversion.= "<div style='clear:both;'></div></div><div style='clear:both;'></div>";
-            return $wysijaversion;
     }
 
     /**

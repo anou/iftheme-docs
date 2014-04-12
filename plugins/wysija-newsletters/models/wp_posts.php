@@ -5,7 +5,7 @@ class WYSIJA_model_wp_posts extends WYSIJA_model{
     var $pk='ID';
     var $tableWP=true;
     var $table_name='posts';
-    var $columns=array(
+    var $columns = array(
         'ID'=>array('req' => true, 'type' => 'integer'),
         'post_author' => array('type' => 'integer'),
         'post_date' => array(),
@@ -36,10 +36,7 @@ class WYSIJA_model_wp_posts extends WYSIJA_model{
         $this->table_prefix='';
     }
 
-    function get_posts($args=array()){
-        if(!$args) return false;
-        $customQuery='';
-
+    function get_posts($args = array()){
         /**
          * SELECT A.ID, A.post_title, A.post_content, A.post_date FROM `wp_posts` A
          * LEFT JOIN `wp_term_relationships` B ON (A.ID = B.object_id)
@@ -48,76 +45,167 @@ class WYSIJA_model_wp_posts extends WYSIJA_model{
          *
          */
 
-        $customQuery='SELECT DISTINCT A.ID, A.post_title, A.post_content, A.post_excerpt FROM `[wp]'.$this->table_name.'` A ';
+        $default_args = array(
+            'post_limit'        => 10,
+            'offset'            => 0,
+            'category'          => NULL,
+            'not_category'      => NULL,
+            'orderby'           => 'post_date',
+            'order'             => 'DESC',
+            'include'           => NULL,
+            'exclude'           => NULL,
+            'meta_key'          => NULL,
+            'meta_value'        => NULL,
+            'post_type'         => NULL,
+            'post_mime_type'    => NULL,
+            'post_parent'       => NULL,
+            'post_status'       => 'publish',
+            'post_date'         => NULL,
+            'is_search_query'   => false,
+            'search'            => NULL
+        );
 
-        if(isset($args['category']) && $args['category']) {
-            $customQuery.='JOIN `[wp]term_relationships` as B ON (A.ID = B.object_id) ';
-            $customQuery.='JOIN `[wp]term_taxonomy` C ON (C.term_taxonomy_id = B.term_taxonomy_id) ';
+        $args = array_merge($default_args, $args);
+
+        // set categories
+        if(isset($args['category_ids']) && strlen(trim($args['category_ids'])) > 0) {
+            $args['category'] = explode(',', trim($args['category_ids']));
+        } else if(isset($args['post_category']) && (int)$args['post_category'] > 0) {
+            $args['category'] = (int)$args['post_category'];
+        }
+        if(isset($args['include_category_ids']) && !empty($args['include_category_ids'])) {
+            $args['category'] = $args['include_category_ids'];
+        }
+        if(isset($args['exclude_category_ids']) && !empty($args['exclude_category_ids'])) {
+            $args['not_category'] = $args['exclude_category_ids'];
         }
 
-        $conditionsOut=$conditionsIn=array();
+        // default selected fields
+        $post_fields = array('A.ID', 'A.post_title', 'A.post_content', 'A.post_excerpt');
 
-        foreach($args as $col => $val){
-            if(!$val) continue;
-            switch($col){
-                case 'category':
-                    //$conditionsIn['B.term_taxonomy_id']=array('sign'=>'IN','val' =>$val, 'cast' => 'int');
-                    $conditionsIn[]=array('col'=>'C.term_id','sign'=>'IN','val' =>$val, 'cast' => 'int');
-                    break;
-                case 'includeonly':
-                    $conditionsIn[] = array('col'=>'A.ID', 'sign'=>'=','val' =>$val);
-                    break;
-                case 'include':
-                    $conditionsIn[] = array('col'=>'A.ID','sign'=>'IN','val' =>$val, 'cast' => 'int');
-                    break;
-                case 'exclude':
-                    $conditionsIn[] = array('col'=>'A.ID','sign'=>'NOT IN', 'val' => $val, 'cast' => 'int');
-                    break;
-                case 'post_type':
-                    $conditionsIn[]=array('col'=>'A.post_type','sign'=>'IN','val' =>$val);
-                    break;
-                case 'post_status':
-                    $conditionsIn[]=array('col'=>'A.post_status','sign'=>'IN','val' =>$val);
-                    break;
-                case 'post_date':
-                    //convert the date to WordPress format
-                    $toob=WYSIJA::get('toolbox','helper');
-                    $val= $toob->time_tzed($val);
+        // look for manual fields to select
+        if(isset($args['post_fields']) && is_array($args['post_fields']) && !empty($args['post_fields'])) {
+            $extra_post_fields = $args['post_fields'];
+            // merge both fields selection
+            $post_fields = array_merge(array('A.ID'), $extra_post_fields);
+        }
 
-                    if($val !== '') {
-                        $conditionsIn[]=array('col'=>'A.post_date','sign'=>'>','val' =>$val);
-                    }
-                    break;
-                default:
+        // build query
+        $query = sprintf('SELECT DISTINCT %s FROM `[wp]'.$this->table_name.'` A ', join(', ', $post_fields));
+
+        if($args['is_search_query'] === true) {
+            $count_query = 'SELECT COUNT(DISTINCT A.ID) as total FROM `[wp]'.$this->table_name.'` A ';
+        }
+
+        // search by category
+        if((isset($args['category']) && $args['category'] !== NULL) || (isset($args['not_category']) && $args['not_category'] !== NULL)) {
+            $query_joins = 'JOIN `[wp]term_relationships` as B ON (A.ID = B.object_id) ';
+            $query_joins .= 'JOIN `[wp]term_taxonomy` C ON (C.term_taxonomy_id = B.term_taxonomy_id) ';
+
+            $query .= $query_joins;
+
+            if($args['is_search_query'] === true) {
+                $count_query .= $query_joins;
             }
         }
 
-        $customQuery.='WHERE ';
+        $conditions = array();
 
-        $customQuery.=$this->setWhereCond($conditionsIn);
+        if(isset($args['include']) && $args['include'] !== NULL) {
+            $conditions[] = array('col' => 'A.ID', 'sign' => 'IN', 'val' => $args['include'], 'cast' => 'int');
+        } else {
+            foreach($args as $type => $value) {
+                if(!$value) continue;
+                switch($type) {
+                    case 'category':
+                        $conditions[] = array('col' => 'C.term_id', 'sign' => 'IN', 'val' => $value, 'cast' => 'int');
+                    break;
+                    case 'not_category':
+                        $conditions[] = array('col' => 'C.term_id', 'sign' => 'NOT IN', 'val' => $value, 'cast' => 'int');
+                    break;
+                    case 'include':
+                        $conditions[] = array('col' => 'A.ID', 'sign' => 'IN', 'val' => $value, 'cast' => 'int');
+                    break;
+                    case 'exclude':
+                        $conditions[] = array('col' => 'A.ID', 'sign' => 'NOT IN', 'val' => $value, 'cast' => 'int');
+                    break;
+                    case 'cpt': // this is for backwards compatibility's sake
+                    case 'post_type':
+                        $conditions[] = array('col' => 'A.post_type', 'sign' => 'IN', 'val' => $value);
+                    break;
+                    case 'post_status':
+                        $conditions[] = array('col' => 'A.post_status', 'sign' => 'IN', 'val' => $value);
+                    break;
+                    case 'post_date':
+                        // apply timezone to date value
+                        $helper_toolbar = WYSIJA::get('toolbox','helper');
+                        $value = $helper_toolbar->time_tzed($value);
 
+                        if($value !== '') {
+                            $conditions[] = array('col' => 'A.post_date', 'sign' => '>', 'val' => $value);
+                        }
+                    break;
+                    case 'search':
+                        $conditions[] = array('col' => 'A.post_title', 'sign' => 'LIKE', 'val' => '%'.$value.'%');
+                    break;
+                }
+            }
+        }
+
+        // set static conditions for post statuses (we don't want drafts and such to appear in search results)
+        if($args['include'] === null) {
+            $conditions[] = array('col' => 'A.post_status', 'sign' => 'NOT IN', 'val' => array('auto-draft', 'inherit'));
+        }
+
+        // where conditions
+        if(!empty($conditions)) {
+            $query_conditions = $this->build_conditions($conditions);
+
+            $query .= $query_conditions;
+
+            if($args['is_search_query'] === true) {
+                $count_query .= $query_conditions;
+            }
+        }
+
+        // order by
         if(isset($args['orderby'])){
-            $customQuery.=' ORDER BY '.$args['orderby'];
-            if(isset($args['order'])) $customQuery.=' '.$args['order'];
+            $query .= ' ORDER BY '.$args['orderby'];
+            if(isset($args['sort_by'])) {
+                $query .= ' '.(($args['sort_by'] === 'newest') ? 'DESC' : 'ASC');
+            } else if(isset($args['order'])) {
+                $query .= ' '.$args['order'];
+            }
         }
 
-        if(isset($args['numberposts'])){
-            $customQuery.=' LIMIT 0,'.$args['numberposts'];
-        }
+        // set limit
+        $query_offset = (isset($args['query_offset']) ? (int)$args['query_offset'] : 0);
+        $query_limit = ((isset($args['post_limit']) && (int)$args['post_limit'] > 0) ? (int)$args['post_limit'] : 10);
+        $query .= sprintf(' LIMIT %d,%d', $query_offset, $query_limit);
 
-        WYSIJA::log('post notif qry',$customQuery,'post_notif');
-        return $this->query('get_res',$customQuery);
+        // print $query."\n\n";
+
+        WYSIJA::log('post notif qry', $query,'post_notif');
+
+        if($args['is_search_query'] === true) {
+            return array(
+                'rows' => $this->query('get_res', $query),
+                'count' => $this->query('get_row', $count_query)
+            );
+        } else {
+            return $this->query('get_res', $query);
+        }
     }
 
-    function setWhereCond($conditionsIn){
-        $customQuery='';
+    function build_conditions($conditions){
+        $query = '';
         $i = 0;
 
-        foreach($conditionsIn as $key => $data) {
+        foreach($conditions as $key => $data) {
 
-            if($i > 0) $customQuery .=' AND ';
+            if($i > 0) $query .=' AND ';
 
-            $customQuery .= $data['col'].' ';
+            $query .= $data['col'].' ';
 
             $value = $data['val'];
 
@@ -136,34 +224,42 @@ class WYSIJA_model_wp_posts extends WYSIJA_model{
                         } else {
                             $values = "'".join("', '", $value)."'";
                         }
+                        $query.= $data['sign'].' ('.$values.')';
                     } else {
                         if(strpos($value, ',') === FALSE) {
                             // single value
-                            $values = "'".$value."'";
+                            if(array_key_exists('cast', $data) && $data['cast'] === 'int') {
+                                $query .= '= '.(int)$value;
+                            } else {
+                                $query .= '= "'.$value.'"';
+                            }
                         } else {
                             // multiple values
                             $values = "'".join("','", explode(',', $value))."'";
+                            $query.= $data['sign'].' ('.$values.')';
                         }
                     }
-
-                    if($values !== '') {
-                        $customQuery.= $data['sign'].' ('.$values.') ';
-                    }
-                    break;
-
+                break;
+                case 'LIKE':
+                    $query .= ' LIKE "'.$value.'"';
+                break;
                 default:
                     $sign='=';
                     if(isset($data['sign'])) $sign = $data['sign'];
 
                     if(array_key_exists('cast', $data) && $data['cast'] === 'int') {
-                        $customQuery.= $sign.(int)$value." ";
+                        $query.= $sign.(int)$value." ";
                     } else {
-                        $customQuery.= $sign."'".$value."' ";
+                        $query.= $sign."'".$value."' ";
                     }
             }
             $i++;
         }
-        return $customQuery;
-    }
 
+        if($query === '') {
+            return '';
+        } else {
+            return 'WHERE '.$query;
+        }
+    }
 }

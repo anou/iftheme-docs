@@ -89,6 +89,26 @@ tinyMCEPopup.onInit.add(ButtonDialog.init, ButtonDialog);
 // Get translations.
 var wysijatrans = window.parent.wysijatrans;
 
+// Generate custom fields HTML.
+var custom_fields = wysijatrans.custom_fields_list;
+var cfields_output = [];
+if (custom_fields.length !== 0) {
+  var cfields_title = '<h4>' + wysijatrans.custom_fields_title + '</h4>';
+  cfields_output.push(cfields_title);
+  cfields_output.push('<ul>');
+  var tag = '';
+  for (var id in custom_fields) {
+    tag = '<li><a class="button" ' +
+      ' href="javascript:ButtonDialog.insert(ButtonDialog.local_ed,' +
+      "'field:" + id + "')" + '">' +
+      custom_fields[id] +
+      '</a></li>';
+    cfields_output.push(tag);
+  }
+  cfields_output.push('</ul>');
+}
+cfields_output = cfields_output.join('');
+
 </script>
 
 </head>
@@ -201,6 +221,10 @@ var wysijatrans = window.parent.wysijatrans;
         </a>
       </li>
     </ul>
+    <script>
+      // Output Custom Fields.
+      document.write(cfields_output);
+    </script>
 </body>
 
 </html>

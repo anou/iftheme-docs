@@ -253,7 +253,7 @@ class WYSIJA_help_themes extends WYSIJA_object{
 
         if(!$dirtheme){
             $upload_dir = wp_upload_dir();
-            $this->error(sprintf(__('The folder "%1$s" is not writable, please change the access rights to this folder so that Wysija can setup itself properly.',WYSIJA),$upload_dir['basedir'])."<a target='_blank' href='http://codex.wordpress.org/Changing_File_Permissions'>".__('Read documentation',WYSIJA)."</a>");
+            $this->error(sprintf(__('The folder "%1$s" is not writable, please change the access rights to this folder so that Mailpoet can setup itself properly.',WYSIJA),$upload_dir['basedir'])."<a target='_blank' href='http://codex.wordpress.org/Changing_File_Permissions'>".__('Read documentation',WYSIJA)."</a>");
             return false;
         }
 

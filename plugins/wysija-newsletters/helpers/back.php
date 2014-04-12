@@ -19,7 +19,8 @@ class WYSIJA_help_back extends WYSIJA_help{
             ini_set('display_errors', '0');
         }
 
-
+        add_filter('admin_footer_text', array(&$this, 'admin_footer_text'));
+        add_filter('update_footer', array(&$this, 'update_footer'), 15);
 
         //the controller is backend is it from our pages or from wordpress?
         //are we pluging-in to wordpress interfaces or doing entirely our own page?
@@ -46,10 +47,6 @@ class WYSIJA_help_back extends WYSIJA_help{
         }else{
             if(WYSIJA_ITF)  {
                 add_action('admin_init', array($this->controller, 'main'));
-                if(!isset($_REQUEST['action']) || (isset($_REQUEST['action']) && $_REQUEST['action'] !== 'editTemplate')) {
-                    add_action('admin_footer',array($this,'version'),9);
-                }
-
                 add_action('after_setup_theme',array($this,'resolveConflicts'));
             }
             //this is a fix for qtranslate as we were loading translatable string quite early
@@ -70,35 +67,50 @@ class WYSIJA_help_back extends WYSIJA_help{
              $wptools = WYSIJA::get('wp_tools', 'helper');
              $wptools->set_default_rolecaps();
 
-             //code disabling updates for premium users who dont have WJP activated
-            if($config->getValue('premium_key') && !WYSIJA::is_plugin_active('wysija-newsletters-premium/index.php')){
-
-                if(file_exists(WYSIJA_PLG_DIR.'wysija-newsletters-premium'.DS.'index.php')){
-                    //send a message to the user so that he activates the premium plugin or try to fetch it directly.
-                    $this->notice('<p>'.__('You need to activate the Wysija Premium plugin.',WYSIJA).' <a id="install-wjp" class="button-primary"  href="admin.php?page=wysija_campaigns&action=install_wjp">'.__('Activate now',WYSIJA).'</a></p>');
-                }else{
-                    //send a message to the user so that he gets the premium plugin or try to fetch it directly.
-                    $this->notice('<p>'.__('Congrats, your Premium license is active. One last step...',WYSIJA).' <a id="install-wjp" class="button-primary"  href="admin.php?page=wysija_campaigns&action=install_wjp">'.__('Install the Premium plugin.',WYSIJA).'</a></p>');
-                }
-
-                $this->controller->jsTrans['instalwjp']='Installing Wysija Newsletter Premium plugin';
-
-            }
+            // Hook the warning function for premium.
+            add_action( 'admin_init', array(&$this, 'warn_action_on_premium') );
         }
 
         //if the comment form option is activated then we add an approval action
         if($config->getValue('commentform')){
-            add_action('wp_set_comment_status',  array($this,'comment_approved'), 60,2);
+            add_action('wp_set_comment_status', array($this,'comment_approved'), 60,2);
+        }
+    }
+
+
+    /**
+     * On any of the administration pages related to MailPoet, if the user
+     * has the key and doesn't have the premium plugin active a warning will
+     * be displayed.
+     *
+     * @return null
+     */
+    public function warn_action_on_premium(){
+        $mdl_config=WYSIJA::get('config','model');
+
+        if($mdl_config->getValue('premium_key') && !WYSIJA::is_plugin_active(WJ_Upgrade::$plugins[1])){
+            if( file_exists( WPMU_PLUGIN_DIR . DIRECTORY_SEPARATOR . WJ_Upgrade::$plugins[1] ) ||  file_exists( WP_PLUGIN_DIR . DIRECTORY_SEPARATOR . WJ_Upgrade::$plugins[1] ) ){
+                //send a message to the user so that he activates the premium plugin or try to fetch it directly.
+                $this->notice('<p>'.__('You need to activate the MailPoet Premium plugin.', WYSIJA).' <a data-warn="' . esc_attr__( "Confirm activating the MailPoet Premium Plugin?", WYSIJA ) . '" class="button-primary" title="' . esc_attr__( "Activate MailPoet Premium Version", WYSIJA ) . '" href="' . wp_nonce_url('plugins.php?action=activate&amp;plugin=' . urlencode(WJ_Upgrade::$plugins[1]) . '&amp;plugin_status=all', 'activate-plugin_' . WJ_Upgrade::$plugins[1]) . '">'.__('Activate now',WYSIJA).'</a></p>');
+            } else {
+
+                $args = array(
+                    'page' => 'wysija_config',
+                    'action' => 'packager-switch',
+                    '_mp_action' => 'install',
+                    '_wpnonce' => wp_create_nonce('packager-switch'),
+                );
+                if (WYSIJA::is_beta())
+                    $args["stable"] = 1;
+
+                $link = esc_attr(add_query_arg($args, admin_url('admin.php')));
+
+                //send a message to the user so that he gets the premium plugin or try to fetch it directly.
+                $this->notice('<p>'.__('Congrats, your Premium license is active. One last step...', WYSIJA).' <a data-warn="' . esc_attr__( "Confirm installing the MailPoet Premium Plugin?", WYSIJA ) . '" id="install-wjp" class="button-primary" title="' . esc_attr__( "Installing MailPoet Premium Version", WYSIJA ) . '" href="' . esc_url($link) . '">'.__('Download the Premium plugin.',WYSIJA).'</a></p>');
+            }
         }
 
-        // if the beta mode is on we look for the updates on a different server
-        if($config->getValue('beta_mode')){
-            $package_helper = WYSIJA::get('package', 'helper');
-            $package_helper->set_package('wysija-newsletters');
-        }
-
-
-
+        return null;
     }
 
     function comment_approved($cid,$comment_status){
@@ -164,26 +176,26 @@ class WYSIJA_help_back extends WYSIJA_help{
      * @global type $wysija_installing
      */
     function define_translated_strings(){
-        $config=WYSIJA::get('config','model');
-        $linkcontent=__("It doesn't always work the way we want it to, doesn't it? We have a [link]dedicated support website[/link] with documentation and a ticketing system.",WYSIJA);
-        $finds=array('[link]','[/link]');
-        $replace=array('<a target="_blank" href="http://support.mailpoet.com" title="support.mailpoet.com">','</a>');
-        $truelinkhelp='<p>'.str_replace($finds,$replace,$linkcontent).'</p>';
+        $config = WYSIJA::get('config','model');
+        $linkcontent = __("It doesn't always work the way we want it to, doesn't it? We have a [link]dedicated support website[/link] with documentation and a ticketing system.",WYSIJA);
+        $finds = array('[link]','[/link]');
+        $replace = array('<a target="_blank" href="http://support.mailpoet.com" title="support.mailpoet.com">','</a>');
+        $truelinkhelp = '<p>'.str_replace($finds,$replace,$linkcontent).'</p>';
 
-        $extra='<a href="admin.php?page=wysija_config&scroll_to=beta_mode_setting#tab-advanced" title="'.__('Switch to beta',WYSIJA).'">'.__('Switch to beta',WYSIJA).'</a>';
+        $extra = '<a href="admin.php?page=wysija_config&scroll_to=beta_mode_setting#tab-advanced" title="'.__('Switch to beta',WYSIJA).'">'.__('Switch to beta',WYSIJA).'</a>';
 
-        $truelinkhelp.='<p>'.str_replace($finds,$replace,$extra).'</p>';
+        $truelinkhelp .= '<p>'.str_replace($finds,$replace,$extra).'</p>';
 
-        $truelinkhelp.='<p>'.__('Wysija Version: ',WYSIJA).'<strong>'.WYSIJA::get_version().'</strong></p>';
+        $truelinkhelp .= '<p>'.__('MailPoet Version: ',WYSIJA).'<strong>'.WYSIJA::get_version().'</strong></p>';
 
         $this->menus=array(
-            'campaigns'=>array('title'=>'Wysija'),
-            'subscribers'=>array('title'=>__('Subscribers',WYSIJA)),
+            'campaigns'=>array('title'=>'MailPoet'),
+            'subscribers'=>array('title'=>__('Subscribers',WYSIJA)), // if the key "subscribers" is changed, please change in the filter "wysija_menus" as well.
             'config'=>array('title'=>__('Settings',WYSIJA)),
-            //"support"=>array("title"=>__("Support",WYSIJA))
+            'premium'=>array('title'=>__('Premium',WYSIJA))
         );
-        $this->menuHelp=$truelinkhelp;
-
+        $this->menus = apply_filters('wysija_menus', $this->menus);
+        $this->menuHelp = $truelinkhelp;
         if($config->getValue('queue_sends_slow')){
             $msg=$config->getValue('ignore_msgs');
             if(!isset($msg['queuesendsslow'])){
@@ -192,7 +204,6 @@ class WYSIJA_help_back extends WYSIJA_help{
                         ' <a class="linkignore queuesendsslow" href="javascript:;">'.__('Hide!',WYSIJA).'</a>');
             }
         }
-
 
         if(WYSIJA_ITF){
             global $wysija_installing;
@@ -210,14 +221,8 @@ class WYSIJA_help_back extends WYSIJA_help{
 
 
     function add_menus(){
-
-        $modelC=WYSIJA::get('config','model');
+        global $menu,$submenu;// WordPress globals be careful there
         $count=0;
-
-        //WordPress globals be careful there
-        global $menu,$submenu;
-
-
 
         //anti conflicting menus code to make sure that another plugin is not at the same level as us
         $position=50;
@@ -235,20 +240,34 @@ class WYSIJA_help_back extends WYSIJA_help{
         global $wysija_installing;
         foreach($this->menus as $action=> $menutemp){
             $actionFull='wysija_'.$action;
-            if(!isset($menutemp['subtitle'])) $menutemp['subtitle']=$menutemp['title'];
-            if($action=='campaigns')    $roleformenu='wysija_newsletters';
-            elseif($action=='subscribers')    $roleformenu='wysija_subscribers';
-            else $roleformenu='wysija_config';
+            if (!isset($menutemp['subtitle']))
+                $menutemp['subtitle'] = $menutemp['title'];
+            if ($action == 'campaigns')
+                $roleformenu = 'wysija_newsletters';
+            elseif ($action == 'subscribers')
+                $roleformenu = 'wysija_subscribers';
+            elseif ($action == 'statistics')
+                $roleformenu = 'wysija_stats_dashboard';
+            else
+                $roleformenu = 'wysija_config';
 
             if($wysija_installing===true){
                 if($count==0){
                     $parentmenu=$actionFull;
-                    $hookname=add_menu_page($menutemp['title'], $menutemp['subtitle'], $roleformenu, $actionFull , array($this->controller, 'errorInstall'), WYSIJA_EDITOR_IMG.'mail.png', $position);
+                    $hookname=add_menu_page($menutemp['title'], $menutemp['subtitle'], $roleformenu, $actionFull , array($this->controller, 'errorInstall'), 'div', $position);
                 }
             }else{
                 if($count==0){
-                    $parentmenu=$actionFull;
-                    $hookname=add_menu_page($menutemp['title'], $menutemp['subtitle'], $roleformenu, $actionFull , array($this->controller, 'render'), WYSIJA_EDITOR_IMG.'mail.png', $position);
+                    $parentmenu = $actionFull;
+                    $hookname = add_menu_page(
+                            $menutemp['title'],
+                            $menutemp['subtitle'],
+                            $roleformenu,
+                            $actionFull ,
+                            array($this->controller, 'render'),
+                            'div',
+                            $position
+                            );
                 }else{
                     $hookname=add_submenu_page($parentmenu,$menutemp['title'], $menutemp['subtitle'], $roleformenu, $actionFull , array($this->controller, 'render'));
                 }
@@ -267,12 +286,28 @@ class WYSIJA_help_back extends WYSIJA_help{
             $count++;
         }
 
-        if(isset($submenu[$parentmenu])){
-            if($submenu[$parentmenu][0][2]=="wysija_subscribers") $textmenu=__('Subscribers',WYSIJA);
-            else $textmenu=__('Newsletters',WYSIJA);
+        // Correct the text of submenu, in case there is only 1 submenu is enabled
+        if(isset($submenu[$parentmenu])) {
+            switch ($submenu[$parentmenu][0][2]) {
+                case 'wysija_subscribers':
+                    $textmenu=__('Subscribers',WYSIJA);
+                    break;
+
+                case 'wysija_statistics':
+                    $textmenu=__('Statistics',WYSIJA);
+                    break;
+
+                case 'wysija_config':
+                    $textmenu=__('Settings',WYSIJA);
+                    break;
+
+                case 'wysija_campaigns':
+                default:
+                    $textmenu=__('Newsletters',WYSIJA);
+                    break;
+            }
             $submenu[$parentmenu][0][0]=$submenu[$parentmenu][0][3]=$textmenu;
         }
-
     }
 
     function add_help_tab($params){
@@ -298,7 +333,7 @@ class WYSIJA_help_back extends WYSIJA_help{
 
         wp_enqueue_style('wysija-admin-css-widget', WYSIJA_URL.'css/admin-widget.css',array(),WYSIJA::get_version());
 
-        // If Cron enabled sending, send Mixpanel data and reset flag.
+       // If Cron enabled sending, send Mixpanel data and reset flag.
         $model_config = WYSIJA::get('config', 'model');
         if ($model_config->getValue('send_analytics_now') == 1) {
             $analytics = new WJ_Analytics();
@@ -315,7 +350,7 @@ class WYSIJA_help_back extends WYSIJA_help{
             wp_enqueue_script('wysija-admin-js-global', WYSIJA_URL.'js/admin-wysija-global.js',array(),WYSIJA::get_version());
             $pagename=str_replace('wysija_','',$_REQUEST['page']);
             $backloader=WYSIJA::get('backloader','helper');
-            $backloader->initLoad($this->controller);
+            $backloader->init( $this->controller );
 
             //$this->controller->jsTrans["ignoremsg"]=__('Are you sure you want to ignore this message?.',WYSIJA);
             $jstrans=$this->controller->jsTrans;
@@ -324,13 +359,13 @@ class WYSIJA_help_back extends WYSIJA_help{
             $jstrans['gopremium']=__('Go Premium!',WYSIJA);
 
             //enqueue all the scripts that have been declared in the controller
-            $backloader->jsParse($this->controller,$pagename,WYSIJA_URL);
+            $backloader->parse_js( $this->controller, $pagename, WYSIJA_URL );
 
             //this will load automatically existing scripts and stylesheets based on the page and action parameters
-            $backloader->loadScriptsStyles($pagename,WYSIJA_DIR,WYSIJA_URL,$this->controller);
+            $backloader->load_assets($pagename,WYSIJA_DIR,WYSIJA_URL,$this->controller);
 
             //add some translation
-            $backloader->localize($pagename,WYSIJA_DIR,WYSIJA_URL,$this->controller);
+            $backloader->localize( $pagename, WYSIJA_DIR, WYSIJA_URL, $this->controller );
 
             // add rtl support
             if ( is_rtl() ) {
@@ -381,55 +416,68 @@ class WYSIJA_help_back extends WYSIJA_help{
        return $newButtons;
     }
 
-    /**
-     *
-     */
-    function version(){
-        $wysija_footer_links= '<div class="wysija-version">';
-        $wysija_footer_links.='<div class="social-foot">';
+    function admin_footer_text($text) {
+        $screen = get_current_screen();
+        if (strpos($screen->base, 'wysija')===false)
+            return $text;
 
-        $link_start=' | <a target="_blank" id="switch_to_package" href="admin.php?page=wysija_campaigns&action=switch_to_package&plugin=wysija-newsletters&_wpnonce='.WYSIJA_view::secure(array('controller'=>'wysija_campaigns', 'action'=>'switch_to_package'),true);
-        if(WYSIJA::is_beta()){
-            $beta_link=$link_start.'&stable=1"  title="'.__('Switch back to stable',WYSIJA).'">'.__('Switch back to stable',WYSIJA).'</a>';
-        }else{
-            $beta_link=$link_start.'"   title="'.__('Switch to beta',WYSIJA).'">'.__('Switch to beta',WYSIJA).'</a>';
-        }
-        if( (is_multisite() && !WYSIJA::current_user_can('manage_network')) || (!is_multisite() && !WYSIJA::current_user_can('switch_themes')) ) $beta_link='';
-        $wysija_footer_links.= '<div id="upperfoot"><div class="support"><a target="_blank" href="http://support.mailpoet.com/?utm_source=wpadmin&utm_campaign=footer" >'.__('Support',WYSIJA).'</a>'.$beta_link;
-
-        add_filter('wysija_footer_add_stars', array($this,'footer_add_stars'),10);
-        $wysija_footer_links.=apply_filters('wysija_footer_add_stars', '');
-
-        $wysija_footer_links.= '<div class="version">'.__('Wysija Version: ',WYSIJA).'<a href="admin.php?page=wysija_campaigns&action=whats_new">'.WYSIJA::get_version().'</a></div></div>';
-
-        /*$config=WYSIJA::get('config','model');
-        $msg=$config->getValue('ignore_msgs');
-        if(!isset($msg['socialfoot'])){
-            $wysijaversion .= $this->controller->__get_social_buttons();
-        }*/
-
-        $wysija_footer_links.= '</div></div>';
-        echo $wysija_footer_links;
-    }
-
-    /**
-     *
-     * @param string $message
-     * @return string
-     */
-    function footer_add_stars($message){
-        $message.=' | '.str_replace(
+        return
+            "<a target='_blank' href='http://support.mailpoet.com/feedback/?utm_source=wpadmin&utm_campaign=contact_footer'>" . __( 'Contact Support', WYSIJA ) . "</a>" .
+            " | " .
+            str_replace(
                 array('[stars]','[link]','[/link]'),
-
-                array('<a target="_blank" href="http://goo.gl/LVsvys" >&#9733;&#9733;&#9733;&#9733;&#9733;</a>','<a target="_blank" href="http://goo.gl/PFGphH" >','</a>'),
-
+                array('<a target="_blank" href="http://clicky.me/wp-reviews" >&#9733;&#9733;&#9733;&#9733;&#9733;</a>','<a target="_blank" href="http://clicky.me/wp-reviews" >','</a>'),
                 __('Add your [stars] on [link]wordpress.org[/link] and keep this plugin essentially free.',WYSIJA)
-                );
-        return $message;
+            ) .
+            "";
     }
 
+    function update_footer($text){
+        $screen = get_current_screen();
+        if (strpos($screen->base, 'wysija')===false)
+            return $text;
 
+        $title = esc_attr((WYSIJA::is_beta()?__('Revert to stable',WYSIJA):__('Switch to beta',WYSIJA)));
+        $warn_message = esc_attr((WYSIJA::is_beta()?__('Confirm going back to the stable version?',WYSIJA):__('Great! But the beta version might be buggy, and we expect you to report any bugs. Confirm to installing the Beta version?',WYSIJA)));
 
+        $args = array(
+            'page' => 'wysija_config',
+            'action' => 'packager-switch',
+            '_wpnonce' => wp_create_nonce('packager-switch'),
+        );
+        if (WYSIJA::is_beta())
+            $args["stable"] = 1;
+
+        $switch_link = esc_attr(add_query_arg($args, admin_url('admin.php')));
+
+        $switch_text = esc_attr((WYSIJA::is_beta()?__('Revert to Stable', WYSIJA):__('Switch to Beta', WYSIJA)));
+
+        $version_link = esc_url(add_query_arg(
+            array(
+                'page' => 'wysija_campaigns',
+                'action' => 'whats_new',
+            ),
+            admin_url('admin.php')
+        ));
+
+        $premium = false;
+        if (is_plugin_active('wysija-newsletters-premium/index.php')){
+            $premium = WYSIJA::get_version('wysija-newsletters-premium/index.php');
+        }
+
+        return
+            ((is_multisite() && WYSIJA::current_user_can('manage_network')) || (!is_multisite() && WYSIJA::current_user_can('switch_themes'))?
+                "<span class='wrap'>" .
+                    "<a id='switch_to_package' href='{$switch_link}' title='{$title}' data-warn='{$warn_message}' class='add-new-h2'>{$switch_text}</a>" .
+                    (WYSIJA::is_beta()?"<a target='_blank' class='add-new-h2' href='http://support.mailpoet.com/feedback/?utm_source=wpadmin&utm_campaign=contact_beta'>" . __( 'Report Bugs', WYSIJA ) . "</a>":"") .
+                "</span>"
+            :"") .
+            "</p>" .
+            "<p class='alignright'>" .
+                __("MailPoet Version", WYSIJA) . ": <a href='{$version_link}'>" . esc_attr(WYSIJA::get_version()) . "</a>" .
+                ($premium?
+                    " | " .
+                    __("Premium", WYSIJA) . ": " . esc_attr($premium) . "</a>"
+                :"");
+    }
 }
-
-

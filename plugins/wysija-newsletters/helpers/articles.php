@@ -6,64 +6,17 @@ class WYSIJA_help_articles extends WYSIJA_object {
 
     }
 
-    function getPosts($params = array()) {
-        if(!empty($params['exclude'])) {
-            $exclude = $params['exclude'];
-        } else {
-            $exclude = NULL;
+    function stripShortcodes($content) {
+        if(strlen(trim($content)) === 0) {
+            return '';
         }
+        // remove captions
+        $content = preg_replace("/\[caption.*?\](.*<\/a>)(.*?)\[\/caption\]/", '$1', $content);
 
-        if(!empty($params['include'])) {
-            $include = $params['include'];
-        } else {
-            $include = NULL;
-        }
+        // remove other shortcodes
+        $content = preg_replace('/\[[^\[\]]*\]/', '', $content);
 
-        if(!empty($params['includeonly'])) {
-            $includeonly = $params['includeonly'];
-        } else {
-            $includeonly = NULL;
-        }
-
-        // transform category_ids to array
-        if(strlen($params['category_ids']) === 0) {
-            $categories = NULL;
-        } else {
-            $categories = explode(',', $params['category_ids']);
-        }
-        if(!isset($params['cpt'])) $params['cpt']='post';
-        $args = array(
-            'numberposts'     => (int)$params['post_limit'],
-            'offset'          => 0,
-            'category'        => $categories,
-            'orderby'         => 'post_date',
-            'order'           => 'DESC',
-            'include'         => $include,
-            'includeonly'         => $includeonly,
-            'exclude'         => $exclude,
-            'meta_key'        => NULL,
-            'meta_value'      => NULL,
-            'post_type'       => $params['cpt'],
-            'post_mime_type'  => NULL,
-            'post_parent'     => NULL,
-            'post_status'     => 'publish'
-        );
-
-        if(isset($params['post_date'])) {
-            $args['post_date'] = $params['post_date'];
-        }
-
-        $modelPosts=WYSIJA::get('wp_posts','model');
-
-        $posts=$modelPosts->get_posts($args);
-
-        if(empty($posts)) return array();
-        $mConfig=WYSIJA::get('config','model');
-        foreach($posts as $key => $post) {
-            if($mConfig->getValue('interp_shortcode'))    $post['post_content']=apply_filters('the_content',$post['post_content']);
-            $posts[$key] = (array)$post;
-        }
-        return $posts;
+        return $content;
     }
 
     function convertPostToBlock($post, $params = array()) {
@@ -72,9 +25,15 @@ class WYSIJA_help_articles extends WYSIJA_object {
         $defaults = array(
             'title_tag' => 'h1',
             'title_alignment' => 'left',
+            'title_position' => 'inside',
             'image_alignment' => 'left',
+            'image_width' => 325,
             'readmore' => __('Read online.', WYSIJA),
-            'post_content' => 'full'
+            'post_content' => 'full',
+            'author_show' => 'no',
+            'author_label' => '',
+            'category_show' => 'no',
+            'category_label' => ''
         );
 
         // merge params with default params
@@ -82,13 +41,15 @@ class WYSIJA_help_articles extends WYSIJA_object {
 
         if($params['post_content'] === 'full') {
             $content = $post['post_content'];
+        } else if($params['post_content'] === 'title') {
+            $content = $this->getPostTitle($post, $params);
         } else {
             // get excerpt
             if(!empty($post['post_excerpt'])) {
                 $content = $post['post_excerpt'];
             } else {
-                // remove shortcodes before getting the excerpt
-                $post['post_content'] = preg_replace('/\[[^\[\]]*\]/', '', $post['post_content']);
+                // strip shortcodes before getting the excerpt
+                $post['post_content'] = $this->stripShortcodes($post['post_content']);
 
                 // if excerpt is empty then try to find the "more" tag
                 $excerpts = explode('<!--more-->', $post['post_content']);
@@ -96,8 +57,8 @@ class WYSIJA_help_articles extends WYSIJA_object {
                     $content = $excerpts[0];
                 }else{
                     // finally get a made up excerpt if there is no other choice
-                    $helperToolbox = WYSIJA::get('toolbox', 'helper');
-                    $content = $helperToolbox->excerpt($post['post_content'], 60);
+                    $helper_toolbox = WYSIJA::get('toolbox', 'helper');
+                    $content = $helper_toolbox->excerpt($post['post_content'], apply_filters('mpoet_excerpt_length', 60));
                 }
             }
             // strip title tags from excerpt
@@ -110,8 +71,8 @@ class WYSIJA_help_articles extends WYSIJA_object {
         // remove images
         $content = preg_replace('/<img[^>]+./','', $content);
 
-        // remove shortcodes
-        $content = preg_replace('/\[[^\[\]]*\]/', '', $content);
+        // strip shortcodes
+        $content = $this->stripShortcodes($content);
 
         // remove wysija nl shortcode
         $content= preg_replace('/\<div class="wysija-register">(.*?)\<\/div>/','',$content);
@@ -125,27 +86,93 @@ class WYSIJA_help_articles extends WYSIJA_object {
         // convert ol to ul
         $content = preg_replace('/<([\/])?ol(.*?)>/', '<$1ul$2>', $content);
 
-        // convert dollar signs
-        $content = str_replace(array('$', 'â‚¬', 'Â£', 'Â¥'), array('&#36;', '&euro;', '&pound;', '&#165;'), $content);
+        // convert currency signs
+        $content = str_replace(array('$', '€', '£', '¥'), array('&#36;', '&euro;', '&pound;', '&#165;'), $content);
 
         // strip useless tags
-        $content = strip_tags($content, '<p><em><span><b><strong><i><h1><h2><h3><a><ul><ol><li><br>');
+        // TODO should we add table, tr, td and th into that list it could create issues in some cases
+        $tags_not_being_stripped = array('<p>','<em>','<span>','<b>','<strong>','<i>','<h1>','<h2>','<h3>','<a>','<ul>','<ol>','<li>','<br>');
 
-        // set post title if present
-        if(strlen(trim($post['post_title'])) > 0) {
-            // cleanup post title
-            $post['post_title'] = trim(str_replace(array('$', 'â‚¬', 'Â£', 'Â¥'), array('&#36;', '&euro;', '&pound;', '&#165;'), strip_tags($post['post_title'])));
-            // build content starting with title
-            $content = '<'.$params['title_tag'].' class="align-'.$params['title_alignment'].'">'.  $post['post_title'].'</'.$params['title_tag'].'>'.$content;
+        // filter to modify that list
+        $tags_not_being_stripped = apply_filters('mpoet_strip_tags_ignored',$tags_not_being_stripped);
+
+        $content = strip_tags($content, implode('',$tags_not_being_stripped));
+
+        // post meta (author, categories)
+        $post_meta_above = '';
+        // if the author or categories are displayed, open a new paragraph
+        if($params['author_show'] === 'above' || $params['category_show'] === 'above') {
+            $post_meta_above .= '<p>';
         }
 
-        // add read online link
-        $content .= '<p><a href="'.get_permalink($post['ID']).'" target="_blank">'.esc_attr($params['readmore']).'</a></p>';
+        // author above
+        if($params['author_show'] === 'above') {
+            $post_meta_above .= $this->getPostAuthor($post, $params);
+        }
+        // categories above
+        if($params['category_show'] === 'above') {
+            // if there is an author already, we need to add an extra break
+            if($params['author_show'] === 'above') {
+                $post_meta_above .= '<br />';
+            }
+            // display post categories
+            $post_meta_above .= $this->getPostCategories($post, $params);
+        }
+
+        // close the paragraph around author and categories
+        if($params['author_show'] === 'above' || $params['category_show'] === 'above') {
+            $post_meta_above .= '</p>';
+        }
+
+        if($params['post_content'] !== 'title') {
+            if($params['title_position'] === 'inside') {
+                // add title
+                $content = $this->getPostTitle($post, $params).$post_meta_above.$content;
+            } else {
+                $content = $post_meta_above.$content;
+            }
+        } else {
+            $content = $post_meta_above.$content;
+        }
+
+        if($params['post_content'] !== 'title') {
+            // add read online link
+            $content .= '<p><a href="'.get_permalink($post['ID']).'" target="_blank">'.stripslashes($params['readmore']).'</a></p>';
+        }
+
+        // post meta (author, categories) below
+        $post_meta_below = '';
+
+        // if the author or categories are displayed, open a new paragraph
+        if($params['author_show'] === 'below' || $params['category_show'] === 'below') {
+            $post_meta_below .= '<p>';
+        }
+
+        // author below
+        if($params['author_show'] === 'below') {
+            $post_meta_below .= $this->getPostAuthor($post, $params);
+        }
+
+        // categories below
+        if($params['category_show'] === 'below') {
+            // if there is an author already, we need to add an extra break
+            if($params['author_show'] === 'below') {
+                $post_meta_below .= '<br />';
+            }
+            $post_meta_below .= $this->getPostCategories($post, $params);
+        }
+
+        // close the paragraph around author and categories
+        if($params['author_show'] === 'below' || $params['category_show'] === 'below') {
+            $post_meta_below .= '</p>';
+        }
+
+        if($post_meta_below !== '') $content .= $post_meta_below;
 
         // set image/text alignment based on present data
         $post_image = null;
 
-        if(isset($post['post_image'])) {
+        if(($params['title_tag'] !== 'list') && isset($post['post_image'])) {
             $post_image = $post['post_image'];
 
             // set image alignment to match block's
@@ -161,11 +188,11 @@ class WYSIJA_help_articles extends WYSIJA_object {
                     case 'left':
                     case 'right':
                         // constrain width to 325px max
-                        $post_image['width'] = min($post_image['width'], 325);
+                        $post_image['width'] = min($params['image_width'], 325);
                         break;
                     case 'center':
                         // constrain width to 564px max
-                        $post_image['width'] = min($post_image['width'], 564);
+                        $post_image['width'] = min($params['image_width'], 564);
                         break;
                 }
 
@@ -179,17 +206,89 @@ class WYSIJA_help_articles extends WYSIJA_object {
             }
         }
 
+        $position = 0;
+        if(isset($params['position']) && (int)$params['position'] > 0) {
+            $position = (int)$params['position'];
+        }
+
         $block = array(
-          'position' => 0,
-          'type' => 'content',
-          'text' => array(
-              'value' => base64_encode($content)
-          ),
-          'image' => $post_image,
-          'alignment' => $params['image_alignment']
+            'position' => $position,
+            'type' => 'content',
+            'text' => array(
+                'value' => base64_encode($content)
+            ),
+            'image' => $post_image,
+            'alignment' => $params['image_alignment']
         );
 
         return $block;
+    }
+
+    public function getPostAuthor($post = array(), $params = array()) {
+        $content = '';
+
+        if(isset($post['post_author'])) {
+            $author_name = get_the_author_meta('display_name', (int)$post['post_author']);
+
+            // check if the user specified a label to be displayed before the author's name
+            if(strlen(trim($params['author_label'])) > 0) {
+                $author_name = stripslashes(trim($params['author_label'])).' '.$author_name;
+            }
+            $content .= $author_name;
+        }
+
+        return $content;
+    }
+
+    public function getPostCategories($post = array(), $params = array()) {
+        $content = '';
+
+        // get categories
+        $categories = get_the_category($post['ID']);
+
+        if(empty($categories) === false) {
+            // check if the user specified a label to be displayed before the author's name
+            if(strlen(trim($params['category_label'])) > 0) {
+                $content = stripslashes($params['category_label']).' ';
+            }
+
+            $category_names = array();
+
+            foreach($categories as $category) {
+                $category_names[] = $category->name;
+            }
+
+            $content .= join(', ', $category_names);
+        }
+
+        return $content;
+    }
+
+    public function getPostTitle($post = array(), $params = array()) {
+        $content = '';
+
+        if(strlen(trim($post['post_title'])) > 0) {
+            // cleanup post title and convert currency signs
+            $post_title = trim(str_replace(array('$', '€', '£', '¥'), array('&#36;', '&euro;', '&pound;', '&#165;'), strip_tags($post['post_title'])));
+
+            // open title tag
+            if($params['title_tag'] === 'list') {
+                $params['title_tag'] = 'li';
+            }
+
+            $content .= '<'.$params['title_tag'].' class="align-'.$params['title_alignment'].'">';
+                // set title link
+                $content .= '<a href="'.get_permalink($post['ID']).'" target="_blank">';
+                    // set title
+                    $content .= $post_title;
+                // close title link
+                $content .= '</a>';
+            // close title tag
+            $content .= '</'.$params['title_tag'].'>';
+
+        }
+
+        return $content;
     }
 
     function getImage($post) {
@@ -256,6 +355,8 @@ class WYSIJA_help_articles extends WYSIJA_object {
         return array_merge($post_image, array('url' => get_permalink($post['ID'])));
     }
 
+
+
     function convertEmbeddedContent($content = '') {
         // remove embedded video and replace with links
         $content = preg_replace('#<iframe.*?src=\"(.+?)\".*><\/iframe>#', '<a href="$1">'.__('Click here to view media.', WYSIJA).'</a>', $content);
@@ -266,4 +367,70 @@ class WYSIJA_help_articles extends WYSIJA_object {
         return $content;
     }
 
+    function getFilterByType($params = array()) {
+        if(array_key_exists('value', $params)) {
+            $value = $params['value'];
+        } else {
+            return;
+        }
+
+        // make sure value is null if it's an empty string
+        if($value !== null and strlen(trim($value)) === 0) $value = null;
+
+        // get all post types
+        $helper_wp_tools = WYSIJA::get('wp_tools', 'helper');
+        $post_types = $helper_wp_tools->get_post_types();
+
+        // build post type selection
+        $output = '<select name="post_type" id="post_type">';
+
+        if(isset($params['label'])) {
+            $output .= '<option value=""'.(($value === null) ? ' selected="selected"' : '').'>'.$params['label'].'</option>';
+        }
+        $output .= '<option value="post"'.(($value === 'post') ? ' selected="selected"' : '').'>'.__('Posts',WYSIJA).'</option>';
+        $output .= '<option value="page"'.(($value === 'page') ? ' selected="selected"' : '').'>'.__('Pages',WYSIJA).'</option>';
+
+        foreach($post_types as $key=> $object_post_type) {
+            $selected = ($value === $key) ? ' selected="selected"' : '';
+            $output .= '<option value="'.$key.'"'.$selected.'>'.$object_post_type->labels->name.'</option>';
+        }
+        $output .= '</select>';
+        return $output;
+    }
+
+    function getFilterByCategory($value = null, $post_type = 'post') {
+        // make sure value is null if it's an empty string
+        if($value !== null and strlen(trim($value)) === 0) $value = null;
+
+        $helper_wp_tools = WYSIJA::get('wp_tools','helper');
+        $categories = $helper_wp_tools->get_categories();
+
+        $output = '';
+        foreach($categories as $cpt => $categories_of_cpt){
+            $output .= '<select id="post_category_'.$cpt.'" name="category_ids" class="post_category">';
+            $output .= '<option value="">'.__('Filter by category', WYSIJA).'</option>';
+            foreach($categories_of_cpt as $category) {
+                $output .=  '<option value="'.$category['id'].'">'.$category['name'].'</option>';
+            }
+            $output .= '</select>';
+        }
+        return $output;
+    }
+
+
+    function getFilterByStatus($current_status = 'publish') {
+        $output = '';
+
+        $helper_wp_tools = WYSIJA::get('wp_tools', 'helper');
+        $statuses = $helper_wp_tools->get_post_statuses();
+
+        $output .= '<select id="post_status" name="post_status" class="post_status">';
+        $output .= '<option value="">'.__('Filter by status', WYSIJA).'</option>';
+        foreach($statuses as $key => $label) {
+            $is_selected = ($current_status === $key) ? 'selected="selected"' : '';
+            $output .=  '<option value="'.$key.'" '.$is_selected.'>'.$label.'</option>';
+        }
+        $output .= '</select>';
+        return $output;
+    }
 }

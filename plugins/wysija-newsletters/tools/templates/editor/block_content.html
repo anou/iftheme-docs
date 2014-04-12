@@ -4,7 +4,7 @@
         {include file="templates/editor/block_controls.html"}
     {/if}
 {/if}
-    <div class="wysija_content {#alignment}" wysija_align="{#alignment}">
+    <div class="wysija_content {#alignment}" wysija_align="{#alignment}" {if #background_color && #no-block}wysija_bg_color="{#background_color}"{/if}>
         {include file="templates/editor/block_image.html"}
         {include file="templates/editor/block_text.html"}
     </div>

@@ -170,6 +170,7 @@ class WYSIJA_help_mailer extends acymailingPHPMailer {
             $this->WordWrap = 150;
 
             if($this->config->getValue('dkim_active') && $this->config->getValue('dkim_pubk') && !$this->isElasticRest && !$this->isSendGridRest){
+               // check that server can sign emails
                if(!function_exists('openssl_sign')){
                    $this->error(__('You cannot use the DKIM signature option...',WYSIJA).' '.__('The PHP Extension openssl is not enabled on your server. Ask your host to enable it if you want to use an SSL connection.',WYSIJA));
                }else{
@@ -463,7 +464,9 @@ class WYSIJA_help_mailer extends acymailingPHPMailer {
                 }
             }
 
-
+            if(has_filter('mpoet_mailer_hostname')){
+                $this->Hostname = apply_filters('mpoet_mailer_hostname', $this->Hostname);
+            }
             /*if(!empty($this->forceTemplate) AND empty($this->defaultMail[$email_id]->tempid)){
                 $this->defaultMail[$email_id]->tempid = $this->forceTemplate;
             }*/
@@ -540,7 +543,7 @@ class WYSIJA_help_mailer extends acymailingPHPMailer {
                 $message_id.='JA'.base64_encode(time().rand(0,99999));
             }
 
-            $this->MessageID = '<'.preg_replace("|[^a-z0-9+_]|i",'',$message_id).'@'.$this->ServerHostname().'>';
+            $this->MessageID = '<'.preg_replace("|[^a-z0-9+_]|i",'',$message_id).'@'.  $this->ServerHostname().'>';
             //$this->addCustomHeader( 'X-Subid: ' . $receiver->user_id );
             if(!isset($this->forceVersion)){
                     if(/*!isset($this->defaultMail[$email_id]->simple) &&*/ $this->checkConfirmField AND empty($receiver->status) AND $this->config->getValue('confirm_dbleoptin')==1 AND $email_id != $this->config->getValue('confirm_email_id')){
@@ -850,65 +853,98 @@ class WYSIJA_help_mailer extends acymailingPHPMailer {
 
         }
 
+	/**
+	 * Embed GA tracking code into a link
+	 * @param string $link
+	 * @param string $tracking_code
+	 * @param string $media (email, web)
+	 * @return string
+	 */
+	protected function add_ga_tracking_code($link, $tracking_code, $media = 'email') {
+	    if (!$this->is_wysija_link($link) && $this->is_internal_link($link)) {
+		$hash_part_url = '';
+		$argsp = array();
+
+		if (strpos($link, '#') !== false)
+		{
+		    $hash_part_url = substr($link, strpos($link, '#'));
+		    $link = substr($link, 0, strpos($link, '#'));
+		}
+
+		$argsp['utm_source'] = 'wysija';
+		$argsp['utm_medium'] = !empty($media) ? trim($media) : 'email';
+		$argsp['utm_campaign'] = trim($tracking_code);
+
+		$link .= $this->get_started_character_of_param($link);
+		$link .= http_build_query($argsp);
+		$link .= $hash_part_url;
+	    }
+	    return $link;
+	}
+
+	/**
+	 * Detects if a link is on a same website
+	 * @param string $link
+	 * @access public
+	 * @return boolean
+	 */
+	public function is_internal_link($link) {
+	    $helper_toolbox = WYSIJA::get('toolbox', 'helper');
+	    return (strpos($link, $helper_toolbox->_make_domain_name(site_url())) !== false);
+	}
+
+	/**
+	 * is a wysija link
+	 * @param string $link
+	 * @access public
+	 * @return boolean
+	 */
+	public function is_wysija_link($link) {
+	    // @todo: we should use pattern to remove all links with []
+	    return (
+		    strpos($link, '[view_in_browser_link]') !== false
+		    || strpos($link, '[unsubscribe_link]') !== false
+		    || strpos($link, '[subscriptions_link]') !== false
+		    );
+	}
+
+	/**
+	 * Get a character which is between the original url and the next param
+	 * @param string $link
+	 * @access public
+	 * @return string
+	 */
+	public function get_started_character_of_param($link) {
+	    return (strpos($link, '?') !== false) ? '&' : '?';
+	}
+
         function tracker_replaceusertags($email,$user){
-
-            //if(empty($user->user_id)) return;
-
-            //$urlClass = acymailing_get('class.url');
-            //if($urlClass === null) return;
             $urls = array();
+	    $results = array();// collect all links in email
             if(!preg_match_all('#href[ ]*=[ ]*"(?!mailto:|\#|ymsgr:|callto:|file:|ftp:|webcal:|skype:)([^"]+)"#Ui',$email->body,$results)) return;
 
             $modelConf=WYSIJA::get('config','model');
-            //$urltracking=site_url()."?p=".$modelConf->getValue("confirm_email_link");
-            //$urltracking=WYSIJA::get_permalink($modelConf->getValue("confirm_email_link"));
+
             foreach($results[1] as $i => $url){
-                $coreUrl=false;
                 if(isset($urls[$results[0][$i]])|| strpos($url, 'wysija-key')) continue;
 
-                $urlreuse=$url;
-                if((strpos($urlreuse, '[view_in_browser_link]')===false || strpos($urlreuse, '[unsubscribe_link]')===false) && isset($email->params['googletrackingcode']) && trim($email->params['googletrackingcode']) ){
-
-                    $helperToolbox=WYSIJA::get('toolbox','helper');
-                    if(strpos($urlreuse, $helperToolbox->_make_domain_name(site_url()))!==false){
-                        $hashPartUrl = '';
-                        if (strpos($urlreuse, '#') !== false){
-                            $hashPartUrl = substr($urlreuse,strpos($urlreuse, '#'));
-                            $urlreuse = substr($urlreuse,0,strpos($urlreuse, '#'));
-                        }
-
-                        if (strpos($urlreuse, '?') !== false) $charStart='&';
-                        else $charStart='?';
-                        $urlreuse.=$charStart;
-
-                        $argsp=array();
-                        $argsp['utm_source'] = 'wysija';
-                        $argsp['utm_medium'] = 'email';
-                        $argsp['utm_campaign'] = trim($email->params['googletrackingcode']);
-
-                        $paramsinline=array();
-                        foreach($argsp as $k => $v){
-                            $paramsinline[]=$k.'='.$v;
-                        }
-                        $urlreuse.=implode('&',$paramsinline);
-                        $urlreuse.=$hashPartUrl;
-                    }
-
-
-
+                $email_url = $url;
+		// Embed Google Analytics tracking code
+                if (isset($email->params['googletrackingcode']) && trim($email->params['googletrackingcode'])) {
+		    $email_url = $this->add_ga_tracking_code($email_url, trim($email->params['googletrackingcode']));
                 }
 
-                //$mytracker = $urlClass->getUrl($url,$email->email_id,$user->user_id);
-                //if(empty($mytracker)) continue;
+                if(!empty($email->params))  $email_url = apply_filters('mpoet_email_url', $email_url, $email->params);
+
                 $Wysijaurls=array();
                 $Wysijaurls['action=unsubscribe']='[unsubscribe_link]';
                 $Wysijaurls['action=subscriptions']='[subscriptions_link]';
                 $Wysijaurls['action=viewinbrowser']='[view_in_browser_link]';
                 $urlsportions=array_keys($Wysijaurls);
 
-                if(preg_match('#'.implode('|',$urlsportions).'|\{|%7B#i',$urlreuse)){
+                if(preg_match('#'.implode('|',$urlsportions).'|\{|%7B#i',$email_url)){
                     foreach($Wysijaurls as $k =>$v){
-                        if(strpos($urlreuse, $k)!==false){
+                        if(strpos($email_url, $k)!==false){
                             if($modelConf->getValue('urlstats_base64')){
                                 $cururl=base64_encode($v);
                             }else{
@@ -920,11 +956,11 @@ class WYSIJA_help_mailer extends acymailingPHPMailer {
                     }
                 }else{
                     //make sure that broken url don't fuck the reidrection up like a space before http://
-                    $urlreuse=trim($urlreuse);
+                    $email_url=trim($email_url);
                     if($modelConf->getValue('urlstats_base64')){
-                        $cururl=base64_encode($urlreuse);
+                        $cururl=base64_encode($email_url);
                     }else{
-                        $cururl=$urlreuse;
+                        $cururl=$email_url;
                     }
                     $urlencoded=urlencode($cururl);
                 }
@@ -936,13 +972,16 @@ class WYSIJA_help_mailer extends acymailingPHPMailer {
                 $args['urlpassed'] = $urlencoded;
                 $args['controller'] = 'stats';
 
+                $page_id = $modelConf->getValue('confirm_email_link');
                 //if it's a system url that needs privacy we hash it
-                if(strpos($urlreuse, '[unsubscribe_link]')!==false){
+                if(strpos($email_url, '[unsubscribe_link]')!==false){
                     $args['hash']=md5(AUTH_KEY.'[unsubscribe_link]'.$args['user_id']);
+                    $page_id = $modelConf->getValue('unsubscribe_page');
                 }
 
-                if(strpos($urlreuse, '[subscriptions_link]')!==false){
+                if(strpos($email_url, '[subscriptions_link]')!==false){
                     $args['hash']=md5(AUTH_KEY.'[subscriptions_link]'.$args['user_id']);
+                    $page_id = $modelConf->getValue('subscriptions_page');
                 }
 
 
@@ -955,10 +994,9 @@ class WYSIJA_help_mailer extends acymailingPHPMailer {
                     $args['no64'] = 1;
                 }
 
-                $mytracker=WYSIJA::get_permalink($modelConf->getValue('confirm_email_link'),$args);
+                $mytracker=WYSIJA::get_permalink($modelConf->getValue($page_id),$args);
                 $urls[$results[0][$i]] = str_replace($url,$mytracker,$results[0][$i]);
             }
-
             $email->body = str_replace(array_keys($urls),$urls,$email->body);
 
 	}//endfct

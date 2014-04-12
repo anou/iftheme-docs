@@ -6,14 +6,20 @@
             $.validationEngineLanguage.allRules = {
                 "required": {
                     "regex": "none",
-                    "alertText": "* Ce champs est requis",
+                    "alertText": "* Ce champ est requis",
                     "alertTextCheckboxMultiple": "* Choisir une option",
                     "alertTextCheckboxe": "* Cette option est requise"
+                },
+                "requiredInFunction": { 
+                    "func": function(field, rules, i, options){
+                        return (field.val() == "test") ? true : false;
+                    },
+                    "alertText": "* Field must equal test"
                 },
                "minSize": {
                     "regex": "none",
                     "alertText": "* Minimum ",
-                    "alertText2": " caracteres requis"
+                    "alertText2": " caractères requis"
                 },
 				"groupRequired": {
                     "regex": "none",
@@ -22,7 +28,7 @@
                 "maxSize": {
                     "regex": "none",
                     "alertText": "* Maximum ",
-                    "alertText2": " caracteres requis"
+                    "alertText2": " caractères requis"
                 },
 		        "min": {
                     "regex": "none",
@@ -51,11 +57,15 @@
                 },
                 "equals": {
                     "regex": "none",
-                    "alertText": "* Votre champs n'est pas identique"
+                    "alertText": "* Votre champ n'est pas identique"
+                },
+                "creditCard": {
+                    "regex": "none",
+                    "alertText": "* Numéro de carte bancaire valide"
                 },
                 "phone": {
                     // credit: jquery.h5validate.js / orefalo
-                    "regex": /^([\+][0-9]{1,3}[ \.\-])?([\(]{1}[0-9]{2,6}[\)])?([0-9 \.\-\/]{3,20})((x|ext|extension)[ ]?[0-9]{1,4})?$/,
+                    "regex": /^([\+][0-9]{1,3}([ \.\-])?)?([\(][0-9]{1,6}[\)])?([0-9 \.\-]{1,32})(([A-Za-z \:]{1,11})?[0-9]{1,4}?)$/,
                     "alertText": "* Numéro de téléphone invalide"
                 },
                 "email": {
@@ -69,7 +79,7 @@
                 },
                 "number": {
                     // Number, including positive, negative, and floating decimal. credit: orefalo
-                    "regex": /^[\-\+]?(([0-9]+)([\.,]([0-9]+))?|([\.,]([0-9]+))?)$/,
+                    "regex": /^[\-\+]?((([0-9]{1,3})([,][0-9]{3})*)|([0-9]+))?([\.]([0-9]+))?$/,
                     "alertText": "* Nombre flottant invalide"
                 },
                 "date": {
@@ -86,14 +96,14 @@
                 },
                 "onlyNumberSp": {
                     "regex": /^[0-9\ ]+$/,
-                    "alertText": "* Seules les chiffres sont acceptées"
+                    "alertText": "* Seuls les chiffres sont acceptés"
                 },
                 "onlyLetterSp": {
-                    "regex": /^[a-zA-Z\ \']+$/,
+                    "regex": /^[a-zA-Z\u00C0-\u00D6\u00D9-\u00F6\u00F9-\u00FD\ \']+$/,
                     "alertText": "* Seules les lettres sont acceptées"
                 },
                 "onlyLetterNumber": {
-                    "regex": /^[0-9a-zA-Z]+$/,
+                    "regex": /^[0-9a-zA-Z\u00C0-\u00D6\u00D9-\u00F6\u00F9-\u00FD]+$/,
                     "alertText": "* Aucun caractère spécial n'est accepté"
                 },
 				// --- CUSTOM RULES -- Those are specific to the demos, they can be removed or changed to your likings

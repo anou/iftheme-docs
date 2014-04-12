@@ -14,6 +14,10 @@ class WYSIJA_model_user extends WYSIJA_model{
         'keyuser' => array(),
         'status' => array('req'=>true,'type'=>'boolean'),
         'created_at' => array('auto'=>true,'type'=>'date'),
+        'confirmed_ip' => array(),
+        'confirmed_at' => array(),
+        'last_opened' => array(),
+        'last_clicked' => array(),
     );
     var $searchable = array('email','firstname', 'lastname');
 
@@ -23,12 +27,24 @@ class WYSIJA_model_user extends WYSIJA_model{
         $this->WYSIJA_model();
     }
 
-    /**
-     * return the subscription status of one subscriber using his user_id
-     * @param int $user_id
-     * @return int
-     */
-    function getSubscriptionStatus($user_id){
+    function beforeInsert(){
+        /* set the activation key */
+        $modelUser=WYSIJA::get("user","model");
+
+        $this->values['keyuser']=md5($this->values['email'].$this->values['created_at']);
+        while($modelUser->exists(array("keyuser"=>$this->values['keyuser']))){
+            $this->values['keyuser']=$this->generateKeyuser($this->values['email']);
+            $modelUser->reset();
+        }
+
+        if(!isset($this->values['status'])) $this->values['status']=0;
+
+        // automatically add value to the field "domain". This is useful for statistics
+        $this->values['domain'] = substr($this->values['email'],strpos($this->values['email'],'@')+1);
+        return true;
+    }
+
+    function getSubscriptionStatus($uid){
         $this->getFormat=OBJECT;
         $result=$this->getOne(array('status'),array('user_id'=>$user_id));
         return $result->status;
@@ -92,7 +108,7 @@ class WYSIJA_model_user extends WYSIJA_model{
 
     /**
      * get the details, lists and stats email counts regarding one user
-     * @param array $conditions : Wysija's condition format
+     * @param array $conditions : MailPoet's condition format
      * @param boolean $stats : do we get the stats data of that user
      * @param boolean $subscribed_list_only :
      * @return boolean
@@ -169,9 +185,9 @@ class WYSIJA_model_user extends WYSIJA_model{
      * @param string $target how does the link open
      * @return type
      */
-    function getConfirmLink($user_obj = false, $action = 'subscribe', $text = false, $url_only = false, $target = '_blank'){
-        if(!$text) $text=__('Click here to subscribe',WYSIJA);
-        $users_preview=false;
+    function getConfirmLink($user_obj = false, $action = 'subscribe', $text = false, $url_only = false, $target = '_blank' , $page_id_known = false){
+        if(!$text) $text = __('Click here to subscribe',WYSIJA);
+        $users_preview = false;
         //if($action=='subscriptions')dbg($userObj);
         if(!$user_obj){
             //preview mode
@@ -187,18 +203,40 @@ class WYSIJA_model_user extends WYSIJA_model{
             if(!$user_obj->keyuser){
                 $user_obj->keyuser = $this->generateKeyuser($user_obj->email);
                 while($this->exists(array('keyuser'=>$user_obj->keyuser))){
-                    $user_obj->keyuser=$this->generateKeyuser($user_obj->email);
+                    $user_obj->keyuser = $this->generateKeyuser($user_obj->email);
                 }
-               $this->update(array('keyuser'=>$user_obj->keyuser),array('user_id'=>$user_obj->user_id));
+               $this->update(array('keyuser' => $user_obj->keyuser),array('user_id' => $user_obj->user_id));
             }
 
             $this->reset();
-            $params['wysija-key']=$user_obj->keyuser;
+            $params['wysija-key'] = $user_obj->keyuser;
         }
-        $params['action']=$action;
-        $model_config=WYSIJA::get('config','model');
+        $params['action'] = $action;
+        $model_config = WYSIJA::get('config','model');
         if($users_preview) $params['demo']=1;
-        $full_url=WYSIJA::get_permalink($model_config->getValue('confirm_email_link'),$params);
+
+        $default_page_id = $model_config->getValue('confirm_email_link');
+
+        $action_page_param = array(
+            'subscribe' => 'confirmation_page',
+            'unsubscribe' => 'unsubscribe_page',
+            'subscriptions' => 'subscriptions_page',
+        );
+
+        $page_id_for_action = $model_config->getValue($action_page_param[$action]);
+
+        if(!$page_id_for_action || $default_page_id == $page_id_for_action){
+            // if we use the default page created on install for this action
+            $page_id = $default_page_id;
+        }else{
+            // if the page for this action has been modified in the settings
+            $page_id = $page_id_for_action;
+        }
+
+        if($page_id_known!==false) $page_id = $page_id_known;
+
+        $full_url = WYSIJA::get_permalink($page_id,$params);
+
         if($url_only) return $full_url;
         return '<a href="'.$full_url.'" target="'.$target.'">'.$text.'</a>';
     }
@@ -211,7 +249,9 @@ class WYSIJA_model_user extends WYSIJA_model{
      * @return type
      */
     function getEditsubLink($user_obj=false,$url_only=false, $target = '_blank'){
-        return $this->getConfirmLink($user_obj,'subscriptions',__('Edit your subscriptions',WYSIJA),$url_only,false,$target);
+        $model_config = WYSIJA::get('config','model');
+
+        return $this->getConfirmLink($user_obj,'subscriptions',$model_config->getValue('manage_subscriptions_linkname'),$url_only,$target);
     }
 
     /**
@@ -221,7 +261,8 @@ class WYSIJA_model_user extends WYSIJA_model{
      * @return string
      */
     function getUnsubLink($user_obj=false,$url_only=false){
-        $model_config=WYSIJA::get('config','model');
+        $model_config = WYSIJA::get('config','model');
+
         return $this->getConfirmLink($user_obj,'unsubscribe',$model_config->getValue('unsubscribe_linkname'),$url_only);
     }
 
@@ -266,16 +307,14 @@ class WYSIJA_model_user extends WYSIJA_model{
         }
 
         // Lists filters
-        // - override wysija[filter][filter-list] if this is empty
-        if( !empty($_REQUEST['redirect'])
-                && (!empty($_REQUEST['filter_list']))
-                && empty($_REQUEST['wysija']['filter']['filter_list']) ){
-            $_REQUEST['wysija']['filter']['filter_list'] = !empty ($_REQUEST['filter_list']) ? $_REQUEST['filter_list'] : $_REQUEST['filter-list'];
+        // Catch list filter from URL
+        if ( empty($_REQUEST['wysija']['filter']['filter_list']) && !empty($_REQUEST['filter-list']) ) {
+            $filters['lists'] = $_REQUEST['filter-list'];
         }
 
         if(!empty($_REQUEST['wysija']['filter']['filter_list'])){
             if ($_REQUEST['wysija']['filter']['filter_list'] == 'orphaned') {
-                $filters['lists'] = null;
+                $filters['lists'] = 0; // force to 0. 0 means: no list!
             } else {
                 //we only get subscribed or unconfirmed users
                 $filters['lists'] = $_REQUEST['wysija']['filter']['filter_list'];
@@ -374,7 +413,10 @@ class WYSIJA_model_user extends WYSIJA_model{
         }
 
         // as soon as we detect lists we set the query that way
-        if(!empty($filters_in['lists'])){
+        if (isset($filters_in['lists']) && $filters_in['lists'] === 0) // orphan
+        {
+            $filters_out['equal']['list_id'] = 0;
+        }elseif(!empty($filters_in['lists'])){
             $filters_out['equal']['list_id'] = $filters_in['lists'];
             $filter_has_list = true;
         }
@@ -406,11 +448,15 @@ class WYSIJA_model_user extends WYSIJA_model{
                         $filters_out['greater_eq']['sub_date'] =0;
                         $filters_out['equal']['unsub_date'] =0;
                     }
-
                     break;
+
+		case 'inactive':
+		    $temporary_table = $this->get_inactive_subscribers_table();
+		    // A in "A.user_id" is correct but it's not recommended.
+		    $filters_out['is']['A.user_id'] = 'IN (SELECT inactive_users.`user_id` FROM `'.$temporary_table.'` inactive_users)';
+		    break;
+
                 case 'all':
-
-
                     break;
             }
         }
@@ -418,6 +464,7 @@ class WYSIJA_model_user extends WYSIJA_model{
         if(!empty($filters_in['created_at'])){
             $filters_out['less_eq']['created_at'] = $filters_in['created_at'];
         }
+
 
         return $filters_out;
     }
@@ -427,6 +474,7 @@ class WYSIJA_model_user extends WYSIJA_model{
      * @param type $filters
      */
     function get_subscribers($select = array(), $filters = array(), $count_group_by = '', $return_query=false){
+
         $this->noCheck=true;
         $is_count = false;
 
@@ -442,17 +490,31 @@ class WYSIJA_model_user extends WYSIJA_model{
         //1 - prepare select
         if(isset($filters['equal']['list_id'])){
             // orphans are selected with this kind of join
-            if($filters['equal']['list_id']==null) {
+            if($filters['equal']['list_id']=== 0) {
+                // reset all prefixes. We are selecting from only 1 table - [wysija]user
+                $select_string = str_replace(array('[wysija]user.', '[wysija]user_list.', 'A.','B.'), array('','','',''), implode(', ', $select));
+                $is_count = strpos($select_string, 'COUNT(') !== false;
 
-                $select_string = implode(', ', $select);
-                if(strpos($select_string, 'COUNT(') === false){
-                    $select_string = str_replace('B.user_id', 'DISTINCT(B.user_id)', $select_string);
-                }else{
-                    $is_count = true;
+                // this approach is not so good! Refactoring is needed.
+                if ($is_count) {
+                    $query = '
+                        SELECT
+                            '.$select_string.'
+                        FROM [wysija]user
+                        WHERE `user_id` NOT IN (SELECT DISTINCT user_id FROM [wysija]user_list)
+                        ';
+                } else {
+                    $query = '
+                        SELECT
+                            '.$select_string.'
+                        FROM [wysija]user
+                        WHERE `user_id` NOT IN (SELECT DISTINCT user_id FROM [wysija]user_list)
+                        ';
                 }
 
-                $query = 'SELECT '.$select_string.' FROM `[wysija]user` as A';
-                $query .= ' LEFT JOIN `[wysija]user_list` as B on B.user_id=A.user_id';
+                $this->conditions=array(); // reset all conditions
+                $filters = array(); // reset all conditions
+
             }else{
                 // standard select when lists ids are in the filters
 
@@ -483,15 +545,15 @@ class WYSIJA_model_user extends WYSIJA_model{
         if(!$is_count){
             if($return_query) return $query;
 
-            $order_by=' ORDER BY ';
+            $order_by = ' ORDER BY ';
             if(!empty($_REQUEST['orderby'])){
-                $order_by.=$_REQUEST['orderby'].' '.$_REQUEST['ordert'];
+                $order_by .= '`'.$_REQUEST['orderby'].'` '.$_REQUEST['ordert'];
             }else{
-                $order_by.=$this->pk.' desc';
+                $order_by .= $this->pk.' DESC';
             }
 
             $query = $query.' '.$order_by.$this->setLimit();
-            return $this->getResults($query);
+	    return $this->getResults($query);
         }else{
             if(!empty($count_group_by)){
                 return $this->getResults($query.' GROUP BY '.$count_group_by);
@@ -500,9 +562,167 @@ class WYSIJA_model_user extends WYSIJA_model{
                 return $result[0];
             }
         }
-
     }
 
+    /**
+     * Add last opens of one or more users
+     * @todo: Not in use. Will be removed soon
+     *
+     * @param array $users
+     * @return array
+     * Array(
+     *	int => array(
+     *	    'user_id' => int,
+     *	    'firstname' => string,
+     *	    'lastname' => string,
+     *	    ...
+     *	    'last_open' => int
+     *	)
+     * )
+     */
+    protected function add_last_opens(Array $users) {
+	$user_ids = array();
+	foreach ($users as $subscriber) {
+	    $user_ids[] = $subscriber['user_id'];
+	}
+	$query = '
+	    SELECT
+		eus.`user_id`,
+		MAX(eus.`opened_at`) AS `last_open`
+	    FROM
+		[wysija]email_user_stat eus
+	    WHERE
+		eus.`user_id` IN ('.implode(', ', $user_ids).')
+	    GROUP BY
+		eus.`user_id`
+	    ';
+	$users_last_opens = $this->indexing_dataset_by_field('user_id', $this->getResults($query), true, 'last_open');
+	foreach ($users as &$user) {
+	    $user['last_open'] = !empty($users_last_opens[$user['user_id']]) ? $users_last_opens[$user['user_id']] : null;
+	}
+	return $users;
+    }
+
+    /**
+     * Add last opens of one or more users
+     *
+     * @todo: Not in use. Will be removed soon
+     * @param array $users
+     * @return array
+     * Array(
+     *	int => array(
+     *	    'user_id' => int,
+     *	    'firstname' => string,
+     *	    'lastname' => string,
+     *	    ...
+     *	    'last_click' => int
+     *	)
+     * )
+     */
+    protected function add_last_clicks(Array $users) {
+	$user_ids = array();
+	foreach ($users as $subscriber) {
+	    $user_ids[] = $subscriber['user_id'];
+	}
+	$query = '
+	    SELECT
+		euu.`user_id`,
+		MAX(euu.`clicked_at`) AS `last_click`
+	    FROM
+		[wysija]email_user_url euu
+	    WHERE
+		euu.`user_id` IN ('.implode(', ', $user_ids).')
+	    GROUP BY
+		euu.`user_id`
+	    ';
+	$users_last_clicks = $this->indexing_dataset_by_field('user_id', $this->getResults($query), true, 'last_click');
+	foreach ($users as &$user) {
+	    $user['last_click'] = !empty($users_last_clicks[$user['user_id']]) ? $users_last_clicks[$user['user_id']] : null;
+	}
+	return $users;
+    }
+
+
+    protected static $_inactive_subscribers_table = null;
+    /**
+     * Get name of a temporary table of inactive users. It's helpful for all actions related to MASSIVE editing subscribers
+     * @return type
+     */
+    protected function get_inactive_subscribers_table() {
+	if (empty(self::$_inactive_subscribers_table))
+	    self::$_inactive_subscribers_table = '[wysija]inactive_subscriber'.time();
+	return self::$_inactive_subscribers_table;
+    }
+
+    /**
+     * Preprare a temporary table of inactive users. It's helpful for all actions related to MASSIVE editing subscribers
+     */
+    public function prepare_inactive_users_table() {
+	// Use temporary table for better joins
+	$temporary_table = $this->get_inactive_subscribers_table();
+	$temporary_table_2 = $temporary_table.'_2';
+	$queries = array();
+	// Main table which stores ID of inactive subscribers
+	$queries[] = '
+	    CREATE TEMPORARY TABLE `'.$temporary_table.'` (
+		`user_id` INT(10) NOT NULL,
+		`created_at` INT(10) NULL,
+		PRIMARY KEY(`user_id`)
+	    )
+	    ';
+	$queries[] = '
+	    CREATE TEMPORARY TABLE `'.$temporary_table_2.'` (
+		`user_id` INT(10) NOT NULL,
+		PRIMARY KEY(`user_id`)
+	    )
+	    ';
+	$queries[] = '
+	    INSERT INTO `'.$temporary_table_2.'`
+		SELECT
+		    DISTINCT `user_id`
+		FROM
+		    `[wysija]email_user_stat`
+		GROUP BY
+		    `user_id`
+		HAVING SUM(IF (`status` < 0, 0, `status`)) <= 0
+	    ';
+	$queries[] = '
+	    INSERT INTO `'.$temporary_table.'`
+		SELECT
+		    DISTINCT u.`user_id`, u.`created_at`
+		FROM
+		    `'.$temporary_table_2.'` t2
+		LEFT JOIN
+		    `[wysija]user` u ON t2.`user_id` = u.`user_id`
+		WHERE
+		    u.`status` > 0
+		GROUP BY
+		    u.`user_id`
+	    ';
+	foreach ($queries as $query) {
+	    $this->getResults($query);
+	}
+    }
+    /**
+     * Count inactive users.
+     * Inactive users are people who:
+     * - AND were confirmed (status > 0)
+     * - AND were received at least 1 newsletter
+     * - AND have never opened or clicked
+     *
+     * @return array
+     * Array (
+     * 'count' => int,
+     * 'max_created_at' => int
+     * )
+     */
+    public function count_inactive_users() {
+	$temporary_table = $this->get_inactive_subscribers_table();
+	$main_query = 'SELECT COUNT(*) AS `count`, MAX(`created_at`) AS `max_created_at` FROM `'.$temporary_table.'` ';
+	$result = $this->getResults($main_query);
+	if ($result)
+	    return $result[0];
+    }
     public function structure_user_status_count_array($count_by_status){
         $arr_max_create_at = array();
         foreach($count_by_status as $status_data){
@@ -517,6 +737,8 @@ class WYSIJA_model_user extends WYSIJA_model{
                 case '1':
                     $counts['subscribed'] = $status_data['users'];
                     break;
+		case '-99':
+		    $counts['inactive'] = $status_data['users'];
             }
             $arr_max_create_at[] = $status_data['max_create_at'];
         }
@@ -536,24 +758,6 @@ class WYSIJA_model_user extends WYSIJA_model{
         return $arr_max_create_at;
     }
 
-    /**
-     * triggered before a user is inserte using the insert function of the user model
-     * @return boolean
-     */
-    function beforeInsert(){
-        // set the activation key
-        $model_user=WYSIJA::get('user','model');
-
-        $this->values['keyuser']=md5($this->values['email'].$this->values['created_at']);
-        while($model_user->exists(array('keyuser'=>$this->values['keyuser']))){
-            $this->values['keyuser']=$this->generateKeyuser($this->values['email']);
-            $model_user->reset();
-        }
-
-        if(!isset($this->values['status'])) $this->values['status']=0;
-
-        return true;
-    }
 
     /**
      * triggered before a user is deleted using the delete function of the user model
@@ -593,17 +797,36 @@ class WYSIJA_model_user extends WYSIJA_model{
         $helper_user=WYSIJA::get('user','helper');
         $helper_user->refreshUsers();
 
+        $this->_update_domain_field();
+
         do_action('wysija_subscriber_added', $id);
         return true;
     }
 
-    /**
-     * triggered after a user is updated using the u pdate function of the user model
-     * @return boolean
-     */
+
+
+    function beforeUpdate($id=null){
+
+        do_action('wysija_subscriber_modified', $id);
+        return true;
+    }
+
+    function _update_domain_field(){
+        // automatically add value to the field "domain". This is useful for statistics
+        // but only possible if we update the email
+        if(isset($this->values['email'])){
+            $this->values['domain'] = substr(
+                $this->values['email'] ,
+                strpos($this->values['email'],
+                        '@')+1);
+        }
+    }
+
     function afterUpdate($id){
         $helper_user=WYSIJA::get('user','helper');
         $helper_user->refreshUsers();
+
+        $this->_update_domain_field();
 
         do_action('wysija_subscriber_modified', $id);
         return true;

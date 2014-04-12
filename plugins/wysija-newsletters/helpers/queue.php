@@ -64,7 +64,7 @@ class WYSIJA_help_queue extends WYSIJA_object{
          * @return boolean
          */
 	function process($email_id=false,$user_id=false){
-            if($email_id)    $this->email_id=$email_id;
+                if($email_id)    $this->email_id=$email_id;
                 $model_queue = WYSIJA::get('queue','model');
 		$queue_elements = $model_queue->getReady($this->send_limit,$this->email_id,$user_id);
 
@@ -146,8 +146,8 @@ class WYSIJA_help_queue extends WYSIJA_object{
 
                 $helper_mailer=WYSIJA::get('mailer','helper');
 		$helper_mailer->report = false;
-		//if($this->config->getValue('smtp_keepalive',0) || in_array($this->config->getValue('mailer_method'),array('elasticemail','smtp_com'))) $mailHelper->SMTPKeepAlive = true;
-                $helper_mailer->SMTPKeepAlive = true;
+		if($this->config->getValue('smtp_keepalive',1)) $helper_mailer->SMTPKeepAlive = true;
+                else $helper_mailer->SMTPKeepAlive = false;
 		$queue_delete = array();
 		$queue_update = array();
 		$stats_add = array();
@@ -262,8 +262,8 @@ class WYSIJA_help_queue extends WYSIJA_object{
 		$this->_deleteQueue($queue_delete);
 		$this->_statsAdd($stats_add);
 		$this->_queueUpdate($queue_update);
-		//if($this->config->getValue('smtp_keepalive',1)) $mailHelper->SmtpClose();
-                $helper_mailer->SmtpClose();
+		if($this->config->getValue('smtp_keepalive',1)) $helper_mailer->SmtpClose();
+
 		if(!empty($this->total) AND $current_mail >= $this->total){
 			$this->finish = true;
 		}
@@ -418,27 +418,32 @@ class WYSIJA_help_queue extends WYSIJA_object{
          */
         function clear(){
 
-            $model_config=WYSIJA::get('config','model');
-            $model_queue=WYSIJA::get('queue','model');
+            $model_config = WYSIJA::get('config','model');
+            $model_queue = WYSIJA::get('queue','model');
 
             //remove queued emails of unsubscribed users
-            $real_query='DELETE a.* FROM `[wysija]queue` as a LEFT JOIN `[wysija]user` as b on a.user_id = b.user_id WHERE b.status< '.$model_config->getValue('confirm_dbleoptin');
+            $real_query = 'DELETE a.* FROM `[wysija]queue` as a LEFT JOIN `[wysija]user` as b on a.user_id = b.user_id WHERE b.status< '.$model_config->getValue('confirm_dbleoptin');
             $model_queue->query($real_query);
 
             //remove queued emails of deleted emails
-            $real_query='DELETE a.* FROM `[wysija]queue` as a LEFT JOIN `[wysija]email` as b on a.email_id = b.email_id WHERE b.email_id IS NULL';
+            $real_query = 'DELETE a.* FROM `[wysija]queue` as a LEFT JOIN `[wysija]email` as b on a.email_id = b.email_id WHERE b.email_id IS NULL';
             $model_queue->query($real_query);
 
             //remove queued emails of deleted users
-            $real_query='DELETE a.* FROM `[wysija]queue` as a LEFT JOIN `[wysija]user` as b on a.user_id = b.user_id WHERE b.user_id IS NULL';
+            $real_query = 'DELETE a.* FROM `[wysija]queue` as a LEFT JOIN `[wysija]user` as b on a.user_id = b.user_id WHERE b.user_id IS NULL';
             $model_queue->query($real_query);
 
             //finally check if there are any queued emails left that stays unsent from 2 days ago
-            $conditions=array();
-            $conditions['less']=array('send_at'=>time()-(3600*48));
-            if($model_queue->exists($conditions)){
+            $conditions = array();
+            $conditions['less'] = array( 'send_at' => time() - (3600*48) );
+
+            // replaced the exists function with a count
+            $model_queue->setConditions( $conditions );
+            $count_late_in_queue = $model_queue->count();
+
+            if( $count_late_in_queue > 1000 ){
                 //send message your queue cannot send very fast
-                $model_config->save(array('queue_sends_slow'=>1));
+                $model_config->save( array( 'queue_sends_slow' => 1 ) );
             }
 
             return true;

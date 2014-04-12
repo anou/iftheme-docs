@@ -12,7 +12,7 @@ class WYSIJA_view_front_widget_nl extends WYSIJA_view_front {
 <head profile="http://gmpg.org/xfn/11">
 <meta name="robots" content="NOINDEX,NOFOLLOW">
 <meta charset="utf-8" />
-<title>'.__('Wysija Subscription',WYSIJA).'</title>';
+<title>'.__('MailPoet Subscription Form',WYSIJA).'</title>';
         global $wp_scripts,$wp_styles;
 
         ob_start();
@@ -57,6 +57,7 @@ class WYSIJA_view_front_widget_nl extends WYSIJA_view_front {
         wp_print_scripts('wysija-validator-lang');
         wp_print_scripts('wysija-validator');
         wp_print_scripts('wysija-front-subscribers');
+        wp_print_scripts('jquery-ui-datepicker');
 
         $html.=ob_get_contents();
         ob_end_clean();
@@ -120,6 +121,21 @@ class WYSIJA_view_front_widget_nl extends WYSIJA_view_front {
                     // replace total subscribers shortcode by actual value
                     $form_html = str_replace('[total_subscribers]', number_format($model_config->getValue('total_subscribers'), 0, '.', ' '), $form_html);
                 }
+
+                // IMPORTANT: we remove the ones that could break our subscription form
+                // this resolve the conflict with Ultimate Shortcodes
+                remove_shortcode('user');
+                remove_shortcode('user_list');
+                remove_shortcode('list_ids');
+                remove_shortcode('list_id');
+                remove_shortcode('firstname');
+                remove_shortcode('lastname');
+                remove_shortcode('email');
+                remove_shortcode('custom');
+                remove_shortcode('required');
+
+                // interpret shortcodes
+                $form_html = do_shortcode($form_html);
 
                 $data .= '<form id="'.$form_id_real.'" method="post" action="#wysija" class="widget_wysija'.$extra_class.'">';
                 $data .= $form_html;

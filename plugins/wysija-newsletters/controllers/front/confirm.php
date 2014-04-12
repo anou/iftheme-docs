@@ -34,7 +34,15 @@ class WYSIJA_control_front_confirm extends WYSIJA_control_front{
             $helper_user->confirm_user();
 
             if(!empty($helper_user->title))    $this->title = $helper_user->title;
-            if(!empty($helper_user->subtitle))    $this->subtitle = $helper_user->subtitle;
+            if(!empty($helper_user->subtitle))    $this->optional_subtitle = $helper_user->subtitle;
+        }else{
+            $model_config=WYSIJA::get('config','model');
+
+            // we need to call the translation otherwise it will not be loaded and translated
+            $model_config->add_translated_default();
+
+            $this->title = sprintf($model_config->getValue('subscribed_title'), 'demo');
+            $this->optional_subtitle=$model_config->getValue('subscribed_subtitle');
         }
 
         return true;
@@ -46,13 +54,13 @@ class WYSIJA_control_front_confirm extends WYSIJA_control_front{
         // we need to call the translation otherwise it will not be loaded and translated
         $model_config->add_translated_default();
 
-        $this->title=$model_config->getValue('unsubscribed_title');
-        if(!isset($model_config->values['unsubscribed_title'])) $this->title=__("You've unsubscribed!",WYSIJA);
+        $this->title = $model_config->getValue('unsubscribed_title');
+        if(!isset($model_config->values['unsubscribed_title'])) $this->title = __("You've unsubscribed!",WYSIJA);
 
-        $this->subtitle=$model_config->getValue('unsubscribed_subtitle');
-        if(!isset($model_config->values['unsubscribed_subtitle'])) $this->subtitle=__("Great, you'll never hear from us again!",WYSIJA);
+        $this->optional_subtitle = $model_config->getValue('unsubscribed_subtitle');
+        if(!isset($model_config->values['unsubscribed_subtitle'])) $this->optional_subtitle = __("Great, you'll never hear from us again!",WYSIJA);
 
-        $undo_paramsurl=array(
+        $undo_paramsurl = array(
              'wysija-page'=>1,
              'controller'=>'confirm',
              'action'=>'undounsubscribe',
@@ -71,13 +79,16 @@ class WYSIJA_control_front_confirm extends WYSIJA_control_front{
                     return false;
                 }
             }
-        }
-        else
+        }else{
             $undo_paramsurl['demo'] = 1;
+        }
 
-        $this->subtitle .= str_replace(
+        $link_undo = WYSIJA::get_permalink($model_config->getValue('unsubscribe_page'),$undo_paramsurl);
+
+
+        $this->undo_unsubscribe = str_replace(
                 array('[link]','[/link]'),
-                array('<a href="'.WYSIJA::get_permalink($model_config->getValue('confirm_email_link'),$undo_paramsurl).'">','</a>'),
+                array('<a href="'.$link_undo.'">','</a>'),
                 '<p><b>'.__('You made a mistake? [link]Undo unsubscribe[/link].',WYSIJA)).'</b></p>';
         return true;
     }
@@ -201,16 +212,18 @@ class WYSIJA_control_front_confirm extends WYSIJA_control_front{
             $modelUL->backSave=true;
             /* list of core list */
             $modelLIST=WYSIJA::get('list','model');
-            $results=$modelLIST->get(array('list_id'),array('is_enabled'=>'0'));
-            $core_listids=array();
+	    
+	    // Using "like" condition in order to force sql query to OR (instead of AND). It'll be incorrct if status contains other values than 0/1.
+            $results=$modelLIST->get(array('list_id'),array('like' => array('is_enabled'=>0, 'is_public' => 0)));
+            $static_listids=array();
             foreach($results as $res){
-                $core_listids[]=$res['list_id'];
+                $static_listids[]=$res['list_id'];
             }
 
             //0 - get current lists of the user
             $userlists=$modelUL->get(array('list_id','unsub_date'),array('user_id'=>$id));
 
-            $oldlistids=$newlistids=array();
+            $oldlistids=$new_list_ids=array();
             foreach($userlists as $listdata)    $oldlistids[$listdata['list_id']]=$listdata['unsub_date'];
 
             $config=WYSIJA::get('config','model');
@@ -223,7 +236,7 @@ class WYSIJA_control_front_confirm extends WYSIJA_control_front{
                     //if the list is not already recorded for the user then we will need to insert it
                     if(!isset($oldlistids[$list_id])){
                         $modelUL->reset();
-                        $newlistids[]=$list_id;
+                        $new_list_ids[]=$list_id;
                         $dataul=array('user_id'=>$id,'list_id'=>$list_id,'sub_date'=>time());
                         //if double optin is on then we want to send a confirmation email for newly added subscription
                         if($dbloptin){
@@ -246,21 +259,44 @@ class WYSIJA_control_front_confirm extends WYSIJA_control_front{
 
 
             //if a confirmation email needs to be sent then we send it
-            if($dbloptin && !empty($newlistids)){
-                $hUser->sendConfirmationEmail($id,true,$newlistids);
+
+            if($dbloptin && !empty($new_list_ids)){
+                $send_confirmation = true;
+                $send_confirmation = apply_filters('mpoet_confirm_new_list_subscriptions_page', $send_confirmation);
+
+                if($send_confirmation === true){
+                    $hUser->sendConfirmationEmail($id,true,$new_list_ids);
+                }else{
+                    // this case has been made so that when subscribers add themselves to a
+                    // list through the edit your subscription form they don't receive a confirmation email they already confirmed.
+                    // so they receive also the autorespo,nders correspondign to that list immediately.
+                    $helper_user = WYSIJA::get('user','helper');
+                    $_REQUEST['wysiconf'] = base64_encode(serialize($new_list_ids));
+                    $helper_user->confirm_user();
+                }
             }
 
             // list ids
             $list_ids = !empty($_POST['wysija']['user_list']['list_id']) ? $_POST['wysija']['user_list']['list_id'] : array();
             if(is_array($list_ids) === false) $list_ids = array();
 
-            $notEqual = array_merge($core_listids, $list_ids);
+            $notEqual = array_merge($static_listids, $list_ids);
 
             //delete the lists from which you've removed yourself
             $condiFirst = array('notequal'=>array('list_id'=> $notEqual), 'equal' => array('user_id' => $id, 'unsub_date' => 0));
             $modelUL=WYSIJA::get('user_list','model');
             $modelUL->update(array('unsub_date'=>time()),$condiFirst);
             $modelUL->reset();
+
+            /*
+            Custom Fields.
+            */
+            if (isset($_POST['wysija']['field'])) {
+              WJ_FieldHandler::handle_all(
+                $_POST['wysija']['field'], $id
+              );
+            }
+
             $this->notice(__('Newsletter profile has been updated.',WYSIJA));
             $this->subscriptions();
 

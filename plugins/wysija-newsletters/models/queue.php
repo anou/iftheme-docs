@@ -147,6 +147,13 @@ class WYSIJA_model_queue extends WYSIJA_model{
      * @return type
      */
     function getReady($sql_limit,$email_id = 0,$user_id=false){
+        // in some cases of a large database, with millions of entries recorded in the queue table, the triple joins was
+        // very slow and crashing the request.
+        $model_config = WYSIJA::get('config', 'model');
+        if ((int) $model_config->getValue('total_subscribers') > 1000000){
+            return get_ready_large_db($sql_limit,$email_id = 0,$user_id=false);
+        }
+
         $query = 'SELECT c.*,a.* FROM [wysija]queue as a';
         $query .= ' JOIN [wysija]email as b on a.`email_id` = b.`email_id` ';
         $query .= ' JOIN [wysija]user as c on a.`user_id` = c.`user_id` ';
@@ -155,6 +162,61 @@ class WYSIJA_model_queue extends WYSIJA_model{
         if($user_id) $query .= ' AND a.`user_id` = '.$user_id;
         $query .= ' ORDER BY a.`priority` ASC, a.`send_at` ASC, a.`user_id` ASC';
         if(!empty($sql_limit)) $query .= ' LIMIT '.$sql_limit;
+
+        $results=$this->query('get_res',$query,OBJECT_K);
+        if($results === null){
+            $this->query('REPAIR TABLE [wysija]queue, [wysija]user, [wysija]email');
+        }
+
+        if(!empty($results)){
+                $first_element_queued = reset($results);
+                $this->query('UPDATE [wysija]queue SET send_at = send_at + 1 WHERE email_id = '.$first_element_queued->email_id.' AND user_id = '.$first_element_queued->user_id.' LIMIT 1');
+        }
+        return $results;
+    }
+
+    /**
+     * this function is here to make sure that if the subscribers has a large db, and the queue has millions of entry, the
+     * selection request will still work
+     * @param type $sql_limit
+     * @param type $email_id
+     * @param type $user_id
+     * @return type
+     */
+    function get_ready_large_db($sql_limit,$email_id = 0,$user_id=false){
+
+        $query = 'SELECT A.user_id, A.email_id
+            FROM [wysija]queue AS A
+            JOIN [wysija]email AS B ON A.`email_id` = B.`email_id`
+            WHERE A.`send_at` <= '.time().' AND B.status IN ( 1, 3, 99 ) ';
+        if($user_id) $query .= ' AND A.`user_id` = '.$user_id;
+        if(!empty($email_id)) $query .= ' AND A.`email_id` = '.$email_id;
+        $query .= ' ORDER BY A.`priority` ASC , A.`send_at` ASC , A.`user_id` ASC';
+
+        if(!empty($sql_limit)) $query .= ' LIMIT '.$sql_limit;
+
+        // the first request is looking for data between the queue table and the email table
+        $results = $this->query('get_res',$query,OBJECT_K);
+        if(empty($results)) return $result;
+        $user_ids = $email_ids = '';
+        $email_ids = array();
+
+        foreach($results as $ids){
+            $user_ids .= $ids->user_id. ',';
+            $email_ids[$ids->email_id] = $ids->email_id ;
+        }
+
+        $user_ids = substr($user_ids, 0, -1);
+
+        $email_ids_string = implode(',',  $email_ids);
+
+        if(substr($email_ids_string, 0, -1) == ',') $email_ids_string = substr($email_ids_string, 0, -1);
+
+
+        $query = 'SELECT c.*,a.*
+            FROM [wysija]queue as a
+            JOIN [wysija]user as c on a.`user_id` = c.`user_id`
+            WHERE a.user_id IN('.$user_ids.') and a.email_id IN('.$email_ids_string.') ORDER BY a.`priority` ASC, a.`send_at` ASC, a.`user_id`';
 
         $results=$this->query('get_res',$query,OBJECT_K);
         if($results === null){

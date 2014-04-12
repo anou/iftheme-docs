@@ -1,7 +1,7 @@
 <div class="wysija_form_block" wysija_type="{#type}" wysija_field="{#field}" wysija_name="{#name}">
     {if #type != 'divider'}
     <div class="wysija_settings" style="display:none;">
-        <a class="settings" href="javascript:;"><span></span>{$i18n.edit_settings}</a>
+        <a class="settings" href="javascript:;"><span class="dashicons dashicons-admin-generic"></span>{$i18n.edit_settings}</a>
     </div>
     {/if}
     <div class="wysija_params">
@@ -10,7 +10,7 @@
         {/foreach}
     </div>
     <ul class="wysija_controls clearfix" style="display: none;">
-        <li><a class="handle" href="javascript:;"><span></span></a></li>
+        <li class="handle_container"><a class="handle" href="javascript:;"><span></span></a></li>
         {if ! #static}<li><a class="remove" href="javascript:;"><span></span></a></li>{/if}
     </ul>
 

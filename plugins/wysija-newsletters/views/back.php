@@ -56,7 +56,6 @@ class WYSIJA_view_back extends WYSIJA_view{
         if($this->skip_header === true) return;
 
         $header = '<div class="icon32" id="'.$this->icon.'"><br/></div>';
-        $header='';
         $full_title = __($this->title,WYSIJA);
         $action = $sub_title = '';
 
@@ -278,7 +277,7 @@ class WYSIJA_view_back extends WYSIJA_view{
     /**
      * limit of records to show per page
      */
-    function limitPerPage($urlbase=false){
+    function limitPerPage(){
         $limitPerpageS=array(10,20,50,100);
         if($this->model->countRows <= $limitPerpageS[0]) return true;
         $limitPerpage=array();
@@ -293,7 +292,7 @@ class WYSIJA_view_back extends WYSIJA_view{
         if(isset($this->limit_pp)) $pagi.='<input id="wysija-pagelimit" type="hidden" name="limit_pp" value="'.$this->limit_pp.'" />';
         foreach($limitPerpage as $k => $count){
             $numperofpages=ceil($this->model->countRows/$count);
-            $titleLink=' title="'.sprintf(__('Split subscribers into %1$s pages.',WYSIJA),$numperofpages).'" ';
+            $titleLink=' title="'.(isset($this->viewObj->title) ? $this->viewObj->title : sprintf(__('Split subscribers into %1$s pages.',WYSIJA),$numperofpages)).'" ';
             /*if($urlbase)    $linkk=$urlbase.'&limit_pp='.$count;
             else    $linkk='admin.php?page='.$_REQUEST['page'].'&limit_pp='.$count;*/
             $linkk='javascript:;';
@@ -376,29 +375,6 @@ class WYSIJA_view_back extends WYSIJA_view{
 
         }
          return $wrap;
-    }
-
-    /**
-     * central function to return a translated formated date
-     * @param type $val
-     * @param type $format
-     * @return string
-     */
-    function fieldListHTML_created_at($val,$format=''){
-        if(!$val) return '---';
-
-        //offset the time to the time of the WP site not the server
-        $hToolbox = WYSIJA::get('toolbox','helper');
-        // get current time taking timezone into account.
-
-        $val = $hToolbox->servertime_to_localtime($val);
-
-        if($format) return date_i18n($format,$val);
-        else return date_i18n(get_option('date_format'),$val);
-    }
-
-    function fieldListHTML_created_at_time($val){
-        return $this->fieldListHTML_created_at($val,get_option('date_format').', '.get_option('time_format'));
     }
 
     /**
@@ -830,8 +806,5 @@ class WYSIJA_view_back extends WYSIJA_view{
             </p>
         <?php
     }
-
-
-
 
 }

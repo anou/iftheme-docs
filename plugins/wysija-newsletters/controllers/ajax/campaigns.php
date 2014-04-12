@@ -26,8 +26,8 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
 
             $theme = (isset($rawData['theme'])) ? $rawData['theme'] : 'default';
 
-            $wjEngine = WYSIJA::get('wj_engine', 'helper');
-            $res['templates'] = $wjEngine->renderTheme($theme);
+            $helper_wj_engine = WYSIJA::get('wj_engine', 'helper');
+            $res['templates'] = $helper_wj_engine->renderTheme($theme);
 
             $email_id = (int)$_REQUEST['id'];
 
@@ -42,7 +42,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
             $campaignsHelper->saveParameters($email_id, 'theme', $theme);
 
             $res['templates']['theme'] = $theme;
-            $res['styles'] = $wjEngine->renderThemeStyles($theme);
+            $res['styles'] = $helper_wj_engine->renderThemeStyles($theme);
         } else {
             $res['msg'] = __("The theme you selected could not be loaded.",WYSIJA);
             $res['result'] = false;
@@ -66,27 +66,35 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
             return array('result' => false);
         }
 
-        $wjEngine = WYSIJA::get('wj_engine', 'helper');
-        $wjEngine->setData($rawData);
+        $helper_wj_engine = WYSIJA::get('wj_engine', 'helper');
+        $helper_wj_engine->setData($rawData);
         $result = false;
 
         // get email id
         $email_id = (int)$_REQUEST['id'];
 
-        $modelEmail = WYSIJA::get('email', 'model');
-        $emailData = $modelEmail->getOne(array('wj_styles', 'subject', 'params', 'email_id'), array('email_id' => $email_id));
+        $model_email = WYSIJA::get('email', 'model');
+        $emailData = $model_email->getOne(array('wj_styles', 'subject', 'params', 'email_id', 'campaign_id'), array('email_id' => $email_id));
 
-        $wjEngine->setStyles($emailData['wj_styles'], true);
+        $helper_wj_engine->setStyles($emailData['wj_styles'], true);
 
-        $values = array('wj_data' => $wjEngine->getEncoded('data'));
-        $values['body'] = $wjEngine->renderEmail($emailData);
-        $values['email_id']=$email_id;
+        $values = array('wj_data' => $helper_wj_engine->getEncoded('data'));
+        $values['body'] = $helper_wj_engine->renderEmail($emailData);
+        $values['email_id'] = $email_id;
+
+        $updated_email = $helper_wj_engine->getEmailData();
+        // check if we are dealing with an auto newsletter
+        if(isset($updated_email['params']['autonl']) && !empty($updated_email['params']['autonl'])) {
+            // update include/exclude category ids in autonl params so as to process post notifications
+            $values['params']['autonl']['include_category_ids'] = (array_key_exists('include_category_ids', $updated_email['params']['autonl']) ? $updated_email['params']['autonl']['include_category_ids'] : array());
+            $values['params']['autonl']['exclude_category_ids'] = (array_key_exists('exclude_category_ids', $updated_email['params']['autonl']) ? $updated_email['params']['autonl']['exclude_category_ids'] : array());
+        }
 
         // wtf is that? could it explain the Sent On being updated for no reason?
-        $modelEmail->columns['modified_at']['autoup']=1;
+        $model_email->columns['modified_at']['autoup']=1;
 
         // update data in DB
-        $result = $modelEmail->update($values, array('email_id' => $email_id));
+        $result = $model_email->update($values, array('email_id' => $email_id));
 
         if(!$result) {
             // throw error
@@ -116,21 +124,21 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
             $rawData['a-underline'] = -1;
         }
 
-        $wjEngine = WYSIJA::get('wj_engine', 'helper');
-        $wjEngine->setStyles($wjEngine->formatStyles($rawData));
+        $helper_wj_engine = WYSIJA::get('wj_engine', 'helper');
+        $helper_wj_engine->setStyles($helper_wj_engine->formatStyles($rawData));
 
         $result = false;
 
         $values = array(
-            'wj_styles' => $wjEngine->getEncoded('styles')
+            'wj_styles' => $helper_wj_engine->getEncoded('styles')
         );
 
         // get email id
         $email_id = (int)$_REQUEST['id'];
 
         // update data in DB
-        $modelEmail = WYSIJA::get('email', 'model');
-        $result = $modelEmail->update($values, array('email_id' => $email_id));
+        $model_email = WYSIJA::get('email', 'model');
+        $result = $model_email->update($values, array('email_id' => $email_id));
 
         if(!$result) {
             // throw error
@@ -141,7 +149,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
         }
 
         return array(
-            'styles' => $wjEngine->renderStyles(),
+            'styles' => $helper_wj_engine->renderStyles(),
             'result' => $result
         );
     }
@@ -208,8 +216,8 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
         $values['email_id']=$email_id;
 
         // update data in DB
-        $modelEmail = WYSIJA::get('email', 'model');
-        $result = $modelEmail->update($values, array('email_id' => $email_id));
+        $model_email = WYSIJA::get('email', 'model');
+        $result = $model_email->update($values, array('email_id' => $email_id));
 
         if(!$result) {
             // throw error
@@ -228,8 +236,8 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
         $email_id = (int)$_REQUEST['id'];
 
         // update data in DB
-        $modelEmail = WYSIJA::get('email', 'model');
-        $result = $modelEmail->getOne(false,array('email_id' => $email_id));
+        $model_email = WYSIJA::get('email', 'model');
+        $result = $model_email->getOne(false,array('email_id' => $email_id));
 
         echo $result['body'];
         exit;
@@ -240,15 +248,36 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
         $email_id = (int)$_REQUEST['id'];
 
         // update data in DB
-        $modelEmail = WYSIJA::get('email', 'model');
-        $email= $modelEmail->getOne(false,array('email_id' => $email_id));
+        $model_email = WYSIJA::get('email', 'model');
+        $email= $model_email->getOne(false,array('email_id' => $email_id));
 
-        $wjEngine = WYSIJA::get('wj_engine', 'helper');
-        $wjEngine->setStyles($result['wj_styles'], true);
-        $wjEngine->setData($result['wj_data'], true);
-        $html = $wjEngine->renderEmail($email);
+        $helper_wj_engine = WYSIJA::get('wj_engine', 'helper');
+        $helper_wj_engine->setStyles($result['wj_styles'], true);
+        $helper_wj_engine->setData($result['wj_data'], true);
+        $html = $helper_wj_engine->renderEmail($email);
         print $html;
         exit;
+    }
+
+    /**
+     * returns the images attached to displayed posts
+     */
+    function get_post_images() {
+        // get parameters
+        $params = array(
+
+        );
+
+        $result = true;
+
+        if($params['post_id'] === null) {
+
+        }
+
+        return array(
+            'result' => $result,
+            'images' => $images
+        );
     }
 
     /**
@@ -260,128 +289,161 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
         // fixes issue with pcre functions
         @ini_set('pcre.backtrack_limit', 1000000);
 
-        $model=WYSIJA::get('user','model');
-
-        //Carefull WordPress global
-        global $wpdb;
-        $mConfig=WYSIJA::get('config','model');
-        $isFullArticle=$mConfig->getValue('editor_fullarticle');
-
-        //test to set the default value
-        if(!$isFullArticle && isset($_REQUEST['fullarticle'])){
-            $mConfig->save(array('editor_fullarticle'=>true));
+        // get parameters
+        $raw_data = $_REQUEST['data'];
+        $params = array();
+        foreach ($raw_data as $value) {
+            $params[$value['name']] = $value['value'];
         }
 
-        if($isFullArticle && !isset($_REQUEST['fullarticle'])){
-            $mConfig->save(array('editor_fullarticle'=>false));
-        }
-        $cpt = array('post');
-        if(isset($_REQUEST['cpt'])){
-            $cpt = array();
-            if($_REQUEST['cpt'] === 'all') {
-                $hWPTools = WYSIJA::get('wp_tools','helper');
-                $post_types = $hWPTools->get_post_types();
-                $cpt = array_keys($post_types);
-                $cpt[] = 'post';
-                $cpt[] = 'page';
+        // get options
+        $model_config = WYSIJA::get('config', 'model');
+        $interpret_shortcode = (bool)$model_config->getValue('interp_shortcode');
+
+        // specify custom fields to get from posts
+        $params['post_fields'] = array('post_title', 'post_content', 'post_excerpt', 'post_author', 'post_type', 'post_status');
+
+        // post statuses
+        $helper_wp_tools = WYSIJA::get('wp_tools', 'helper');
+        $post_statuses = $helper_wp_tools->get_post_statuses();
+        $post_types = $helper_wp_tools->get_post_types();
+
+        // filter by post_type
+        if(isset($params['post_type'])) {
+            $post_types_filter = array();
+            if(strlen(trim($params['post_type'])) === 0) {
+                $post_types_filter = array_keys($post_types);
+                $post_types_filter[] = 'post';
+                $post_types_filter[] = 'page';
             } else {
-                $cpt = $_REQUEST['cpt'];
+                $post_types_filter = trim($params['post_type']);
             }
-
-            $query_cpt = '';
-            if(is_array($cpt)) {
-                $query_cpt = ' '.$wpdb->posts.'.post_type IN ("'.  implode('", "', $cpt).'")';
-            } else {
-                $query_cpt = ' '.$wpdb->posts.'.post_type="'.$cpt.'"';
-            }
-        }
-        $hWPTools = WYSIJA::get('wp_tools','helper');
-        $post_statuses = $hWPTools->get_post_statuses();
-        if(isset($_REQUEST['status'])){
-            $statuses = array();
-            if($_REQUEST['status'] === 'all') {
-
-                $statuses = array_keys($post_statuses);
-                $statuses[] = 'future';
-            } else {
-                $statuses = $_REQUEST['status'];
-            }
-
-            $query_statuses = '';
-            if(is_array($statuses)) {
-                $query_statuses = ' AND '.$wpdb->posts.'.post_status IN ("'.  implode('", "', $statuses).'")';
-            } else {
-                $query_statuses = ' AND '.$wpdb->posts.'.post_status="'.$statuses.'"';
-            }
+            // set condition on post type
+            $params['post_type'] = $post_types_filter;
         }
 
-        $limitquery='';
-        $res=array();
-        $res['append']=false;
+        // query offset when doing incremental loading
+        $query_offset = (isset($_REQUEST['query_offset']) && (int)$_REQUEST['query_offset'] >= 0) ? (int)$_REQUEST['query_offset'] : 0;
+        $params['query_offset'] = $query_offset;
 
-        if(isset($_REQUEST['query_offset']) && (int)$_REQUEST['query_offset']){
-            $res['append']=true;
-            $limitquery = ' LIMIT '.(int)($_REQUEST['query_offset']).',10';
-        } else {
-            $limitquery = ' LIMIT 0,10';
-        }
-
-        if(isset($_REQUEST['search']) && strlen(trim($_REQUEST['search'])) > 0) {
-            $querystr = "SELECT $wpdb->posts.ID , $wpdb->posts.post_type, $wpdb->posts.post_title, $wpdb->posts.post_content, $wpdb->posts.post_excerpt , $wpdb->posts.post_status
-            FROM $wpdb->posts
-            WHERE $wpdb->posts.post_title like '%".addcslashes(mysql_real_escape_string($_REQUEST['search'],$wpdb->dbh), '%_' )."%'";
-
-            $querystr.= ' AND '.$query_cpt.$query_statuses;
-
-            $querystr.=" ORDER BY $wpdb->posts.post_date DESC";
-            $querystr.=$limitquery;
-            // query to count total rows
-            $queryCount = "SELECT COUNT(*) as total FROM $wpdb->posts WHERE $wpdb->posts.post_title like '%".addcslashes(mysql_real_escape_string($_REQUEST['search'],$wpdb->dbh), '%_' )."%' AND ".$query_cpt.$query_statuses;
-        }else{
-            $querystr = "SELECT $wpdb->posts.ID , $wpdb->posts.post_type, $wpdb->posts.post_title, $wpdb->posts.post_content, $wpdb->posts.post_excerpt , $wpdb->posts.post_status
-            FROM $wpdb->posts WHERE";
-
-            $querystr.= $query_cpt.$query_statuses;
-
-            $querystr.= " ORDER BY $wpdb->posts.post_date DESC";
-            $querystr.=$limitquery;
-
-            // query to count total rows
-            $queryCount = "SELECT COUNT(*) as total FROM $wpdb->posts WHERE ".$query_cpt.$query_statuses;
-        }
-
-        $res['posts']=$model->query('get_res',$querystr);
-        $count = $model->query('get_row', $queryCount);
-        $res['total'] = (int)$count['total'];
-
-        $helper_engine=WYSIJA::get('wj_engine','helper');
+        // fetch posts
         $helper_articles = WYSIJA::get('articles', 'helper');
 
-        // set params for post format
-        $params = array('post_content' => 'full');
+        // set is_search_query (true) to get a count in addition to the results
+        $params['is_search_query'] = true;
 
-        //if excerpt has been requested then we try to provide it */
-        if(!isset($_REQUEST['fullarticle'])) {
-            $params['post_content'] = 'excerpt';
-        }
+        $model_wp_posts = WYSIJA::get('wp_posts','model');
+        $data = $model_wp_posts->get_posts($params);
 
-        if($res['posts']){
-            $res['result'] = true;
-            foreach($res['posts'] as $k =>$v){
-                if($mConfig->getValue('interp_shortcode'))    $res['posts'][$k]['post_content']=apply_filters('the_content',$res['posts'][$k]['post_content']);
+        // extract data
+        $posts = $data['rows'];
+        // contains the total number of rows available
+        $count = $data['count'];
 
-                $res['posts'][$k]['post_status']=$post_statuses[$res['posts'][$k]['post_status']];
+        // return results
+        $result = array(
+            'result' => true,
+            'append' => ($query_offset > 0)
+        );
 
+        if(empty($posts) === false) {
+            foreach($posts as $key => $post) {
+                // interpret shortcodes
+                if($interpret_shortcode === true) {
+                    $posts[$key]['post_content'] = apply_filters('the_content', $posts[$key]['post_content']);
+                }
 
                 // get thumbnail
-                $res['posts'][$k]['post_image'] = $helper_articles->getImage($v);
+                $posts[$key]['post_image'] = $helper_articles->getImage($post);
 
-                // convert post data into block data
-                $block = $helper_articles->convertPostToBlock($res['posts'][$k], $params);
-
-                // make editor block from post data
-                $res['posts'][$k]['html'] = base64_encode($helper_engine->renderEditorBlock($block));
+                // set post status
+                $post_status_label = '';
+                if(isset($post_statuses[$posts[$key]['post_status']])) {
+                    $post_status_label = $post_statuses[$posts[$key]['post_status']];
+                }
+                $posts[$key]['post_status'] = $post_status_label;
             }
+            $result['posts'] = $posts;
+            $result['total'] = (int)$count['total'];
+        }else {
+            $result['msg'] = __('There are no posts corresponding to that search.', WYSIJA);
+            $result['result'] = false;
+        }
+
+        return $result;
+    }
+
+    function insert_articles() {
+        // get raw params
+        $raw_params = $_REQUEST['data'];
+
+        // format params
+        $params = array();
+        foreach($raw_params as $value) {
+            $params[$value['name']] = $value['value'];
+        }
+
+        if($params['show_divider'] === 'yes') {
+            // get divider
+            $divider = $_REQUEST['divider'];
+        } else {
+            $divider = null;
+        }
+        $params['divider'] = $divider;
+
+        // get post ids
+        $post_ids = array();
+        if(isset($_REQUEST['post_ids']) && strlen(trim($_REQUEST['post_ids'])) > 0) {
+            $post_ids = explode(',', $_REQUEST['post_ids']);
+        }
+
+        if(empty($post_ids)) {
+            // return error
+            $res['msg'] = __('Please select an article.', WYSIJA);
+            $res['result'] = false;
+            return $res;
+        }
+
+        // specify custom fields to get from posts
+        $post_params = array(
+            'include' => $post_ids,
+            'post_fields' => array('post_title', 'post_content', 'post_excerpt', 'post_author', 'post_type', 'post_status')
+        );
+
+        // include sort by parameter into post params
+        $post_params['sort_by'] = $params['sort_by'];
+
+        // get posts
+        $model_wp_posts = WYSIJA::get('wp_posts', 'model');
+        $posts = $model_wp_posts->get_posts($post_params);
+
+        // check if we need to interpret shortcodes
+        $model_config = WYSIJA::get('config', 'model');
+        $interpret_shortcode = (bool)$model_config->getValue('interp_shortcode');
+
+        // get some model and helpers
+        $helper_articles = WYSIJA::get('articles', 'helper');
+        $helper_wj_engine = WYSIJA::get('wj_engine', 'helper');
+
+        $output = '';
+
+        // save parameters for next time
+        $model_config->save(array('insert_post_parameters' => $helper_wj_engine->encodeParameters($params)));
+
+        foreach($posts as $key => $post) {
+            if($interpret_shortcode === true) {
+                // interpret shortcodes
+                $posts[$key]['post_content'] = apply_filters('the_content', $post['post_content']);
+            }
+            // get thumbnail
+            $posts[$key]['post_image'] = $helper_articles->getImage($post);
+        }
+
+        $output .= base64_encode($helper_wj_engine->renderPostsToBlocks($posts, $params));
+
+        if(strlen($output) > 0) {
+            $res['result'] = true;
+            $res['posts'] = $output;
         }else {
             $res['msg'] = __('There are no posts corresponding to that search.',WYSIJA);
             $res['result'] = false;
@@ -487,16 +549,12 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
             if(isset($email_child['params']['autonl']['articles']['first_subject'])) $first_subject = $email_child['params']['autonl']['articles']['first_subject'];
             if(isset($email_child['params']['autonl']['total_child'])) $total_count = (int)$email_child['params']['autonl']['total_child'] + 1;
 
-            if(empty($first_subject)) {
-                $this->error(__('There are no articles to be sent in this email.',WYSIJA),1);
-                return array('result' => false);
-            }
             $email_object->subject = str_replace(
-                    array('[total]','[number]','[post_title]'),
-                    array($item_count, $total_count, $first_subject),
-                    $email_child['subject']);
+                array('[total]','[number]','[post_title]'),
+                array($item_count, $total_count, $first_subject),
+                $email_child['subject']
+            );
         }
-
         $successmsg = __('Your email preview has been sent to %1$s', WYSIJA);
 
         // correction added for post notifications with the tag [newsletter:post_title] failing to send
@@ -575,8 +633,8 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
         // set params
         $block = array_merge(array('no-block' => true, 'type' => 'divider'), $divider);
 
-        $helper_engine=WYSIJA::get('wj_engine','helper');
-        return base64_encode($helper_engine->renderEditorBlock($block));
+        $helper_wj_engine=WYSIJA::get('wj_engine','helper');
+        return base64_encode($helper_wj_engine->renderEditorBlock($block));
     }
 
     function get_social_bookmarks() {
@@ -676,79 +734,101 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
         // set optimal width
         $block['width'] = max(0, min($width, 564));
 
-        $helper_engine=WYSIJA::get('wj_engine','helper');
-        return base64_encode($helper_engine->renderEditorBlock($block));
+        $helper_wj_engine=WYSIJA::get('wj_engine','helper');
+        return base64_encode($helper_wj_engine->renderEditorBlock($block));
     }
 
     function install_theme() {
         if( isset($_REQUEST['theme_id'])){
-
+            global $wp_version;
             //check if theme is premium if you have the premium licence
             if(isset($_REQUEST['premium']) && $_REQUEST['premium']){
                 $getpremiumtheme=apply_filters('wysija_install_theme_premium', false);
 
                 if(!$getpremiumtheme){
-                    $wjEngine = WYSIJA::get('wj_engine', 'helper');
-                    $themes = $wjEngine->renderThemes();
+                    $helper_wj_engine = WYSIJA::get('wj_engine', 'helper');
+                    $themes = $helper_wj_engine->renderThemes();
                     return array('result'=>false, 'themes' => $themes);
                 }
             }
 
+            $helperToolbox = WYSIJA::get('toolbox','helper');
+            $domain_name = $helperToolbox->_make_domain_name(admin_url('admin.php'));
 
-            $httpHelp=WYSIJA::get('http','helper');
-            $url=admin_url('admin.php');
+            $request = 'http://api.mailpoet.com/download/zip/'.$_REQUEST['theme_id'].'?domain='.$domain_name;
 
-            $helperToolbox=WYSIJA::get('toolbox','helper');
-            $domain_name=$helperToolbox->_make_domain_name($url);
+            $args = array(
+                    'timeout' =>  30,
+                    'body' => array(  ),
+		 'user-agent' => 'WordPress/' . $wp_version . '; ' . get_bloginfo( 'url' )
+            );
+            $raw_response = wp_remote_post( $request, $args );
 
-            $request='http://api.wysija.com/download/zip/'.$_REQUEST['theme_id'].'?domain='.$domain_name;
-
-            $ZipfileResult = $httpHelp->wp_request($request);
+            if ( is_wp_error( $raw_response ) || 200 != wp_remote_retrieve_response_code( $raw_response ) ){
+                if(method_exists($raw_response, 'get_error_messages')){
+                    $this->error($raw_response->get_error_messages());
+                }
+                $ZipfileResult = false;
+            }else{
+                $ZipfileResult = maybe_unserialize( wp_remote_retrieve_body( $raw_response ) );
+            }
 
             if($ZipfileResult === false){
-                $result=false;
+                $result = false;
                 $this->error(__('We were unable to contact the API, the site may be down. Please try again later.',WYSIJA),true);
             }else{
                 $themesHelp=WYSIJA::get('themes','helper');
                 $result = $themesHelp->installTheme($ZipfileResult);
 
                 // refresh themes list
-                $wjEngine = WYSIJA::get('wj_engine', 'helper');
-                $themes = $wjEngine->renderThemes();
+                $helper_wj_engine = WYSIJA::get('wj_engine', 'helper');
+                $themes = $helper_wj_engine->renderThemes();
             }
         }else{
-            $result=false;
+            $result = false;
+            $themes = '';
             $this->notice('missing info');
         }
 
-        return array('result'=>$result, 'themes' => $themes);
+        return array('result' => $result, 'themes' => $themes);
     }
 
     function refresh_themes() {
         // refresh themes list
-        $wjEngine = WYSIJA::get('wj_engine', 'helper');
-        return array('result'=>true, 'themes' => $wjEngine->renderThemes());
+        $helper_wj_engine = WYSIJA::get('wj_engine', 'helper');
+        return array('result'=>true, 'themes' => $helper_wj_engine->renderThemes());
     }
 
     function generate_auto_post() {
         // get params and generate html
-        $wjEngine = WYSIJA::get('wj_engine', 'helper');
+        $helper_wj_engine = WYSIJA::get('wj_engine', 'helper');
         $helper_articles = WYSIJA::get('articles', 'helper');
 
         // get parameters
         $block_params = array();
         if(isset($_POST['wysijaData'])) {
+            // store category ids (TBR)
+            $category_ids = array();
+
             foreach($_POST['wysijaData'] as $pairs) {
                 // special cases
                 switch($pairs['name']) {
+                	case 'author_label':
+                	case 'category_label':
                     case 'readmore':
                     case 'nopost_message':
                         $block_params[] = array('key' => $pairs['name'], 'value' => base64_encode(stripslashes($pairs['value'])));
                         break;
+                    case 'category_ids':
+                        $category_ids[] = (int)$pairs['value'];
+                    break;
                     default:
                         $block_params[] = array('key' => $pairs['name'], 'value' => $pairs['value']);
                 }
             }
+
+            // make sure we have only unique ids in categories
+            $block_params[] = array('key' => 'category_ids', 'value' => join(',', array_unique($category_ids)));
         }
 
         if(empty($block_params)) {
@@ -759,7 +839,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
                 'type' => 'auto-post',
                 'params' => $block_params
             );
-            return base64_encode($wjEngine->renderEditorBlock($data));
+            return base64_encode($helper_wj_engine->renderEditorBlock($data));
         }
     }
 
@@ -772,13 +852,13 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
 
             foreach($pairs as $pair) {
                 list($key, $value) = explode('=', $pair);
-
-
                 switch($key) {
                     case 'autopost_count':
                         $params[$key] = (int)$value;
                         break;
                     case 'readmore':
+                    case 'author_label':
+                    case 'category_label':
                     case 'nopost_message':
                         $params[$key] = base64_decode($value);
                         break;
@@ -795,17 +875,17 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
             // an error occurred, do something!
             return false;
         } else {
+
             // get email params
             $email_id = (int)$_REQUEST['id'];
-            $modelEmail = WYSIJA::get('email', 'model');
-            $email = $modelEmail->getOne(array('params','sent_at','campaign_id'), array('email_id' => $email_id));
+            $model_email = WYSIJA::get('email', 'model');
+            $email = $model_email->getOne(array('params','sent_at','campaign_id'), array('email_id' => $email_id));
 
-            $articlesHelper = WYSIJA::get('articles', 'helper');
-            $wjEngine = WYSIJA::get('wj_engine', 'helper');
+            $helper_articles = WYSIJA::get('articles', 'helper');
+            $helper_wj_engine = WYSIJA::get('wj_engine', 'helper');
 
             // see if posts have already been sent
             if(!empty($email['params']['autonl']['articles']['ids'])) {
-
                 if(!isset($params['exclude'])) { $params['exclude'] = array(); }
 
                 $params['exclude'] = array_unique(array_merge($email['params']['autonl']['articles']['ids'], $params['exclude']));
@@ -831,43 +911,47 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
                     $mEmail->orderBy('email_id','DESC');
                     $lastEmailSent=$mEmail->getOne(false,array('campaign_id'=>$email['campaign_id'],'type'=>'1'));
 
-                    if(isset($data['sent_at'])) $params['post_date'] = $lastEmailSent['sent_at'];
+                    if(!empty($lastEmailSent)) $params['post_date'] = $lastEmailSent['sent_at'];
                 }
             }
 
+            // get posts
+            $params['post_fields'] = array('post_title', 'post_content', 'post_excerpt', 'post_author');
+            $model_wp_posts = WYSIJA::get('wp_posts','model');
+            $posts = $model_wp_posts->get_posts($params);
 
+            if(empty($posts)) {
+                // nothing to display
+                $posts = array();
+            } else {
+                // used to keep track of post ids present in the auto post
+                $post_ids = array();
 
-            $posts = $articlesHelper->getPosts($params);
+                // cleanup post and get image
+                foreach($posts as $key => $post) {
+                    if($params['image_alignment'] !== 'none') {
+                        // attempt to get post image
+                        $posts[$key]['post_image'] = $helper_articles->getImage($post);
+                    }
 
-            // used to keep track of post ids present in the auto post
-            $post_ids = array();
-
-            // cleanup post and get image
-            foreach($posts as $key => $post) {
-                if($params['image_alignment'] !== 'none') {
-                    // attempt to get post image
-                    $posts[$key]['post_image'] = $articlesHelper->getImage($post);
+                    // store article id
+                    $post_ids[] = $post['ID'];
                 }
-
-                $posts[$key] = $articlesHelper->convertPostToBlock($posts[$key], $params);
-
-                // store article id
-                $post_ids[] = $post['ID'];
+                // store article ids
+                $params['post_ids'] = join(',', $post_ids);
             }
-            // store article ids
-            $params['post_ids'] = join(',', $post_ids);
 
-            // get divider if necessary
-            if($params['show_divider'] === 'yes') {
+            // get divider if necessary (for immediate post notification, the "show_divider" parameter is not available)
+            if(isset($params['show_divider']) && $params['show_divider'] === 'yes') {
                 if(isset($email['params']['divider'])) {
                     $params['divider'] = $email['params']['divider'];
                 } else {
-                    $dividersHelper = WYSIJA::get('dividers', 'helper');
-                    $params['divider'] = $dividersHelper->getDefault();
+                    $helper_dividers = WYSIJA::get('dividers', 'helper');
+                    $params['divider'] = $helper_dividers->getDefault();
                 }
             }
 
-            return base64_encode($wjEngine->renderEditorAutoPost($posts, $params));
+            return base64_encode($helper_wj_engine->renderEditorAutoPost($posts, $params));
         }
     }
 }

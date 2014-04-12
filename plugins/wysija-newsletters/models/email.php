@@ -80,7 +80,7 @@ class WYSIJA_model_email extends WYSIJA_model{
      * validation before updating the data
      * @return boolean
      */
-    function beforeUpdate(){
+    function beforeUpdate($id = null){
 
         if(isset($this->values['params']) && is_array($this->values['params'])){
 
@@ -237,16 +237,16 @@ class WYSIJA_model_email extends WYSIJA_model{
         // update parent email articles' ids to reflect the ones added in the child email
         $paramsVal['autonl']['articles']['ids'] = $emailChild['params']['autonl']['articles']['ids'];
 
-//        $count_array_ids = count($paramsVal['autonl']['articles']['ids']);
-//        if($count_array_ids > 200){
-//            $offset = $count_array_ids - 50;
-//            $paramsVal['autonl']['articles']['ids'] = array_slice($paramsVal['autonl']['articles']['ids'], $offset, -1);
-//        }
-
+        // added new_ids parameter in order to know which articles are being used in that newsletter for instance with shortcodes
+        if(!empty($email['params']['autonl']['articles']['ids'])) {
+            $emailChild['params']['autonl']['articles']['new_ids'] = array_diff($emailChild['params']['autonl']['articles']['ids'], $email['params']['autonl']['articles']['ids']);
+        } else {
+            $emailChild['params']['autonl']['articles']['new_ids'] = $emailChild['params']['autonl']['articles']['ids'];
+        }
 
         $donotsend=false;
         // if there's no article, do not send
-        if($emailChild['params']['autonl']['articles']['count'] === 0) {
+        if((int)$emailChild['params']['autonl']['articles']['count'] === 0) {
             $donotsend = true;
         }
 

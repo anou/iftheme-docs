@@ -101,7 +101,7 @@ class WYSIJA_help_server extends WYSIJA_object {
         $upload_dir = wp_upload_dir();
         $temp_dir = $hFile->makeDir();
         if (!$temp_dir) {
-            $this->error(sprintf(__('The folder "%1$s" is not writable, please change the access rights to this folder so that Wysija can setup itself properly.',WYSIJA),$upload_dir['basedir']).'<a target="_blank" href="http://codex.wordpress.org/Changing_File_Permissions">'.__('Read documentation',WYSIJA).'</a>');
+            $this->error(sprintf(__('The folder "%1$s" is not writable, please change the access rights to this folder so that MailPoet can setup itself properly.',WYSIJA),$upload_dir['basedir']).'<a target="_blank" href="http://codex.wordpress.org/Changing_File_Permissions">'.__('Read documentation',WYSIJA).'</a>');
             return false;
         } else {
             // Create index.html to protect the temp directory.
@@ -146,7 +146,7 @@ class WYSIJA_help_server extends WYSIJA_object {
 
         if(!$res){
             $this->error(sprintf(
-                    __('The MySQL user you have setup on your Wordpress site (wp-config.php) doesn\'t have enough privileges to CREATE MySQL tables. Please change this user yourself or contact the administrator of your site in order to complete Wysija\'s installation. mysql errors:(%1$s)',WYSIJA),  mysql_error()));
+                    __('The MySQL user you have setup on your WordPress site (wp-config.php) doesn\'t have enough privileges to CREATE MySQL tables. Please change this user yourself or contact the administrator of your site in order to complete MailPoet\'s installation. mysql errors:(%1$s)',WYSIJA),  mysql_error()));
             return false;
         }
         return true;
@@ -169,7 +169,7 @@ class WYSIJA_help_server extends WYSIJA_object {
         global $wpdb;
         $wpdb->query($query);
         if(!$wpdb->result){
-            $error_message=__('The MySQL user you have setup on your Wordpress site (wp-config.php) doesn\'t have enough privileges to CREATE MySQL tables. Please change this user yourself or contact the administrator of your site in order to complete Wysija\'s installation. mysql errors:(%1$s)',WYSIJA);
+            $error_message=__('The MySQL user you have setup on your WordPress site (wp-config.php) doesn\'t have enough privileges to CREATE MySQL tables. Please change this user yourself or contact the administrator of your site in order to complete MailPoet\'s installation. mysql errors:(%1$s)',WYSIJA);
             $this->error(sprintf(str_replace('CREATE', 'ALTER', $error_message), mysql_error($wpdb->dbh)));
             $this->_drop_temp_sql_table();
             return false;

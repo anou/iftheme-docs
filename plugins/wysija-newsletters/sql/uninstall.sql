@@ -25,3 +25,5 @@ DROP TABLE `email_user_url`;
 DROP TABLE `url_mail`;
 -- QUERY ---
 DROP TABLE `form`;
+-- QUERY ---
+DROP TABLE `custom_field`;

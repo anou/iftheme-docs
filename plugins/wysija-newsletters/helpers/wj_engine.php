@@ -28,7 +28,7 @@ class WYSIJA_help_wj_engine extends WYSIJA_object {
     var $FONTS = array("Arial", "Arial Black", "Comic Sans MS", "Courier New", "Georgia", "Impact", "Tahoma", "Times New Roman", "Trebuchet MS", "Verdana");
 
     /* Constructor */
-    function WYSIJA_help_wj_engine(){ }
+    function WYSIJA_help_wj_engine() { }
 
     /* i18n methods */
     function getTranslations() {
@@ -71,7 +71,7 @@ class WYSIJA_help_wj_engine extends WYSIJA_object {
             'addLinkTitle' => __('Add Link & Alternative text', WYSIJA),
             'styleTransparent' => __('Check this box if you want transparency', WYSIJA),
             'ajaxLoading' => __('Loading...', WYSIJA),
-            'customFieldsLabel' => __('Add first or last name of subscriber', WYSIJA),
+            'customFieldsLabel' => __('Insert dynamic data about your subscribers, the newsletter, today\'s date, etc...', WYSIJA),
             'autoPostSettingsTitle' => __('Selection options', WYSIJA),
             'autoPostEditSettings' => __('Edit Automatic latest content', WYSIJA),
             'autoPostImmediateNotice' => __('You can only add one widget when designing a post notification sent immediately after an article is published', WYSIJA),
@@ -81,7 +81,7 @@ class WYSIJA_help_wj_engine extends WYSIJA_object {
             'tags_user_firstname' => __('First Name', WYSIJA),
             'tags_user_lastname' => __('Last Name', WYSIJA),
             'tags_user_email' => __('Email Address', WYSIJA),
-            'tags_user_displayname' => __('Wordpress user display name', WYSIJA),
+            'tags_user_displayname' => __('WordPress user display name', WYSIJA),
             'tags_user_count' => __('Total of subscribers', WYSIJA),
             'tags_newsletter' => __('Newsletter', WYSIJA),
             'tags_newsletter_subject' => __('Newsletter Subject', WYSIJA),
@@ -100,11 +100,12 @@ class WYSIJA_help_wj_engine extends WYSIJA_object {
             'tags_global_unsubscribe' => __('Unsubscribe link', WYSIJA),
             'tags_global_manage' => __('Edit subscription page link', WYSIJA),
             'tags_global_browser' => __('View in browser link', WYSIJA),
+            'custom_fields_title' => __('Custom Fields', WYSIJA),
+            'custom_fields_list' => WJ_Field::get_all_names(),
             // Themes specific labels
             'theme_setting_default' => __('Saving default style...', WYSIJA),
             'theme_saved_default' => __('Default style saved.', WYSIJA),
             'theme_save_as_default' => __('Set as default style.', WYSIJA)
-
         );
     }
 
@@ -247,17 +248,17 @@ class WYSIJA_help_wj_engine extends WYSIJA_object {
                 'size' => $this->TITLE_SIZES[6]
             ),
             'h2' => array(
-                'color' => '000000',
+                'color' => '424242',
                 'family' => 'Arial',
                 'size' => $this->TITLE_SIZES[5]
             ),
             'h3' => array(
-                'color' => '000000',
+                'color' => '424242',
                 'family' => 'Arial',
                 'size' => $this->TITLE_SIZES[4]
             ),
             'a' => array(
-                'color' => '0000FF',
+                'color' => '4a91b0',
                 'underline' => false
             ),
             'unsubscribe' => array(
@@ -296,6 +297,14 @@ class WYSIJA_help_wj_engine extends WYSIJA_object {
 
             return $styles;
         }
+    }
+
+    function getApplicationData() {
+        $app = array();
+
+        $app['domain'] = WJ_Utils::get_domain();
+
+        return $app;
     }
 
     /* Editor methods */
@@ -390,23 +399,187 @@ class WYSIJA_help_wj_engine extends WYSIJA_object {
 
     /* render auto post */
     function renderEditorAutoPost($posts = array(), $params = array()) {
+        $output = '';
+        if(isset($params['post_ids'])) {
+            $output .= '<input type="hidden" name="post_ids" value="'.$params['post_ids'].'" />';
+        }
+
+        // check if there are posts to display
+        if(empty($posts)) {
+            // if not, display a message stating that the latest content has been sent
+            $block = array(
+                'no-block' => true,
+                'type' => 'content',
+                'alignment' => 'center',
+                'background_color' => $params['bgcolor1'],
+                'image' => null,
+                'text' => array('value' => base64_encode(__('Latest content already sent.', WYSIJA)))
+            );
+            $output .= $this->renderEditorBlock($block);
+        } else {
+            // otherwise, render all posts into blocks
+            $output .= $this->renderPostsToBlocks($posts, $params, 'autopost');
+        }
+
+        return $output;
+    }
+
+    function renderEmailAutoPost($posts = array(), $params = array()) {
+        if(empty($posts)) {
+            return '';
+        } else {
+            return $this->renderPostsToBlocks($posts, $params, 'autopost');
+        }
+    }
+
+    function renderEmailBlock($block = array()) {
         $helper_render_engine = WYSIJA::get('render_engine', 'helper');
         $helper_render_engine->setTemplatePath(WYSIJA_EDITOR_TOOLS);
         $helper_render_engine->setStripSpecialchars(true);
 
-        if(isset($params['bgcolor1']) && strlen($params['bgcolor1']) === 0) {
-            $params['bgcolor1'] = 'transparent';
-        }
-        if(isset($params['bgcolor2']) && strlen($params['bgcolor2']) === 0) {
-            $params['bgcolor2'] = 'transparent';
+        // set block background color
+        $background_color = null;
+        if(isset($block['background_color'])) {
+            $background_color = $block['background_color'];
         }
 
-        $data = array(
-            'posts' => $posts,
-            'params' => $params
+        return $this->applyInlineStyles(
+            'body',
+            $helper_render_engine->render($block, 'templates/email_v3/block_'.$block['type'].'.html'),
+            array('background_color' => $background_color)
         );
+    }
 
-        $html = $helper_render_engine->render($data, 'templates/editor/block_auto-post_content.html');
+    function renderPostsToBlocks($posts = array(), $params = array(), $mode = 'post') {
+        $html = '';
+        $context = $this->getContext();
+
+        $helper_articles = WYSIJA::get('articles', 'helper');
+
+        if($params['title_tag'] === 'list') {
+            $list = '<ul class="align-'.$params['title_alignment'].'">';
+        }
+
+        // make sure empty bgcolors are set to transparent
+        if(!isset($params['bgcolor1']) || (isset($params['bgcolor1']) && strlen($params['bgcolor1']) === 0)) {
+            $params['bgcolor1'] = '';
+        }
+        if(!isset($params['bgcolor2']) || (isset($params['bgcolor2']) && strlen($params['bgcolor2']) === 0)) {
+            $params['bgcolor2'] = '';
+        }
+
+        // BEGIN - posts
+        for($i = 0, $count = count($posts); $i < $count; $i++) {
+            $post = $posts[$i];
+            $is_odd = (bool)($i % 2);
+            $is_last = (bool)($i === ($count - 1));
+
+            // set default background color to transparent
+            $background_color = '';
+
+            // set background color for each post
+            if($is_odd === false) $background_color = $params['bgcolor1'];
+            if($is_odd === true) $background_color = $params['bgcolor2'];
+
+            if($params['image_alignment'] === 'alternate') {
+                $image_alignment = ($is_odd ===  false) ? 'left' : 'right';
+            } else if($params['image_alignment'] === 'none') {
+                $image_alignment = 'left';
+                $post['post_image'] = null;
+            } else {
+                $image_alignment = $params['image_alignment'];
+            }
+
+            // build basic block data
+            $block = array(
+                'position' => $i,
+                'type' => 'content',
+                'alignment' => $image_alignment,
+                'background_color' => $background_color,
+                'image' => null,
+                'text' => null
+            );
+
+            // in case of autopost, we need to remove the "block" container because each block will be rendered within the autopost block
+            if($mode === 'autopost') {
+                $block['no-block'] = true;
+            }
+
+            // get title
+            $title = $helper_articles->getPostTitle($post, $params);
+
+            if(!isset($params['title_position'])) {
+                $params['title_position'] = 'inside';
+            }
+
+            // if post content is title, force title position inside
+            if($params['post_content'] === 'title') {
+                $params['title_position'] = 'inside';
+            }
+
+            // only display titles as a list
+            if($params['title_tag'] === 'list') {
+                $list .= $title;
+                continue;
+            }
+
+            // if the title is outside, generate its own block
+            if($params['title_position'] === 'outside') {
+                // generate title
+                $title_block = array_merge($block, array(
+                    'alignment' => 'left',
+                    'text' => array(
+                        'value' => base64_encode($title)
+                    )
+                ));
+
+                if($context === 'editor') {
+                    $html .= $this->renderEditorBlock($title_block);
+                } else if($context === 'email') {
+                    $html .= $this->renderEmailBlock($title_block);
+                }
+            }
+
+            // generate content
+            $content_block = array_merge($block, $helper_articles->convertPostToBlock($post, array_merge($params, array('image_alignment' => $image_alignment))));
+
+            if($context === 'editor') {
+                $html .= $this->renderEditorBlock($content_block);
+            } else if($context === 'email') {
+                $html .= $this->renderEmailBlock($content_block);
+            }
+
+            // display divider if required
+            if(isset($params['divider']) && ($params['divider'] !== null && $is_last === false)) {
+                // display divider only if there is one and if it's not the last post
+                $divider_block = array_merge(
+                    array(
+                        'type' => 'divider',
+                        'no-block' => ($mode === 'autopost')
+                    ),
+                    $params['divider']
+                );
+
+                if($context === 'editor') {
+                    $html .= $this->renderEditorBlock($divider_block);
+                } else if($context === 'email') {
+                    $html .= $this->renderEmailBlock($divider_block);
+                }
+            }
+        }
+        // END - Posts
+
+        if($params['title_tag'] === 'list') {
+            $list .= '</ul>';
+            $list_block = array_merge($block, array(
+                'alignment' => 'center',
+                'type' => 'content',
+                'text' => array(
+                    'value' => base64_encode($list)
+                )
+            ));
+            $html .= $this->renderEditorBlock($list_block);
+        }
 
         return $html;
     }
@@ -509,7 +682,8 @@ class WYSIJA_help_wj_engine extends WYSIJA_object {
                     break;
                 case 'font-family':
                     $property = 'family';
-                    $value = array_shift(explode(',', $value));
+                    $fonts = explode(',', $value);
+                    $value = array_shift($fonts);
                     break;
                 case 'font-size':
                     $property = 'size';
@@ -647,6 +821,13 @@ class WYSIJA_help_wj_engine extends WYSIJA_object {
         $data = $this->getStyles();
         $data['context'] = $this->getContext();
 
+        // right to left language property
+        if(function_exists('is_rtl')) {
+            $data['is_rtl'] = is_rtl();
+        } else {
+            $data['is_rtl'] = false;
+        }
+
         switch($data['context']) {
             case 'editor':
                 $helper_render_engine->setStripSpecialchars(false);
@@ -670,12 +851,6 @@ class WYSIJA_help_wj_engine extends WYSIJA_object {
                 $data['footer_container'] = '#wysija_footer_content';
                 $data['text_container'] = '.wysija-text-container';
                 $data['unsubscribe_container'] = '#wysija_unsubscribe';
-                //right to left language property
-                if(function_exists('is_rtl')) {
-                    $data['is_rtl'] = is_rtl();
-                } else {
-                    $data['is_rtl'] = false;
-                }
 
                 return $helper_render_engine->render($data, 'templates/email_v3/css.html');
             break;
@@ -805,6 +980,28 @@ class WYSIJA_help_wj_engine extends WYSIJA_object {
         return $header;
     }
 
+    function encodeParameters($params = array()) {
+    	// encode string parameters
+        $keys_to_encode = array('author_label', 'category_label', 'readmore');
+        foreach($keys_to_encode as $key) {
+        	if(isset($params[$key]) && strlen(trim($params[$key])) > 0) {
+        		$params[$key] = base64_encode(stripslashes($params[$key]));
+        	}
+        }
+        return $params;
+	}
+
+	function decodeParameters($params = array()) {
+    	// decode string parameters
+        $keys_to_decode = array('author_label', 'category_label', 'readmore');
+        foreach($keys_to_decode as $key) {
+        	if(isset($params[$key]) && strlen(trim($params[$key])) > 0) {
+        		$params[$key] = base64_decode($params[$key]);
+        	}
+        }
+        return $params;
+	}
+
     function renderEmailBody() {
         $helper_render_engine = WYSIJA::get('render_engine', 'helper');
         $helper_render_engine->setTemplatePath(WYSIJA_EDITOR_TOOLS);
@@ -813,9 +1010,35 @@ class WYSIJA_help_wj_engine extends WYSIJA_object {
         $blocks = $this->getData('body');
         $styles = array('body' => $this->getStyles('body'));
 
+        // default newsletter type
+        $newsletter_type = 'default';
+
+        // check if we need to interpret shortcodes
+        $model_config = WYSIJA::get('config', 'model');
+        $interpret_shortcode = (bool)$model_config->getValue('interp_shortcode');
+
         $body = '';
 
+        // check if we are dealing with an auto newsletter
+        $email = $this->getEmailData();
+        if(isset($email['params']['autonl']) && !empty($email['params']['autonl'])) {
+            // set newsletter type to automattic newsletter
+            $newsletter_type = 'automatic';
+            // reset category_ids
+            $include_category_ids = array();
+            $exclude_category_ids = array();
+
+            // posts data
+            $first_subject = null;
+            $post_count = 0;
+            $post_ids = array();
+
+        }
+
         foreach($blocks as $key => $block) {
+            // reset block HTML so as to avoid duplicates
+            $blockHTML = '';
+
             // specific background color
             $block_background_color = null;
 
@@ -831,15 +1054,40 @@ class WYSIJA_help_wj_engine extends WYSIJA_object {
                 // special case for auto post, we need to fetch posts, taking previously sent posts into account
 
                 // get email data
-                $email = $this->getEmailData();
+                //$email = $this->getEmailData();
 
                 // get block params
                 $blockParams = $block['params'];
 
                 // format parameters
                 $params = array();
+
+                $category_ids = array();
+                $category_condition = 'include';
+
                 foreach($blockParams as $pairs) {
+                    // store category_ids in email for better performance on immediate sending of WP Posts.
+                    if($pairs['key'] === 'category_ids') {
+                        $pair_value = trim($pairs['value']);
+                        if(!empty($pair_value)) {
+                            $category_ids = explode(',', trim($pairs['value']));
+                        }
+                    }
+                    // store category condition (include / exclude) for same above reason.
+                    if($pairs['key'] === 'category_condition') {
+                        $category_condition = (in_array(trim($pairs['value']), array('include', 'exclude'))) ? trim($pairs['value']) : 'include';
+                    }
                     $params[$pairs['key']] = $pairs['value'];
+                }
+
+                // make sure we store category_ids
+                if(!empty($category_ids)) {
+                    if($category_condition === 'include') {
+                        $include_category_ids = array_unique(array_merge($include_category_ids, $category_ids));
+                    }
+                    if($category_condition === 'exclude') {
+                        $exclude_category_ids = array_unique(array_merge($exclude_category_ids, $category_ids));
+                    }
                 }
 
                 // make sure empty bgcolors are set to transparent
@@ -850,20 +1098,21 @@ class WYSIJA_help_wj_engine extends WYSIJA_object {
                     $params['bgcolor2'] = 'transparent';
                 }
 
-                // get list of post ids already sent if present
+                // make sure the default params are set
+                if(array_key_exists('autonl', $email['params']) === false) {
+                    $email['params']['autonl'] = array();
+                }
+                if(array_key_exists('articles', $email['params']['autonl']) === false) {
+                    $email['params']['autonl']['articles'] = array(
+                        'ids' => array(),
+                        'count' => 0,
+                        'first_subject' => ''
+                    );
+                }
+
+                // exclude already sent post ids from selection
                 if(!empty($email['params']['autonl']['articles']['ids'])) {
                     $params['exclude'] = $email['params']['autonl']['articles']['ids'];
-                } else {
-                    if(array_key_exists('autonl', $email['params']) === false) {
-                        $email['params']['autonl'] = array();
-                    }
-                    if(array_key_exists('articles', $email['params']['autonl']) === false) {
-                        $email['params']['autonl']['articles'] = array(
-                            'ids' => array(),
-                            'count' => 0,
-                            'first_subject' => ''
-                        );
-                    }
                 }
 
                 //we set the post_date to filter articles only older than that one
@@ -890,100 +1139,70 @@ class WYSIJA_help_wj_engine extends WYSIJA_object {
                     }
                 }
 
+                // decode specific keys
+                $params = $this->decodeParameters($params);
 
-                // decode readmore text & nopost message
-                $params['readmore'] = trim(base64_decode($params['readmore']));
+                // include/exclude category_ids
+                $params['include_category_ids'] = $include_category_ids;
+                $params['exclude_category_ids'] = $exclude_category_ids;
+
+                // define which fields are required from the posts
+                $params['post_fields'] = array('post_title', 'post_content', 'post_excerpt', 'post_author');
+
+                // check for already inserted posts
+                if(!empty($post_ids)) {
+                    $params['exclude'] = $post_ids;
+                }
 
                 // get posts for this block
-                $hArticles = WYSIJA::get('articles', 'helper');
-                $posts = $hArticles->getPosts($params);
+                $model_wp_posts = WYSIJA::get('wp_posts','model');
+                $posts = $model_wp_posts->get_posts($params);
+
                 // cleanup post and get image
-                $postIds = array();
-                $postCount = 0;
+                //$post_ids = array();
+                //$post_count = 0;
 
-                if(empty($posts)) {
-                    // case when there's no post, but there's a message to be displayed
-                    if(!isset($params['nopost_message']) || strlen($params['nopost_message']) === 0) {
-                        $blockHTML = '';
-                    } else {
-                        $data = array('text' => array('value' => $params['nopost_message']), 'block_width' => $block['block_width']);
-                        $blockHTML = $helper_render_engine->render($data, 'templates/email_v3/block_content.html');
-                    }
-                } else {
-                    $blockHTML = '';
-                    $divider = null;
-
+                // check if we have posts to display
+                if(!empty($posts)) {
                     // get divider if necessary
-                    if($params['show_divider'] === 'yes') {
+                    if(isset($params['show_divider']) && $params['show_divider'] === 'yes') {
                         if(isset($email['params']['divider'])) {
-                            $divider = $email['params']['divider'];
+                            // either from the email params
+                            $params['divider'] = $email['params']['divider'];
                         } else {
-                            $dividersHelper = WYSIJA::get('dividers', 'helper');
-                            $divider = $dividersHelper->getDefault();
+                            // get default divider otherwise
+                            $helper_dividers = WYSIJA::get('dividers', 'helper');
+                            $params['divider'] = $helper_dividers->getDefault();
                         }
                     }
 
-                    $postIterator= 1;
-                    $postCount = count($posts);
-                    for($key = 0; $key < $postCount; $key++) {
-                        // get post ids
-                        $postIds[] = $posts[$key]['ID'];
+                    $helper_articles = WYSIJA::get('articles', 'helper');
 
-                        if(strlen(trim($posts[$key]['post_title'])) > 0 and empty($email['params']['autonl']['articles']['first_subject'])) {
-                            $email['params']['autonl']['articles']['first_subject'] = trim($posts[$key]['post_title']);
+                    foreach($posts as $key => $post) {
+                        // assign first post title to autonl parameters (this is used to display the [newsletter:post_title] shortcode in the subject)
+                        if($first_subject === null && strlen(trim($posts[$key]['post_title'])) > 0) {
+                            $first_subject = trim($posts[$key]['post_title']);
                         }
 
+                        // check if shortcodes should be interpreted (value comes from WP options)
+                        if($interpret_shortcode === true) {
+                            // interpret shortcodes
+                            $posts[$key]['post_content'] = apply_filters('the_content', $post['post_content']);
+                        }
                         if($params['image_alignment'] !== 'none') {
-                            // attempt to get post image
-                            $posts[$key]['post_image'] = $hArticles->getImage($posts[$key]);
-
-                            // set image alignment
-                            if($params['image_alignment'] === 'alternate') {
-                                $image_alignment = ($postIterator > 0) ? 'left' : 'right';
-                            } else {
-                                $image_alignment = $params['image_alignment'];
-                            }
-                        } else {
-                            // set default alignment
-                            $image_alignment = 'left';
+                            // get thumbnail
+                            $posts[$key]['post_image'] = $helper_articles->getImage($post);
                         }
 
-                        // override image alignment in params
-                        $post_params = array_merge($params, array('image_alignment' => $image_alignment));
-
-                        // convert post data to block
-                        $posts[$key] = $hArticles->convertPostToBlock($posts[$key], $post_params);
-
-                        // set default background color to transparent
-                        $posts[$key]['background_color'] = 'transparent';
-
-                        // set background color for each post
-                        if(isset($params['bgcolor1']) && $postIterator > 0) {
-                            $posts[$key]['background_color'] = $params['bgcolor1'];
-                        }
-                        if(isset($params['bgcolor2']) && $postIterator < 0) {
-                            $posts[$key]['background_color'] = $params['bgcolor2'];
-                        }
-                        $postIterator *= -1;
-
-                        // render post into block
-                        $data = array_merge($posts[$key], array('styles' => $styles, 'block_width' => $block['block_width']));
-
-                        // apply inline styles
-                        $blockHTML .= $this->applyInlineStyles('body', $helper_render_engine->render($data, 'templates/email_v3/block_content.html'), array('background_color' => $posts[$key]['background_color']));
-
-                        // add divider if this is not the last post
-                        if($divider !== null and $key !== ($postCount - 1)) {
-                            $blockHTML .= $helper_render_engine->render(array_merge($divider, array('block_width' => $block['block_width'])), 'templates/email_v3/block_divider.html');
-                        }
+                        $post_ids[] = (int)$post['ID'];
+                        $post_count++;
                     }
+                    // render html from post data and params
+                    $blockHTML = $this->renderEmailAutoPost($posts, $params);
                 }
 
                 // update email post ids sent
-                $email['params']['autonl']['articles']['ids'] = array_unique(array_merge($email['params']['autonl']['articles']['ids'], $postIds));
-                // increment posts count
-                if(!isset($email['params']['autonl']['articles']['count'])) $email['params']['autonl']['articles']['count']=0;
-                $email['params']['autonl']['articles']['count'] = (int)$email['params']['autonl']['articles']['count'] + $postCount;
+                //$email['params']['autonl']['articles']['ids'] = array_unique(array_merge($email['params']['autonl']['articles']['ids'], $post_ids));
 
                 $this->setEmailData($email);
             } else {
@@ -1003,6 +1222,20 @@ class WYSIJA_help_wj_engine extends WYSIJA_object {
                 // render each block
                 $body .= $blockHTML;
             }
+        }
+
+        if($newsletter_type === 'automatic') {
+            $email = $this->getEmailData();
+
+            // store category ids
+            $email['params']['autonl']['include_category_ids'] = $include_category_ids;
+            $email['params']['autonl']['exclude_category_ids'] = $exclude_category_ids;
+
+            $email['params']['autonl']['articles']['count'] = $post_count;
+            $email['params']['autonl']['articles']['first_subject'] = $first_subject;
+            $email['params']['autonl']['articles']['ids'] = array_unique(array_merge($email['params']['autonl']['articles']['ids'], $post_ids));
+
+            $this->setEmailData($email);
         }
 
         return $body;
@@ -1100,6 +1333,7 @@ class WYSIJA_help_wj_engine extends WYSIJA_object {
                     $tags['li']['background'] = $extra['background_color'];
                     // fixes issue on Outlook.com Mobile where h2 have a white background
                     $tags['h2']['background'] = $extra['background_color'];
+                    $tags['p']['background'] = $extra['background_color'];
                 } else {
                     // default newsletter background
                     // fixes issue on Outlook.com Mobile where h2 have a white background

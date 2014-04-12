@@ -8,8 +8,27 @@ class WYSIJA_control_back_subscribers extends WYSIJA_control_back{
     var $_separators = array(',', ';'); // csv separator; comma is for standard csv, semi-colon is good for Excel
     var $_default_separator = ';';
 
-    function WYSIJA_control_back_subscribers(){
+    /**
+     * Inactive users = users who never opened or clicked
+     * @todo: disabled on 2.6. Once it's enabled, please double check in term of "inactive users".
+     * OR - users who never opened or clicked
+     * OR - users who never opened or clicked AND received at least 1 newsletter.
+     * @var boolean
+     */
+    var $_filter_by_inactive_users = false;
 
+    function WYSIJA_control_back_subscribers(){
+	WYSIJA_control_back::WYSIJA_control_back();
+	if ($this->_filter_by_inactive_users) {
+	    if (
+		// default display
+		empty($_REQUEST['action'])
+		// bulk action
+		|| !empty($_REQUEST['doaction']) && trim(strtolower($_REQUEST['doaction'])) === 'apply'
+		    ) {
+		$this->modelObj->prepare_inactive_users_table();
+	    }
+	}
     }
 
     function save(){
@@ -89,13 +108,24 @@ class WYSIJA_control_back_subscribers extends WYSIJA_control_back{
             $notEqual=array_merge($core_listids, $arrayLists);
 
             //unsubscribe from lists which exist in the old list but does not exist in the new list
-            $unsubsribe_list = array_diff(array_keys($oldlistids),$_POST['wysija']['user_list']['list_id']);
+            $unsubsribe_list = array_diff(array_keys($oldlistids), $arrayLists);
             if(!empty($unsubsribe_list))
             {
                 $modelUL->reset();
                 $modelUL->update(array('unsub_date'=>time()),array('user_id'=>$id,'list_id'=>$unsubsribe_list));
             }
             $modelUL->reset();
+
+            /*
+            Custom Fields.
+            */
+            if (isset($_POST['wysija']['field'])) {
+              WJ_FieldHandler::handle_all(
+                $_POST['wysija']['field'], $id
+              );
+            }
+
+
         }else{
             //instead of going through a classic save we should save through the helper
             $data=$_REQUEST['wysija'];
@@ -124,9 +154,20 @@ class WYSIJA_control_back_subscribers extends WYSIJA_control_back{
         $this->jsTrans['selecmiss'] = __('Select at least 1 subscriber!',WYSIJA);
 
         // get the total count for subscribed, unsubscribed and unconfirmed users
-        $select = array( 'count(user_id) as users' , 'status' , 'max(created_at) as max_create_at');
+        $select = array( 'COUNT(`user_id`) AS users' , 'status' , 'MAX(`created_at`) AS `max_create_at`');
         $count_group_by = 'status';
         $count_by_status = $this->modelObj->get_subscribers( $select , array() , $count_group_by );
+	if ($this->_filter_by_inactive_users) {
+	    $inactive_users = $this->modelObj->count_inactive_users();
+	    if ($inactive_users) {
+		array_unshift($count_by_status, array(
+		    'users' => $inactive_users['count'],
+		    'status' => -99,//-99 = inactive
+		    'max_create_at' => $inactive_users['max_created_at']
+		));
+	    }
+	}
+
 
         $counts = $this->modelObj->structure_user_status_count_array($count_by_status);
         $arr_max_create_at = $this->modelObj->get_max_create($count_by_status);
@@ -134,7 +175,7 @@ class WYSIJA_control_back_subscribers extends WYSIJA_control_back{
         // count the rows based on the filters
         $filters = $this->modelObj->detect_filters();
         $select = array( 'COUNT(DISTINCT([wysija]user.user_id)) as total_users', 'MAX([wysija]user.created_at) as max_create_at');
-        $count_rows = $this->modelObj->get_subscribers( $select, $filters );
+        $count_rows = $this->modelObj->get_subscribers( $select, $filters);
 
         // without filter we already have the total number of subscribers
         $this->data['max_create_at'] = null; //max value of create_at field of current list of users
@@ -148,9 +189,18 @@ class WYSIJA_control_back_subscribers extends WYSIJA_control_back{
             $this->modelObj->countRows=$counts['all'];
         }
 
-        $select = array( '[wysija]user.firstname', '[wysija]user.lastname', '[wysija]user.status', '[wysija]user.email', '[wysija]user.created_at', '[wysija]user_list.user_id' );
+        $select = array(
+	    '[wysija]user.firstname',
+	    '[wysija]user.lastname',
+	    '[wysija]user.status',
+	    '[wysija]user.email',
+	    '[wysija]user.created_at',
+	    '[wysija]user.last_opened',
+	    '[wysija]user.last_clicked',
+	    '[wysija]user_list.user_id'
+	    );
 
-        $this->data['subscribers'] = $this->modelObj->get_subscribers($select , $filters);
+        $this->data['subscribers'] = $this->modelObj->get_subscribers($select , $filters, '', false, true);
 
         $this->data['current_counts'] = $this->modelObj->countRows;
         $this->data['show_batch_select'] = ($this->modelObj->limit >= $this->modelObj->countRows) ? false : true;
@@ -222,6 +272,7 @@ class WYSIJA_control_back_subscribers extends WYSIJA_control_back{
         $this->messages['insert'][false]=__('Subscriber has not been saved.',WYSIJA);
         $this->messages['update'][true]=__('Subscriber has been modified. [link]Edit again[/link].',WYSIJA);
         $this->messages['update'][false]=__('Subscriber has not been modified.',WYSIJA);
+	$this->cleanup_form();
         parent::WYSIJA_control_back();
 
         //we change the default model of the controller based on the action
@@ -241,9 +292,38 @@ class WYSIJA_control_back_subscribers extends WYSIJA_control_back{
         if(!isset($_REQUEST['action']) || !$_REQUEST['action']) {
             $this->defaultDisplay();
             $this->checkTotalSubscribers();
+        } else {
+            $this->_tryAction($_REQUEST['action']);
         }
-        else $this->_tryAction($_REQUEST['action']);
+        if ( isset($_REQUEST['method']) && !empty($_REQUEST['method'])){
+            $this->_tryAction($_REQUEST['method']);
+        }
+    }
 
+    /**
+     * We are using the same form for different purposes:
+     * - Bulk actions
+     * - Filter by list
+     * We need to remove all un-necessary values from interface
+     */
+    protected function cleanup_form() {
+	if (!empty($_REQUEST['doaction'])) {
+	    $action_type = strtolower(trim($_REQUEST['doaction']));
+	    switch ($action_type)
+	    {
+		// Filter by list
+		case 'filter':
+		    if (!empty($_REQUEST['wysija']['user']))
+			unset($_REQUEST['wysija']['user']);
+		    if (!empty($_REQUEST['action']))
+			unset($_REQUEST['action']);
+		    break;
+		// Bulk action. Nothing to do, because we will invoke _tryAction() directly right after this step
+		case 'apply':
+		default:
+		    break;
+	    }
+	}
     }
 
     /**
@@ -269,23 +349,28 @@ class WYSIJA_control_back_subscribers extends WYSIJA_control_back{
     }
 
     /**
-     * bulk action move to list
-     * @param type $data = array('list_id'=>?)
+     * Moves subscriber to another list.
+     *
+     * @param array $data List id to move, $data = array('listid' => 1);
      */
-    function movetolist($data){
-        $helpU=WYSIJA::get('user','helper');
-        if(!empty($this->_batch_select))
-            $helpU->moveToList($data['listid'],$this->_batch_select, true);
-        else
-            $helpU->moveToList($data['listid'],$_POST['wysija']['user']['user_id']);
+    function movetolist($data) {
+        $helper_user = WYSIJA::get('user', 'helper');
 
-        $modelL=WYSIJA::get('list','model');
-        $result=$modelL->getOne(array('name'),array('list_id'=>$data['listid']));
+        if (!empty($this->_batch_select)) {
+            $helper_user->moveToList($data['listid'], $this->_batch_select, true);
+        } elseif (isset($_POST['wysija']['user']['user_id'])) {
+            $helper_user->moveToList($data['listid'], $_POST['wysija']['user']['user_id']);
+        }
 
-        if($this->_affected_rows > 1)
-            $this->notice(sprintf(__('%1$s subscribers have been moved to "%2$s".',WYSIJA),$this->_affected_rows,$result['name']));
-        else
-            $this->notice(sprintf(__('%1$s subscriber have been moved to "%2$s".',WYSIJA),$this->_affected_rows,$result['name']));
+        $model_list = WYSIJA::get('list','model');
+        $result = $model_list->getOne(array('name'), array('list_id' => $data['listid']));
+
+        if ($this->_affected_rows > 1) {
+            $this->notice(sprintf(__('%1$s subscribers have been moved to "%2$s".',WYSIJA), $this->_affected_rows, $result['name']));
+        } else {
+            $this->notice(sprintf(__('%1$s subscriber have been moved to "%2$s".',WYSIJA), $this->_affected_rows, $result['name']));
+        }
+
         $this->redirect('admin.php?page=wysija_subscribers&filter-list='.$data['listid']);
     }
 
@@ -446,62 +531,38 @@ class WYSIJA_control_back_subscribers extends WYSIJA_control_back{
 
     function edit($id=false){
 
-        if(isset($_REQUEST['id']) || $id){
-            if(!$id) $id=$_REQUEST['id'];
-
-            $this->js[]='wysija-validator';
-            $this->js[]='wysija-charts';
-
-            $this->data=array();
-            $this->data['user']=$this->modelObj->getDetails(array('user_id'=>$id),true);
-            if(!$this->data['user']){
-                $this->notice(__('No subscriber found, most probably because he was deleted.',WYSIJA));
-                return $this->redirect();
-            }
-            $model_list=WYSIJA::get('list','model');
-            $model_list->limitON=false;
-            $model_list->orderBy('is_enabled','DESC');
-            $this->data['list']=$model_list->get(false,array('greater'=>array('is_enabled'=>'-1') ));
-
-            //we prepare the data to be passed to the charts script
-            $this->data['charts']['title']=' ';
-            $this->data['charts']['stats']=array();
-
-            //group email user stats by status where userid
-            $model_email_user_stat=WYSIJA::get('email_user_stat','model');
-            $model_email_user_stat->setConditions(array('equal'=>array('user_id'=>$id)));
-            $query='SELECT count(email_id) as emails, status FROM `[wysija]'.$model_email_user_stat->table_name."`";
-            $query.=$model_email_user_stat->makeWhere();
-            $query.=' GROUP BY status';
-            $grouped_counts=$model_email_user_stat->query('get_res',$query,ARRAY_A);
-
-            //-2 is an automatic unsubscribed made through bounce processing
-            $statuses=array('-1'=>__('Bounced',WYSIJA),'0'=>__('Unopened',WYSIJA),'1'=>__('Opened',WYSIJA),'2'=>__('Clicked',WYSIJA),'3'=>__('Unsubscribed',WYSIJA) ,'-2'=>__('Unsubscribed',WYSIJA));
-            foreach($grouped_counts as $count){
-                $this->data['charts']['stats'][]=array('name'=>$statuses[$count['status']],'number'=>$count['emails']);
-            }
-
-            //email_user_url
-            $modelEUU=WYSIJA::get('email_user_url','model');
-            $modelEUU->setConditions(array('equal'=>array('user_id'=>$id)));
-            $query='SELECT A.*,B.*,C.subject as name FROM `[wysija]'.$modelEUU->table_name."` as A JOIN `[wysija]url` as B on A.url_id=B.url_id JOIN `[wysija]email` as C on C.email_id=A.email_id ";
-            $query.=$model_email_user_stat->makeWhere();
-            $query.=' ORDER BY A.number_clicked DESC ';
-            $this->data['clicks']=$model_email_user_stat->query('get_res',$query,ARRAY_A);
-
-            foreach($this->data['clicks'] as $k => &$v){
-                $v['url']=urldecode(utf8_encode($v['url']));
-            }
-
-            $chartsencoded=base64_encode(json_encode($this->data['charts']));
-            wp_enqueue_script('wysija-admin-subscribers-edit-manual', WYSIJA_URL.'js/admin-subscribers-edit-manual.php?data='.$chartsencoded, array( 'wysija-charts' ), true);
-
-            $this->viewObj->title=__('Edit',WYSIJA).' '.$this->data['user']['details']['email'];
-
-        }else{
+        if (empty($_REQUEST['id']) && empty($id)){
             $this->error('Cannot edit element primary key is missing : '. get_class($this));
+            return;
         }
 
+        if(!$id) $id=$_REQUEST['id'];
+
+        // get detail info of current user
+        $this->data['user']=$this->modelObj->getDetails(array('user_id'=>$id));
+        if(!$this->data['user']){
+            $this->notice(__('No subscriber found, most probably because he was deleted.',WYSIJA));
+            return $this->redirect();
+        }
+
+        // get list info
+        $model_list=WYSIJA::get('list','model');
+        $model_list->limitON=false;
+        $model_list->orderBy('is_enabled','DESC');
+        $this->data['list']=$model_list->get(false,array('greater'=>array('is_enabled'=>'-1') ));
+        $this->viewObj->title=__('Edit',WYSIJA).' '.$this->data['user']['details']['email'];
+
+        // execute hooks
+        $hook_params = array(
+            'user_id' => $id
+        );
+	$this->data['hooks']['hook_subscriber_left'] = apply_filters('hook_subscriber_left',WYSIJA_module::execute_hook('hook_subscriber_left', $hook_params), $hook_params);
+	$this->data['hooks']['hook_subscriber_right'] = apply_filters('hook_subscriber_right',WYSIJA_module::execute_hook('hook_subscriber_right', $hook_params), $hook_params);
+	$this->data['hooks']['hook_subscriber_bottom'] = apply_filters('hook_subscriber_bottom',WYSIJA_module::execute_hook('hook_subscriber_bottom', $hook_params), $hook_params);
+
+
+        // prepare js, for rendering
+        $this->js[]='wysija-validator';
     }
 
     function deletelist(){
@@ -573,7 +634,7 @@ class WYSIJA_control_back_subscribers extends WYSIJA_control_back{
             if($_REQUEST['wysija']['list']['is_public']=='on')$_REQUEST['wysija']['list']['is_public']=1;
             else $_REQUEST['wysija']['list']['is_public']=0;
         }else{
-            $_REQUEST['wysija']['list']['is_public']=0;
+            //$_REQUEST['wysija']['list']['is_public']=0; It's wrong. If is_public is not passed by interface, leave it as it is.
         }
 
         if($update){
@@ -597,7 +658,7 @@ class WYSIJA_control_back_subscribers extends WYSIJA_control_back{
         $this->requireSecurity();
         $this->_resetGlobMsg();
         $model_config=WYSIJA::get('config','model');
-        $helper_import=WYSIJA::get('import','helper');
+        $helper_import=WYSIJA::get('plugins_import','helper');
         $plugins_importable=$model_config->getValue('pluginsImportableEgg');
         $plugins_imported=array();
         foreach($_REQUEST['wysija']['import'] as $table_name =>$result){
@@ -653,7 +714,10 @@ class WYSIJA_control_back_subscribers extends WYSIJA_control_back{
     }
 
     function importmatch(){
+	$this->jsTrans['subscribers_import_match_confirmation_1'] = __('The selected value is already matched to another column.', WYSIJA);
+	$this->jsTrans['subscribers_import_match_confirmation_2'] = __('Can you confirm that this column is corresponding to that field?', WYSIJA);
         $this->js[] = 'wysija-validator';
+	wp_enqueue_script('jquery-matchColumn', WYSIJA_URL.'js/jquery/jquery.matchColumn.js', array('jquery'), WYSIJA::get_version());
         $helper_numbers = WYSIJA::get('numbers','helper');
         $bytes = $helper_numbers->get_max_file_upload();
 
@@ -762,16 +826,16 @@ class WYSIJA_control_back_subscribers extends WYSIJA_control_back{
         }
 
         //get a list of list name
-        $model=WYSIJA::get('list','model');
-        $results=$model->get(array('name'),array('list_id'=>$_REQUEST['wysija']['user_list']['list']));
+        $model = WYSIJA::get('list','model');
+        $results = $model->get(array('name'),array('list_id'=>$_REQUEST['wysija']['user_list']['list']));
 
-        $listnames=array();
-        foreach($results as $k =>$v) $listnames[]=$v['name'];
+        $list_names=array();
+        foreach($results as $k =>$v) $list_names[]=$v['name'];
 
-        $this->notice(sprintf(__('%1$s subscribers added to %2$s.', WYSIJA),
+        $this->notice( sprintf(__('%1$s subscribers added to %2$s.', WYSIJA),
                     $data_numbers['list_user_ids'],
-                    '"'.implode('", "',$listnames).'"'
-                    ));
+                    '"'.implode('", "',$list_names).'"'
+                    ) );
 
         if(count($duplicate_emails_count)>0){
             $list_emails = '';
@@ -786,7 +850,8 @@ class WYSIJA_control_back_subscribers extends WYSIJA_control_back{
         }
 
         if(count($data_numbers['invalid'])>0){
-            $this->notice(sprintf(__('%1$s emails are not valid : %2$s.',WYSIJA),count($data_numbers['invalid']),implode(', ',$data_numbers['invalid'])),0);
+            $string = sprintf(__('%1$s emails are not valid : %2$s.',WYSIJA),count($data_numbers['invalid']), utf8_encode(implode(', ',$data_numbers['invalid'])));
+            $this->notice($string,0);
         }
 
         $this->redirect();
@@ -912,6 +977,10 @@ class WYSIJA_control_back_subscribers extends WYSIJA_control_back{
     }
 
 
+
+    function bulk_action(){
+        return true;
+    }
 
 
 

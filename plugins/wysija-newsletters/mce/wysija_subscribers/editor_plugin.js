@@ -16,7 +16,7 @@
 
             // Register wysija_subscribers button
             ed.addButton('wysija_subscribers', {
-                title : 'Add total of Wysija subscribers',
+                title : 'Add total of MailPoet subscribers',
                 image : url+'/wysija_register.png',
                 cmd : 'wysijaSubscribers'
             });

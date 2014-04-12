@@ -1,10 +1,10 @@
 <?php
 defined('WYSIJA') or die('Restricted access');
 class WYSIJA_help_dividers extends WYSIJA_object {
-        
+
     function WYSIJA_help_dividers() {
     }
-    
+
     /**
      * Returns all dividers
      * @return array
@@ -12,7 +12,7 @@ class WYSIJA_help_dividers extends WYSIJA_object {
     function getAll() {
         $fileHelper = WYSIJA::get('file', 'helper');
         $dirHandle = $fileHelper->exists('dividers');
-        
+
         if($dirHandle['result'] === FALSE) {
             return array();
         } else {
@@ -30,13 +30,13 @@ class WYSIJA_help_dividers extends WYSIJA_object {
                         $width = 564;
                         $height = 1;
                     }
-                    
+
                     // only add divider if height is superior to 0
                     if($height > 0) {
                         $ratio = round(($width / $height) * 1000) / 1000;
                         $width = min($width, 564);
                         $height = (int)($width / $ratio);
-                    
+
                         $dividers[] = array(
                             'src' => $fileHelper->url($filename, 'dividers'),
                             'width' => $width,
@@ -48,7 +48,7 @@ class WYSIJA_help_dividers extends WYSIJA_object {
             return $dividers;
         }
     }
-    
+
     /**
     * Get default divider
     * @return array

@@ -448,7 +448,8 @@ class WYSIJA_help_bounce extends WYSIJA_help {
         // the action is about deleting users
         if (!empty($this->deletedUsers)) {
             $this->subClass->testdelete = true;
-            $this->subClass->delete(array('user_id' => $this->deletedUsers));
+            $helper_user = WYSIJA::get('user','helper');
+            $helper_user->delete($this->deletedUsers);
             $this->deletedUsers = array();
         }
 
@@ -691,7 +692,9 @@ class WYSIJA_help_bounce extends WYSIJA_help {
         $var = $this->_message->$type;
 
         if (!empty($this->_message->$address)) {
-            $this->_message->header->$name = $this->_message->$address;
+            if(!isset($this->_message->header) || is_null($this->_message->header)){
+                $this->_message->header = new stdClass();
+            }
         } else {
             $this->_message->header->$name = $var[0]->personal;
         }
@@ -960,7 +963,7 @@ class WYSIJA_help_bounce extends WYSIJA_help {
         }
 
         // delete process from  the  user table needs to be made through a join since we cannot nest select from the same table we delete from
-        $query_delete_user = 'DELETE FROM A.* [wysija]user as A JOIN '.$main_site_prefix.'bounce as B on A.email = B.email';
+        $query_delete_user = 'DELETE A.* FROM [wysija]user as A JOIN '.$main_site_prefix.'bounce as B on A.email = B.email WHERE B.action_taken = "delete"';
         $this->subClass->query($query_delete_user);
 
         // central query to fetch the id of the bounced emails of the unsubscribe action
@@ -1078,11 +1081,13 @@ class WYSIJA_help_bounce extends WYSIJA_help {
         if(strpos($one_rule['action_user'], 'unsub')!==false) $action_taken='unsubscribe';
         elseif($one_rule['action_user']!='') $action_taken='delete';
 
-        $main_site_prefix=$this->subClass->get_site_prefix();
-        $query_insert_bounce_ms='INSERT INTO `'.$main_site_prefix.'bounce` (`email`,`site_id`,`user_id`,`email_id`,`action_taken`,`case`,`message`,`created_at`)';
-        $query_insert_bounce_ms.= " VALUES ('".$result_subscriber[0]->email."','".(int)$this->_message->site_id."','".(int)$this->_message->user_id."','".(int)$this->_message->email_id."','".$action_taken."', '".$one_rule['key']."', '".  mysql_real_escape_string($email_copy)."', '".time()."')";
+        if(!empty($result_subscriber[0]->email)){
+            $main_site_prefix = $this->subClass->get_site_prefix();
+            $query_insert_bounce_ms = 'INSERT IGNORE INTO `'.$main_site_prefix.'bounce` (`email`,`site_id`,`user_id`,`email_id`,`action_taken`,`case`,`message`,`created_at`)';
+            $query_insert_bounce_ms .= " VALUES ('".$result_subscriber[0]->email."','".(int)$this->_message->site_id."','".(int)$this->_message->user_id."','".(int)$this->_message->email_id."','".$action_taken."', '".$one_rule['key']."', '".  mysql_real_escape_string($email_copy)."', '".time()."')";
 
-        $this->subClass->query($query_insert_bounce_ms);
+            $this->subClass->query($query_insert_bounce_ms);
+        }
 
         if (isset($one_rule['action_message']['delete'])) {
             $message .= ', message deleted';

@@ -1,9 +1,9 @@
 <?php
 /*
-Plugin Name: Wysija Newsletters
+Plugin Name: MailPoet Newsletters
 Plugin URI: http://www.mailpoet.com/
-Description: Create and send newsletters. Import and manage your lists. Add subscription forms in widgets, articles and pages. Wysija is a freemium plugin updated regularly with new features.
-Version: 2.5.9.4
+Description: Create and send newsletters. Import and manage your lists. Add subscription forms in widgets, articles and pages. MailPoet (formerly Wysija) is a freemium plugin updated regularly with new features.
+Version: 2.6.2
 Author: Wysija
 Author URI: http://www.mailpoet.com/
 License: GPLv2 or later

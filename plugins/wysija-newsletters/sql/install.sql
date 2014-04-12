@@ -15,12 +15,18 @@ CREATE TABLE IF NOT EXISTS `user` (
   `firstname` VARCHAR(255) NOT NULL DEFAULT '',
   `lastname` VARCHAR(255) NOT NULL DEFAULT '',
   `ip` VARCHAR(100) NOT NULL,
+  `confirmed_ip` VARCHAR(100) NOT NULL DEFAULT 0,
+  `confirmed_at` INT unsigned NULL,
+  `last_opened` INT unsigned NULL,
+  `last_clicked` INT unsigned NULL,
   `keyuser` VARCHAR(255) NOT NULL DEFAULT '',
   `created_at` INT unsigned NULL,
   `status` TINYINT  NOT NULL  DEFAULT 0,
+  `domain` VARCHAR(255) NULL DEFAULT '',
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `EMAIL_UNIQUE` (`email`)
 ) ENGINE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
+
 
 -- QUERY ---
 
@@ -176,4 +182,15 @@ CREATE TABLE IF NOT EXISTS `form` (
   `styles` longtext COLLATE utf8_bin,
   `subscribed` int(10) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`form_id`)
+) ENGINE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
+
+-- QUERY ---
+
+CREATE TABLE IF NOT EXISTS `custom_field` (
+  `id` mediumint(9) NOT NULL AUTO_INCREMENT,
+  `name` tinytext NOT NULL,
+  `type` tinytext NOT NULL,
+  `required` tinyint(1) DEFAULT "0" NOT NULL,
+  `settings` text DEFAULT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;

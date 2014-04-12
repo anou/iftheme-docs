@@ -292,7 +292,7 @@ class WYSIJA_help_autonews  extends WYSIJA_object {
         $model_email->reset();
 
         // select the scheduled emails
-        $all_emails=$model_email->get(false,array('type'=>'1','status'=>'4'));
+        $all_emails = $model_email->get(false,array('type'=>'1','status'=>'4'));
 
         if($all_emails){
 
@@ -301,8 +301,8 @@ class WYSIJA_help_autonews  extends WYSIJA_object {
                 // check if the email is scheduled
                 if(isset($email['params']['schedule']['isscheduled'])){
 
-                    $schedule_date=$email['params']['schedule']['day'].' '.$email['params']['schedule']['time'];
-                    $unix_scheduled_time=strtotime($schedule_date);
+                    $schedule_date = $email['params']['schedule']['day'] . ' ' . $email['params']['schedule']['time'];
+                    $unix_scheduled_time = strtotime($schedule_date);
 
                     // if the scheduled time is passed let's send the email
                     // we don't compare to the time recorded but to the offset time which is the time set by the user in his time
@@ -313,7 +313,6 @@ class WYSIJA_help_autonews  extends WYSIJA_object {
                 }
             }
         }
-
     }
 
     function refresh_automatic_content($email_ids = array()) {
@@ -333,8 +332,8 @@ class WYSIJA_help_autonews  extends WYSIJA_object {
 
                 $wj_data = unserialize(base64_decode($email['wj_data']));
                 $reload_auto_content = false;
-                foreach($wj_data['body'] as $block){
-                    if(isset($block['type']) && $block['type']=='auto-post'){
+                foreach($wj_data['body'] as $block) {
+                    if(isset($block['type']) && $block['type'] === 'auto-post') {
                         $reload_auto_content = true;
                     }
                 }
@@ -358,6 +357,34 @@ class WYSIJA_help_autonews  extends WYSIJA_object {
                 // update data in DB
                 $model_email->update($values, array('email_id' => (int)$email['email_id']));
             }
+        }
+    }
+
+    // removes any auto-post block
+    function remove_autopost_blocks($data = array()) {
+        if(empty($data)) {
+            return false;
+        }
+
+        // decode data
+        $wj_data = unserialize(base64_decode($data));
+
+        // init updated_wj_data variable with initial wj_data
+        $updated_wj_data = $wj_data;
+
+        foreach($wj_data['body'] as $key => $block) {
+            // if we detect an auto-post block, we need to remove it
+            if(isset($block['type']) && $block['type'] === 'auto-post') {
+                // remove block from updated data
+                unset($updated_wj_data['body'][$key]);
+            }
+        }
+        // if the wj_data has not changed, return false
+        if($updated_wj_data === $wj_data) {
+            return false;
+        } else {
+            // otherwise return encoded version of updated_wj_data
+            return base64_encode(serialize($updated_wj_data));
         }
     }
 }

@@ -8,14 +8,121 @@ class WYSIJA_view extends WYSIJA_object{
     var $search=array();
     var $cols_nks=array();//correspondance between user_id and user-id once processed
 
+    static $color_coordinates = array();
+
+    static $cache_color_schemes = array();
+
+    /**
+     * Color schemes of MailPoet
+     * @var array
+     */
+    var $color_schemes = array(
+        array('#21759b', '#6697BF', '#487192', '#284c69', '#000333'),// like blue
+        array('#388e71', '#2c6f58','#16523d','#0d3c2c','#092e21'),// like green
+        array('#c97575','#a76262', '#854f4f', '#743a3a', '#5a2a2a'),// like red
+        array('#00CC00', '#269926', '#008500', '#39E639', '#67E667'), // http://colorschemedesigner.com/#2P11Tw0w0w0w0 // green
+        array('#FF0000', '#BF3030', '#A60000', '#FF4040', '#FF7373') // http://colorschemedesigner.com/#0011Tw0w0w0w0 // red
+        );
+
+    /**
+     * Default font family
+     * @var type
+     */
+    var $font_family = array('Arial');
+
+    /**
+     * Default font size in pixel
+     * @var int
+     */
+    var $font_size = 12;
+
+
     function WYSIJA_view(){
 
     }
 
 
+    /**
+     * Swap color schemes, to make sure, we don't use 2 colors in a same scheme continously
+     * @return array()
+     */
+    protected function swap_color_schemes() {
+        if (empty(self::$cache_color_schemes)) {
+            // swap colors from axis X => Y, Y => X
+            $x = count($this->color_schemes[0][0]);
+            $y = count($this->color_schemes[0]);
+            $tmp = array();
+            foreach ($this->color_schemes as $y => $colors) {
+                foreach ($colors as $x => $color) {
+                    $tmp[$x][$y] = $color;
+                }
+            }
+            self::$cache_color_schemes = $tmp;
+        }
+        return self::$cache_color_schemes;
+    }
+    /**
+     * Get one random color from schemes
+     * @return type
+     *
+     * Depreciated
+     */
+    function get_random_color() {
+	return $this->get_next_color();
+    }
+
+    public function get_next_color() {
+
+        $color_schemes = $this->swap_color_schemes();
+
+        $class_name = get_class($this);
+        if (empty(self::$color_coordinates[$class_name]))
+            self::$color_coordinates[$class_name] = array('x'=> 0, 'y' => 0);
+
+        $current_color = $color_schemes[self::$color_coordinates[$class_name]['x']][self::$color_coordinates[$class_name]['y']];
+
+        // find out and set a next color
+        $flag = false;
+        $detected_new_color = false;
+        foreach ($color_schemes as $x => $colors) {
+            if ($detected_new_color) break;
+            foreach ($colors as $y => $color) {
+                if ($flag) {
+                    self::$color_coordinates[$class_name]['x'] = $x;
+                    self::$color_coordinates[$class_name]['y'] = $y;
+                    $detected_new_color = true;
+                    break;
+                }
+                if ($x == self::$color_coordinates[$class_name]['x'] && $y == self::$color_coordinates[$class_name]['y'])
+                    $flag = true;
+
+            }
+        }
+        if (!$detected_new_color) {
+            self::$color_coordinates[$class_name]['x'] = 0;
+            self::$color_coordinates[$class_name]['y'] = 0;
+        }
+        return $current_color;
+    }
+
+    /**
+     * Get all colors from schemes
+     * @return type
+     */
+    function get_all_colors() {
+	$color_schemes = $this->swap_color_schemes();// this one, to make sure, we don't put same color tone continously
+
+	$tmp = array();
+	foreach ($color_schemes as $colors) {
+	    $tmp = array_merge($tmp, $colors);
+	}
+	return $tmp;
+    }
+
+
 
     function renderErrorInstall(){
-        $this->title=__("Your server's configuration doesn't allow us to complete Wysija's Installation!",WYSIJA);
+        $this->title=__("Your server's configuration doesn't allow us to complete MailPoet's Installation!",WYSIJA);
         $this->header();
         $this->footer();
     }
@@ -24,14 +131,19 @@ class WYSIJA_view extends WYSIJA_object{
      *
      * @param type $type
      * @param type $data
+     * @param bool $is_module is rendering a module view
      */
-    function render($type,$data){
+    function render($type,$data, $is_module = false){
         $this->action=$type;
-        $this->header($data);
+        if (!$is_module){
+            $this->header($data);
+        }
         if($type !== NULL) {
             $this->$type($data);
         }
-        $this->footer();
+        if (!$is_module){
+            $this->footer();
+        }
     }
 
     /**
@@ -55,20 +167,25 @@ class WYSIJA_view extends WYSIJA_object{
            }
            unset($wysija_msg['g-error']);
         }
-
-        $wpnonce='<input type="hidden" value="'.wp_create_nonce('wysija_ajax').'" id="wysijax" />';
+        $wpnonce='<input type="hidden" value="'.wp_create_nonce("wysija_ajax").'" id="wysijax" />';
         if(!$wysija_msg) return '<div class="wysija-msg ajax"></div>'.$wpnonce;
         $html='<div class="wysija-msg">';
-
             foreach($wysija_msg as $level =>$messages){
                 $msg_class = '';
                 switch($level){
                     case 'updated':
-                        $msg_class = 'notice-msg';
+                        $msg_class = 'notice-msg updated';
                         break;
                     case 'error':
-                        $msg_class = 'error-msg';
+                        $msg_class = 'error-msg error';
                         break;
+                    case 'xdetailed-updated':
+                        $msg_class = 'xdetailed-updated';
+                        break;
+                    case 'xdetailed-errors':
+                        $msg_class = 'xdetailed-errors';
+                        break;
+
                 }
 
                 $html.='<div class="'.$msg_class.'">';
@@ -84,7 +201,6 @@ class WYSIJA_view extends WYSIJA_object{
                 $html.='</ul>';
                 $html.='</div>';
             }
-
         $html.='</div><div class="wysija-msg ajax"></div>'.$wpnonce;
 
         return $html;
@@ -97,7 +213,7 @@ class WYSIJA_view extends WYSIJA_object{
      * @param type $get
      * @return type
      */
-    function secure($params=array(),$get=false,$echo=true){
+    static function secure($params=array(),$get=false,$echo=true){
         $controller='';
         if(!is_array($params)) $action=$params;
         else{
@@ -143,5 +259,28 @@ class WYSIJA_view extends WYSIJA_object{
         if(!$returnAttr && $class_validate)  $class_validate= ' class="'.$prefixclass.$class_validate.'" ';
 
         return $class_validate;
+    }
+
+    /**
+     * central function to return a translated formated date
+     * @param type $val
+     * @param type $format
+     * @return string
+     */
+    function fieldListHTML_created_at($val,$format=''){
+        if(!$val) return '---';
+
+        //offset the time to the time of the WP site not the server
+        $hToolbox = WYSIJA::get('toolbox','helper');
+        // get current time taking timezone into account.
+
+        $val = $hToolbox->servertime_to_localtime($val);
+
+        if($format) return date_i18n($format,$val);
+        else return date_i18n(get_option('date_format'),$val);
+    }
+
+    function fieldListHTML_created_at_time($val){
+        return $this->fieldListHTML_created_at($val,get_option('date_format').', '.get_option('time_format'));
     }
 }

@@ -19,7 +19,7 @@ class WYSIJA_help_install extends WYSIJA_object{
             if(count($missing_capabilities) > 1 ||
                     (count($missing_capabilities)==1 && (!isset($missing_capabilities['functions']) || isset($missing_capabilities['functions']['required']))) ){
                 // here we need to return unfortunately
-                $this->error(__('Your server cannot run Wysija.',WYSIJA),1);
+                $this->error(__('Your server cannot run MailPoet.',WYSIJA),1);
 
                 if(isset($missing_capabilities['functions']['required'])){
                     $this->error(sprintf(__('Your server is missing one or many important PHP functions to run properly :  %1$s',WYSIJA),'<strong>'.implode(', ',  array_keys($missing_capabilities['functions']['required'])).'</strong>').' '.__('Please contact your host or server administrator to fix this.',WYSIJA));
@@ -80,7 +80,7 @@ class WYSIJA_help_install extends WYSIJA_object{
 
         // synchronize our user table with wordpress users
         if((int)get_option('installation_step')<9){
-            $helper_import=WYSIJA::get('import','helper');
+            $helper_import=WYSIJA::get('plugins_import','helper');
             $values['importwp_list_id']=$helper_import->importWP();
             $model_config->save($values);
             WYSIJA::update_option('installation_step', '9');
@@ -150,17 +150,20 @@ class WYSIJA_help_install extends WYSIJA_object{
 
         // save the config into the db
 
-        if((int)get_option('installation_step')<16){
-            $values['installed']=true;
-            $values['manage_subscriptions']=true;
-            $values['installed_time']=time();
+        if( (int) get_option('installation_step') < 16){
 
-            $values['wysija_db_version']=WYSIJA::get_version();
+            $model_config = WYSIJA::get('config','model');
+
+            $values['installed'] = true;
+            $values['manage_subscriptions'] = true;
+            $values['installed_time'] = time();
+
+            $values['wysija_db_version'] = WYSIJA::get_version();
 
             $wptoolboxs = WYSIJA::get('toolbox', 'helper');
-            $values['dkim_domain']=$wptoolboxs->_make_domain_name();
+            $values['dkim_domain'] = $wptoolboxs->_make_domain_name();
 
-            if(get_option('wysija_reinstall',0)) $values['wysija_whats_new']=WYSIJA::get_version();
+            if( get_option('wysija_reinstall',0) ) $values['wysija_whats_new'] = WYSIJA::get_version();
             $model_config->save($values);
 
             WYSIJA::update_option('installation_step', '16');
@@ -182,7 +185,7 @@ class WYSIJA_help_install extends WYSIJA_object{
         $listname=__('My first list',WYSIJA);
         $defaultListId=$model_list->insert(array(
             'name'=>$listname,
-            'description'=>__('The list created automatically on install of the Wysija.',WYSIJA),
+            'description'=>__('The list created automatically on install of the MailPoet.',WYSIJA),
             'is_public'=>1,
             'is_enabled'=>1));
         $values['default_list_id']=$defaultListId;
@@ -303,19 +306,19 @@ class WYSIJA_help_install extends WYSIJA_object{
                     'alignment' => 'center',
                     'items' => array(
                         array_merge(array(
-                            'url' => 'http://www.facebook.com/wysija',
+                            'url' => 'http://www.facebook.com/mailpoetplugin',
                             'alt' => 'Facebook',
                             'cellWidth' => 61,
                             'cellHeight' => 32
                         ), $bookmarks['facebook']),
                         array_merge(array(
-                            'url' => 'http://www.twitter.com/wysija',
+                            'url' => 'http://www.twitter.com/mail_poet',
                             'alt' => 'Twitter',
                             'cellWidth' => 61,
                             'cellHeight' => 32
                         ), $bookmarks['twitter']),
                         array_merge(array(
-                            'url' => 'https://plus.google.com/104749849451537343615',
+                            'url' => 'https://plus.google.com/+Mailpoet',
                             'alt' => 'Google',
                             'cellWidth' => 61,
                             'cellHeight' => 32
@@ -332,7 +335,7 @@ class WYSIJA_help_install extends WYSIJA_object{
                 'block-9' => array(
                     'text' => array(
                         'value' => '<h2><strong>'.__('Step 4:', WYSIJA).'</strong> '.__('and the footer?', WYSIJA).'</h2>'.
-                                    '<p>'.sprintf(__('Change the footer\'s content in Wysija\'s %1$sSettings%2$s page.', WYSIJA), '<strong>', '</strong>').'</p>'
+                                    '<p>'.sprintf(__('Change the footer\'s content in MailPoet\'s %1$sSettings%2$s page.', WYSIJA), '<strong>', '</strong>').'</p>'
                     ),
                     'image' => null,
                     'alignment' => 'left',
@@ -388,7 +391,7 @@ class WYSIJA_help_install extends WYSIJA_object{
                 'size' => 24
             ),
             'a' => array(
-                'color' => '0000FF',
+                'color' => '4a91b0',
                 'underline' => false
             ),
             'unsubscribe' => array(
@@ -602,8 +605,9 @@ class WYSIJA_help_install extends WYSIJA_object{
         //$datauser=wp_get_current_user();
         $current_user=WYSIJA::wp_get_userdata();
 
-        $values['replyto_name']=$values['from_name']=$current_user->user_login;
-        $values['emails_notified']=$values['replyto_email']=$values['from_email']=$current_user->user_email;
+        $values['replyto_name'] = $values['from_name'] = $current_user->user_login;
+        $values['emails_notified'] = $current_user->user_email;
+        $values['replyto_email'] = $values['from_email'] = 'info@' . WJ_Utils::get_domain();
     }
 
 
@@ -641,7 +645,7 @@ class WYSIJA_help_install extends WYSIJA_object{
 
 
     function testNLplugins(){
-        $importHelp=WYSIJA::get('import','helper');
+        $importHelp=WYSIJA::get('plugins_import','helper');
         $importHelp->testPlugins();
     }
 

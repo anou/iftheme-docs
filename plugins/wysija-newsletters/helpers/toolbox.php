@@ -119,18 +119,8 @@ class WYSIJA_help_toolbox extends WYSIJA_object{
      * @param type $more
      * @return type
      */
-    function excerpt($text,$num_words=8,$more=' ...'){
-
-        $words_array = preg_split('/[\r\t ]+/', $text, $num_words + 1, PREG_SPLIT_NO_EMPTY);
-        if(count($words_array) > $num_words) {
-                array_pop($words_array);
-                $text = implode(' ', $words_array);
-                $text = $text . $more;
-        } else {
-            $text = implode( ' ', $words_array );
-        }
-
-        return $this->closetags($text);
+    function excerpt($text, $num_words = 8, $more = ' &hellip;'){
+        return wp_trim_words($text, $num_words, $more);
     }
 
     /**
@@ -146,47 +136,133 @@ class WYSIJA_help_toolbox extends WYSIJA_object{
         $domain_name=explode('/',$domain_name);
         return $domain_name[0];
     }
+    
+    /**
+     * get base url of the current site or base url of a specific url WITHOUT http, https, www
+     * @param string $url
+     * @return string
+     */
+    function get_base_uri($url = null) {
+        $url = !empty($url) ? $url : site_url();
+        return str_replace(array('https://','http://','www.'),'',strtolower($url));
+    }
+    
+    /**
+     * Detect if this is an internal link, otherwise, it will be an external one
+     * @param string $url
+     * @return boolean 
+     */    
+    function is_internal_link($url) {
+        $str_pos = strpos($this->get_base_uri($url), $this->get_base_uri());
+        // an internal link must CONTAIN base_uri of the current site and must START with that base_uri
+        return ($str_pos !== false && $str_pos === 0);        
+    }
 
     /**
      * creates a duration string to tell when is the next batch to be processed for instance
-     * @param type $s
-     * @param type $durationin
-     * @param type $level
+     * TODO we should add an estimation parameter so that instead of having a precise remaining time 39 minutes left,
+     * we have something based on the sending frequency : about 45 minutes left becomes about 30 minutes left, becomes about 15 minutes left
+     * with a 15 minutes sending frequency
+     * @param int $value_seconds it can be a duration or a timestamp
+     * @param boolean $entered_value_is_duration
+     * @param int $number_of_units should I get just on unit days, or should I get 2 units days and hours
+     * @param int $precision how precise should be the duration calculated, until the second ? or just a number of hours by default in minutes
      * @return string
      */
-    function duration($s,$durationin=false,$level=1){
-        $t=time();
-        if($durationin){
-            $e=$t+$s;
-            $s=$t;
-            //Find out the seconds between each dates
-            $timestamp = $e - $s;
+    function duration_string($value_seconds, $entered_value_is_duration=false, $number_of_units=1, $precision=4){
+
+        if($entered_value_is_duration){
+            // the time entered is already a duration
+            $duration = $value_seconds;
         }else{
-            $timestamp = $t - $s;
+            // the time entered is a unix time
+            $duration = time() - $value_seconds;
         }
 
         //Clever Maths
-        $years=floor($timestamp/(60*60*24*365));$timestamp%=60*60*24*365;
-        $weeks=floor($timestamp/(60*60*24*7));$timestamp%=60*60*24*7;
-        $days=floor($timestamp/(60*60*24));$timestamp%=60*60*24;
-        $hrs=floor($timestamp/(60*60));$timestamp%=60*60;
-        $mins=floor($timestamp/60);
-        if($timestamp>60)$secs=$timestamp%60;
-        else $secs=$timestamp;
+        $array_duration = $this->convert_seconds_to_array($duration);
 
+        // when we don't show the seconds in our result we need to add one minute to the min key
+        if($precision == 4){
+            $array_duration['mins'] ++;
+        }
 
-        //Display for date, can be modified more to take the S off
-        $str='';
-        $mylevel=0;
-        if ($mylevel<$level && $years >= 1) { $str.= sprintf(_n( '%1$s year', '%1$s years', $years, WYSIJA ),$years).' ';$mylevel++; }
-        if ($mylevel<$level && $weeks >= 1) { $str.= sprintf(_n( '%1$s week', '%1$s weeks', $weeks, WYSIJA ),$weeks).' ';$mylevel++; }
-        if ($mylevel<$level && $days >= 1) { $str.=sprintf(_n( '%1$s day', '%1$s days', $days, WYSIJA ),$days).' ';$mylevel++; }
-        if ($mylevel<$level && $hrs >= 1) { $str.=sprintf(_n( '%1$s hour', '%1$s hours', $hrs, WYSIJA ),$hrs).' ';$mylevel++; }
-        if ($mylevel<$level && $mins >= 1) { $str.=sprintf(_n( '%1$s minute', '%1$s minutes', $mins, WYSIJA ),$mins).' ';$mylevel++; }
-        if ($mylevel<$level && $secs >= 1) { $str.=sprintf(_n( '%1$s second', '%1$s seconds', $secs, WYSIJA ),$secs).' ';$mylevel++; }
+        // Display for date, can be modified more to take the S off
+        $str = '';
+        $current_level = 0;
+        if ($current_level < $number_of_units && $array_duration['years'] >= 1) { $str .= sprintf(_n( '%1$s year', '%1$s years', $array_duration['years'], WYSIJA ),$array_duration['years']).' ';$current_level++; }
+        if ($precision >0 && $current_level < $number_of_units && $array_duration['weeks'] >= 1) { $str .= sprintf(_n( '%1$s week', '%1$s weeks', $array_duration['weeks'], WYSIJA ),$array_duration['weeks']).' ';$current_level++; }
+        if ($precision >1 && $current_level < $number_of_units && $array_duration['days'] >= 1) { $str .= sprintf(_n( '%1$s day', '%1$s days', $array_duration['days'], WYSIJA ),$array_duration['days']).' ';$current_level++; }
+        if ($precision >2 && $current_level < $number_of_units && $array_duration['hours'] >= 1) { $str .= sprintf(_n( '%1$s hour', '%1$s hours', $array_duration['hours'], WYSIJA ),$array_duration['hours']).' ';$current_level++; }
+        if ($precision >3 && $current_level < $number_of_units && $array_duration['mins'] >= 1) { $str .= sprintf(_n( '%1$s minute', '%1$s minutes', $array_duration['mins'], WYSIJA ),$array_duration['mins']).' ';$current_level++; }
+        if ($precision >4 && $current_level < $number_of_units && $array_duration['secs'] >= 1) { $str .= sprintf(_n( '%1$s second', '%1$s seconds', $array_duration['secs'], WYSIJA ),$array_duration['secs']).' ';$current_level++; }
 
         return $str;
 
+    }
+
+    /**
+     * this array is to be used in some of the functions below
+     * @return array
+     */
+    private function get_duration_units($unit = false){
+
+        // keep it in that order otherwise it will count first the second and will just retunr the number of seconds left
+        $units = array(
+            'years' => 60*60*24*365,
+            'weeks' => 60*60*24*7,
+            'days' => 60*60*24,
+            'hours' => 60*60,
+            'mins' => 60,
+            'secs' => 1,
+        );
+
+        if($unit === false ) return $units;
+        elseif(isset($units[$unit])) return $units[$unit];
+    }
+
+    /**
+     * enter a number of seconds as input it will return an array calculating the duration in years,weeks,days,hours and seconds
+     * @param int $duration
+     * @param boolean $split_the_duration_between_each_unit I didn't know how to explain that value,
+     * basically it's either 1hour 33min 7seconds translate into
+     * array(years=>0, weeks=>0, days=>0, hours=>1, mins=>33, secs=7)
+     * or
+     * array(years=>0, weeks=>0, days=>0, hours=>1, mins=>93, secs=5587)
+     * @return array with each units
+     */
+    public function convert_seconds_to_array( $duration , $split_the_duration_between_each_unit = true){
+        $result = array();
+        $duration = array( 'seconds_left' => $duration);
+        $units = $this->get_duration_units();
+
+        foreach($units as $unit => $unit_in_seconds){
+            if($split_the_duration_between_each_unit){
+                $duration = $this->get_duration( $duration['seconds_left'] , $unit);
+                $result[$unit] = $duration['number'];
+            }else{
+                $result_duration = $this->get_duration( $duration['seconds_left'] , $unit);
+                $result[$unit] = $result_duration['number'];
+            }
+
+        }
+
+        return $result;
+    }
+
+    /**
+     * convert one duration in seconds to a unit you specify (mins,hours,days,weeks,years)
+     * @param int $duration
+     * @param string $unit
+     * @return array
+     */
+    public function get_duration($duration, $unit = 'days'){
+        $result = array();
+
+        $result['number'] = floor($duration / $this->get_duration_units($unit));
+        $result['seconds_left'] = $duration % $this->get_duration_units($unit);
+
+        return $result;
     }
 
     /**
@@ -197,7 +273,13 @@ class WYSIJA_help_toolbox extends WYSIJA_object{
      */
     function localtime($time,$justtime=false){
         if($justtime) $time=strtotime($time);
-        return date(get_option('time_format'),$time);
+
+
+        $time_format = get_option('time_format');
+        // in some rare cases the time format option may be empty in which case we want it to default to g:i a
+        if(empty($time_format)) $time_format = 'g:i a';
+        $time = date($time_format, $time);
+        return $time;
     }
 
     /**
@@ -330,9 +412,10 @@ class WYSIJA_help_toolbox extends WYSIJA_object{
     /**
      * we use to deal with the WPLANG constant but that's silly considering there are plugins like
      * WPML which needs to alter that value
+     * @param type $get_country when true if we find pt_BR as the language code we return BR if we find en_GB we return GB
      * @return string
      */
-    function get_language_code(){
+    function get_language_code($get_country = false){
 
         // in WP Multisite if we have a WPLANG defined in the wp-config,
         // it won't be used each site needs to have a WPLANG option defined and if it's not defined it will be empty and default to en_US
@@ -344,7 +427,8 @@ class WYSIJA_help_toolbox extends WYSIJA_object{
 		if ( $ms_locale !== false )
 			$locale = $ms_locale;
                 // make sure we don't default to en_US if we have an empty locale and a WPLANG defined
-                if(empty($locale)) $locale = WPLANG;
+                if(empty($locale) && defined('WPLANG')) $locale = WPLANG;
+                else $locale = get_locale();
 	}else{
             $locale = get_locale();
         }
@@ -352,7 +436,11 @@ class WYSIJA_help_toolbox extends WYSIJA_object{
         if($locale!=''){
             if(strpos($locale, '_')!==false){
                 $locale = explode('_',$locale);
-                $language_code = $locale[0];
+                if($get_country === true){
+                    $language_code = $locale[1];
+                }else{
+                    $language_code = $locale[0];
+                }
             }else{
                 $language_code = $locale;
             }
@@ -387,5 +475,18 @@ class WYSIJA_help_toolbox extends WYSIJA_object{
 
     function check_email_domain($email){
         return $this->check_domain_exist(substr($email,strrpos($email,'@')+1));
+    }
+
+    /**
+     * let us know if the visitor is a european member
+     * @return boolean
+     */
+    function is_european(){
+        $european_members = array('AT','BE','BG','CY','CZ','DK','EE','DE','PT','EL','ES','FI','HU','LU','MT','SI',
+		'FR','GB','IE','IT','LV','LT','NL','PL','SK','RO','SE','HR');
+
+        // if the language of the site is an european
+        if(in_array(strtoupper($this->get_language_code(true)), $european_members) )    return true;
+        return false;
     }
 }

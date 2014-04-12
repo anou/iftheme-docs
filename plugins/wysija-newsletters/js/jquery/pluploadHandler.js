@@ -164,7 +164,7 @@ function WYSIJAsetParams(result,fileObj){
     }
 
     // If the image is bigger that 600px width, let's try to load our generated image size.
-    // If our image size is not present, it's probably an old image uploaded before Wysija install,
+    // If our image size is not present, it's probably an old image uploaded before MailPoet install,
     // So we load the full url.
     if(parseInt(imgdimensions[0])>600) {
 
