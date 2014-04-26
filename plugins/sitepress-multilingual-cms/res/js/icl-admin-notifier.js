@@ -2,9 +2,15 @@
 jQuery(document).ready(function () {
     jQuery('a.icl-admin-message-hide').live('click', function (event) {
 
-        var messagebox = jQuery(this).parent().parent();
+		if (typeof(event.preventDefault) !== 'undefined' ) {
+			event.preventDefault();
+		} else {
+			event.returnValue = false;
+		}
 
-        event.preventDefault();
+		var messagebox = jQuery(this).parent().parent();
+
+
         jQuery.ajax({
             url: ajaxurl,
             type: 'POST',
@@ -28,17 +34,23 @@ jQuery(document).ready(function () {
             }
         });
     });
-    jQuery('a.icl-admin-message-link').live('click', function (event) {
-        event.preventDefault();
-        jQuery.post(
-            ajaxurl,
-            {
-                action: 'icl-hide-admin-message',
-                'icl-admin-message-id': jQuery(this).parent().parent().attr('id')
-            },
-            function (response) {
-            }
-        );
-    });
+	jQuery('a.icl-admin-message-link').live('click', function (event) {
+
+		if (typeof(event.preventDefault) !== 'undefined' ) {
+			event.preventDefault();
+		} else {
+			event.returnValue = false;
+		}
+
+		jQuery.post(
+			ajaxurl,
+			{
+				action: 'icl-hide-admin-message',
+				'icl-admin-message-id': jQuery(this).parent().parent().attr('id')
+			},
+			function (response) {
+			}
+		);
+	});
 });
 /*]]>*/

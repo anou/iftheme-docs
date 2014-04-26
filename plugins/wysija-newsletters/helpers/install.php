@@ -479,15 +479,15 @@ class WYSIJA_help_install extends WYSIJA_object{
 
         // execute the queries one by one
         global $wpdb;
-        $has_errors=false;
+        $has_errors = false;
+        
         foreach($queries as $qry){
+            $last_error = $wpdb->last_error;
             $wpdb->query($qry);
-            $error = mysql_error( $wpdb->dbh );
 
-            if($error){
-                $this->notice(mysql_error());
-                $has_errors=true;
-
+            if( !empty($wpdb->last_error) && $last_error != $wpdb->last_error ){
+                $this->notice($wpdb->last_error);
+                $has_errors = true;
             }
 
         }

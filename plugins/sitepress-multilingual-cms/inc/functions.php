@@ -26,11 +26,14 @@ function _icl_deprecated_icl_debug_mode(){
     echo '<div class="updated"><p><strong>ICL_DEBUG_MODE</strong> no longer supported. Please use <strong>WP_DEBUG</strong> instead.</p></div>';
 } 
 
-function icl_js_escape($str){ 
-    $str = esc_js($str);
-    $str = htmlspecialchars_decode($str);
-    return $str;
-}  
+if(!function_exists('icl_js_escape')) {
+	function icl_js_escape( $str ) {
+		$str = esc_js( $str );
+		$str = htmlspecialchars_decode( $str );
+
+		return $str;
+	}
+}
 
 function icl_nobreak($str){
     return preg_replace("# #", '&nbsp;', $str);
@@ -118,7 +121,7 @@ function _icl_trash_restore_prompt(){
             $ret = '<p>';
             $ret .= sprintf(__('This translation is currently in the trash. You need to either <a href="%s">delete it permanently</a> or <a href="%s">restore</a> it in order to continue.'), 
                 get_delete_post_link($post->ID, '', true) , 
-                wp_nonce_url( admin_url( sprintf( $post_type_object->_edit_link . '&amp;action=untrash', $post->ID ) ), 'untrash-' . $post->post_type . '_' . $post->ID)
+                wp_nonce_url( admin_url( sprintf( $post_type_object->_edit_link . '&amp;action=untrash', $post->ID ) ), 'untrash-post_' . $post->ID)
                 );
             $ret .= '</p>';
             wp_die($ret);

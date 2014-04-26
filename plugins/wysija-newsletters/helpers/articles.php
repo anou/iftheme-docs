@@ -244,7 +244,9 @@ class WYSIJA_help_articles extends WYSIJA_object {
         $content = '';
 
         // get categories
-        $categories = get_the_category($post['ID']);
+        //$categories = get_the_category($post['ID']);
+        $helper_wp_tools = WYSIJA::get('wp_tools', 'helper');
+        $categories = $helper_wp_tools->get_post_categories($post);
 
         if(empty($categories) === false) {
             // check if the user specified a label to be displayed before the author's name
@@ -252,13 +254,7 @@ class WYSIJA_help_articles extends WYSIJA_object {
                 $content = stripslashes($params['category_label']).' ';
             }
 
-            $category_names = array();
-
-            foreach($categories as $category) {
-                $category_names[] = $category->name;
-            }
-
-            $content .= join(', ', $category_names);
+            $content .= join(', ', $categories);
         }
 
         return $content;

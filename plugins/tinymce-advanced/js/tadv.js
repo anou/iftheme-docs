@@ -1,116 +1,151 @@
-// TinyMCE Advanced jQuery sortables
-
-(function($) {
+// TinyMCE Advanced
+( function($) {
 	tadvSortable = {
 
 		init : function() {
-			$("#toolbar_1").sortable({
-				connectWith: ["#toolbar_2, #toolbar_3, #toolbar_4, #tadvpalette"],
+			var self = this;
+
+			$('#tb1').sortable({
+				connectWith: '#tb2, #tb3, #tb4, #unused',
 				items : 'li',
-				stop : tadvSortable.update,
+				cursor: 'move',
+				stop : self.update,
 				revert : true,
 				opacity : 0.7,
 				containment : '#contain'
 			});
 
-			$("#toolbar_2").sortable({
-				connectWith: ["#toolbar_1, #toolbar_3, #toolbar_4, #tadvpalette"],
+			$('#tb2').sortable({
+				connectWith: '#tb1, #tb3, #tb4, #unused',
 				items : 'li',
-				stop : tadvSortable.update,
+				stop : self.update,
 				revert : true,
 				opacity : 0.7,
 				containment : '#contain'
 			});
 
-			$("#toolbar_3").sortable({
-				connectWith: ["#toolbar_2, #toolbar_1, #toolbar_4, #tadvpalette"],
+			$('#tb3').sortable({
+				connectWith: '#tb1, #tb2, #tb4, #unused',
 				items : 'li',
-				stop : tadvSortable.update,
+				stop : self.update,
 				revert : true,
 				opacity : 0.7,
 				containment : '#contain'
 			});
 
-			$("#toolbar_4").sortable({
-				connectWith: ["#toolbar_2, #toolbar_3, #toolbar_1, #tadvpalette"],
+			$('#tb4').sortable({
+				connectWith: '#tb1, #tb2, #tb3, #unused',
 				items : 'li',
-				stop : tadvSortable.update,
+				stop : self.update,
 				revert : true,
 				opacity : 0.7,
 				containment : '#contain'
 			});
 
-			$("#tadvpalette").sortable({
-				connectWith: ["#toolbar_1, #toolbar_2, #toolbar_3, #toolbar_4"],
+			$('#unused').sortable({
+				connectWith: '#tb1, #tb2, #tb3, #tb4',
 				items : 'li',
-				stop : tadvSortable.update,
+				stop : self.update,
 				revert : true,
 				opacity : 0.7,
 				containment : '#contain'
 			});
 
 			this.update();
-			$(window).resize(function(){
-  				tadvSortable.update();
+
+			$(window).resize( function() {
+  				self.update();
+			});
+
+			$('#tadvadmin').on( 'submit', function(e) {
+				var toolbars234 = $('#tb2, #tb3, #tb4');
+
+				if ( toolbars234.find('li#wp_adv').length || ! toolbars234.find('li').length ) {
+					$(document.body).addClass('wp-adv-error');
+					e.preventDefault();
+				}
 			});
 		},
 
-		I : function(a) {
-			return document.getElementById(a);
-		},
-
-		serialize : function() {
-			var tb1, tb2, tb3, tb4;
-
-			tb1 = $('#toolbar_1').sortable('serialize',{expression : '([^_]+)_(.+)'});
-			tb2 = $('#toolbar_2').sortable('serialize',{expression : '([^_]+)_(.+)'});
-			tb3 = $('#toolbar_3').sortable('serialize',{expression : '([^_]+)_(.+)'})
-			tb4 = $('#toolbar_4').sortable('serialize',{expression : '([^_]+)_(.+)'})
-
-			$('#toolbar_1order').val(tb1);
-			$('#toolbar_2order').val(tb2);
-			$('#toolbar_3order').val(tb3);
-			$('#toolbar_4order').val(tb4);
-			
-			if ( (tb1.indexOf('wp_adv') != -1 && ! tb2) ||
-				 (tb2.indexOf('wp_adv') != -1 && ! tb3) ||
-				 (tb3.indexOf('wp_adv') != -1 && ! tb4) ||
-				 tb4.indexOf('wp_adv') != -1 ) {
-					$('#sink_err').css('display', 'inline');
-					return false;
-				 }
-			$('#tadvadmin').submit();
-		},
-
 		reset : function() {
-			var pd = this.I('tadvpalette');
-			if ( ! pd ) return;
-			if( pd.childNodes.length > 6 ) {
-				var last = pd.lastChild.previousSibling;
-			    pd.style.height = last.offsetTop + last.offsetHeight + 30 + "px";
-			} else pd.style.height = "60px";
-		},
+			var el = $('#unused'), el_node = el.get(0), last, w, i;
 
-		update : function() {
-			var t = tadvSortable, w;
+			if ( !el.length )
+				return;
 
-			t.reset();
-			$('#too_long').css('display', 'none');
-			$('#sink_err').css('display', 'none');
+			$(document.body).removeClass('wp-adv-error length-error');
 
-			$('.container').each(function(no,o){
-			    var kids = o.childNodes, tbwidth = o.clientWidth, W = 0;
+			$('.container').each( function( num, ul ) {
+			    var kids = ul.childNodes, tbwidth = ul.clientWidth, W = 0;
 
-			    for( i = 0; i < kids.length; i++ ) {
+			    for ( i in kids ) {
 					if ( w = kids[i].offsetWidth )
 						W += w;
 				}
 
-			    if( (W+8) > tbwidth )
-					$('#too_long').css('display', 'inline');
+			    if ( ( W + 8 ) > tbwidth )
+					$(document.body).addClass('length-error');
 			});
+
+			if ( el_node.childNodes.length > 6 ) {
+				last = el_node.lastChild.previousSibling;
+			    el.height( last.offsetTop + last.offsetHeight + 30 );
+			} else {
+				el.height(60);
+			}
+		},
+
+		update : function(e, ui) {
+			var toolbar_id;
+
+			tadvSortable.reset();
+
+			if ( ui && ( toolbar_id = ui.item.parent().attr('id') ) )
+				ui.item.find('input.tadv-button').attr('name', toolbar_id + '[]');
 		}
 	}
-}(jQuery));
 
-jQuery(document).ready(function(){ tadvSortable.init(); });
+	$( document ).ready( function() {
+		var $uninstall = $('#tadv-confirm-uninstall'),
+			$importElement = $('#tadv-import'),
+			$importError = $('#tadv-import-error');
+
+		tadvSortable.init();
+
+		$( '#menubar' ).on( 'change', function() {
+			$( '#tadv-menu-img' ).toggleClass( 'enabled', $(this).prop('checked') );
+		});
+
+		$('#tadv-remove-settings').click( function() {
+			$uninstall.show();
+		});
+
+		$('#tadv-cancel').click( function() {
+			$uninstall.hide();
+		});
+
+		$('#tadv-export-select').click( function() {
+			$('#tadv-export').focus().select();
+		});
+
+		$importElement.change( function() {
+			$importError.empty();
+		});
+
+		$('#tadv-import-verify').click( function() {
+			var string, parsed;
+
+			string = ( $importElement.val() || '' ).replace( /^[^{]*/, '' ).replace( /[^}]*$/, '' );
+			$importElement.val( string );
+
+			try {
+				parsed = JSON.parse( string );
+			} catch( error ) {
+				$importError.text( error );
+				return;
+			}
+
+			$importError.text( 'No errors.' );
+		});
+	});
+}(jQuery));

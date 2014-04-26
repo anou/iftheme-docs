@@ -19,7 +19,7 @@ class WYSIJA_object{
 	 * Static variable holding core MailPoet's version
 	 * @var array
 	 */
-	static $version = '2.6.2';
+	static $version = '2.6.5';
 
 	function WYSIJA_object(){
 
@@ -964,37 +964,62 @@ class WYSIJA extends WYSIJA_object{
 						$include_category_ids = array();
 						$exclude_category_ids = array();
 
-						// get included categories
-						if(isset($email['params']['autonl']['include_category_ids']) && !empty($email['params']['autonl']['include_category_ids'])) {
-							$include_category_ids = $email['params']['autonl']['include_category_ids'];
+						// ALC need to check for post_type on each block of the autoposts
+						$wj_data = maybe_unserialize( base64_decode( $email['wj_data'] ) );
+						$post_types = array();
+						$has_alc_blocks = false;
+
+						foreach ( $wj_data['body'] as $block_key => $block ){
+							if ( $block['type'] !== 'auto-post' ){
+								continue;
+							}
+
+							$has_alc_blocks = true;
+
+							// get post type and post categories from block parameters
+							foreach( $block['params'] as $param_data ) {
+								if(in_array($param_data['key'], array('post_type', 'cpt'))  && strlen(trim($param_data['value'])) > 0) {
+									// store post type
+									$post_types[] = trim($param_data['value']);
+								} else if($param_data['key'] === 'category_ids' && strlen(trim($param_data['value'])) > 0) {
+									// store post category ids
+									$include_category_ids = array_map('intval', explode(',', trim($param_data['value'])));
+								}
+							}
 						}
-						// get excluded categories
-						if(isset($email['params']['autonl']['exclude_category_ids']) && !empty($email['params']['autonl']['exclude_category_ids'])) {
-							$exclude_category_ids = $email['params']['autonl']['exclude_category_ids'];
+
+						if ( $has_alc_blocks === true && ! in_array( $post->post_type, $post_types ) ) {
+							continue;
 						}
 
 						// get post categories
-						//$post_categories = wp_get_post_categories($post->ID);
 						$helper_wp_tools = WYSIJA::get('wp_tools', 'helper');
-						$post_categories = $helper_wp_tools->get_post_category_ids($post);
+						$taxonomies = $helper_wp_tools->get_post_category_ids($post);
 
 						// assume the post has to be sent
 						$do_send_post = true;
 
 						// post categories have to match at least one of the email's included categories
-						$include_intersection = array_intersect($post_categories, $include_category_ids);
+						$include_intersection = array_intersect($taxonomies, $include_category_ids);
 						if(!empty($include_category_ids) && empty($include_intersection)) {
 							$do_send_post = false;
 						}
 
-						$exclude_intersection = array_intersect($post_categories, $exclude_category_ids);
+						$exclude_intersection = array_intersect($taxonomies, $exclude_category_ids);
 						// post categories should not match any one of the email's excluded categories
 						if(!empty($exclude_category_ids) && !empty($exclude_intersection)) {
 							$do_send_post = false;
 						}
 
 						if($do_send_post) {
-							WYSIJA::log('post_transition_hook_give_birth',array('postID'=>$post->ID,'postID'=>$post->post_title,'old_status'=>$old_status,'new_status'=>$new_status),'post_notif');
+							WYSIJA::log('post_transition_hook_give_birth', array(
+								'post_id' => $post->ID,
+								'post_title' => $post->post_title,
+								'newsletter' => $email,
+								'old_status' => $old_status,
+								'new_status' => $new_status
+							),'post_notif');
+
 							$model_email->reset();
 							$model_email->give_birth($email, $post->ID);
 						}

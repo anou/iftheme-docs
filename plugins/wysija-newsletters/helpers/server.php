@@ -135,18 +135,18 @@ class WYSIJA_help_server extends WYSIJA_object {
     function can_sql_create_tables(){
 
         // test that we can create tables on the mysql server
-        $model_user=WYSIJA::get('user','model');
+        $model_user = WYSIJA::get('user','model');
 
         $this->_create_temp_sql_table_if_not_exists();
 
         $query="SHOW TABLES like '".$model_user->getPrefix()."user_list_temp';";
 
         global $wpdb;
-        $res=$wpdb->get_var($query);
+        $res = $wpdb->get_var($query);
 
         if(!$res){
             $this->error(sprintf(
-                    __('The MySQL user you have setup on your WordPress site (wp-config.php) doesn\'t have enough privileges to CREATE MySQL tables. Please change this user yourself or contact the administrator of your site in order to complete MailPoet\'s installation. mysql errors:(%1$s)',WYSIJA),  mysql_error()));
+                    __('The MySQL user you have setup on your WordPress site (wp-config.php) doesn\'t have enough privileges to CREATE MySQL tables. Please change this user yourself or contact the administrator of your site in order to complete MailPoet\'s installation. mysql errors:(%1$s)',WYSIJA),  $wpdb->last_error));
             return false;
         }
         return true;
@@ -170,7 +170,7 @@ class WYSIJA_help_server extends WYSIJA_object {
         $wpdb->query($query);
         if(!$wpdb->result){
             $error_message=__('The MySQL user you have setup on your WordPress site (wp-config.php) doesn\'t have enough privileges to CREATE MySQL tables. Please change this user yourself or contact the administrator of your site in order to complete MailPoet\'s installation. mysql errors:(%1$s)',WYSIJA);
-            $this->error(sprintf(str_replace('CREATE', 'ALTER', $error_message), mysql_error($wpdb->dbh)));
+            $this->error(sprintf(str_replace('CREATE', 'ALTER', $error_message), $wpdb->last_error ));
             $this->_drop_temp_sql_table();
             return false;
         }

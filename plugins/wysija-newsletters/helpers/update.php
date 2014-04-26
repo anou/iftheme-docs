@@ -199,7 +199,7 @@ class WYSIJA_help_update extends WYSIJA_object {
 				return true;
 			   break;
 		   case '2.3.3':
-				update_option('wysija_log', $optionlog);
+				update_option('wysija_log', '');
 
 				return true;
 			   break;
@@ -408,10 +408,10 @@ class WYSIJA_help_update extends WYSIJA_object {
 					}
 
 				} else {
-                                    if(!empty($errors)){
-                                        $this->error( implode( $errors, "\n" ) );
-                                    }
-                                    return false;
+									if(!empty($errors)){
+										$this->error( implode( $errors, "\n" ) );
+									}
+									return false;
 				}
 
 				return true;
@@ -597,18 +597,18 @@ class WYSIJA_help_update extends WYSIJA_object {
 	 * )
 	 */
 	function run_update_queries($queries) {
-		$failed=array();
+		$failed = array();
 
 		//we use mysql query instead of wordpress query to make sure we don't miss the sql errors
 		global $wpdb;
 		foreach($queries as $query){
 			$query=str_replace('[wysija]',$this->modelWysija->getPrefix(),$query);
-			$wpdb->query($query);
+			$last_error = $wpdb->last_error;
+                        $wpdb->query($query);
 
-
-
-			if(empty($wpdb->result) || !$wpdb->result)    $failed[]= mysql_error($wpdb->dbh)." ($query)";
-
+			if( (empty($wpdb->result) || !$wpdb->result) && !empty( $wpdb->last_error ) && $last_error != $wpdb->last_error ){
+				$failed[]= $wpdb->last_error." ($query)";
+			}
 		}
 		if($failed) return $failed;
 		else return false;
@@ -867,60 +867,60 @@ class WYSIJA_help_update extends WYSIJA_object {
 		*/
 	}
 
-        /**
-         * in some cases scenario our update helper can't be run simply because a version is missing
-         */
-        function repair_settings(){
-            static $is_repairing = FALSE;
+		/**
+		 * in some cases scenario our update helper can't be run simply because a version is missing
+		 */
+		function repair_settings(){
+			static $is_repairing = FALSE;
 
-            if($is_repairing === FALSE){
-                $is_repairing = TRUE;
+			if($is_repairing === FALSE){
+				$is_repairing = TRUE;
 
-                // set installed as true
-                $values['installed'] = true;
-                // set installed_time: minus 7200 on it so that we don't display the welcome page again on the
-                // view condition in the check() function above WYSIJA::redirect('admin.php?page=wysija_campaigns&action=welcome_new');
-                $values['installed_time'] = time() - 7200;
+				// set installed as true
+				$values['installed'] = true;
+				// set installed_time: minus 7200 on it so that we don't display the welcome page again on the
+				// view condition in the check() function above WYSIJA::redirect('admin.php?page=wysija_campaigns&action=welcome_new');
+				$values['installed_time'] = time() - 7200;
 
-                // find our current db version
-                $values['wysija_db_version'] = $this->_find_db_version();
+				// find our current db version
+				$values['wysija_db_version'] = $this->_find_db_version();
 
-                // save the missing settings to repair the installation
-                $model_config = WYSIJA::get('config','model');
-                $model_config->save($values);
+				// save the missing settings to repair the installation
+				$model_config = WYSIJA::get('config','model');
+				$model_config->save($values);
 
-            }
+			}
 
-        }
+		}
 
-        /**
-         * find out what is the db version based on the existing columns of some tables
-         */
-        private function _find_db_version(){
-            $model_wysija = new WYSIJA_model();
+		/**
+		 * find out what is the db version based on the existing columns of some tables
+		 */
+		private function _find_db_version(){
+			$model_wysija = new WYSIJA_model();
 
-            // test against 2.0 and set it to 1.1 if true
-            $test = $model_wysija->query('get_res', "SHOW COLUMNS FROM `[wysija]email` like 'modified_at';" );
-            if(empty($test)){
-                return '1.1';
-            }
-            // test against 2.4 and set it to 2.3.4 if true
-            $test = $model_wysija->query('get_res', "SHOW COLUMNS FROM `[wysija]form`;" );
-            if(empty($test)){
-                return '2.3.4';
-            }
+			// test against 2.0 and set it to 1.1 if true
+			$test = $model_wysija->query('get_res', "SHOW COLUMNS FROM `[wysija]email` like 'modified_at';" );
+			if(empty($test)){
+				return '1.1';
+			}
+			// test against 2.4 and set it to 2.3.4 if true
+			$test = $model_wysija->query('get_res', "SHOW COLUMNS FROM `[wysija]form`;" );
+			if(empty($test)){
+				return '2.3.4';
+			}
 
-            // test against 2.5.9.6 and set it to 2.5.5 if true
-            $test = $model_wysija->query('get_res', "SHOW COLUMNS FROM `[wysija]user` like 'domain';" );
-            if(empty($test)){
-                return '2.5.5';
-            }
-            // test against 2.5.9.7 and set it to 2.5.9.6 if true
-            $test = $model_wysija->query('get_res', "SHOW COLUMNS FROM `[wysija]user` like 'last_opened';" );
-            if(empty($test)){
-                return '2.5.9.6';
-            }
+			// test against 2.5.9.6 and set it to 2.5.5 if true
+			$test = $model_wysija->query('get_res', "SHOW COLUMNS FROM `[wysija]user` like 'domain';" );
+			if(empty($test)){
+				return '2.5.5';
+			}
+			// test against 2.5.9.7 and set it to 2.5.9.6 if true
+			$test = $model_wysija->query('get_res', "SHOW COLUMNS FROM `[wysija]user` like 'last_opened';" );
+			if(empty($test)){
+				return '2.5.9.6';
+			}
 
-            return WYSIJA::get_version();
-        }
+			return WYSIJA::get_version();
+		}
 }

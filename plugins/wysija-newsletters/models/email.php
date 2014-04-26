@@ -217,7 +217,7 @@ class WYSIJA_model_email extends WYSIJA_model{
 
         //if it's an immediate post notif let know the render email
         if($immediatePostNotif) {
-            $emailChild['params']['autonl']['articles']['immediatepostid']=$immediatePostNotif;
+            $emailChild['params']['autonl']['articles']['immediatepostid'] = (int)$immediatePostNotif;
             //if this article is already set there is no reason to give birth to a child email
             if(isset($email['params']['autonl']['articles']['ids']) && in_array($immediatePostNotif, $email['params']['autonl']['articles']['ids'])) return false;
         }

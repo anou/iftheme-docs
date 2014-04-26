@@ -3,7 +3,6 @@ defined('WYSIJA') or die('Restricted access');
 class WYSIJA_control_back_tmce extends WYSIJA_control{
 
     function WYSIJA_control_back_tmce(){
-        if(!WYSIJA::current_user_can('wysija_subscriwidget')) die('Action is forbidden.');
         parent::WYSIJA_control();
         $this->viewObj=WYSIJA::get('tmce','view');
     }
@@ -16,13 +15,13 @@ class WYSIJA_control_back_tmce extends WYSIJA_control{
             if (empty($list['is_enabled']) OR empty($list['is_public'])) unset($data['lists'][$k]);
         }
         $data['confirm_dbleoptin'] = WYSIJA::get('config','model')->getValue('confirm_dbleoptin');
-        
+
         $this->viewObj->subscribersAdd($data);
-        exit;        
+        exit;
     }
-    
+
     function subscribersEdit(){
-        
+
     }
 
     function registerAdd(){

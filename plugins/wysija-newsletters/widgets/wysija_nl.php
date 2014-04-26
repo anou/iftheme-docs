@@ -206,7 +206,7 @@ class WYSIJA_NL_Widget extends WP_Widget {
 					$field_html .= '</select>';
 					break;
 				case 'edit_link':
-					$field_html = '<a href="admin.php?page=wysija_config&action=form_add" title="'.$field_params['label'].'">'.$field_params['label'].'</a>';
+					$field_html = '<a href="admin.php?page=wysija_config&action=form_add" target="_blank" title="'.$field_params['label'].'">'.$field_params['label'].'</a>';
 					break;
 				default:
 					$field_html = $helper_forms->input(

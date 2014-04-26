@@ -147,7 +147,7 @@ function icl_st_filter_status(){
 }
 
 function icl_st_filter_context(){
-    var qs = jQuery(this).val() != '' ? '&context=' + jQuery(this).val() : '';
+    var qs = jQuery(this).val() != '' ? '&context=' + encodeURIComponent(jQuery(this).val()) : '';
     location.href=location.href.replace(/#(.*)$/,'').replace(/&paged=([0-9]+)/,'').replace(/&updated=true/,'').replace(/&context=(.*)/g,'') + qs;
 }
 

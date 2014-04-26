@@ -1,16 +1,16 @@
 <?php
 /*
 Plugin Name: WPML String Translation
-Plugin URI: http://wpml.org/
-Description: Adds theme and plugins localization capabilities to WPML. <a href="http://wpml.org">Documentation</a>.
+Plugin URI: https://wpml.org/
+Description: Adds theme and plugins localization capabilities to WPML. <a href="https://wpml.org">Documentation</a>.
 Author: ICanLocalize
-Author URI: http://wpml.org
-Version: 2.0.2
+Author URI: https://wpml.org
+Version: 2.0.5b2
 */
 
 if(defined('WPML_ST_VERSION')) return;
 
-define('WPML_ST_VERSION', '2.0.2');
+define('WPML_ST_VERSION', '2.0.5');
 define('WPML_ST_PATH', dirname(__FILE__));
 
 require WPML_ST_PATH . '/inc/constants.php';

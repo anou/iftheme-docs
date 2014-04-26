@@ -44,12 +44,11 @@ var WPML_Translate_taxonomy = {
         
         jQuery.ajax({
             type:       "POST", 
-            dataType:   'json',
             url:        ajaxurl, 
             data:       'action=wpml_tt_show_terms&' + parameters,
             success:    
                 function(ret){                
-                    jQuery('#wpml_tt_taxonomy_translation_wrap').html(ret.html);                                                         
+                    jQuery('#wpml_tt_taxonomy_translation_wrap').html(ret);
                 }   
                 
             });    

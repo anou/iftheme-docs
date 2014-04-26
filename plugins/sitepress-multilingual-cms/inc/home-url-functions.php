@@ -178,7 +178,12 @@ function wpml_home_url_parse_query( $q )
 		$parts[ 'path' ] = '';
 	}
 
-	if ( trim( $parts[ 'path' ], '/' ) != trim( $_SERVER[ 'REQUEST_URI' ], '/' ) && $q->query_vars[ 'page_id' ] == get_option( 'page_on_front' ) ) {
+	// fix for root page when it has any parameters
+	$server_request_parts = explode('?', $_SERVER[ 'REQUEST_URI' ]);
+	
+	$server_request_without_get = $server_request_parts[0];
+	
+	if ( trim( $parts[ 'path' ], '/' ) != trim( $server_request_without_get, '/' ) && $q->query_vars[ 'page_id' ] == get_option( 'page_on_front' ) ) {
 		return $q;
 	}
 

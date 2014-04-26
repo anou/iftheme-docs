@@ -232,6 +232,11 @@ class WYSIJA_help_backloader extends WYSIJA_help{
 						wp_enqueue_style( 'wysija-editor-css', WYSIJA_URL . 'css/wysija-editor.css', array(), WYSIJA::get_version() );
 						wp_enqueue_script( 'wysija-colorpicker', WYSIJA_URL . 'js/excolor/jquery.modcoder.excolor.js', array(), WYSIJA::get_version() );
 
+						if ( version_compare( $GLOBALS['wp_version'], '3.9', '>=' ) ){
+							wp_enqueue_style( 'mailpoet-tinymce', WYSIJA_URL . 'css/tmce/editor.css', array(), WYSIJA::get_version() );
+						}
+
+
 						/* MailPoet editor i18n */
 						wp_localize_script( 'wysija-editor', 'Wysija_i18n', $controller->jsTrans );
 						break;
@@ -241,8 +246,8 @@ class WYSIJA_help_backloader extends WYSIJA_help{
 						break;
 
 					case 'wysija-tooltip':
-						wp_enqueue_script( 'jquery-qtip', WYSIJA_URL . 'js/qtip2/jquery.qtip.min.js', array( 'jquery' ), WYSIJA::get_version() );
-						wp_enqueue_style( 'jquery-qtip-css', WYSIJA_URL . 'css/qtip2/jquery.qtip.min.css' );
+						wp_enqueue_script( 'mailpoet.tooltip', WYSIJA_URL . 'js/vendor/bootstrap.tooltip.js', array( 'jquery' ), WYSIJA::get_version(), true );
+						wp_enqueue_style( 'mailpoet.tooltip', WYSIJA_URL . 'css/vendor/bootstrap.tooltip.css', array(), WYSIJA::get_version(), 'screen' );
 						break;
 
 					default:

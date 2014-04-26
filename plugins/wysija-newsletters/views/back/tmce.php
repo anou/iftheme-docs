@@ -13,7 +13,6 @@ class WYSIJA_view_back_tmce extends WYSIJA_view_back{
     function getScriptsStyles(){
         ?>
         <link rel='stylesheet' href='<?php $urlblog=get_bloginfo('wpurl');echo $urlblog ?>/wp-admin/load-styles.php?c=1&amp;dir=ltr&amp;load=widgets,global,wp-admin' type='text/css' media='all' />
-        <link rel='stylesheet' id='colors-css'  href='<?php echo $urlblog ?>/wp-admin/css/colors-fresh.css' type='text/css' media='all' />
         <link rel='stylesheet' id='colors-css'  href='<?php echo $urlblog ?>/wp-includes/css/buttons.css' type='text/css' media='all' />
         <!--[if lte IE 7]>
         <link rel='stylesheet' id='ie-css'  href='<?php echo $urlblog ?>/wp-admin/css/ie.css' type='text/css' media='all' />

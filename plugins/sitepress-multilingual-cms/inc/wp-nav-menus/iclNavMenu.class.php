@@ -610,8 +610,8 @@ class iclNavMenu{
     function option_nav_menu_options($val){
         global $wpdb, $sitepress;
         // special case of getting menus with auto-add only in a specific language
-        $db = debug_backtrace();
-        if(isset($db[4]) && $db[4]['function'] == '_wp_auto_add_pages_to_menu' && !empty($val['auto_add'])){
+		$debug_backtrace = $sitepress->get_backtrace( 5 ); //Ignore objects and limit to first 5 stack frames, since 4 is the highest index we use
+        if(isset($debug_backtrace[4]) && $debug_backtrace[4]['function'] == '_wp_auto_add_pages_to_menu' && !empty($val['auto_add'])){
             $post_lang = isset($_POST['icl_post_language']) ? $_POST['icl_post_language'] : (isset($_POST['lang']) ? $_POST['lang'] : false);
 
 			//$val['auto_add'] = false;
@@ -646,11 +646,10 @@ class iclNavMenu{
             }            
             add_filter('theme_mod_nav_menu_locations', array($this, 'theme_mod_nav_menu_locations'));    
         }
-        
-        
+
         if ( $args['menu'] ){            
-            $db = debug_backtrace();
-            if($db[4]['function']=='widget'){
+			$debug_backtrace = $sitepress->get_backtrace( 5 ); //Ignore objects and limit to first 5 stack frames, since 4 is the highest index we use
+            if($debug_backtrace[4]['function']=='widget'){
                 if(is_integer($args['menu'])){
                     $args['menu'] = wp_get_nav_menu_object( icl_object_id($args['menu'], 'nav_menu') );    
                 }elseif(!empty($args['menu']->term_id)){

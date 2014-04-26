@@ -33,9 +33,9 @@ $_tmpinco = $theme_localization_stats_data['incomplete'];
             <td><?php echo __('Fully translated', 'wpml-string-translation') ?></td>
             <td align="right"><?php echo $_tmpcomp; ?></td>
             <td rowspan="3" align="right" style="padding-top:10px;">
-                <a href="admin.php?page=<?php echo WPML_ST_FOLDER ?>/menu/string-translation.php&amp;context=<?php echo $tl_domain ? 'theme%20' . $tl_domain : 'WordPress' ?>" class="button-secondary"><?php echo __("View all the theme's texts",'wpml-string-translation')?></a>
+							<a href="admin.php?page=<?php echo WPML_ST_FOLDER ?>/menu/string-translation.php&amp;context=<?php echo $tl_domain ? 'theme%20' . urlencode($tl_domain) : 'WordPress' ?>" class="button-secondary"><?php echo __("View all the theme's texts",'wpml-string-translation')?></a>
                 <?php if($_tmpinco): ?>
-                <a href="admin.php?page=<?php echo WPML_ST_FOLDER ?>/menu/string-translation.php&amp;context=<?php echo $tl_domain ? 'theme%20' . $tl_domain : 'WordPress' ?>&amp;status=0" class="button-primary"><?php echo __("View strings that need translation",'wpml-string-translation')?></a>
+                <a href="admin.php?page=<?php echo WPML_ST_FOLDER ?>/menu/string-translation.php&amp;context=<?php echo $tl_domain ? 'theme%20' . urlencode($tl_domain) : 'WordPress' ?>&amp;status=0" class="button-primary"><?php echo __("View strings that need translation",'wpml-string-translation')?></a>
                 <?php endif; ?>
             </td>
         </tr>

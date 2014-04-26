@@ -123,7 +123,7 @@ class WYSIJA_view_front_widget_nl extends WYSIJA_view_front {
                 }
 
                 // IMPORTANT: we remove the ones that could break our subscription form
-                // this resolve the conflict with Ultimate Shortcodes
+                // These resolve the conflict with Ultimate Shortcodes
                 remove_shortcode('user');
                 remove_shortcode('user_list');
                 remove_shortcode('list_ids');
@@ -133,6 +133,9 @@ class WYSIJA_view_front_widget_nl extends WYSIJA_view_front {
                 remove_shortcode('email');
                 remove_shortcode('custom');
                 remove_shortcode('required');
+                
+                // These resolve the conflict with Ultimate TinyMCE
+                remove_shortcode('field');
 
                 // interpret shortcodes
                 $form_html = do_shortcode($form_html);

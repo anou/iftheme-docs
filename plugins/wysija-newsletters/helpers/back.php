@@ -387,7 +387,7 @@ class WYSIJA_help_back extends WYSIJA_help{
     function addCodeToPagePost(){
 
         //code to add external buttons to the tmce only if the user has the rights to add the forms
-        if(current_user_can('wysija_subscriwidget') &&  get_user_option('rich_editing') == 'true') {
+        if(get_user_option('rich_editing') == 'true') {
          add_filter("mce_external_plugins", array($this,"addRichPlugin"));
          add_filter('mce_buttons', array($this,'addRichButton1'),999);
          $myStyleUrl = "../../plugins/wysija-newsletters/css/tmce/style.css";
@@ -400,8 +400,16 @@ class WYSIJA_help_back extends WYSIJA_help{
     }
 
     function addRichPlugin($plugin_array) {
-       $plugin_array['wysija_register'] = WYSIJA_URL.'mce/wysija_register/editor_plugin.js';
-       $plugin_array['wysija_subscribers'] = WYSIJA_URL.'mce/wysija_subscribers/editor_plugin.js';
+       global $wp_version;
+
+       if ( version_compare( $wp_version, '3.9', '<' ) ){
+            $suffix = '';
+       } else {
+            $suffix = '_39';
+       }
+
+       $plugin_array['wysija_register'] = WYSIJA_URL.'mce/wysija_register/editor_plugin'.$suffix.'.js';
+       //$plugin_array['wysija_subscribers'] = WYSIJA_URL.'mce/wysija_subscribers/editor_plugin.js';
 
        return $plugin_array;
     }

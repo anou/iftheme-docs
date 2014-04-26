@@ -77,14 +77,22 @@ jQuery(document).ready(function(){
 
     jQuery('.icl_tm_finished').change(function(){
         jQuery(this).parent().parent().find('.icl_tm_error').hide();
-        var field = jQuery(this).attr('name').replace(/finished/,'data');
+
+
+		var regExp = /\[([^\]]+)\]/;
+		var matches =  regExp.exec(jQuery(this).attr('name')) ; //extract values in []
+		var field_id = matches[1]; //get field id from first []
+
+		var field = jQuery(this).attr('name').replace(/finished/,'data');
 
         if(field == 'fields[body][data]'){
             var datatemp = '';
-            try{
-                datatemp = tinyMCE.get('fields[body][data]').getContent();
+
+			try{
+                datatemp = tinyMCE.get('body').getContent();
             }catch(err){;}
-            var data = jQuery('*[name="'+field+'"]').val() + datatemp;
+
+			var data = jQuery('*[name="'+field+'"]').val() + datatemp;
         }
         else if(jQuery(this).hasClass('icl_tmf_multiple')){
             var data = 1;
@@ -95,14 +103,11 @@ jQuery(document).ready(function(){
 
             var datatemp = '';
             try{
-                datatemp = tinyMCE.get(field).getContent();
+                datatemp = tinyMCE.get(field_id).getContent();
             }catch(err){;}
 
             var data = jQuery('[name="'+field+'"]*').val() + datatemp;
         }
-
-
-
 
         if(jQuery(this).attr('checked') && !data){
             jQuery(this).parent().parent().find('.icl_tm_error').show();
@@ -384,19 +389,19 @@ jQuery(document).ready(function(){
 	}
 
     jQuery('.icl_tm_copy_link').click(function(){
-        var type = jQuery(this).attr('id').replace(/^icl_tm_copy_link_/,'');
+        var field = jQuery(this).attr('id').replace(/^icl_tm_copy_link_/,'');
 
-        field = 'fields['+type+'][data]';
+
         var original = '';
 
 
-        if(0 == type.indexOf('field-')){
-            type = type.replace(/ /g, '__20__');
+        if(0 == field.indexOf('field-')){
+			field = field.replace(/ /g, '__20__');
         }
 
-        if(type=='body' || (0 == type.indexOf('field-') && jQuery('#icl_tm_original_'+type)[0].tagName != 'SPAN')){
+        if(field=='body' || (0 == field.indexOf('field-') && jQuery('#icl_tm_original_'+field)[0].tagName != 'SPAN')){
 
-            original = jQuery('#icl_tm_original_'+type).val()
+            original = jQuery('#icl_tm_original_'+field).val()
 
             try{
                 tinyMCE.get(field); // activate
@@ -423,13 +428,13 @@ jQuery(document).ready(function(){
                 edInsertContent(edCanvas, original);
             }
         }else{
-            type = type.replace(/ /g, '__20__');
-            original = jQuery('#icl_tm_original_'+type).html();
+			field = field.replace(/ /g, '__20__');
+            original = jQuery('#icl_tm_original_'+field).html();
 
-            if(jQuery('#icl_tm_editor input[name="'+field+'"]').length){
-                jQuery('#icl_tm_editor input[name="'+field+'"]').val(original);
-            }else if(jQuery('#icl_tm_editor textarea[name="'+field+'"]').length){
-                jQuery('#icl_tm_editor textarea[name="'+field+'"]').val(original);
+            if(jQuery('#'+field).length){
+                jQuery('#'+field).val(original);
+            }else if(jQuery('#'+field).length){
+                jQuery('#'+field).val(original);
             }
             /*jQuery('#icl_tm_editor *[name="'+field+'"]').val(original);    */
 

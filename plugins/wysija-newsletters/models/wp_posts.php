@@ -81,7 +81,7 @@ class WYSIJA_model_wp_posts extends WYSIJA_model{
         }
 
         // default selected fields
-        $post_fields = array('A.ID', 'A.post_title', 'A.post_content', 'A.post_excerpt');
+        $post_fields = array('A.ID', 'A.post_title', 'A.post_content', 'A.post_excerpt', 'A.post_author', 'A.post_type', 'A.post_status');
 
         // look for manual fields to select
         if(isset($args['post_fields']) && is_array($args['post_fields']) && !empty($args['post_fields'])) {
@@ -98,8 +98,8 @@ class WYSIJA_model_wp_posts extends WYSIJA_model{
         }
 
         // search by category
-        if((isset($args['category']) && $args['category'] !== NULL) || (isset($args['not_category']) && $args['not_category'] !== NULL)) {
-            $query_joins = 'JOIN `[wp]term_relationships` as B ON (A.ID = B.object_id) ';
+        if( (isset($args['category']) && !empty($args['category'])) || (isset($args['not_category']) && !empty($args['not_category'])) ) {
+            $query_joins = 'JOIN `[wp]term_relationships` B ON (A.ID = B.object_id) ';
             $query_joins .= 'JOIN `[wp]term_taxonomy` C ON (C.term_taxonomy_id = B.term_taxonomy_id) ';
 
             $query .= $query_joins;
@@ -182,10 +182,6 @@ class WYSIJA_model_wp_posts extends WYSIJA_model{
         $query_offset = (isset($args['query_offset']) ? (int)$args['query_offset'] : 0);
         $query_limit = ((isset($args['post_limit']) && (int)$args['post_limit'] > 0) ? (int)$args['post_limit'] : 10);
         $query .= sprintf(' LIMIT %d,%d', $query_offset, $query_limit);
-
-        // print $query."\n\n";
-
-        WYSIJA::log('post notif qry', $query,'post_notif');
 
         if($args['is_search_query'] === true) {
             return array(

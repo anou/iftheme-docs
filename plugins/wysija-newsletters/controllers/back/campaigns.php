@@ -1243,9 +1243,9 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back {
         }
         if (isset($_REQUEST['wysija']['email']['params']['googletrackingcode']) && $_REQUEST['wysija']['email']['params']['googletrackingcode'] &&
                 (!is_string($_REQUEST['wysija']['email']['params']['googletrackingcode']) OR
-                preg_match('#[^a-z0-9_-\s]#i', $_REQUEST['wysija']['email']['params']['googletrackingcode']) !== 0 )) {
+                preg_match('#[^a-z0-9_\-\s]#i', $_REQUEST['wysija']['email']['params']['googletrackingcode']) !== 0 )) {
             //force to simple text
-            $_REQUEST['wysija']['email']['params']['googletrackingcode'] = preg_replace('#[^a-z0-9_-\s]#i', '_', $_REQUEST['wysija']['email']['params']['googletrackingcode']);
+            $_REQUEST['wysija']['email']['params']['googletrackingcode'] = preg_replace('#[^a-z0-9_\-\s]#i', '_', $_REQUEST['wysija']['email']['params']['googletrackingcode']);
             $this->error(__('Your Google Campaign can only contain letters, number, spaces and hyphens!', WYSIJA), 1);
             return $this->editDetails();
         }
@@ -2545,12 +2545,17 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back {
             'sort_by' => 'newest'
         );
 
+        // backwards compatibility since we replaced the 'cpt' parameter by 'post_type' in 2.6
+        if(isset($_GET['cpt']) && strlen(trim($_GET['cpt'])) > 0) {
+            $params['post_type'] = trim($_GET['cpt']);
+        }
+
         // check if GET parameters are specified
         foreach ($params as $key => $value) {
             if (array_key_exists($key, $_GET)) {
                 switch ($key) {
                     case 'autopost_count':
-                        $params[$key] = (int) $_GET[$key];
+                        $params[$key] = (int)$_GET[$key];
                         break;
                     case 'author_label':
                     case 'category_label':
@@ -2559,7 +2564,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back {
                         $params[$key] = base64_decode($_GET[$key]);
                         break;
                     default:
-                        $params[$key] = $_GET[$key];
+                        $params[$key] = trim($_GET[$key]);
                 }
             }
         }
@@ -2731,6 +2736,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control_back {
     function _checkEmailExists($emailId) {
         $result = false;
         $modelEmail = WYSIJA::get('email', 'model');
+
         if ($modelEmail->exists(array('email_id' => $emailId)))
             $result = true;
 

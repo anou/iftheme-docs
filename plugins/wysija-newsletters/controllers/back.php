@@ -544,7 +544,7 @@ class WYSIJA_control_back extends WYSIJA_control{
         remove_action('admin_enqueue_scripts', 'wp_auth_check_load');
 
         // add popup css
-        wp_enqueue_style('custom_popup_css', WYSIJA_URL.'css/adminPopup.css');
+        wp_enqueue_style('custom_popup_css', WYSIJA_URL.'css/adminPopup.css', array(), WYSIJA::get_version(), 'screen');
 
         global $viewMedia;
         $viewMedia=$this->viewObj;

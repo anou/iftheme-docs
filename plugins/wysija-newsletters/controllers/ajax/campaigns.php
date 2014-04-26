@@ -83,14 +83,8 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
         $values['email_id'] = $email_id;
 
         $updated_email = $helper_wj_engine->getEmailData();
-        // check if we are dealing with an auto newsletter
-        if(isset($updated_email['params']['autonl']) && !empty($updated_email['params']['autonl'])) {
-            // update include/exclude category ids in autonl params so as to process post notifications
-            $values['params']['autonl']['include_category_ids'] = (array_key_exists('include_category_ids', $updated_email['params']['autonl']) ? $updated_email['params']['autonl']['include_category_ids'] : array());
-            $values['params']['autonl']['exclude_category_ids'] = (array_key_exists('exclude_category_ids', $updated_email['params']['autonl']) ? $updated_email['params']['autonl']['exclude_category_ids'] : array());
-        }
 
-        // wtf is that? could it explain the Sent On being updated for no reason?
+        // update modified_at timestamp
         $model_email->columns['modified_at']['autoup']=1;
 
         // update data in DB
@@ -300,9 +294,6 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
         $model_config = WYSIJA::get('config', 'model');
         $interpret_shortcode = (bool)$model_config->getValue('interp_shortcode');
 
-        // specify custom fields to get from posts
-        $params['post_fields'] = array('post_title', 'post_content', 'post_excerpt', 'post_author', 'post_type', 'post_status');
-
         // post statuses
         $helper_wp_tools = WYSIJA::get('wp_tools', 'helper');
         $post_statuses = $helper_wp_tools->get_post_statuses();
@@ -405,10 +396,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
         }
 
         // specify custom fields to get from posts
-        $post_params = array(
-            'include' => $post_ids,
-            'post_fields' => array('post_title', 'post_content', 'post_excerpt', 'post_author', 'post_type', 'post_status')
-        );
+        $post_params = array('include' => $post_ids);
 
         // include sort by parameter into post params
         $post_params['sort_by'] = $params['sort_by'];
@@ -916,7 +904,6 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
             }
 
             // get posts
-            $params['post_fields'] = array('post_title', 'post_content', 'post_excerpt', 'post_author');
             $model_wp_posts = WYSIJA::get('wp_posts','model');
             $posts = $model_wp_posts->get_posts($params);
 

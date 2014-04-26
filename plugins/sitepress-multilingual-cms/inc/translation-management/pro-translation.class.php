@@ -878,9 +878,10 @@ class ICL_Pro_Translation{
                                 $wpdb->update($wpdb->term_taxonomy, array('parent'=>$tmp['term_id']), array(
                                     'taxonomy'=>'category', 'term_id' => $_tr_child
                                 ));
+	                            $sitepress->update_terms_relationship_cache( array($category_parent_id, $tmp['term_id'], $_tr_child), 'category' );
                             }
-                        }                            
-                        delete_option('category_children');
+                        }
+//                        delete_option('category_children');
                     }
                 }else{
                     $term_taxonomy_id = $ecat->term_taxonomy_id;
@@ -984,9 +985,10 @@ class ICL_Pro_Translation{
                                         $wpdb->update($wpdb->term_taxonomy, array('parent'=>$tmp['term_id']), array(
                                             'taxonomy'=>$taxonomy, 'term_id' => $_tr_child
                                         ));
+	                                    $sitepress->update_terms_relationship_cache( array($tmp['term_id'], $_tr_child), $taxonomy );
                                     }
                                 }
-                                delete_option($taxonomy . '_children');
+//                                delete_option($taxonomy . '_children');
                             }
                         }else{
                             $term_taxonomy_id = $etag->term_taxonomy_id;

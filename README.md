@@ -5,7 +5,7 @@ You can find here docs and plug-ins used for iftheme.
 
 since *iftheme* **v3.0.0**, if you activate *GitHub Updater* plugin, you'll receive update notifications in WordPress admin directly. 
 
-**Be aware** when updating iftheme, that if you have made some **changes** to the original theme, **every custom work** will be **deleted** and replaced by the files from the update.
+**Be aware** when updating *iftheme*, that if you have made some **changes** to the original theme, **every custom work** will be **deleted** and replaced by the files from the update.
 
 
 

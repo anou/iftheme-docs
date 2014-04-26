@@ -20,7 +20,11 @@ if ( $element_id ) {
 		$element_lang_code = $res->language_code;
 	} else {
 		$element_lang_code = $current_language;
-		$trid              = $this->set_element_language_details( $element_id, $icl_element_type, null, $element_lang_code );
+
+		$translation_id = $this->set_element_language_details( $element_id, $icl_element_type, null, $element_lang_code );
+		//get trid of $translation_id
+		$trid = $wpdb->get_var( $wpdb->prepare( "SELECT trid FROM {$wpdb->prefix}icl_translations WHERE translation_id=%d", array( $translation_id) ) );
+
 	}
 } else {
 	$trid              = isset( $_GET[ 'trid' ] ) ? intval( $_GET[ 'trid' ] ) : false;

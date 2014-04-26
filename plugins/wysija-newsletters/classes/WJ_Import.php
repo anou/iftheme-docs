@@ -16,6 +16,7 @@ class WJ_Import extends WYSIJA_object {
     private $_data_to_insert = array();
     private $_number_list = 0;
     private $_data_numbers = array();
+    private $_line_delimiter = "\n";
     private $_duplicate_emails_count = array(); // detect the emails that are duplicates in the import file
     private $_csv_array = array(); // containing the csv into an array
     private $_ignored_row_count = 0; // the count of rows we ignore because there was no valid email present
@@ -309,7 +310,7 @@ class WJ_Import extends WYSIJA_object {
         $data = array();
 
         // the new way for splitting a string into an array of lines
-        $csv_data_array = preg_split ('/$\R?^/m', $csv_file_content);
+        $csv_data_array = explode( $this->_line_delimiter, $csv_file_content );
 
         $i=1;
         foreach($csv_data_array as $csv_line){
@@ -660,21 +661,21 @@ class WJ_Import extends WYSIJA_object {
      */
     private function _run_test_on_csv_file(){
         // try different set of enclosure and separator for the csv which can have different look depending on the data carried
-        $field_separators_to_test = array(',',';',"\t");
-        $field_enclosers_to_test = array('"','');
+        $field_separators_to_test = array( ',', ';', "\t" );
+        $field_enclosers_to_test = array( '"', '' );
         $this->_csv_data['fsep'] = false;
         $this->_csv_data['fenc'] = '';
         $helper_user = WYSIJA::get('user','helper');
+
         foreach($field_enclosers_to_test as $enclosure){
             foreach($field_separators_to_test as $fsep){
 
                 // testing different combinations of separator and enclosers
-                $this->_csv_array = $this->_csv_to_array($this->_csv_file_string , 10 , $fsep , $enclosure);
+                $this->_csv_array = $this->_csv_to_array( $this->_csv_file_string, 10, $fsep, $enclosure );
 
                 // make sure that our CSV has more than one row and that it has the same number of values in the first row and the second row
-                if((count($this->_csv_array) > 1 && count($this->_csv_array[0]) == count($this->_csv_array[1]))){
-
-                    if(count($this->_csv_array[0]) > 1 || $helper_user->validEmail(trim($this->_csv_array[0][0])) || $helper_user->validEmail(trim($this->_csv_array[1][0]))){
+                if ( ( count( $this->_csv_array ) > 1 && count( $this->_csv_array[0] ) == count( $this->_csv_array[1] ) ) ) {
+                    if ( count( $this->_csv_array[0] ) > 1 || $helper_user->validEmail( trim( $this->_csv_array[0][0] ) ) || $helper_user->validEmail( trim( $this->_csv_array[1][0] ) ) ) {
                         $this->_csv_data['fsep'] = $fsep;
                         $this->_csv_data['fenc'] = $enclosure;
                         break(2);
@@ -682,7 +683,6 @@ class WJ_Import extends WYSIJA_object {
                 }
             }
         }
-
 
          // if we didn't manage to find a separator in that file then it is not a csv file and we come out
         if(empty($this->_csv_data['fsep'])){

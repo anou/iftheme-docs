@@ -121,7 +121,7 @@ class WJ_Stats extends WYSIJA_object {
         $this->decoded_url = str_replace('&amp;', '&', $this->decoded_url);
         if ($this->is_browser_link($this->decoded_url)) {
             $this->decoded_url = $this->attach_user($this->decoded_url);
-        }                
+        }
         return $this->decoded_url;
     }
 
@@ -132,7 +132,7 @@ class WJ_Stats extends WYSIJA_object {
      * @return string
      */
     protected function attach_user($url) {
-	if (!empty($this->_user) && !empty($this->_user['user_id'])) {        
+	if (!empty($this->_user) && !empty($this->_user['user_id'])) {
             $url_components = parse_url($url);
             $arr_params = array();
             if (!empty($url_components['query']))
@@ -140,7 +140,7 @@ class WJ_Stats extends WYSIJA_object {
             if (empty($arr_params['user_id'])) {
                 $url .= ((strpos($url, '?') !== false) ? '&' : '?');
                 $url .= 'user_id='.$this->_user['user_id'];
-            }                    
+            }
         }
 	return $url;
     }
@@ -341,11 +341,11 @@ class WJ_Stats extends WYSIJA_object {
         $config = WYSIJA::get('config', 'model');
         return WYSIJA::get_permalink($config->getValue('confirm_email_link'), $params_url);
     }
-    
+
     /**
      * Detect if the current link is a browser link
      * @param string $url
-     * @return boolean 
+     * @return boolean
      */
     protected function is_browser_link($url) {
         $flag = false;
@@ -361,7 +361,7 @@ class WJ_Stats extends WYSIJA_object {
                     $flag = true;
                 }
             }
-        }        
+        }
         return $flag;
     }
 

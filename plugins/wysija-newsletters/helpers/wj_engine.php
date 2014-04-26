@@ -406,12 +406,18 @@ class WYSIJA_help_wj_engine extends WYSIJA_object {
 
         // check if there are posts to display
         if(empty($posts)) {
-            // if not, display a message stating that the latest content has been sent
+            // set background color
+            $background_color = '';
+            if(isset($params['bgcolor1'])) {
+                $background_color = $params['bgcolor1'];
+            }
+
+            // display a message stating that the latest content has been sent
             $block = array(
                 'no-block' => true,
                 'type' => 'content',
                 'alignment' => 'center',
-                'background_color' => $params['bgcolor1'],
+                'background_color' => $background_color,
                 'image' => null,
                 'text' => array('value' => base64_encode(__('Latest content already sent.', WYSIJA)))
             );
@@ -1070,7 +1076,7 @@ class WYSIJA_help_wj_engine extends WYSIJA_object {
                     if($pairs['key'] === 'category_ids') {
                         $pair_value = trim($pairs['value']);
                         if(!empty($pair_value)) {
-                            $category_ids = explode(',', trim($pairs['value']));
+                            $category_ids = array_map('intval', explode(',', trim($pairs['value'])));
                         }
                     }
                     // store category condition (include / exclude) for same above reason.
@@ -1083,10 +1089,10 @@ class WYSIJA_help_wj_engine extends WYSIJA_object {
                 // make sure we store category_ids
                 if(!empty($category_ids)) {
                     if($category_condition === 'include') {
-                        $include_category_ids = array_unique(array_merge($include_category_ids, $category_ids));
+                        $include_category_ids = array_unique($category_ids);
                     }
                     if($category_condition === 'exclude') {
-                        $exclude_category_ids = array_unique(array_merge($exclude_category_ids, $category_ids));
+                        $exclude_category_ids = array_unique($category_ids);
                     }
                 }
 
@@ -1113,6 +1119,8 @@ class WYSIJA_help_wj_engine extends WYSIJA_object {
                 // exclude already sent post ids from selection
                 if(!empty($email['params']['autonl']['articles']['ids'])) {
                     $params['exclude'] = $email['params']['autonl']['articles']['ids'];
+                } else {
+                    $email['params']['autonl']['articles']['ids'] = array();
                 }
 
                 //we set the post_date to filter articles only older than that one
@@ -1122,7 +1130,7 @@ class WYSIJA_help_wj_engine extends WYSIJA_object {
 
                  // if immediate let it know to the get post
                 if(isset($email['params']['autonl']['articles']['immediatepostid'])){
-                    $params['include'] = $email['params']['autonl']['articles']['immediatepostid'];
+                    $params['include'] = (int)$email['params']['autonl']['articles']['immediatepostid'];
                     $params['post_limit'] = 1;
                 }else{
                     //we set the post_date to filter articles only older than the last time we sent articles
@@ -1146,9 +1154,6 @@ class WYSIJA_help_wj_engine extends WYSIJA_object {
                 $params['include_category_ids'] = $include_category_ids;
                 $params['exclude_category_ids'] = $exclude_category_ids;
 
-                // define which fields are required from the posts
-                $params['post_fields'] = array('post_title', 'post_content', 'post_excerpt', 'post_author');
-
                 // check for already inserted posts
                 if(!empty($post_ids)) {
                     $params['exclude'] = $post_ids;
@@ -1157,10 +1162,6 @@ class WYSIJA_help_wj_engine extends WYSIJA_object {
                 // get posts for this block
                 $model_wp_posts = WYSIJA::get('wp_posts','model');
                 $posts = $model_wp_posts->get_posts($params);
-
-                // cleanup post and get image
-                //$post_ids = array();
-                //$post_count = 0;
 
                 // check if we have posts to display
                 if(!empty($posts)) {
@@ -1201,9 +1202,6 @@ class WYSIJA_help_wj_engine extends WYSIJA_object {
                     $blockHTML = $this->renderEmailAutoPost($posts, $params);
                 }
 
-                // update email post ids sent
-                //$email['params']['autonl']['articles']['ids'] = array_unique(array_merge($email['params']['autonl']['articles']['ids'], $post_ids));
-
                 $this->setEmailData($email);
             } else {
                 // set styles
@@ -1226,11 +1224,7 @@ class WYSIJA_help_wj_engine extends WYSIJA_object {
 
         if($newsletter_type === 'automatic') {
             $email = $this->getEmailData();
-
-            // store category ids
-            $email['params']['autonl']['include_category_ids'] = $include_category_ids;
-            $email['params']['autonl']['exclude_category_ids'] = $exclude_category_ids;
-
+            // set auto newsletter parameters
             $email['params']['autonl']['articles']['count'] = $post_count;
             $email['params']['autonl']['articles']['first_subject'] = $first_subject;
             $email['params']['autonl']['articles']['ids'] = array_unique(array_merge($email['params']['autonl']['articles']['ids'], $post_ids));

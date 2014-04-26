@@ -1,17 +1,18 @@
 <?php
 /*
 Plugin Name: WPML Multilingual CMS
-Plugin URI: http://wpml.org/
-Description: WPML Multilingual CMS. <a href="http://wpml.org">Documentation</a>.
+Plugin URI: https://wpml.org/
+Description: WPML Multilingual CMS. <a href="https://wpml.org">Documentation</a>.
 Author: ICanLocalize
-Author URI: http://wpml.org
-Version: 3.1
+Author URI: https://wpml.org
+Version: 3.1.5b3
 */
 
 if(preg_match('#' . basename(__FILE__) . '#', $_SERVER['PHP_SELF'])) { die('You are not allowed to call this page directly.'); }
 
 if(defined('ICL_SITEPRESS_VERSION')) return;
-define('ICL_SITEPRESS_VERSION', '3.1');
+define('ICL_SITEPRESS_VERSION', '3.1.5');
+define('ICL_SITEPRESS_DEV_VERSION', '3.1.5b3');
 define('ICL_PLUGIN_PATH', dirname(__FILE__));
 define('ICL_PLUGIN_FOLDER', basename(ICL_PLUGIN_PATH));
 
@@ -102,7 +103,7 @@ if(
     require ICL_PLUGIN_PATH . '/inc/wp-login-filters.php';
     
     require_once ICL_PLUGIN_PATH . '/inc/plugins-integration.php';
-    
+
 }
 
 if(!empty($sitepress_settings['automatic_redirect'])){

@@ -29,9 +29,6 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
             case 'log':
             case 'save':
             case 'clearlog':
-
-                wp_enqueue_script('jquery-qtip', WYSIJA_URL.'js/qtip2/jquery.qtip.min.js', array('jquery'), WYSIJA::get_version());
-                wp_enqueue_style('jquery-qtip-css', WYSIJA_URL.'css/qtip2/jquery.qtip.min.css');
                 wp_enqueue_script('wysija-config-settings', WYSIJA_URL.'js/admin-config-settings.js', array('wysija-admin-js-global'), WYSIJA::get_version());
                 wp_localize_script('wysija-config-settings', 'mpEmailCheck', WJ_Utils::get_tip_data());
                 wp_enqueue_script('jquery-cookie', WYSIJA_URL.'js/jquery/jquery.cookie.js', array('jquery'), WYSIJA::get_version());
@@ -62,9 +59,9 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
                 return;
                 break;
             default:
-                wp_enqueue_script( 'jquery-qtip', WYSIJA_URL.'js/qtip2/jquery.qtip.min.js', array('jquery'), WYSIJA::get_version());
-                wp_enqueue_style('jquery-qtip-css', WYSIJA_URL.'css/qtip2/jquery.qtip.min.css');
-                wp_enqueue_script('wysija-config-settings', WYSIJA_URL.'js/admin-config-settings.js', array('wysija-admin-js-global', 'jquery-qtip'), WYSIJA::get_version());
+                wp_enqueue_script( 'mailpoet.tooltip', WYSIJA_URL . 'js/vendor/bootstrap.tooltip.js', array( 'jquery' ), WYSIJA::get_version(), true );
+                wp_enqueue_style( 'mailpoet.tooltip', WYSIJA_URL . 'css/vendor/bootstrap.tooltip.css', array(), WYSIJA::get_version(), 'screen' );
+                wp_enqueue_script('wysija-config-settings', WYSIJA_URL.'js/admin-config-settings.js', array('wysija-admin-js-global'), WYSIJA::get_version(), true);
                 wp_localize_script('wysija-config-settings', 'mpEmailCheck', WJ_Utils::get_tip_data());
                 wp_enqueue_script('jquery-cookie', WYSIJA_URL.'js/jquery/jquery.cookie.js', array('jquery'), WYSIJA::get_version());
         }

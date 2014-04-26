@@ -12,14 +12,17 @@
     $current_translator = $iclTranslationManagement->get_current_translator();
     $icl_translation_filter['translator_id'] = $current_translator->translator_id;
     $icl_translation_filter['include_unassigned'] = true;
-    
-    if(isset($_GET['updated'])){
-        $user_message = __('Translation updated: ', 'wpml-translation-management') . TranslationManagement::tm_post_link(intval($_GET['updated']));                
-        $iclTranslationManagement->messages[] = array('type'=>'updated', 'text' => $user_message);        
-    }elseif(isset($_GET['added'])){
-        $user_message = __('Translation added: ', 'wpml-translation-management') . TranslationManagement::tm_post_link(intval($_GET['added']));        
-        $iclTranslationManagement->messages[] = array('type'=>'updated', 'text' => $user_message);        
-    }
+
+		if ( isset( $_GET[ 'updated' ] ) ) {
+			$user_message                          = __( 'Translation updated: ', 'wpml-translation-management' ) . TranslationManagement::tm_post_link( intval( $_GET[ 'updated' ] ) );
+			$iclTranslationManagement->messages[ ] = array( 'type' => 'updated', 'text' => $user_message );
+		} elseif ( isset( $_GET[ 'added' ] ) ) {
+			$user_message                          = __( 'Translation added: ', 'wpml-translation-management' ) . TranslationManagement::tm_post_link( intval( $_GET[ 'added' ] ) );
+			$iclTranslationManagement->messages[ ] = array( 'type' => 'updated', 'text' => $user_message );
+		} elseif ( isset( $_GET[ 'job-cancelled' ] ) ) {
+			$user_message                          = __( 'Translation has been removed by admin', 'wpml-translation-management' );
+			$iclTranslationManagement->messages[ ] = array( 'type' => 'error', 'text' => $user_message );
+		}
     
     if(!empty($current_translator->language_pairs)){
         $_langs_to = array();

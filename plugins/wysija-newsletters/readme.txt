@@ -2,8 +2,8 @@
 Contributors: wysija, kgjerstad, benheu, JoN1oP, badshark, tung-wysija, bordoni
 Tags: newsletter, newsletters, wysija, newsletter signup, newsletter widget, subscribers, post notification, email subscription, email alerts, automatic newsletter, auto newsletter, autoresponder, follow up, email, marketing, emailing, subscription, mail poet, mailpoet
 Requires at least: 3.3
-Tested up to: 3.8.1
-Stable tag: 2.6.2
+Tested up to: 3.9
+Stable tag: 2.6.5
 Send newsletters, post notifications or autoresponders from WordPress easily, and beautifully.
 
 == Description ==
@@ -132,6 +132,24 @@ Our [support site](http://support.mailpoet.com/) has plenty of articles and a ti
 7. Importing subscribers with a CSV.
 
 == Changelog ==
+
+= 2.6.5 - 2014-04-18 =
+* Fixed TinyMCE issue with WordPress 3.9, our editor in Step 2 is working again
+* Fixed conflicting shortcode between MailPoet's custom fields and Ultimate TinyMCE shortcode
+
+= 2.6.4 - 2014-04-17 =
+* Fixed compatibility issue with WordPress 3.9: the TinyMCE editor in WordPress Posts edition page was broken
+* Fixed regular expression on Google analytics tracking code (Premium only)
+* Fixed the importing method, compatible to more CSV formats
+* Hey, we still have an issue with WordPress 3.9, our tinyMCE editor in Step 2 of the newsletter edition is not working properly (buttons are not usable)
+* No need to report us that issue, we're already working hard to fix it. Thanks for your patience! :)
+
+= 2.6.3 - 2014-04-16 =
+* Fixed filters on Automated Latest Content for Taxonomies and Post Types
+* Fixed White Screen on What's New page after updating
+* Fixed display bug, image sitting on top of the text editor in the Step2 of newsletter edition
+* Added support for `mysqli` of WordPress 3.9
+* Replaced The tooltip script "qTip2" in favor of "Bootstrap's Tooltip" (JavaScript Library)
 
 = 2.6.2 - 2014-04-01 =
 * Fixed Javascript conflict breaking some of WordPress post editor function (add media upload, etc ...)

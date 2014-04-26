@@ -7,19 +7,23 @@ class WPML_Config
 	{
 		global $pagenow;
 
-		if ( !( is_admin() && !is_ajax() && ( !isset( $_POST[ 'action' ] ) || $_POST[ 'action' ] != 'heartbeat' ) ) ) {
+		if ( !( is_admin() && !wpml_is_ajax() && ( !isset( $_POST[ 'action' ] ) || $_POST[ 'action' ] != 'heartbeat' ) ) ) {
 			return;
 		}
 
 		$white_list_pages = array(
-			'sitepress-multilingual-cms/menu/languages.php',
-			'sitepress-multilingual-cms/menu/theme-localization.php',
-			'wpml-string-translation/menu/string-translation.php',
-			'wpml-translation-management/menu/main.php',
 			'theme_options',
 			'plugins.php',
 			'themes.php',
+			ICL_PLUGIN_FOLDER . '/menu/languages.php',
+			ICL_PLUGIN_FOLDER . '/menu/theme-localization.php',
 		);
+		if (defined('WPML_ST_FOLDER')) {
+			$white_list_pages[] = WPML_ST_FOLDER . '/menu/string-translation.php';
+		}
+		if(defined('WPML_TM_FOLDER')) {
+			$white_list_pages[] = WPML_TM_FOLDER . '/menu/main.php';
+		}
 
 		//Runs the load config process only on specific pages
 		$current_page = isset($_GET[ 'page' ]) ? $_GET[ 'page' ] : null;
@@ -321,25 +325,56 @@ class WPML_Config
 	 */
 	protected static function parse_custom_types( $config )
 	{
-		global $sitepress, $sitepress_settings, $iclTranslationManagement;
+		global $sitepress, $iclTranslationManagement;
 		$cf = array();
+		$custom_posts_sync_option = array();
+
 		if ( !empty( $config[ 'wpml-config' ][ 'custom-types' ] ) ) {
 			if ( !is_numeric( key( current( $config[ 'wpml-config' ][ 'custom-types' ] ) ) ) ) {
 				$cf[ 0 ] = $config[ 'wpml-config' ][ 'custom-types' ][ 'custom-type' ];
 			} else {
 				$cf = $config[ 'wpml-config' ][ 'custom-types' ][ 'custom-type' ];
 			}
+
 			foreach ( $cf as $c ) {
+
 				$translate = intval( $c[ 'attr' ][ 'translate' ] );
-				if ( $translate ) {
+				$iclTranslationManagement->settings[ 'custom_types_readonly_config' ][ $c[ 'value' ] ]	= $translate;
+				$custom_posts_sync_option[ 'custom_posts_sync_option' ][ $c[ 'value' ] ]				= $translate;
+
+				if ( $translate == 1) {
 					$sitepress->verify_post_translations( $c[ 'value' ] );
+					$iclTranslationManagement->save_settings();
 				}
-				$iclTranslationManagement->settings[ 'custom_types_readonly_config' ][ $c[ 'value' ] ] = $translate;
-				$sitepress_settings[ 'custom_posts_sync_option' ][ $c[ 'value' ] ]                     = $translate;
+
 			}
 
-			add_filter( 'get_translatable_documents', array( $iclTranslationManagement, '_override_get_translatable_documents' ) );
+			$sitepress->save_settings( $custom_posts_sync_option );
+
+			// add_filter( 'get_translatable_documents', array( $iclTranslationManagement, '_override_get_translatable_documents' ) );
 		}
+
+
+		// custom post types - check what's been removed
+		if ( !empty( $iclTranslationManagement->settings[ 'custom_types_readonly_config' ] ) ) {
+			$config_values = array();
+			foreach ( $cf as $config_value ) {
+				$config_values[ $config_value[ 'value' ] ] = $config_value[ 'attr' ][ 'translate' ];
+			}
+			$do_save = false;
+			foreach ( $iclTranslationManagement->settings[ 'custom_types_readonly_config' ] as $tconf => $tconf_val ) {
+				if ( !isset( $config_values[ $tconf ] ) ) {
+					unset( $iclTranslationManagement->settings[ 'custom_types_readonly_config' ][ $tconf ] );
+					$do_save = true;
+				}
+			}
+			if ( $do_save ) {
+				$iclTranslationManagement->save_settings();
+			}
+		}
+
+
+
 	}
 
 	/**
@@ -349,8 +384,9 @@ class WPML_Config
 	 */
 	protected static function parse_taxonomies( $config )
 	{
-		global $sitepress, $sitepress_settings, $iclTranslationManagement;
+		global $sitepress, $iclTranslationManagement;
 		$cf = array();
+		$taxonomies_sync_option = array();
 
 		if ( !empty( $config[ 'wpml-config' ][ 'taxonomies' ] ) ) {
 			if ( !is_numeric( key( current( $config[ 'wpml-config' ][ 'taxonomies' ] ) ) ) ) {
@@ -361,19 +397,19 @@ class WPML_Config
 
 			foreach ( $cf as $c ) {
 
-				// did this exist before?
-				$empty_before = empty( $iclTranslationManagement->settings[ 'taxonomies_readonly_config' ][ $c[ 'value' ] ] );
-
-				$translate                                                                           = intval( $c[ 'attr' ][ 'translate' ] );
-				$iclTranslationManagement->settings[ 'taxonomies_readonly_config' ][ $c[ 'value' ] ] = $translate;
-				$sitepress_settings[ 'taxonomies_sync_option' ][ $c[ 'value' ] ]                     = $translate;
+				$translate  																			= intval( $c[ 'attr' ][ 'translate' ] );
+				$iclTranslationManagement->settings[ 'taxonomies_readonly_config' ][ $c[ 'value' ] ]	= $translate;
+				$taxonomies_sync_option[ 'taxonomies_sync_option' ][ $c[ 'value' ] ]					= $translate;
 
 				// this has just changed. save.
-				if ( $translate == 1 && $empty_before ) {
+				if ( $translate == 1 ) {
 					$sitepress->verify_taxonomy_translations( $c[ 'value' ] );
 					$iclTranslationManagement->save_settings();
 				}
 			}
+
+			$sitepress->save_settings( $taxonomies_sync_option );
+
 			add_filter( 'get_translatable_taxonomies', array( $iclTranslationManagement, '_override_get_translatable_taxonomies' ) );
 		}
 
@@ -465,10 +501,6 @@ class WPML_Config
 				$arr_options = array();
 				if ( isset( $arr ) && is_array( $arr ) ) {
 					foreach ( $arr as $key => $v ) {
-						// http://forum.wpml.org/topic.php?id=4888&replies=7#post-23038
-						// http://forum.wpml.org/topic.php?id=4615
-						// http://forum.wpml.org/topic.php?id=4761
-
 						remove_filter( 'option_' . $key, 'icl_st_translate_admin_string' ); // dont try to translate this one below
 						$value = get_option( $key );
 						add_filter( 'option_' . $key, 'icl_st_translate_admin_string' ); // put the filter back on

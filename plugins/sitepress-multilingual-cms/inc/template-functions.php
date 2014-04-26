@@ -41,36 +41,48 @@ function icl_get_languages($a='') {
     return $langs;
 }
 
-function icl_disp_language($native_name, $translated_name,
-        $lang_native_hidden = false, $lang_translated_hidden = false) {
-    if (!$native_name && !$translated_name) {
-        $ret = '';
-    } elseif ($native_name && $translated_name) {
-        $hidden1 = $hidden2 = $hidden3 = '';
-        if ($lang_native_hidden) {
-            $hidden1 = 'style="display:none;"';
-        }
-        if ($lang_translated_hidden) {
-            $hidden2 = 'style="display:none;"';
-        }
-        if ($lang_native_hidden && $lang_translated_hidden) {
-            $hidden3 = 'style="display:none;"';
-        }
+function icl_disp_language( $native_name, $translated_name = false, $lang_native_hidden = false, $lang_translated_hidden = false ) {
+	$ret = '';
 
-        if ($native_name != $translated_name) {
-            $ret = '<span ' . $hidden1 . ' class="icl_lang_sel_native">' . $native_name .
-                    '</span> <span ' . $hidden2 . ' class="icl_lang_sel_translated"><span ' . $hidden1 . ' class="icl_lang_sel_native">(</span>' . $translated_name .
-                    '<span ' . $hidden1 . ' class="icl_lang_sel_native">)</span></span>';
-        } else {
-            $ret = '<span ' . $hidden3 . ' class="icl_lang_sel_current">' . $native_name . '</span>';
-        }
-    } elseif ($native_name) {
-        $ret = $native_name;
-    } elseif ($translated_name) {
-        $ret = $translated_name;
-    }
+	if ( !$native_name && !$translated_name ) {
+		$ret = '';
+	} elseif ( $native_name && $translated_name ) {
+		$hidden1 = $hidden2 = $hidden3 = '';
+		if ( $lang_native_hidden ) {
+			$hidden1 = 'style="display:none;"';
+		}
+		if ( $lang_translated_hidden ) {
+			$hidden2 = 'style="display:none;"';
+		}
+		if ( $lang_native_hidden && $lang_translated_hidden ) {
+			$hidden3 = 'style="display:none;"';
+		}
 
-    return $ret;
+		if ( $native_name != $translated_name ) {
+			$ret =
+				'<span ' .
+				$hidden1 .
+				' class="icl_lang_sel_native">' .
+				$native_name .
+				'</span> <span ' .
+				$hidden2 .
+				' class="icl_lang_sel_translated"><span ' .
+				$hidden1 .
+				' class="icl_lang_sel_native">(</span>' .
+				$translated_name .
+				'<span ' .
+				$hidden1 .
+				' class="icl_lang_sel_native">)</span></span>';
+		} else {
+			$ret = '<span ' . $hidden3 . ' class="icl_lang_sel_current">' . $native_name . '</span>';
+		}
+	} elseif ( $native_name ) {
+		$ret = $native_name;
+	} elseif ( $translated_name ) {
+		$ret = $translated_name;
+	}
+
+	return $ret;
 }
 
 function icl_link_to_element($element_id, $element_type='post', $link_text='',
@@ -186,6 +198,14 @@ function icl_link_to_element($element_id, $element_type='post', $link_text='',
     }
 }
 
+/**
+ * @param int    $element_id                 Use term_id for taxonomies, post_id for posts
+ * @param string $element_type               Use comment, post, page, {custom post time name}, nav_menu, nav_menu_item, category, post_tag, etc.
+ * @param bool   $return_original_if_missing If set to true it will always return a value (the original value, if translation is missing)
+ * @param null   $ulanguage_code             If missing, it will use the current language, if set to a language code, it will return a translation for that language code (or the original, if missing and $return_original_if_missing is set to true).
+ *
+ * @return bool|mixed|null|string
+ */
 function icl_object_id($element_id, $element_type='post', $return_original_if_missing=false, $ulanguage_code=null) {
     global $sitepress, $wpdb, $wp_post_types, $wp_taxonomies;
 
@@ -199,9 +219,9 @@ function icl_object_id($element_id, $element_type='post', $return_original_if_mi
     }
     //
 
-	$cache_key_args = array($element_id, $element_type, $return_original_if_missing, $ulanguage_code);
-	$cache_key = implode(':', array_filter($cache_key_args));
-	$cache_group = 'icl_object_id';
+	$cache_key_args = array_filter( array( $element_id, $element_type, $return_original_if_missing, $ulanguage_code ) );
+	$cache_key      = md5( json_encode( $cache_key_args ) );
+	$cache_group    = 'icl_object_id';
 
 	$ret_element_id = wp_cache_get($cache_key, $cache_group);
 	if($ret_element_id) return $ret_element_id;
@@ -230,8 +250,8 @@ function icl_object_id($element_id, $element_type='post', $return_original_if_mi
     }
 
     if (in_array($element_type, $taxonomies)) {
-        $icl_element_id = $wpdb->get_var($wpdb->prepare("SELECT term_taxonomy_id FROM {$wpdb->term_taxonomy} WHERE term_id= %d AND taxonomy='{$element_type}'",
-                        $element_id));
+		$icl_element_id_prepared = $wpdb->prepare( "SELECT term_taxonomy_id FROM {$wpdb->term_taxonomy} WHERE term_id=%d AND taxonomy=%s", array($element_id, $element_type) );
+		$icl_element_id = $wpdb->get_var( $icl_element_id_prepared );
     } else {
         $icl_element_id = $element_id;
     }
@@ -250,8 +270,8 @@ function icl_object_id($element_id, $element_type='post', $return_original_if_mi
     if (isset($translations[$ulanguage_code]->element_id)) {
         $ret_element_id = $translations[$ulanguage_code]->element_id;
         if (in_array($element_type, $taxonomies)) {
-            $ret_element_id = $wpdb->get_var($wpdb->prepare("SELECT t.term_id FROM {$wpdb->term_taxonomy} tx JOIN {$wpdb->terms} t ON t.term_id = tx.term_id WHERE tx.term_taxonomy_id = %d AND tx.taxonomy='{$element_type}'",
-                            $ret_element_id));
+			$ret_element_id_prepared = $wpdb->prepare( "SELECT t.term_id FROM {$wpdb->term_taxonomy} tx JOIN {$wpdb->terms} t ON t.term_id = tx.term_id WHERE tx.term_taxonomy_id = %d AND tx.taxonomy=%s", array($ret_element_id, $element_type) );
+			$ret_element_id = $wpdb->get_var( $ret_element_id_prepared );
         }
     } else {
         $ret_element_id = $return_original_if_missing ? $element_id : null;
@@ -422,10 +442,11 @@ function wpml_cf_translation_preferences_store($id, $custom_field) {
  *
  * This should be used to popupate any custom field controls when
  * a new translation is selected and the field is marked as "copy" (sync)
- * 
+ *
  * @param array $fields
+ *
+ * @return array
  */
-
 function wpml_get_copied_fields_for_post_edit( $fields = array() ) {
     global $sitepress, $wpdb, $sitepress_settings, $pagenow;
     
@@ -565,3 +586,56 @@ function wpml_custom_post_translation_options($type_id){
     return $out;
     
 }
+
+
+/**
+ * Choose appropriate template file when paged and not default language
+ *
+ * Some fix when somebody uses 'page_on_front', set page with custom Template,
+ * this page has Loop of posts. Before that, when you changed language to
+ * non-default and paged, WPML looses page Template and uses index.php from theme
+ *
+ * @since 3.1.5
+ *
+ * @param string $template Template path retrieved from @see wp-includes/template-loader.php
+ *
+ * @return string New template path (or default)
+ *
+ */
+function icl_template_paged($template) {
+   global $wp_query, $sitepress;
+   
+   // we don't want to run this on default language 
+   if (ICL_LANGUAGE_CODE == icl_get_default_language()) return $template;
+   
+   // seems WPML overwrite 'page' param too early, let's fix this
+   if ( $sitepress->get_setting('language_negotiation_type') == 3) {
+       set_query_var('page', get_query_var('paged'));
+   }
+   
+   
+   // if template is chosen correctly there is no need to change it
+   if ($template != get_home_template()) return $template;
+   
+   // this is a place where real error occurs. on paged page result we loose 
+   // $wp_query->queried_object. so if it set correctly, there is no need to 
+   // change template
+   if ($wp_query->get_queried_object() != null) return $template;
+   
+   // does our site really use custom page as front page?
+   if (1 > intval( get_option('page_on_front') )) return $template;
+   
+   // get template slug for custom page chosen as front page
+   $template_slug = get_page_template_slug( get_option('page_on_front') );
+   
+   $templates = array();
+   
+   $templates[] = $template_slug;
+   
+   $template = get_query_template( 'page', $templates );
+       
+   return $template;
+}
+
+// apply this filter only on non default language
+add_filter('template_include', 'icl_template_paged');

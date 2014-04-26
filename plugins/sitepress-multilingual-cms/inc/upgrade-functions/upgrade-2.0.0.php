@@ -74,8 +74,8 @@ function icl_upgrade_2_0_0_steps($step, $stepper){
 
             //loop existing translations
 			if ( isset( $types ) ) {
-				$res = mysql_query("SELECT * FROM {$wpdb->prefix}icl_translations WHERE element_type IN('".join("','", $types)."') AND source_language_code IS NULL LIMIT " . $limit . "  OFFSET " . $offset);
-				while($row = mysql_fetch_object($res)){
+				$res = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}icl_translations WHERE element_type IN('".join("','", $types)."') AND source_language_code IS NULL LIMIT " . $limit . "  OFFSET " . $offset); // @since 3.1.5 - mysql_* function deprecated in php 5.5+
+				foreach( $res as $row){
 					$processing = TRUE;
 					// grab translations
 					$translations = $sitepress->get_element_translations($row->trid, $row->element_type);
@@ -152,7 +152,7 @@ function icl_upgrade_2_0_0_steps($step, $stepper){
 							));
 
 							$job_id = $TranslationManagement->add_translation_job($newrid, $translator_id , $translation_package);
-							if($status == 10){
+							if($job_id && $status == 10){
 								$post = get_post($t->element_id);
 								$TranslationManagement->save_job_fields_from_post($job_id, $post);
 							}
@@ -183,7 +183,7 @@ function icl_upgrade_2_0_0_steps($step, $stepper){
                 	$sitepress->save_settings($iclsettings);
 				}
 
-                mysql_query("DROP TABLE {$wpdb->prefix}icl_plugins_texts");
+                $wpdb->query("DROP TABLE {$wpdb->prefix}icl_plugins_texts");
             }
 
             $iclsettings['language_selector_initialized'] = 1;
@@ -223,10 +223,13 @@ if(empty($iclsettings['migrated_2_0_0'])){
 
 
 function icl_migrate_2_0_0() {
+	$ajax_action = 'wpml_upgrade_2_0_0';
+	$ajax_action_none = wp_create_nonce($ajax_action);
+	$link = 'index.php?icl_ajx_action=' . $ajax_action . '&nonce=' . $ajax_action_none;
     $txt = get_option('icl_temp_upgrade_data', FALSE) ? __('Resume Upgrade Process', 'sitepress') : __('Run Upgrade Process', 'sitepress');
     echo '<div class="message error" id="icl-migrate"><p><strong>'.__('WPML requires database upgrade', 'sitepress').'</strong></p>'
-            .'<p>' . __('This normally takes a few seconds, but may last up to several minutes of very large databases.', 'sitepress') . '</p>' 
-            . '<p><a href="index.php?icl_ajx_action=wpml_upgrade_2_0_0" style="" id="icl-migrate-start">' . $txt . '</a></p>'
+            .'<p>' . __('This normally takes a few seconds, but may last up to several minutes of very large databases.', 'sitepress') . '</p>'
+            . '<p><a href="' . $link . '" style="" id="icl-migrate-start">' . $txt . '</a></p>'
             . '<div id="icl-migrate-progress" style="display:none; margin: 10px 0 20px 0;">'
             . '</div></div>';
 }

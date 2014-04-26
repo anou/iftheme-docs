@@ -4,50 +4,18 @@
     <h2><?php _e('Support', 'sitepress') ?></h2>
     
     <p style="margin-top: 20px;">
-        <?php _e('Technical support for clients is available via <a target="_blank" href="http://forum.wpml.org">WPML forum</a>.','sitepress'); ?>
+        <?php _e('Technical support for clients is available via <a target="_blank" href="https://wpml.org/forums/">WPML forums</a>.','sitepress'); ?>
     </p>
 
     <?php
     
     // Installer plugin active?
-    $installer_on = defined('WPRC_VERSION') && WPRC_VERSION;
 
-    $wp_plugins = get_plugins();
-	$wpml_plugins_list = array(
-		'WPML Multilingual CMS'       => array( 'installed' => false,'active'=>false,'file'=>false, 'plugin'=>false, 'slug'=>'sitepress-multilingual-cms' ),
-		'WPML CMS Nav'                => array( 'installed' => false,'active'=>false,'file'=>false, 'plugin'=>false, 'slug'=>'wpml-cms-nav' ),
-		'WPML String Translation'     => array( 'installed' => false,'active'=>false,'file'=>false, 'plugin'=>false, 'slug'=>'wpml-string-translation' ),
-		'WPML Sticky Links'           => array( 'installed' => false,'active'=>false,'file'=>false, 'plugin'=>false, 'slug'=>'wpml-sticky-links' ),
-		'WPML Translation Management' => array( 'installed' => false,'active'=>false,'file'=>false, 'plugin'=>false, 'slug'=>'wpml-translation-management' ),
-		'WPML Translation Analytics'  => array( 'installed' => false,'active'=>false,'file'=>false, 'plugin'=>false, 'slug'=>'wpml-translation-analytics' ),
-		'WPML XLIFF'                  => array( 'installed' => false,'active'=>false,'file'=>false, 'plugin'=>false, 'slug'=>'wpml-xliff' ),
-		'WPML Media'                  => array( 'installed' => false,'active'=>false,'file'=>false, 'plugin'=>false, 'slug'=>'wpml-media' ),
-		'WooCommerce Multilingual'    => array( 'installed' => false,'active'=>false,'file'=>false, 'plugin'=>false, 'slug'=>'woocommerce-multilingual' ),
-		'JigoShop Multilingual'       => array( 'installed' => false,'active'=>false,'file'=>false, 'plugin'=>false, 'slug'=>'jigoshop-multilingual' ),
-		'Gravity Forms Multilingual'  => array( 'installed' => false,'active'=>false,'file'=>false, 'plugin'=>false, 'slug'=>'gravityforms-multilingual' ),
-		'CRED Frontend Translation'   => array( 'installed' => false,'active'=>false,'file'=>false, 'plugin'=>false, 'slug'=>'cred-frontend-translation' ),
-		'Installer'                   => array( 'installed' => false,'active'=>false,'file'=>false, 'plugin'=>false, 'slug'=>'installer' ),
-	);
+	$wpml_plugins_list = SitePress::get_installed_plugins();
+	$installer_on = defined('WPRC_VERSION') && WPRC_VERSION;
 
-	$wpml_plugins = false;
-
-	foreach($wpml_plugins_list as $wpml_plugin_name => $v){
-        $found = false;
-        foreach($wp_plugins as $file => $plugin){
-			$plugin_name = $plugin[ 'Name' ];
-			if( $plugin_name == $wpml_plugin_name){
-				$wpml_plugins_list[ $plugin_name ]['installed'] = true;
-				$wpml_plugins_list[ $plugin_name ]['plugin'] = $plugin;
-				$wpml_plugins_list[ $plugin_name ]['file'] = $file;
-                $found = true;
-            }
-        }
-    }
-
-    unset($wp_plugins);
-    
     echo '
-        <table class="widefat" style="width:400px;">
+        <table class="widefat" style="width: auto;">
             <thead>
                 <tr>    
                     <th>' . __('Plugin Name', 'sitepress') . '</th>
@@ -112,7 +80,7 @@
                 <br />
                 <p>
                     <a class="button-primary" href="http://wp-compatibility.com/installer-plugin/">' . __('Download Installer', 'sitepress') . '</a>&nbsp;
-                    <a href="http://wpml.org/faq/install-wpml/#2">' . __('Instructions', 'sitepress') . '</a>
+                    <a href="https://wpml.org/faq/install-wpml/#2">' . __('Instructions', 'sitepress') . '</a>
                 </p>
             </div>
         ';

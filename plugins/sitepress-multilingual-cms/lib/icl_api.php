@@ -475,7 +475,7 @@ class ICanLocalizeQuery{
                 
             if($res['info']['status']['attr']['err_code']=='0'){
                 
-                @mysql_query("TRUNCATE {$wpdb->prefix}icl_reminders");
+                $wpdb->query("TRUNCATE {$wpdb->prefix}icl_reminders"); 
                 
                 // First add any low funding warning.
                 $website_data = $this->get_website_details();
@@ -602,7 +602,7 @@ class ICanLocalizeQuery{
     }
     
     function get_help_links() {
-        $request_url = 'http://wpml.org/wpml-resource-maps/pro-translation.xml';
+        $request_url = 'https://wpml.org/wpml-resource-maps/pro-translation.xml';
 
         $res = $this->_request($request_url, 'GET');
         

@@ -376,19 +376,28 @@ function __icl_get_default_widget_title($id){
 }
 
 function icl_register_string($context, $name, $value, $allow_empty_value = false){    
-    global $wpdb, $sitepress, $sitepress_settings, $ICL_Pro_Translation;
+    global $wpdb, $sitepress_settings;
+
+    /* cpt slugs - do not register them when scanning themes and plugins
+     * if name starting from 'URL slug: '
+     * and context is different from 'WordPress'
+     */
+    if (substr($name, 0, 10) === 'URL slug: ' && 'WordPress' !== $context) {
+        return false;
+    }
+
     // if the default language is not set up return without doing anything
     if( 
         !isset($sitepress_settings['existing_content_language_verified']) || 
         !$sitepress_settings['existing_content_language_verified']
     ){
-        return;
+        return false;
     }       
     
     // Check if cached (so exists)    
     $cached = icl_t_cache_lookup($context, $name);
     if ($cached && isset($cached['original']) && $cached['original'] == $value) {
-        return;
+        return false;
     }
     
     $language = $sitepress_settings['st']['strings_language'];
@@ -405,11 +414,10 @@ function icl_register_string($context, $name, $value, $allow_empty_value = false
          * Otherwise after every String Translation screen refresh status of this string
          * will be changed into 'needs update'
          */
-        global $active_plugins;
         $alp_settings = get_option('alp_settings');
         if (!empty($alp_settings['sticky_links_strings']) // do we have setting about sticky links in strings?
-                and $alp_settings['sticky_links_strings'] // is this set to TRUE?
-                and in_array('wpml-sticky-links/plugin.php', $active_plugins)) { // sticky links plugin is active?
+                && $alp_settings['sticky_links_strings'] // is this set to TRUE?
+                && defined('WPML_STICKY_LINKS_VERSION')) { // sticky links plugin is active?
             require_once ICL_PLUGIN_PATH . '/inc/absolute-links/absolute-links.class.php';        
             $absolute_links_object = new AbsoluteLinks;
             $alp_broken_links = array();
@@ -565,7 +573,7 @@ function __icl_unregister_string_multi($arr){
 
 function icl_t($context, $name, $original_value=false, &$has_translation=null, $dont_auto_register = false){
     global $sitepress, $sitepress_settings;
-	static $front_end_language = false;
+//	static $front_end_language = false;
         
     // if the default language is not set up return
     if(!isset($sitepress_settings['existing_content_language_verified'])){        
@@ -578,12 +586,12 @@ function icl_t($context, $name, $original_value=false, &$has_translation=null, $
     }elseif(is_admin()){            
         $current_language = $sitepress->get_admin_language();                 
     }else{
-		if(!$front_end_language) {
+//		if(!$front_end_language) {
         $current_language = $sitepress->get_current_language();     
-			$front_end_language = $current_language;
-		} else {
-			$current_language = $front_end_language;
-    }
+//			$front_end_language = $current_language;
+//		} else {
+//			$current_language = $front_end_language;
+//    }
     }
     $default_language = !empty($sitepress_settings['st']['strings_language']) ? $sitepress_settings['st']['strings_language'] : $sitepress->get_default_language();
     
@@ -703,7 +711,7 @@ function icl_get_string_id($string, $context){
 }
 
 function icl_get_string_translations($offset=0){
-    global $wpdb, $sitepress, $sitepress_settings, $wp_query, $icl_st_string_translation_statuses; 
+    global $wpdb, $sitepress, $sitepress_settings, $wp_query, $icl_st_string_translation_statuses;
     $string_translations = array();
     
     $current_user = $sitepress->get_current_user();
@@ -1117,7 +1125,7 @@ function icl_sw_filters_widget_text($val){
 function icl_sw_filters_gettext( $translation, $text, $domain, $name = false )
 {
 	global $sitepress_settings, $sitepress;
-	static $front_end_language = false;
+//	static $front_end_language = false;
 	$has_translation = 0;
 
 	if ( defined( 'DOING_AJAX' ) ) {
@@ -1125,13 +1133,13 @@ function icl_sw_filters_gettext( $translation, $text, $domain, $name = false )
 	} elseif ( is_admin() ) {
 		$current_language = $sitepress->get_admin_language();
 	} else {
-		if(!$front_end_language) {
+//		if(!$front_end_language) {
 		$current_language = $sitepress->get_current_language();
-			$front_end_language = $current_language;
-		} else {
-			$current_language = $front_end_language;
-	}
-		if ($current_language == $sitepress_settings['default_language'] ) {
+//			$front_end_language = $current_language;
+//		} else {
+//			$current_language = $front_end_language;
+//	}
+		if ($current_language == $sitepress_settings['st']['strings_language'] ) {
 			return $translation;
 		}
 	}
@@ -1206,7 +1214,6 @@ function icl_sw_filters_gettext( $translation, $text, $domain, $name = false )
 		&& stripslashes( $_GET[ 'icl_string_track_context' ] ) == $context && stripslashes( $_GET[ 'icl_string_track_value' ] ) == $text
 	) {
 		$ret_translation = '<span style="background-color:' . $sitepress_settings[ 'st' ][ 'hl_color' ] . '">' . $ret_translation . '</span>';
-
 	}
 
 	wp_cache_set( $cache_name, $ret_translation );
@@ -1442,7 +1449,7 @@ function icl_st_update_text_widgets_actions($old_options, $new_options){
 
 function icl_t_cache_lookup($context, $name){
     global $sitepress, $wpdb;
-	static $front_end_language = false;
+//	static $front_end_language = false;
     
     static $icl_st_cache;
     $ret_value = false;
@@ -1453,12 +1460,12 @@ function icl_t_cache_lookup($context, $name){
     }elseif(is_admin()){            
         $current_language = $sitepress->get_admin_language();                 
     }else{
-		if ( !$front_end_language ) {
+//		if ( !$front_end_language ) {
         $current_language = $sitepress->get_current_language();     
-			$front_end_language = $current_language;
-		} else {
-			$current_language = $front_end_language;
-    }
+//			$front_end_language = $current_language;
+//		} else {
+//			$current_language = $front_end_language;
+//    }
     }
     
     if(!isset($icl_st_cache[$current_language][$context])){  //CACHE MISS (context)    
@@ -1510,7 +1517,9 @@ function icl_t_cache_lookup($context, $name){
 function icl_st_get_contexts($status){
     global $wpdb, $sitepress, $sitepress_settings;    
     $extra_cond = '';
-    
+	$joins = '';
+	$results = false;
+
     $current_user = $sitepress->get_current_user();
     
     if($status !== false){
@@ -1540,14 +1549,14 @@ function icl_st_get_contexts($status){
                 
             }            
             
-            $sql = $wpdb->prepare( "
+            $sql = "
                 SELECT s.context, COUNT(s.context) AS c FROM {$wpdb->prefix}icl_strings s
                 ".join("\n", $joins)."
                 WHERE 1 {$extra_cond} 
                 GROUP BY context
                 ORDER BY context ASC
-            ", array());
-            
+            ";
+	        
             $results = $wpdb->get_results($sql);
         }
         
@@ -1844,7 +1853,7 @@ function icl_st_generate_po_file($strings, $potonly = false){
     $po = "";
     $po .= '# This file was generated by WPML' . PHP_EOL;
     $po .= '# WPML is a WordPress plugin that can turn any WordPress or WordPressMU site into a full featured multilingual content management system.' . PHP_EOL;    
-    $po .= '# http://wpml.org' . PHP_EOL;
+    $po .= '# https://wpml.org' . PHP_EOL;
     $po .= 'msgid ""' . PHP_EOL;
     $po .= 'msgstr ""' . PHP_EOL;
     $po .= '"Content-Type: text/plain; charset=utf-8\n"' . PHP_EOL;
@@ -1983,7 +1992,7 @@ function icl_st_string_in_source($string_id){
             if($i > 0){
                 echo 'style="display:none"';
             }else{
-                $first_pos = $line;                
+                $first_pos = $line;
             }
             echo '>';
             if($i == 0){
@@ -2071,7 +2080,7 @@ function icl_st_scan_options_strings(){
     
     $options_names = array_merge($options_names, _icl_st_get_options_writes(ICL_STRING_TRANSLATION_STYLESHEET_DIRECTORY));
     $options_names = array_unique($options_names);
-    $options_names = array_map('mysql_real_escape_string', $options_names);
+    $options_names = array_map('esc_sql', $options_names);
             
     if(!empty($options_names)){   
         $res = $wpdb->get_results("SELECT option_name, option_value FROM $wpdb->options WHERE option_name IN ('".join("','", $options_names)."')");
@@ -2171,7 +2180,7 @@ function icl_register_admin_options($array, $key=""){
                     for($i = count($matches[1]) - 1; $i >= 0 ; $i--){
                         $tmp = $vals;
                         unset($vals);
-                        $vals[$matches[1][$i]] = $tmp; 
+                        $vals[$matches[1][$i]] = $tmp;
                     }
                     
                 }else{
@@ -2457,7 +2466,7 @@ function icl_st_fix_links_in_strings($post_id){
         return;
     }
     $runonce = true;
-    
+
     if(isset($_POST['autosave']) && $_POST['autosave']) return;
     
     if(isset($_POST['post_ID'])){
@@ -2512,7 +2521,7 @@ function _icl_translation_send_strings_local($string_ids, $target) {
     global $wpdb, $sitepress_settings;
     static $site_translators;
     $site_translators = TranslationManagement::get_blog_translators();
-    
+
     $mkey = $wpdb->prefix . 'strings_notification'; 
     $lkey = $wpdb->prefix . 'language_pairs'; 
     $slang =& $sitepress_settings['st']['strings_language'];
