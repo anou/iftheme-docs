@@ -9,6 +9,7 @@
 	* Handled case where ICL_PLUGIN_PATH constant is not defined (i.e. when plugin is activated before WPML core)
 	* Fixed Translation Editor - Notice: wp_editor() and not working editors in WP3.9 (changes for additional fields)
 	* Fixed not working "Copy from..." links for Gravity forms fields.
+	* Fixed Korean locale in .mo file name
 
 **1.9.3**
 

@@ -5,7 +5,7 @@ Plugin URI: https://wpml.org/
 Description: Adds theme and plugins localization capabilities to WPML. <a href="https://wpml.org">Documentation</a>.
 Author: ICanLocalize
 Author URI: https://wpml.org
-Version: 2.0.5b2
+Version: 2.0.5
 */
 
 if(defined('WPML_ST_VERSION')) return;

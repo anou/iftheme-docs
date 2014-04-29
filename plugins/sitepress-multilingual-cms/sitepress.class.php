@@ -3123,11 +3123,14 @@ class SitePress
 		$trid    = intval( $trid );
 		$el_type = esc_sql( $el_type );
 		$where   = '';
+
+		$delete_args = array($trid, $el_type);
 		if ( $language_code ) {
 			$where .= " AND language_code=%s";
+			$delete_args[] = $language_code;
 		}
 		$delete_sql = "DELETE FROM {$wpdb->prefix}icl_translations WHERE trid=%d AND element_type=%s" . $where;
-		$delete_sql_prepared = $wpdb->prepare($delete_sql, $trid, $el_type, $language_code);
+		$delete_sql_prepared = $wpdb->prepare($delete_sql, $delete_args);
 		$wpdb->query( $delete_sql_prepared );
 		$this->icl_translations_cache->clear();
 	}
@@ -9167,7 +9170,7 @@ class SitePress
 				$_has_slug = isset( $custom_post->rewrite[ 'slug' ] ) && $custom_post->rewrite[ 'slug' ];
 				$_translate = !empty($sitepress_settings['posts_slug_translation']['types'][$k]);
 				if ( $_has_slug ) {
-					if ( $default_language != $sitepress_settings[ 'st' ][ 'strings_language' ] ) {
+					if (isset($sitepress_settings[ 'st' ]) && $default_language != $sitepress_settings[ 'st' ][ 'strings_language' ] ) {
 						$string_id_prepared = $wpdb->prepare( "
 	                                                        SELECT s.id FROM {$wpdb->prefix}icl_strings s
 	                                                            JOIN {$wpdb->prefix}icl_string_translations st

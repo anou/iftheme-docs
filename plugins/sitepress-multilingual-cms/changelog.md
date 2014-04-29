@@ -40,11 +40,11 @@
 	* Fixed PHP Fatal error: Cannot use object of type WP_Error as array
 	* Option to translate custom posts slugs is now hidden when it is no set to translate them
 	* Fixed monthly archive page, now it shows language switcher with correct urls
-	* You can restore trahsed translation when you tried to edit this
-	* When you tried to delete item from untranslated menu, you saw PHP errors, now this is also fixed
+	* You can restore trashed translation when you tried to edit this
+	* When you try to delete an item from untranslated menu, you saw PHP errors, now this is also fixed
 	* Fixed compatibility issue with PHP versions < 5.3.6: constants DEBUG_BACKTRACE_PROVIDE_OBJECT and DEBUG_BACKTRACE_IGNORE_ARGS does not exist before this version, causing a PHP notice message.
 	* Fixed wrong links to attachments in image galleries
-	* Fixed  not hidden spinner after re-install languages
+	* Fixed not hidden spinner after re-install languages
 	* Handled timeout error message when fixing languages table.
 	* Made SitePress::slug_template only work for taxonomies
 	* Fixed problems with missing taxonomies configuration from wpml-config.xml file
@@ -55,6 +55,8 @@
 	* Fixed problem with redirecting to wrong page with the same slug in different language after upgrade to WP3.9
 	* Fixed problem with Sticky Links and Custom Taxonomies
 	* Home url not converted in current language when using different domains per language and WP in a folder
+	* Fixed typos when calling in some places _() instead of __()
+	* Fixed Korean locale in .mo file name
 
 **3.1.4**
 

@@ -306,16 +306,15 @@ function cpt_default_and_st_language_warning()
 
 		$st_page_url = admin_url( 'admin.php?page=' . WPML_ST_FOLDER . '/menu/string-translation.php' );
 
-		$message = 'The strings language in your site is set to %s instead of English. ';
-		$message .= 'This means that the original slug will appear in the URL when displaying content in %s.';
-		$message .= ' ';
-		$message .= '<strong><a href="%s" target="_blank">Read more</a> | ';
-		$message .= '<a href="%s#icl_st_sw_form">Change strings language</a></strong>';
+		$message = __(
+			'The strings language in your site is set to %s instead of English.
+			This means that the original slug will appear in the URL when displaying content in %s.
+			<strong><a href="%s" target="_blank">Read more</a> |  <a href="%s#icl_st_sw_form">Change strings language</a></strong>',
+		'wpml-string-translation' );
 
-		$message = __( $message, 'wpml-string-translation' );
 		$message = sprintf( $message, $st_language, $st_language, 'https://wpml.org/faq/string-translation-default-language-not-english/', $st_page_url );
 
-		$fallback_message = _( '<a href="%s" target="_blank">How to translate strings when default language is not English</a>' );
+		$fallback_message = __( '<a href="%s" target="_blank">How to translate strings when default language is not English</a>', 'wpml-string-translation'  );
 		$fallback_message = sprintf( $fallback_message, 'https://wpml.org/faq/string-translation-default-language-not-english/' );
 
 		ICL_AdminNotifier::addMessage( 'cpt_default_and_st_language_warning', $message, 'icl-admin-message-warning', true, $fallback_message, false, 'cpt-translation' );

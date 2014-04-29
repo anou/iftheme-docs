@@ -536,7 +536,7 @@ class ICLMenusSync
 						wp_delete_post( $item_id, true );
 						$delete_trid = $sitepress->get_element_trid( $item_id, 'post_nav_menu_item' );
 						if ( $delete_trid ) {
-							$sitepress->delete_element_translation( $delete_trid, 'post_nav_menu_item', $language_code );
+							$sitepress->delete_element_translation( $delete_trid, 'post_nav_menu_item' );
 						}
 					}
 				}

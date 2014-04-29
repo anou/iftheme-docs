@@ -141,7 +141,7 @@ class WPML_String_Translation
 			$message = __( $message, 'Read more string-translation-default-language-not-english', 'wpml-string-translation' );
 			$message = sprintf( $message, $translation_languages_list, $last_translation_language, 'https://wpml.org/faq/string-translation-default-language-not-english/' );
 
-			$fallback_message = _( '<a href="%s" target="_blank">How to translate strings when default language is not English</a>' );
+			$fallback_message = __( '<a href="%s" target="_blank">How to translate strings when default language is not English</a>' );
 			$fallback_message = sprintf( $fallback_message, 'https://wpml.org/faq/string-translation-default-language-not-english/' );
 
 			ICL_AdminNotifier::addMessage( '_st_default_language_warning', $message, 'icl-admin-message-information', true, $fallback_message, false, 'string-translation' );
@@ -167,16 +167,15 @@ class WPML_String_Translation
 				$page = WPML_ST_FOLDER . '/menu/string-translation.php';
 				$st_page_url = admin_url('admin.php?page=' . $page);
 
-				$message = 'The strings language in your site is set to %s instead of English. ';
-				$message .= 'This means that all English texts that are hard-coded in PHP will appear when displaying content in %s.';
-				$message .= ' ';
-				$message .= '<strong><a href="%s" target="_blank">Read more</a> | ';
-				$message .= '<a href="%s#icl_st_sw_form">Change strings language</a></strong>';
+				$message = __(
+					'The strings language in your site is set to %s instead of English.
+					This means that all English texts that are hard-coded in PHP will appear when displaying content in %s.
+					<strong><a href="%s" target="_blank">Read more</a> |  <a href="%s#icl_st_sw_form">Change strings language</a></strong>',
+				'wpml-string-translation' );
 
-				$message = __( $message, 'wpml-string-translation' );
 				$message = sprintf( $message, $st_language, $st_language, 'https://wpml.org/faq/string-translation-default-language-not-english/', $st_page_url );
 
-				$fallback_message = _( '<a href="%s" target="_blank">How to translate strings when default language is not English</a>' );
+				$fallback_message = __( '<a href="%s" target="_blank">How to translate strings when default language is not English</a>', 'wpml-string-translation' );
 				$fallback_message = sprintf( $fallback_message, 'https://wpml.org/faq/string-translation-default-language-not-english/' );
 
 				ICL_AdminNotifier::addMessage( '_st_default_and_st_language_warning', $message, 'icl-admin-message-warning', true, $fallback_message, false, 'string-translation' );
