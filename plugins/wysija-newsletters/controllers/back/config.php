@@ -18,7 +18,7 @@ class WYSIJA_control_back_config extends WYSIJA_control_back{
         $this->jsTrans['bounceconnect'] = __('Bounce handling connection test', WYSIJA);
         $this->jsTrans['processbounceT'] = __('Bounce handling processing', WYSIJA);
         $this->jsTrans['doubleoptinon'] = __('Subscribers will now need to activate their subscription by email in order to receive your newsletters. This is recommended.', WYSIJA);
-        $this->jsTrans['doubleoptinoff'] = __('Unconfirmed subscribers will receive your newslettters from now on without the need to activate their subscriptions.', WYSIJA);
+        $this->jsTrans['doubleoptinoff'] = __('Unconfirmed subscribers will receive your newsletters from now on without the need to activate their subscriptions.', WYSIJA);
         $this->jsTrans['processbounce'] = __('Process bounce handling now!', WYSIJA);
         $this->jsTrans['errorbounceforward'] = __('When setting up the bounce system, you need to have a different address for the bounce email and the forward to address', WYSIJA);
 

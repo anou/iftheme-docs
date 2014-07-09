@@ -151,7 +151,7 @@ class WYSIJA_model_queue extends WYSIJA_model{
         // very slow and crashing the request.
         $model_config = WYSIJA::get('config', 'model');
         if ((int) $model_config->getValue('total_subscribers') > 1000000){
-            return get_ready_large_db($sql_limit,$email_id = 0,$user_id=false);
+            return $this->get_ready_large_db($sql_limit,$email_id = 0,$user_id=false);
         }
 
         $query = 'SELECT c.*,a.* FROM [wysija]queue as a';

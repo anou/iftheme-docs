@@ -1,6 +1,3 @@
-<?php
-global $sitepress, $sitepress_settings;
-?>
 <div class="wpml-section" id="ml-content-setup-sec-2">
 
     <div class="wpml-section-header">
@@ -73,10 +70,10 @@ global $sitepress, $sitepress_settings;
                 </p>
             </div>
 
-            <?php if( defined('WPML_TM_VERSION') ): ?>
+            <?php if( !defined('WPML_TM_VERSION') ): ?>
             <div class="wpml-section-content-inner">
                 <p>
-                    <label><input type="checkbox" name="icl_sync_comments_on_duplicates" <?php if($sitepress->get_setting('sync_comments_on_duplicates')): ?>checked<?php endif; ?> value="1" />
+                    <label><input type="checkbox" name="icl_sync_comments_on_duplicates" <?php if(!empty($sitepress_settings['sync_comments_on_duplicates'])): ?>checked<?php endif; ?> value="1" />
                     <?php _e('Synchronize comments on duplicate content', 'sitepress') ?></label>
                 </p>
             </div>

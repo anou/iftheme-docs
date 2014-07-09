@@ -4,7 +4,7 @@ class WYSIJA_model_stats_newsletter_std extends WYSIJA_module_statistics_model {
 
     /**
      * Store email status (output of $this->get_email_status())
-     * @var type 
+     * @var type
      */
     protected static $emails_status = array();
 
@@ -23,10 +23,10 @@ class WYSIJA_model_stats_newsletter_std extends WYSIJA_module_statistics_model {
         if (!isset(self::$emails_status[$email_id])) {
             // get stats email status
             $query = '
-                SELECT 
-                    count(`email_id`) as emails, 
-                    `status` 
-                FROM 
+                SELECT
+                    count(`email_id`) as emails,
+                    `status`
+                FROM
                     `[wysija]email_user_stat`
                 WHERE `email_id` = ' . (int) $email_id . '
                 GROUP BY `status`'
@@ -37,8 +37,8 @@ class WYSIJA_model_stats_newsletter_std extends WYSIJA_module_statistics_model {
     }
 
     /**
-     * 
-     * @param int $user_id 
+     *
+     * @param int $user_id
      * @return int a number of received / sent newsletters to a specific user
      */
     public function get_emails_count($email_id) {
@@ -77,18 +77,31 @@ class WYSIJA_model_stats_newsletter_std extends WYSIJA_module_statistics_model {
                     [wysija]email_user_url euu
                 JOIN
                     [wysija]url u ON euu.url_id = u.url_id
-                WHERE 
+                WHERE
                     euu.email_id = ' . (int) $email_id . '
-                GROUP BY 
+                GROUP BY
                     u.`url_id`
                 ORDER BY `total_clicks` ' . $order_direction . '
-                ' . $limit . '  
-                    
+                ' . $limit . '
+
             ';
-        return $this->get_results($query);
+		$top_links = $this->get_results($query);
+		foreach ($top_links as &$top_link) {
+			$params = array(
+				'action=viewstats',
+				'page=wysija_campaigns',
+				'link_filter=clicked',
+				'id='.$top_link['email_id'],
+				'url_id='.$top_link['url_id']
+			);
+
+			$top_link['view_subscriber_url'] = admin_url('admin.php?'.implode('&', $params));
+		}
+
+        return $top_links;
     }
-    
-    
+
+
     /**
      * Get lists which a campaign was sent to
      * @param int $campaign_id
@@ -98,7 +111,7 @@ class WYSIJA_model_stats_newsletter_std extends WYSIJA_module_statistics_model {
      *      int => string (id => name),
      *  )
      */
-    public function get_lists($campaign_id) {        
+    public function get_lists($campaign_id) {
         $campaign_id = (int) $campaign_id;
         $lists = array();
         if (!empty($campaign_id)) {
@@ -106,7 +119,7 @@ class WYSIJA_model_stats_newsletter_std extends WYSIJA_module_statistics_model {
                 SELECT
                     l.list_id,
                     l.name
-                FROM 
+                FROM
                     `[wysija]campaign_list` cl
                 JOIN
                     `[wysija]list` l ON cl.`list_id` = l.`list_id` AND `campaign_id` = '.$campaign_id.'
@@ -115,5 +128,4 @@ class WYSIJA_model_stats_newsletter_std extends WYSIJA_module_statistics_model {
         }
         return $lists;
     }
-
 }

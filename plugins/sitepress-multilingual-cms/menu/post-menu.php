@@ -1,5 +1,4 @@
 <?php
-/** @var $this SitePress */
 /** @var $post WP_post */
 global $wpdb, $wp_post_types, $iclTranslationManagement;
 
@@ -103,27 +102,23 @@ if($icl_lang_duplicate_of): ?>
     </select>
     <input type="hidden" name="icl_trid" value="<?php echo $trid ?>" />
 </div>
-<?php
-if (isset($translations) && count($translations) == 1 && count(SitePress::get_orphan_translations($trid, $post->post_type, $this->get_current_language())) > 0){
+<?php if (isset($translations) && count($translations) == 1 && count(SitePress::get_orphan_translations($trid, $post->post_type, $this->get_current_language())) > 0): ?>
 
-	$language_name = $this->get_display_language_name( $selected_language, $this->get_default_language() );
-	?>
-	<div id="icl_document_connect_translations_dropdown" class="icl_box_paragraph">
+	<div id="icl_document_set_as_source_of_dropdown" class="icl_box_paragraph">
 		<p>
-			<a class="js-set-post-as-source" href="#">
-				<?php _e( 'Connect with translations', 'sitepress' ); ?>
+			<a class="button button-seondary js-set-post-as-source" href="#">
+				<?php printf( __( 'Set this %s as source of another %s', 'sitepress' ), $post_type_label, $post_type_label ); ?>
 			</a>
 		</p>
-		<input type="hidden" id="icl_connect_translations_post_id" name="icl_connect_translations_post_id" value="<?php echo $post->ID; ?>"/>
-		<input type="hidden" id="icl_connect_translations_trid" name="icl_connect_translations_trid" value="<?php echo $trid; ?>"/>
-		<input type="hidden" id="icl_connect_translations_post_type" name="icl_connect_translations_post_type" value="<?php echo $post->post_type; ?>"/>
-		<input type="hidden" id="icl_connect_translations_language" name="icl_connect_translations_language" value="<?php echo $this->get_current_language(); ?>"/>
+		<input type="hidden" id="icl_set_as_source_of_post_id" name="icl_set_as_source_of_post_id" value="<?php echo $post->ID; ?>"/>
+		<input type="hidden" id="icl_set_as_source_of_trid" name="icl_set_as_source_of_trid" value="<?php echo $trid; ?>"/>
+		<input type="hidden" id="icl_set_as_source_of_post_type" name="icl_set_as_source_of_post_type" value="<?php echo $post->post_type; ?>"/>
+		<input type="hidden" id="icl_set_as_source_of_language" name="icl_set_as_source_of_language" value="<?php echo $this->get_current_language(); ?>"/>
 		<?php wp_nonce_field( 'get_orphan_posts_nonce', '_icl_nonce_get_orphan_posts' ); ?>
 	</div>
 
 	<div class="hidden">
-		<div id="connect_translations_dialog" 	title="<?php _e( 'Choose a post to assign','sitepress' ); ?>"
-			 								data-set_as_source-text="<?php echo esc_attr( sprintf(__("Make %s the original language for this %s",'sitepress'), $language_name, $post->post_type));?>"
+		<div id="set_as_source_of_dialog" 	title="<?php _e( 'Choose a post to assign','sitepress' ); ?>"
 			 								data-alert-text="<?php echo esc_attr(__("Please make sure to save your post, if you've made any change, before proceeding with this action!",'sitepress'));?>"
 											data-cancel-label="<?php echo esc_attr(__( 'Cancel','sitepress' )); ?>"
  											data-ok-label="<?php echo esc_attr(__( 'Ok','sitepress' )); ?>"
@@ -142,29 +137,27 @@ if (isset($translations) && count($translations) == 1 && count(SitePress::get_or
 				<input type="hidden" id="assign_to_trid">
 			</div>
 		</div>
-		<div id="connect_translations_dialog_confirm" 	title="<?php echo esc_attr(__( 'Connect this post?','sitepress' )); ?>"
+		<div id="set_as_source_of_dialog_confirm" 	title="<?php echo esc_attr(__( 'Connect this post?','sitepress' )); ?>"
 			 										data-cancel-label="<?php echo esc_attr(__( 'Cancel','sitepress' )); ?>"
 			 										data-assign-label="<?php echo esc_attr(__( 'Assign','sitepress' )); ?>"
 			>
 			<div class="wpml-dialog-content">
 				<p>
 					<span class="ui-icon ui-icon-alert"></span>
-					<?php _e( 'You are about to connect the current post with these following posts','sitepress' ); ?>:
+					<?php _e( 'You are about to connect the current post as the translation of these following posts','sitepress' ); ?>:
 				</p>
-				<div id="connect_translations_dialog_confirm_list">
+				<div id="set_as_source_of_dialog_confirm_list">
 					<p class="js-ajax-loader ajax-loader">
 						<?php _e('Loading') ?>&hellip; <span class="spinner"></span>
 					</p>
 				</div>
 				<?php wp_nonce_field( 'get_posts_from_trid_nonce', '_icl_nonce_get_posts_from_trid' ); ?>
-				<?php wp_nonce_field( 'connect_translations_nonce', '_icl_nonce_connect_translations' ); ?>
+				<?php wp_nonce_field( 'set_as_source_of_nonce', '_icl_nonce_set_as_source_of' ); ?>
 			</div>
 		</div>
 	</div>
 
-<?php
-}
-	?>
+<?php endif; ?>
 	<div id="translation_of_wrap">
 		<?php
 		if (!$is_original && ( $selected_language != $source_language || ( isset( $_GET[ 'lang' ] ) && $_GET[ 'lang' ] != $source_language ) ) && 'all' != $this->get_current_language() ) {
@@ -175,16 +168,13 @@ if (isset($translations) && count($translations) == 1 && count(SitePress::get_or
 				<?php echo __( 'This is a translation of', 'sitepress' ); ?>&nbsp;
 				<select name="icl_translation_of" id="icl_translation_of"<?php echo $disabled; ?>>
 					<?php
-					if (!$is_original || !$source_language || $source_language == $selected_language ) {
+					if ( !$source_language || $source_language == $selected_language ) {
 						if ( $trid ) {
-							if(!$source_language) {
-								$source_language = $default_language;
-							}
 							?>
 							<option value="none"><?php echo __( '--None--', 'sitepress' ); ?></option>
 							<?php
 							//get source
-							$source_element_id = $wpdb->get_var( "SELECT element_id FROM {$wpdb->prefix}icl_translations WHERE trid={$trid} AND language_code='{$source_language}'" );
+							$source_element_id = $wpdb->get_var( "SELECT element_id FROM {$wpdb->prefix}icl_translations WHERE trid={$trid} AND language_code='{$default_language}'" );
 							if ( !$source_element_id ) {
 								// select the first id found for this trid
 								$source_element_id = $wpdb->get_var( "SELECT element_id FROM {$wpdb->prefix}icl_translations WHERE trid={$trid}" );
@@ -308,13 +298,13 @@ if (isset($translations) && count($translations) == 1 && count(SitePress::get_or
 									$tres = $wpdb->get_row( $tres_prepared );
                                     if($tres->status == ICL_TM_IN_PROGRESS){
                                         $img = 'edit_translation_disabled.png';
-                                        $add_anchor =  sprintf(__('In progress (by a different translator). <a%s>Learn more</a>.','sitepress'), ' href="https://wpml.org/?page_id=52218"');
+                                        $add_anchor =  sprintf(__('In progress (by a different translator). <a%s>Learn more</a>.','sitepress'), ' href="http://wpml.org/?page_id=52218"');
                                     }elseif($tres->status == ICL_TM_NOT_TRANSLATED || $tres->status == ICL_TM_WAITING_FOR_TRANSLATOR){
                                         $img = 'add_translation_disabled.png';
-                                        $add_anchor = sprintf(__('You are not the translator of this document. <a%s>Learn more</a>.','sitepress'), ' href="https://wpml.org/?page_id=52218"');
+                                        $add_anchor = sprintf(__('You are not the translator of this document. <a%s>Learn more</a>.','sitepress'), ' href="http://wpml.org/?page_id=52218"');
                                     }elseif($tres->status == ICL_TM_NEEDS_UPDATE || $tres->status == ICL_TM_COMPLETE){
                                         $img = 'edit_translation_disabled.png';
-                                        $add_anchor = sprintf(__('You are not the translator of this document. <a%s>Learn more</a>.','sitepress'), ' href="https://wpml.org/?page_id=52218"');
+                                        $add_anchor = sprintf(__('You are not the translator of this document. <a%s>Learn more</a>.','sitepress'), ' href="http://wpml.org/?page_id=52218"');
                                     }
 
                                 }
@@ -322,7 +312,7 @@ if (isset($translations) && count($translations) == 1 && count(SitePress::get_or
                                     $add_link = admin_url('admin.php?page='.WPML_TM_FOLDER.'/menu/translations-queue.php&job_id='.$job_id);
                                 }else{
                                     $add_link = '#';
-                                    $add_anchor =  sprintf(__('In progress (by a different translator). <a%s>Learn more</a>.','sitepress'), ' href="https://wpml.org/?page_id=52218"');
+                                    $add_anchor =  sprintf(__('In progress (by a different translator). <a%s>Learn more</a>.','sitepress'), ' href="http://wpml.org/?page_id=52218"');
                                 }
 
                             }else{
@@ -335,7 +325,7 @@ if (isset($translations) && count($translations) == 1 && count(SitePress::get_or
                                 }else{
                                     $add_link = '#';
                                     $img = 'add_translation_disabled.png';
-                                    $add_anchor = sprintf(__('You are not the translator of this document. <a%s>Learn more</a>.','sitepress'), ' href="https://wpml.org/?page_id=52218"');
+                                    $add_anchor = sprintf(__('You are not the translator of this document. <a%s>Learn more</a>.','sitepress'), ' href="http://wpml.org/?page_id=52218"');
                                 }
                             }
                     }else{
@@ -433,7 +423,7 @@ if (isset($translations) && count($translations) == 1 && count(SitePress::get_or
                                 }else{
                                     $edit_link = '#';
                                     $img = 'edit_translation_disabled.png';
-                                    $edit_anchor = sprintf(__('You are not the translator of this document. <a%s>Learn more</a>.','sitepress'), ' href="https://wpml.org/?page_id=52218"');
+                                    $edit_anchor = sprintf(__('You are not the translator of this document. <a%s>Learn more</a>.','sitepress'), ' href="http://wpml.org/?page_id=52218"');
                                 }
                             }else{
                                 if($lang['code'] == $source_language_code){
@@ -445,7 +435,7 @@ if (isset($translations) && count($translations) == 1 && count(SitePress::get_or
                                 }else{
                                     $edit_link = '#';
                                     $img = 'edit_translation_disabled.png';
-                                    $edit_anchor = sprintf(__('You are not the translator of this document. <a%s>Learn more</a>.','sitepress'), ' href="https://wpml.org/?page_id=52218"');
+                                    $edit_anchor = sprintf(__('You are not the translator of this document. <a%s>Learn more</a>.','sitepress'), ' href="http://wpml.org/?page_id=52218"');
                                 }
                             }
                             break;

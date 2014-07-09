@@ -44,10 +44,15 @@ class WYSIJA_model_user extends WYSIJA_model{
         return true;
     }
 
-    function getSubscriptionStatus($uid){
+    /**
+     * Get status number of a subscriber
+     * @param int $user_id
+     * @return int or null
+     */
+    function getSubscriptionStatus($user_id){
         $this->getFormat=OBJECT;
         $result=$this->getOne(array('status'),array('user_id'=>$user_id));
-        return $result->status;
+		return ($result->status !== NULL) ? (int)$result->status : $result->status;
     }
 
     /**
@@ -309,7 +314,11 @@ class WYSIJA_model_user extends WYSIJA_model{
         // Lists filters
         // Catch list filter from URL
         if ( empty($_REQUEST['wysija']['filter']['filter_list']) && !empty($_REQUEST['filter-list']) ) {
-            $filters['lists'] = $_REQUEST['filter-list'];
+            if ($_REQUEST['filter-list'] == 'orphaned') {
+                $filters['lists'] = 0; // force to 0. 0 means: no list!
+            } else {
+                $filters['lists'] = $_REQUEST['filter-list'];
+            }
         }
 
         if(!empty($_REQUEST['wysija']['filter']['filter_list'])){
@@ -320,6 +329,7 @@ class WYSIJA_model_user extends WYSIJA_model{
                 $filters['lists'] = $_REQUEST['wysija']['filter']['filter_list'];
             }
         }
+
 
         if(!empty($_REQUEST['link_filter'])){
             $filters['status'] = $_REQUEST['link_filter'];

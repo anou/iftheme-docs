@@ -182,28 +182,41 @@ class WYSIJA_view_back_subscribers extends WYSIJA_view_back
 	    </div>
 
 	    <div class="alignleft actions">
-		<select name="wysija[filter][filter_list]" class="global-filter mp-select-sort">
-		    <option selected="selected" value=""><?php _e('View all lists', WYSIJA); ?></option>
+		<select name="wysija[filter][filter_list]" class="global-filter">
 	<?php
+	$is_list_pre_selected = false;
+        $options_list = '';
 	foreach ($data['lists'] as $listK => $list)
 	{
-	    $selected = "";
-	    if (isset($_REQUEST['wysija']['filter']['filter_list']) && $_REQUEST['wysija']['filter']['filter_list'] == $listK)
-		$selected = ' selected="selected" ';
+			$selected = '';
+			if (in_array($listK, $data['selected_lists'])) {
+				$selected = ' selected="selected" ';
+				$is_list_pre_selected = true;
+			}
 	    if (isset($list['users']))
-		echo '<option '.$selected.' value="'.$list['list_id'].'">'.$list['name'].' ('.$list['users'].')'.'</option>';
+		$options_list .= '<option '.$selected.' value="'.$list['list_id'].'">'.$list['name'].' ('.$list['users'].')'.'</option>';
 	    else
-		echo '<option '.$selected.' value="'.$list['list_id'].'">'.$list['name'].'</option>';
+		$options_list .= '<option '.$selected.' value="'.$list['list_id'].'">'.$list['name'].'</option>';
 	}
+
 	?>
-	<?php
-	$orphaned_selected = '';
-	if (isset($_REQUEST['wysija']['filter']['filter_list']) && $_REQUEST['wysija']['filter']['filter_list'] === 'orphaned')
-	{
-	    $orphaned_selected = ' selected="selected" ';
-	}
-	?>
-		    <option <?php echo $orphaned_selected; ?> value="orphaned"><?php _e('Subscribers in no list', WYSIJA); ?></option>
+
+                    <?php
+                        // Now, if there is not any selected list, let's select "View all lists" by default.
+                        $selected = in_array('', $data['selected_lists']) ? ' selected="selected" ' : '';
+                    ?>
+			<option <?php echo $selected; ?> data-sort='0' value=""><?php _e('View all lists', WYSIJA); ?></option>
+                    <?php
+                        $selected = in_array('orphaned', $data['selected_lists']) ? ' selected="selected" ' : '';
+			if (in_array('orphaned', $data['selected_lists'])) {
+				$selected = ' selected="selected" ';
+				$is_list_pre_selected = true;
+			}
+                    ?>
+                    <option <?php echo $selected; ?> value="orphaned" data-sort='0'><?php _e('Subscribers in no list', WYSIJA); ?></option>
+
+
+                        <?php echo $options_list; ?>
 		</select>
 		<input type="submit" class="filtersubmit button-secondary action" name="doaction" value="<?php echo esc_attr(__('Filter', WYSIJA)); ?>">
 	    </div>

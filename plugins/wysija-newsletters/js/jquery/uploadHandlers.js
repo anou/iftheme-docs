@@ -1,5 +1,4 @@
 
-
 function WYSIJAprepareMediaItem(fileObj, serverData) {
 	var f = ( typeof shortform == 'undefined' ) ? 1 : 2, item = jQuery('#media-item-' + fileObj.id);
 	// Move the progress bar to 100%

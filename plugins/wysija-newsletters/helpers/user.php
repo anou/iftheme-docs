@@ -265,9 +265,12 @@ class WYSIJA_help_user extends WYSIJA_object {
             if (!empty($message_success))
                 $this->notice($message_success);
         }else {
-            $this->notice(__('Subscriber has not been saved.', WYSIJA));
-            if ($backend)
-                return false;
+            if ($backend) {
+                $this->notice(__('Subscriber has not been saved.', WYSIJA));
+            } else {
+                $this->notice(__('Oops! We could not add you!', WYSIJA));
+            }
+            return false;
         }
 
         $subscribe_to_list = $subscriber_status = 0;
@@ -922,20 +925,16 @@ class WYSIJA_help_user extends WYSIJA_object {
      */
     function cleanWordpressUsersList() {
         // update the screwed up wpuser_id
-        $model = WYSIJA::get('list', 'model');
-        $query = 'UPDATE [wysija]user as A LEFT JOIN [wp]users as B on A.email=B.user_email SET A.wpuser_id = B.ID WHERE A.wpuser_id=0';
-        $model->query($query);
-
+        $model_list = WYSIJA::get('list', 'model');
+        $query = 'UPDATE [wysija]user as A JOIN [wp]users as B on A.email=B.user_email SET A.wpuser_id = B.ID WHERE A.wpuser_id = 0';
+        $model_list->query($query);
 
         // get all the wysija user with a wpuser_id >0 and insert them into the WordPress user list
-        $model->reset();
-        $model->query($query);
-
-        $mConfig = WYSIJA::get('config', 'model');
-        $selectuserCreated = 'SELECT [wysija]user.user_id, ' . $mConfig->getValue('importwp_list_id') . ', ' . time() . ' FROM [wysija]user WHERE wpuser_id>0';
+        $model_config = WYSIJA::get('config', 'model');
+        $selectuserCreated = 'SELECT [wysija]user.user_id, ' . $model_config->getValue('importwp_list_id') . ', ' . time() . ' FROM [wysija]user WHERE wpuser_id > 0';
         $query = 'INSERT IGNORE INTO `[wysija]user_list` (`user_id`,`list_id`,`sub_date`) ' . $selectuserCreated;
-        $model->reset();
-        $model->query($query);
+        $model_list->reset();
+        $model_list->query($query);
         return true;
     }
 

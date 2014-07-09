@@ -99,6 +99,11 @@
 	background: url("../js/tinymce/skins/wordpress/images/icons.gif") no-repeat 20px 20px;
 }
 
+.wp_themeSkin span.mce_code:after {
+	content: '\f475';
+	font-family: 'dashicons';
+}
+
 /* No @font-face support */
 .no-font-face .wp_themeSkin span.mce_undo,
 .no-font-face .wp_themeSkin span.mce_redo,

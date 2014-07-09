@@ -24,7 +24,6 @@ class WYSIJA_help_backloader extends WYSIJA_help{
 		/* default script on all wysija interfaces in admin */
 		wp_enqueue_script( 'wysija-admin-if ', WYSIJA_URL . 'js/admin-wysija.js', array( 'jquery' ), WYSIJA::get_version() );
 
-
 		// TO IMPROVE: This has NOTHING TO DO HERE. It has to be moved to the subscribers controller
 		if ( ! $controller->jsTrans ) {
 			$controller->jsTrans['selecmiss']  = __( 'Please make a selection first!', WYSIJA );
@@ -67,13 +66,77 @@ class WYSIJA_help_backloader extends WYSIJA_help{
 		$possibleParameters = array( array( $pagename ), array( $pagename, $action ) );
 		$enqueueFileTypes   = array( 'wp_enqueue_script' => array( 'js' => 'js', 'php' => 'js' ), 'wp_enqueue_style' => array( 'css' => 'css' ) );
 
+		// Files that we have, don't use file_exists if we know which files we have
+		$files = (object) array(
+			'css' => array(
+				'add-ons',
+				'admin-campaigns-articles',
+				'admin-campaigns-autopost',
+				'admin-campaigns-bookmarks',
+				'admin-campaigns-dividers',
+				'admin-campaigns-editDetails',
+				'admin-campaigns-editTemplate',
+				'admin-campaigns-medias',
+				'admin-campaigns-themes',
+				'admin-campaigns-viewstats',
+				'admin-campaigns-welcome_new',
+				'admin-campaigns',
+				'admin-global',
+				'admin-premium',
+				'admin-statistics',
+				'admin-subscribers-addlist',
+				'admin-subscribers-edit',
+				'admin-subscribers-export',
+				'admin-subscribers-exportlist',
+				'admin-subscribers-import',
+				'admin-subscribers-importmatch',
+				'admin-subscribers-lists',
+				'admin-widget',
+				'admin-config',
+				'admin-config-form_widget_settings',
+			),
+			'js' => array(
+				'admin-ajax-proto',
+				'admin-ajax',
+				'admin-campaigns-articles',
+				'admin-campaigns-autopost',
+				'admin-campaigns-bookmarks',
+				'admin-campaigns-default',
+				'admin-campaigns-dividers',
+				'admin-campaigns-edit',
+				'admin-campaigns-editAutonl',
+				'admin-campaigns-editDetails',
+				'admin-campaigns-editTemplate',
+				'admin-campaigns-image_data',
+				'admin-campaigns-medias',
+				'admin-campaigns-themes',
+				'admin-campaigns-viewstats',
+				'admin-campaigns-welcome_new',
+				'admin-config-form_widget_settings',
+				'admin-config-settings',
+				'admin-global',
+				'admin-listing',
+				'admin-statistics-filter',
+				'admin-statistics',
+				'admin-subscribers-edit-manual',
+				'admin-subscribers-export',
+				'admin-subscribers-import',
+				'admin-subscribers-importmatch',
+				'admin-subscribers',
+				'admin-tmce',
+				'admin-wysija-global',
+				'admin-wysija',
+			)
+		);
+
 		foreach ( $possibleParameters as $params ) {
-			foreach ( $enqueueFileTypes as $wayToInclude => $fileTypes ) {
-				foreach ( $fileTypes as $fileType => $folderLocation ){
-					if ( file_exists( $dirname . $folderLocation . DS . 'admin-' . implode( '-', $params ) . '.' . $fileType ) ) {
-						$sourceIdentifier = 'wysija-autoinc-' . $extension . '-admin-' . implode( '-', $params ) . '-' . $fileType;
-						$sourceUrl = $urlname . $folderLocation . '/admin-' . implode( '-', $params ) . '.' . $fileType;
-						call_user_func_array( $wayToInclude, array( $sourceIdentifier, $sourceUrl, array(), WYSIJA::get_version() ) );
+			foreach ( $enqueueFileTypes as $method => $types ) {
+				foreach ( $types as $file_type => $file_ext ){
+					$file_slug = 'admin-' . implode( '-', $params );
+					if ( in_array( $file_slug, $files->{ $file_ext } ) ) {
+						$file_id = "wysija-autoinc-{$extension}-{$file_slug}-{$file_ext}";
+						$file_url = "{$urlname}{$file_ext}/{$file_slug}.{$file_ext}";
+						call_user_func_array( $method, array( $file_id, $file_url, array(), WYSIJA::get_version() ) );
 					}
 				}
 			}
@@ -165,7 +228,7 @@ class WYSIJA_help_backloader extends WYSIJA_help{
 							'mailpoet-select2-l10n',
 							'mailpoet_l10n_select2',
 							array(
-								'noMatches' => __( 'No Results where found', WYSIJA ),
+								'noMatches' => __( 'No Results were found', WYSIJA ),
 								'inputTooShort' => __( 'Please enter <%= chars %> more character<%= plural %>', WYSIJA ),
 								'inputTooLong' => __( 'Please delete <%= chars %> character<%= plural %>', WYSIJA ),
 								'selectionTooBig' => __( 'You can only select <%= chars %> item<%= plural %>', WYSIJA ),
@@ -215,7 +278,7 @@ class WYSIJA_help_backloader extends WYSIJA_help{
 								'image' => __( 'Image' ),
 								'of' => __( 'of' ),
 								'close' => __( 'Close' ),
-								'noif rames' => __( 'This feature requires inline frames. You have if rames disabled or your browser does not support them.' ),
+								'noif rames' => __( 'This feature requires inline frames. You have iframes disabled or your browser does not support them.' ),
 								'l10n_print_after' => 'try{convertEntities( thickboxL10n );}catch( e ){};',
 							)
 						);
@@ -236,7 +299,6 @@ class WYSIJA_help_backloader extends WYSIJA_help{
 							wp_enqueue_style( 'mailpoet-tinymce', WYSIJA_URL . 'css/tmce/editor.css', array(), WYSIJA::get_version() );
 						}
 
-
 						/* MailPoet editor i18n */
 						wp_localize_script( 'wysija-editor', 'Wysija_i18n', $controller->jsTrans );
 						break;
@@ -253,9 +315,13 @@ class WYSIJA_help_backloader extends WYSIJA_help{
 					default:
 						if ( is_string( $kjs ) ) {
 							// check if there's a trailing slash in the urlbase
-							if ( substr( $urlbase, -1 ) !== '/' ) $urlbase .= '/';
+							if ( substr( $urlbase, -1 ) !== '/' ){
+								$urlbase .= '/';
+							}
 							// check if there's already an extension specif ied for the file
-							if ( substr( $urlbase, -3 ) !== '.js' ) $js .= '.js';
+							if ( substr( $urlbase, -3 ) !== '.js' ){
+								$js .= '.js';
+							}
 							// enqueue script
 
 							wp_enqueue_script( $kjs, $urlbase . 'js/' . $js, array(), WYSIJA::get_version() );
@@ -296,8 +362,9 @@ class WYSIJA_help_backloader extends WYSIJA_help{
 	function localizeme( $handle, $object_name, $l10n ) {
 
 		foreach ( ( array ) $l10n as $key => $value ) {
-			if ( ! is_scalar( $value ) )
+			if ( ! is_scalar( $value ) ){
 				continue;
+			}
 			$l10n[$key] = html_entity_decode( (string) $value, ENT_QUOTES, 'UTF-8' );
 		}
 
@@ -318,23 +385,22 @@ class WYSIJA_help_backloader extends WYSIJA_help{
 
 
 
-     /**
-     * this is for backward compatibility and avoid blank screen on older version of the premium plugin
-     */
-    function loadScriptsStyles($pagename,$dirname,$urlname,&$controller,$extension='newsletter') {
+	/**
+	 * this is for backward compatibility and avoid blank screen on older version of the premium plugin
+	 */
+	function loadScriptsStyles( $pagename, $dirname, $urlname, &$controller, $extension = 'newsletter' ) {
+		return $this->load_assets( $pagename, $dirname, $urlname, $controller, $extension );
+	}
 
-        return $this->load_assets($pagename, $dirname, $urlname, $controller, $extension);
-    }
+	/**
+	 * this is for backward compatibility and avoid blank screen on older version of the premium plugin
+	 */
+	function initLoad( &$controller ){
+		return $this->init( $controller );
+	}
 
-    /**
-     * this is for backward compatibility and avoid blank screen on older version of the premium plugin
-     */
-    function initLoad(&$controller){
-        return $this->init($controller);
-    }
-
-    function jsParse(&$controller, $pagename, $urlbase = WYSIJA_URL){
-        $this->parse_js( $controller, $pagename, $urlbase );
-    }
+	function jsParse( &$controller, $pagename, $urlbase = WYSIJA_URL ){
+		$this->parse_js( $controller, $pagename, $urlbase );
+	}
 
 }

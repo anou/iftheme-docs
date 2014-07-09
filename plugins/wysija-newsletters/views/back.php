@@ -278,7 +278,7 @@ class WYSIJA_view_back extends WYSIJA_view{
      * limit of records to show per page
      */
     function limitPerPage(){
-        $limitPerpageS=array(10,20,50,100);
+        $limitPerpageS=array(5,10,20,50,100);
         if($this->model->countRows <= $limitPerpageS[0]) return true;
         $limitPerpage=array();
 

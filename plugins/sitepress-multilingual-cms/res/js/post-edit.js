@@ -10,36 +10,33 @@ jQuery(document).ready(function ($) {
 
 	var postEdit = postEdit || {};
 
-	postEdit.$connect_translations_dialog = $('#connect_translations_dialog');
-	postEdit.$no_posts_found_message = postEdit.$connect_translations_dialog.find('.js-no-posts-found');
-	postEdit.$posts_found_container = postEdit.$connect_translations_dialog.find('.js-posts-found');
-	postEdit.$ajax_loader = postEdit.$connect_translations_dialog.find('.js-ajax-loader');
-	postEdit.$connect_translations_dialog_confirm = $("#connect_translations_dialog_confirm");
+	postEdit.$set_as_source_of_dialog = $('#set_as_source_of_dialog');
+	postEdit.$no_posts_found_message = postEdit.$set_as_source_of_dialog.find('.js-no-posts-found');
+	postEdit.$posts_found_container = postEdit.$set_as_source_of_dialog.find('.js-posts-found');
+	postEdit.$ajax_loader = postEdit.$set_as_source_of_dialog.find('.js-ajax-loader');
+	postEdit.$set_as_source_of_dialog_confirm = $("#set_as_source_of_dialog_confirm");
 
-	postEdit.connect_element_translations_open = function(event) {
+	postEdit.set_element_as_source_open = function() {
 
-		if (typeof(event.preventDefault) !== 'undefined' ) {
-			event.preventDefault();
-		} else {
-			event.returnValue = false;
-		}
+		event.preventDefault();
 
-//		alert(postEdit.$connect_translations_dialog.data('alert-text'));
+		alert(postEdit.$set_as_source_of_dialog.data('alert-text'));
 
-		postEdit.$connect_translations_dialog.find('#post_search').val('');
-		postEdit.$connect_translations_dialog.find('#assign_to_trid').val('');
-		postEdit.$connect_translations_dialog.dialog('open');
-		postEdit.connect_element_translations_data();
+		postEdit.$set_as_source_of_dialog.find('#post_search').val('');
+		postEdit.$set_as_source_of_dialog.find('#assign_to_trid').val('');
+		postEdit.$set_as_source_of_dialog.dialog('open');
+		postEdit.set_element_as_source_data();
 
 	};
 
-	postEdit.connect_element_translations_data = function() {
+	postEdit.set_element_as_source_data = function() {
 
-		var $connect_translations_dialog_selector = $('#post_search', postEdit.$connect_translations_dialog );
+		var $set_as_source_of_dialog_selector = $('#post_search', postEdit.$set_as_source_of_dialog );
+		// var posts = [];
 
-		var trid = $('#icl_connect_translations_trid').val();
-		var post_type = $('#icl_connect_translations_post_type').val();
-		var source_language = $('#icl_connect_translations_language').val();
+		var trid = $('#icl_set_as_source_of_trid').val();
+		var post_type = $('#icl_set_as_source_of_post_type').val();
+		var source_language = $('#icl_set_as_source_of_language').val();
 		var nonce = $('#_icl_nonce_get_orphan_posts').val();
 		var data = 'icl_ajx_action=get_orphan_posts&source_language=' + source_language + '&trid=' + trid + '&post_type=' + post_type + '&_icl_nonce=' + nonce;
 
@@ -62,15 +59,15 @@ jQuery(document).ready(function ($) {
 				postEdit.$no_posts_found_message.hide();
 				$assignPostButton.prop('disabled', false);
 
-				$connect_translations_dialog_selector.autocomplete({
+				$set_as_source_of_dialog_selector.autocomplete({
 					minLength: 0,
 					source: posts,
 					focus: function (event, ui) {
-						$connect_translations_dialog_selector.val(ui.item.label);
+						$set_as_source_of_dialog_selector.val(ui.item.label);
 						return false;
 					},
 					select: function (event, ui) {
-						$connect_translations_dialog_selector.val(ui.item.label);
+						$set_as_source_of_dialog_selector.val(ui.item.label);
 						$("#assign_to_trid").val(ui.item.value);
 						return false;
 					}
@@ -82,7 +79,9 @@ jQuery(document).ready(function ($) {
 						.appendTo(ul);
 
 				};
-			} else {
+			}
+
+			else {
 				postEdit.$posts_found_container.hide();
 				postEdit.$no_posts_found_message.show();
 				$assignPostButton.prop('disabled', true);
@@ -100,27 +99,27 @@ jQuery(document).ready(function ($) {
 
 	};
 
-	postEdit.connect_element_translations_init = function() {
+	postEdit.set_element_as_source_init = function() {
 
-		postEdit.$connect_translations_dialog.dialog({
+		postEdit.$set_as_source_of_dialog.dialog({
 			dialogClass: 'wpml-dialog wp-dialog',
 			modal: true,
 			autoOpen: false,
 			closeOnEscape: true,
 			buttons: [
 				{
-					text: postEdit.$connect_translations_dialog.data('cancel-label'),
+					text: postEdit.$set_as_source_of_dialog.data('cancel-label'),
 					'class': 'button button-secondary',
 					click: function() {
 						$(this).dialog("close");
 					}
 				},
 				{
-					text: postEdit.$connect_translations_dialog.data('ok-label'),
+					text: postEdit.$set_as_source_of_dialog.data('ok-label'),
 					'class': 'button button-primary js-assign-button',
 					click: function() {
 						$(this).dialog("close");
-						postEdit.connect_element_translations_do();
+						postEdit.set_element_as_source_do();
 					}
 				}
 			]
@@ -128,11 +127,11 @@ jQuery(document).ready(function ($) {
 
 	}(); // Auto executable function
 
-	postEdit.connect_element_translations_do = function() {
+	postEdit.set_element_as_source_do = function() {
 
 		var trid = $("#assign_to_trid").val();
-		var post_type = $('#icl_connect_translations_post_type').val();
-		var post_id = $('#icl_connect_translations_post_id').val();
+		var post_type = $('#icl_set_as_source_of_post_type').val();
+		var post_id = $('#icl_set_as_source_of_post_id').val();
 		var nonce = $('#_icl_nonce_get_posts_from_trid').val();
 
 		var data = 'icl_ajx_action=get_posts_from_trid&trid=' + trid + '&post_type=' + post_type + '&_icl_nonce=' + nonce;
@@ -147,47 +146,31 @@ jQuery(document).ready(function ($) {
 		request.done(function ( posts ) {
 
 			if ( posts.length > 0 ) {
-				var $list = $('#connect_translations_dialog_confirm_list');
+				var $list = $('#set_as_source_of_dialog_confirm_list');
 				$list.empty();
 				var $ul = $('<ul />').appendTo( $list );
-
-				var translation_set_has_source_language = false;
 
 				$.each(posts, function () {
 					var $li  = $('<li>').append('<span>[' + this.language + '] ' + this.title + '</span>');
 					$li.appendTo ( $ul );
-					if(this.source_language && !translation_set_has_source_language) {
-						translation_set_has_source_language = true;
-					}
 				});
 
-				var alert = $('<p>').append('<strong>' + postEdit.$connect_translations_dialog.data('alert-text') + '</strong>');
-				alert.appendTo($list);
-
-				var set_as_source_checkbox = $('<input type="checkbox" value="1" name="set_as_source" />');
-
-				if(!translation_set_has_source_language) {
-					set_as_source_checkbox.attr('checked', 'checked');
-				}
-				var action = $('<label>').append(set_as_source_checkbox).append(postEdit.$connect_translations_dialog.data('set_as_source-text'));
-				action.appendTo($list);
-
-				postEdit.$connect_translations_dialog_confirm.dialog({
-					dialogClass: 'wpml-dialog wp-dialog',
+				postEdit.$set_as_source_of_dialog_confirm.dialog({
+					'dialogClass': 'wpml-dialog wp-dialog',
 					resizable: false,
 					autoOpen: true,
 					modal: true,
 					buttons: [
 						{
-							text: postEdit.$connect_translations_dialog_confirm.data('cancel-label'),
+							text: postEdit.$set_as_source_of_dialog_confirm.data('cancel-label'),
 							'class': 'button button-secondary',
 							click: function() {
 								$(this).dialog("close");
-								postEdit.$connect_translations_dialog.dialog('open');
+								postEdit.$set_as_source_of_dialog.dialog('open');
 							}
 						},
 						{
-							text: postEdit.$connect_translations_dialog_confirm.data('assign-label'),
+							text: postEdit.$set_as_source_of_dialog_confirm.data('assign-label'),
 							'class': 'button button-primary js-confirm-connect-this-post',
 							click: function() {
 
@@ -201,33 +184,19 @@ jQuery(document).ready(function ($) {
 
 								$('<span class="spinner" />').appendTo( $confirmButton );
 
-								var nonce = $('#_icl_nonce_connect_translations').val();
-
-								var data_object = {
-									icl_ajx_action: 'connect_translations',
-									post_id: post_id,
-									post_type: post_type,
-									new_trid: trid,
-									_icl_nonce: nonce,
-									set_as_source: (set_as_source_checkbox.is(':checked') ? 1 : 0)
-								};
-
-//								var data = 'icl_ajx_action=connect_translations&post_id=' + post_id + '&new_trid=' + trid + '&post_type=' + post_type + '&_icl_nonce=' + nonce;
-
-//								console.log( $(this) );
-//
-//								return;
+								var nonce = $('#_icl_nonce_set_as_source_of').val();
+								var data = 'icl_ajx_action=set_as_source_of&post_id=' + post_id + '&new_trid=' + trid + '&post_type=' + post_type + '&_icl_nonce=' + nonce;
 
 								var request = $.ajax({
 									type: "POST",
 									url: icl_ajx_url,
 									dataType: 'json',
-									data: data_object
+									data: data
 								});
 
 								request.done(function (result) {
 									if ( result ) {
-										postEdit.$connect_translations_dialog.dialog("close");
+										postEdit.$set_as_source_of_dialog.dialog("close");
 										location.reload();
 									}
 								});
@@ -262,8 +231,8 @@ jQuery(document).ready(function ($) {
 
 	};
 
-	$('#icl_document_connect_translations_dropdown')
+	$('#icl_document_set_as_source_of_dropdown')
 		.find('.js-set-post-as-source')
-		.on('click', postEdit.connect_element_translations_open );
+		.on('click', postEdit.set_element_as_source_open );
 
 });

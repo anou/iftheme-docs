@@ -46,6 +46,7 @@ class WYSIJA_help_back extends WYSIJA_help{
 
         }else{
             if(WYSIJA_ITF)  {
+                add_action('admin_init', array( $this , 'verify_capability'),1);
                 add_action('admin_init', array($this->controller, 'main'));
                 add_action('after_setup_theme',array($this,'resolveConflicts'));
             }
@@ -168,6 +169,43 @@ class WYSIJA_help_back extends WYSIJA_help{
         if($conflictingPlugins){
             $helperConflicts=WYSIJA::get('conflicts','helper');
             $helperConflicts->resolve($conflictingPlugins);
+        }
+    }
+
+    /**
+     * this function will check the role of the user executing the action, if it's called from another
+     * WordPress admin page than page.php for instance admin-post.php
+     * @return boolean
+     */
+    function verify_capability(){
+        if( isset( $_GET['page'] ) && substr( $_GET['page'] ,0 ,7 ) == 'wysija_' ){
+
+            switch( $_GET['page'] ){
+                case 'wysija_campaigns':
+                    $role_needed = 'wysija_newsletters';
+                    break;
+                case 'wysija_subscribers':
+                    $role_needed = 'wysija_subscribers';
+                    break;
+                case 'wysija_config':
+                    $role_needed = 'wysija_config';
+                    break;
+                case 'wysija_statistics':
+                    $role_needed = 'wysija_stats_dashboard';
+                    break;
+                default:
+                    $role_needed = 'switch_themes';
+            }
+
+            if( current_user_can( $role_needed ) ){
+                return true;
+            } else{
+                die( 'You are not allowed here.' );
+            }
+
+        }else{
+            // this is not a wysija interface/action we can let it pass
+            return true;
         }
     }
 

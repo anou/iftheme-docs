@@ -103,9 +103,9 @@ class WYSIJA_help_email extends WYSIJA_object{
                 $this->error(__('The PHP Extension openssl is not enabled on your server. Ask your host to enable it if you want to use an SSL connection.',WYSIJA));
             }elseif(!empty($bounce) AND !in_array($config->getValue('sending_method'),array('smtp_com','elasticemail'))){
                 $this->error(sprintf(__('The bounce email address "%1$s" might actually cause the problem. Leave the field empty and try again.',WYSIJA),$bounce));
-            //Case 2 : you are using SMTP but you didn't add an authentification
+            //Case 2 : you are using SMTP but you didn't add an authentication
             }elseif(in_array($config->getValue('sending_method'),array('smtp','gmail')) AND !$config->getValue('smtp_auth') AND strlen($config->getValue('smtp_password')) > 1){
-                $this->error(__('You specified an SMTP password but you don\'t require an authentification, you might want to turn the SMTP authentification ON.',WYSIJA));
+                $this->error(__('You specified an SMTP password but you don\'t require an authentication, you might want to turn the SMTP authentication ON.',WYSIJA));
             //Case 3 : you are on localhost!
             }elseif((strpos(WYSIJA_URL,'localhost') || strpos(WYSIJA_URL,'127.0.0.1')) && in_array($config->getValue('sending_method'),array('sendmail','qmail','mail'))){
                 $this->error(__('Your localhost may not have a mail server. To verify, please log out and click on the "Lost your password?" link on the login page. Do you receive the reset password email from your WordPress?',WYSIJA));

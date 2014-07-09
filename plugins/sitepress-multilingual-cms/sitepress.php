@@ -1,18 +1,17 @@
 <?php
 /*
 Plugin Name: WPML Multilingual CMS
-Plugin URI: https://wpml.org/
-Description: WPML Multilingual CMS. <a href="https://wpml.org">Documentation</a>.
+Plugin URI: http://wpml.org/
+Description: WPML Multilingual CMS. <a href="http://wpml.org">Documentation</a>.
 Author: ICanLocalize
-Author URI: https://wpml.org
-Version: 3.1.5
+Author URI: http://wpml.org
+Version: 3.1
 */
 
 if(preg_match('#' . basename(__FILE__) . '#', $_SERVER['PHP_SELF'])) { die('You are not allowed to call this page directly.'); }
 
 if(defined('ICL_SITEPRESS_VERSION')) return;
-define('ICL_SITEPRESS_VERSION', '3.1.5');
-//define('ICL_SITEPRESS_DEV_VERSION', '3.1.5b3');
+define('ICL_SITEPRESS_VERSION', '3.1');
 define('ICL_PLUGIN_PATH', dirname(__FILE__));
 define('ICL_PLUGIN_FOLDER', basename(ICL_PLUGIN_PATH));
 
@@ -38,12 +37,11 @@ if(!empty($icl_ncp_plugins)){
     return;
 }
 
-require ICL_PLUGIN_PATH . '/inc/template-functions.php';
 
 if ( function_exists('is_multisite') && is_multisite() ) {    
     $wpmu_sitewide_plugins = (array) maybe_unserialize( get_site_option( 'active_sitewide_plugins' ) );
     if(false === get_option('icl_sitepress_version', false) && isset($wpmu_sitewide_plugins[ICL_PLUGIN_FOLDER.'/'.basename(__FILE__)])){
-        require_once ICL_PLUGIN_PATH . '/inc/sitepress-schema.php';
+        require_once ICL_PLUGIN_PATH . '/inc/sitepress-schema.php';        
         icl_sitepress_activate();
     }
     include_once ICL_PLUGIN_PATH . '/inc/functions-network.php';
@@ -57,6 +55,7 @@ require ICL_PLUGIN_PATH . '/inc/constants.php';
 require ICL_PLUGIN_PATH . '/inc/icl-admin-notifier.php';
 
 require_once ICL_PLUGIN_PATH . '/inc/sitepress-schema.php';
+require ICL_PLUGIN_PATH . '/inc/template-functions.php';
 require ICL_PLUGIN_PATH . '/sitepress.class.php';
 require ICL_PLUGIN_PATH . '/inc/functions.php';
 require ICL_PLUGIN_PATH . '/inc/hacks.php';
@@ -103,7 +102,7 @@ if(
     require ICL_PLUGIN_PATH . '/inc/wp-login-filters.php';
     
     require_once ICL_PLUGIN_PATH . '/inc/plugins-integration.php';
-
+    
 }
 
 if(!empty($sitepress_settings['automatic_redirect'])){

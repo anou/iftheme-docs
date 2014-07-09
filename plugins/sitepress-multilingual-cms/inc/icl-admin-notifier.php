@@ -191,21 +191,18 @@ class ICL_AdminNotifier {
 	<?php
 	}
 
-	public static function displayInstantMessage( $message, $type = '', $class = false, $return = false ) {
-		if(!$class) {
-			$class = 'icl-' . $type;
-			$class .= ' icl-admin-instant-message';
+	private static function displayInstantMessage( $message, $type = '' ) {
+		if ( $type != 'error' ) {
+			?>
+			<div class="updated icl-admin-instant-message">
+		<?php } else { ?>
+			<div class="error icl-admin-instant-message">
+		<?php
 		}
-		$class .= ' ' . $type;
-
-		$result = '<div class="' . $class . '">';
-		$result .= stripslashes( $message );
-		$result .= '</div>';
-
-		if(!$return) {
-			echo $result;
-		}
-		return $result;
+		echo stripslashes( $message );
+		?>
+		</div>
+	<?php
 	}
 }
 

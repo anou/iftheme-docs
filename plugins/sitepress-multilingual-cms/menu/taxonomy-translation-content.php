@@ -43,8 +43,7 @@ global $wp_taxonomies;
 		<?php
 		/* assume that the selected language can be only one */
 		if ( count( $this->selected_languages ) == 1 ) {
-			$selected_lang = $this->selected_languages;
-			$the_language  = array_shift( $selected_lang );
+			$the_language = current( $this->selected_languages );
 		}
 		?>
 		<select name="language">
@@ -54,7 +53,7 @@ global $wp_taxonomies;
 			<?php
 			foreach ( $active_languages as $language ): if ( $language[ 'code' ] != $current_language ): ?>
 				<option value="<?php echo $language[ 'code' ] ?>"
-						<?php if (isset($the_language) && $language[ 'code' ] == $the_language[ 'code' ]): ?>selected="selected"<?php endif; ?>><?php echo $language[ 'display_name' ] ?></option>
+						<?php if (count( $this->selected_languages ) == 1 && $language[ 'code' ] == $the_language[ 'code' ]): ?>selected="selected"<?php endif; ?>><?php echo $language[ 'display_name' ] ?></option>
 			<?php endif; endforeach; ?>
 		</select>
 		&nbsp;
@@ -125,7 +124,7 @@ global $wp_taxonomies;
 									<tr>
 										<td><?php _e( 'Name', 'sitepress' ) ?></td>
 										<td><input name="name" type="text"
-												   value="<?php echo isset( $term->translations ) && !empty( $term->translations[ $language[ 'code' ] ] ) ? esc_attr( $sitepress->the_category_name_filter( $term->translations[ $language[ 'code' ] ]->name ) ) : '' ?>"/></td>
+												   value="<?php echo isset( $term->translations ) && !empty( $term->translations[ $language[ 'code' ] ] ) ? esc_attr( $term->translations[ $language[ 'code' ] ]->name ) : '' ?>"/></td>
 									</tr>
 									<tr>
 										<td><?php _e( 'Slug', 'sitepress' ) ?></td>

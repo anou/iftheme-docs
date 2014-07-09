@@ -61,7 +61,7 @@ class WYSIJA_module_view_stats_newsletter_std_view extends WYSIJA_view_back {
             <h3 class="title"><?php echo __('Top links', WYSIJA); ?></h3>
             <?php if (empty($data['top_links'])) { ?>
                 <div class="notice-msg updated inline"><ul><li><?php echo $data['messages']['data_not_available']; ?></li></ul></div>
-        <?php } else { ?>              
+        <?php } else { ?>
                 <table class="widefat fixed">
                     <thead>
                     <th class="check-column" style="width:40px">&nbsp;</th>
@@ -71,32 +71,44 @@ class WYSIJA_module_view_stats_newsletter_std_view extends WYSIJA_view_back {
                             <span><?php // echo __('Clicks'); ?></span><span class="sorting-indicator"></span>
                         </a>
                         </th-->
-                    <th class="click_column"><?php echo __('Unique clicks'); ?></th>                        
-		    <th class="click_column"><?php echo __('Total clicks'); ?></th>                        
+                    <th class="click_column"><?php echo __('Unique clicks'); ?></th>
+		    <th class="click_column"><?php echo __('Total clicks'); ?></th>
                     <th>&nbsp;</th>
                     </thead>
                     <tbody class="">
                         <?php
                         $i = 1;
                         $alt = false;
-			$link_helper = WYSIJA::get('links', 'helper');
-			add_filter('wysija_link', array($link_helper, 'render_link'), 1, 6);			
+						$link_helper = WYSIJA::get('links', 'helper');
+						add_filter('wysija_link', array($link_helper, 'render_link'), 1, 6);
                         foreach ($data['top_links'] as $url) {
-			    if ($i === 1) {
-				$wysija_link = apply_filters('wysija_link', '', $url['url'], 50, 15, true);
-			    } else {
-				$wysija_link = apply_filters('wysija_link', '', $url['url'], 50, 15, true, '...');
-			    }
-                            ?>
-                            <tr class="<?php echo $alt ? 'alternate' : '';
-                            $alt = !$alt; ?>">
-                                <td><?php echo $i;
-                            $i++; ?></td>
-                                <td><?php echo $wysija_link; ?></td>
-				<td><?php echo $url['unique_clicks']; ?></td>
-                                <td><?php echo $url['total_clicks']; ?></td>
-                                <td>&nbsp;</td>
-                            </tr>
+							if ($i === 1)
+								$wysija_link = apply_filters('wysija_link', '', $url['url'], 50, 15, true);
+							else
+								$wysija_link = apply_filters('wysija_link', '', $url['url'], 50, 15, true, '...');
+
+
+						?>
+						<tr class="<?php echo $alt ? 'alternate' : '';
+						$alt = !$alt; ?>">
+							<td><?php echo $i; $i++; ?></td>
+							<td><?php echo $wysija_link; ?></td>
+							<td>
+								<?php
+									echo $url['unique_clicks'];
+									if ($data['is_premium']) {
+										echo ' - ';
+										if ($url['is_viewing'])
+											echo __('Currently viewing', WYSIJA);
+										else
+											echo '<a href="'.$url['view_subscriber_url'].'">'.__('View subscribers', WYSIJA).'</a>';
+
+									}
+								?>
+							</td>
+							<td><?php echo $url['total_clicks']; ?></td>
+							<td>&nbsp;</td>
+						</tr>
                     <?php
                 }
                 ?>
@@ -114,7 +126,7 @@ class WYSIJA_module_view_stats_newsletter_std_view extends WYSIJA_view_back {
         </div>
         <?php
     }
-    
+
     /**
      * Render actions of a newsletter
      * @param type $data
@@ -123,17 +135,17 @@ class WYSIJA_module_view_stats_newsletter_std_view extends WYSIJA_view_back {
         echo '<div class="actions right">';
 
         $classes = function_exists('wp_star_rating') ? 'add-new-h2' : 'button-secondary2';
-        
+
         // view button
         $email_helper = WYSIJA::get('email', 'helper');
         $link_view = $email_helper->getVIB($data['email_object']);
         echo '<a id="action-view" target="_blank" href="'.$link_view.'" class="action-view '.$classes.'">'.__('View', WYSIJA).'</a>';
-        
+
         //duplicate button
         $duplicate_suffix = '';
         if (isset($data['email_object']['type']) && (int) $data['email_object']['type'] == 1) {
             $duplicate_suffix = 'Email';
-        }        
+        }
         $action = 'duplicate' . $duplicate_suffix;
         $params = array(
             'page' => 'wysija_campaigns',
@@ -142,7 +154,7 @@ class WYSIJA_module_view_stats_newsletter_std_view extends WYSIJA_view_back {
         );
         $link_duplicate = 'admin.php?'.http_build_query($params);
         echo '<a id="action-'.$action.'" href="'.$link_duplicate.'" class="action-'.$action.' '.$classes.'">'.__('Duplicate', WYSIJA).'</a>';
-        
+
         $alternate = false;
         echo '<table class="newsletter-stats-block widefat fixed">';
         // Google tracking code
@@ -150,30 +162,30 @@ class WYSIJA_module_view_stats_newsletter_std_view extends WYSIJA_view_back {
             // echo '<div class="googletrackingcode"><span>' . __('Google Analytics', WYSIJA) . ':</span> ' . $data['email_object']['params']['googletrackingcode'] . '</div>';
             echo '<tr class="'.($alternate ? 'alternate' : '').'"><td class="label">'.__('Google Analytics', WYSIJA).'</td><td>'.$data['email_object']['params']['googletrackingcode'].'</td></tr>';
             $alternate = !$alternate;
-        }    
-        
+        }
+
         // Sent on:
         // echo '<div class="googletrackingcode"><span>' . __('Sent on', WYSIJA) . ':</span> ' . $this->fieldListHTML_created_at_time($data['email_object']['sent_at']) . '</div>';
         echo '<tr class="'.($alternate ? 'alternate' : '').'"><td class="label">'.__('Sent on', WYSIJA).'</td><td>'.$this->fieldListHTML_created_at_time($data['email_object']['sent_at']).'</td></tr>';
         $alternate = !$alternate;
-        
-        // Lists: 
+
+        // Lists:
         if (!empty($data['lists'])) {
             // echo '<div class="googletrackingcode"><span>' . __('Lists', WYSIJA) . ':</span> ' . implode(', ',$data['lists']) . '</div>';
             echo '<tr class="'.($alternate ? 'alternate' : '').'"><td class="label">'.__('Lists', WYSIJA).'</td><td>'.implode(', ',$data['lists']).'</td></tr>';
             $alternate = !$alternate;
         }
 
-        // From address: 
+        // From address:
         $_from_address = array();
         if (!empty($data['email_object']['from_name'])) {
             $_from_address[] = $data['email_object']['from_name'];
-        }        
+        }
         if (!empty($data['email_object']['from_email'])) {
             $_from_address[] = $data['email_object']['from_email'];
-        }     
+        }
         if (!empty($_from_address)) {
-            // echo '<div class="googletrackingcode"><span>' . __('From', WYSIJA) . ':</span> ' . implode(', ',$_from_address) . '</div>';            
+            // echo '<div class="googletrackingcode"><span>' . __('From', WYSIJA) . ':</span> ' . implode(', ',$_from_address) . '</div>';
             echo '<tr class="'.($alternate ? 'alternate' : '').'"><td class="label">'.__('From', WYSIJA).'</td><td>'.implode(' &lt;',$_from_address).(count($_from_address)>1 ? '&gt;' : '').'</td></tr>';
             $alternate = !$alternate;
         }
@@ -182,25 +194,25 @@ class WYSIJA_module_view_stats_newsletter_std_view extends WYSIJA_view_back {
         $_reply_to_address = array();
         if (!empty($data['email_object']['replyto_name'])) {
             $_reply_to_address[] = $data['email_object']['replyto_name'];
-        }        
+        }
         if (!empty($data['email_object']['replyto_email'])) {
             $_reply_to_address[] = $data['email_object']['replyto_email'];
-        }     
+        }
 
         if (!empty($_reply_to_address)) {
-            // echo '<div class="googletrackingcode"><span>' . __('Reply-to', WYSIJA) . ':</span> ' . implode(', ',$_reply_to_address) . '</div>';            
+            // echo '<div class="googletrackingcode"><span>' . __('Reply-to', WYSIJA) . ':</span> ' . implode(', ',$_reply_to_address) . '</div>';
             echo '<tr class="'.($alternate ? 'alternate' : '').'"><td class="label">'.__('Reply-to', WYSIJA).'</td><td>'.implode(' &lt;',$_reply_to_address). (count($_reply_to_address)>1 ? '&gt;' : '') . '</td></tr>';
             $alternate = !$alternate;
-        }     
-        
+        }
+
         if (!empty($data['bounce'])) {
-            // echo '<div class="googletrackingcode"><span>' . __('Bounce', WYSIJA) . ':</span> ' . $data['bounce'] . '</div>';            
+            // echo '<div class="googletrackingcode"><span>' . __('Bounce', WYSIJA) . ':</span> ' . $data['bounce'] . '</div>';
             echo '<tr class="'.($alternate ? 'alternate' : '').'"><td class="label">'.__('Bounce', WYSIJA).'</td><td>'.$data['bounce'].'</td></tr>';
             $alternate = !$alternate;
         }
 
         echo '</table>';
         echo '</div>';
-    }    
+    }
 
 }

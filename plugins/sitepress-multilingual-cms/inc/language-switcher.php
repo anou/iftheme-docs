@@ -1,9 +1,5 @@
 <?php
 
-if(!class_exists('ICL_Language_Switcher')) {
-	include ICL_PLUGIN_PATH . '/inc/widgets/icl-language-switcher.class.php';
-}
-
 class SitePressLanguageSwitcher {
 
     var $widget_preview = false;
@@ -75,10 +71,8 @@ class SitePressLanguageSwitcher {
             }
             add_filter('the_content', array(&$this, 'post_availability'), 100);
         }
-
         // the language selector widget
-	    add_action( 'widgets_init', array( $this, 'language_selector_widget_init' ) );
-
+        $this->language_selector_widget_init();
         if(is_admin() && isset($_GET['page']) && $_GET['page'] == ICL_PLUGIN_FOLDER . '/menu/languages.php'){
             add_action('admin_head', 'icl_lang_sel_nav_css', 1, 1, true);
             add_action('admin_head', array(&$this, 'custom_language_switcher_style'));
@@ -94,9 +88,8 @@ class SitePressLanguageSwitcher {
     }
 
     function language_selector_widget_init(){
-	   	register_widget( 'ICL_Language_Switcher' );
-//        wp_register_sidebar_widget('icl_lang_sel_widget', __('Language Selector', 'sitepress'), 'language_selector_widget', array('classname'=>'icl_languages_selector'));
-//        wp_register_widget_control('icl_lang_sel_widget_control', __('Language Selector', 'sitepress'), array(&$this, 'set_widget') );
+        wp_register_sidebar_widget('icl_lang_sel_widget', __('Language Selector', 'sitepress'), 'language_selector_widget', array('classname'=>'icl_languages_selector'));
+        wp_register_widget_control('icl_lang_sel_widget_control', __('Language Selector', 'sitepress'), array(&$this, 'set_widget') );
         add_action('template_redirect','icl_lang_sel_nav_ob_start', 0);
         add_action('wp_head','icl_lang_sel_nav_ob_end');
     }
@@ -602,65 +595,45 @@ class SitePressLanguageSwitcher {
 
             <div id="lang_sel_list"<?php if(empty($this->settings['icl_lang_sel_type']) || $this->settings['icl_lang_sel_type'] == 'dropdown') echo ' style="display:none;"';?> class="lang_sel_list_<?php echo $this->settings['icl_lang_sel_orientation'] ?>">
             <ul>
-                <?php
-								foreach($active_languages as $lang){
-
-									$language_url = apply_filters( 'WPML_filter_link', $lang[ 'url' ], $lang );
-									if ( $lang[ 'language_code' ] == $sitepress->get_current_language() ) {
-										$language_selected = ' class="lang_sel_sel"';
-									} else {
-										$language_selected = ' class="lang_sel_other"';
-									}
-									$language_flag_title = $this->settings[ 'icl_lso_display_lang' ] ? esc_attr( $lang[ 'translated_name' ] ) : esc_attr( $lang[ 'native_name' ] );
-
-
-									$lang_native_hidden     = false;
-									$lang_translated_hidden = true;
-									if ( $icl_language_switcher_preview ) {
-										$lang_native = $lang[ 'native_name' ];
-										if ( $this->settings[ 'icl_lso_native_lang' ] ) {
-											$lang_native_hidden = false;
-										} else {
-											$lang_native_hidden = true;
-										}
-										$lang_translated = $lang[ 'translated_name' ];
-										if ( $this->settings[ 'icl_lso_display_lang' ] ) {
-											$lang_translated_hidden = false;
-										} else {
-											$lang_translated_hidden = true;
-										}
-									} else {
-										if ( $this->settings[ 'icl_lso_native_lang' ] ) {
-											$lang_native = $lang[ 'native_name' ];
-										} else {
-											$lang_native = false;
-										}
-										if ( $this->settings[ 'icl_lso_display_lang' ] ) {
-											$lang_translated = $lang[ 'translated_name' ];
-										} else {
-											$lang_translated = false;
-										}
-									}
-
-									$country_flag_url = $lang[ 'country_flag_url' ];
-
-									?>
-                <li class="icl-<?php echo $lang['language_code']; ?>">
-									<a href="<?php echo $language_url; ?>"<?php echo $language_selected; ?>>
-										<?php
-										if ( $this->settings[ 'icl_lso_flags' ] || $icl_language_switcher_preview ) {
-											?>
-											<img <?php if (!$this->settings[ 'icl_lso_flags' ]): ?>style="display:none"<?php endif ?> class="iclflag" src="<?php echo $country_flag_url; ?>" alt="<?php echo $lang[ 'language_code' ] ?>"
-													 title="<?php echo $language_flag_title; ?>"/>&nbsp;
-										<?php
-										}
-										echo @icl_disp_language( $lang_native, $lang_translated, $lang_native_hidden, $lang_translated_hidden );
-										?>
-									</a>
+                <?php foreach($active_languages as $lang): ?>
+                <li class="icl-<?php echo $lang['language_code'] ?>">
+                    <a href="<?php echo apply_filters('WPML_filter_link', $lang['url'], $lang)?>"<?php if ($lang['language_code'] == $sitepress->get_current_language()) echo ' class="lang_sel_sel"'; else echo ' class="lang_sel_other"'; ?>>
+                    <?php if( $this->settings['icl_lso_flags'] || $icl_language_switcher_preview):?>
+                    <img <?php if( !$this->settings['icl_lso_flags'] ):?>style="display:none"<?php endif?> class="iclflag" src="<?php echo $lang['country_flag_url'] ?>" alt="<?php echo $lang['language_code'] ?>" title="<?php echo $this->settings['icl_lso_display_lang'] ? esc_attr($lang['translated_name']) : esc_attr($lang['native_name']) ; ?>" />&nbsp;
+                    <?php endif; ?>
+                    <?php
+						$lang_native_hidden = false;
+						$lang_translated_hidden = true;
+                        if($icl_language_switcher_preview){
+                            $lang_native = $lang['native_name'];
+                            if($this->settings['icl_lso_native_lang']){
+                                $lang_native_hidden = false;
+                            }else{
+                                $lang_native_hidden = true;
+                            }
+                            $lang_translated = $lang['translated_name'];
+                            if($this->settings['icl_lso_display_lang']){
+                                $lang_translated_hidden = false;
+                            }else{
+                                $lang_translated_hidden = true;
+                            }
+                        }else{
+                            if($this->settings['icl_lso_native_lang']){
+                                $lang_native = $lang['native_name'];
+                            }else{
+                                $lang_native = false;
+                            }
+                            if($this->settings['icl_lso_display_lang']){
+                                $lang_translated = $lang['translated_name'];
+                            }else{
+                                $lang_translated = false;
+                            }
+                        }
+                        echo @icl_disp_language($lang_native, $lang_translated, $lang_native_hidden, $lang_translated_hidden);
+                         ?>
+						</a>
                 </li>
-                <?php
-			}
-?>
+                <?php endforeach; ?>
             </ul>
 </div>
 <?php

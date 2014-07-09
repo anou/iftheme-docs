@@ -95,7 +95,7 @@ $cf_keys = array_unique(@array_merge($cf_keys, (array)$iclTranslationManagement-
             <?php _e("WPML can read a configuration file that tells it what needs translation in themes and plugins. The file is named wpml-config.xml and it's placed in the root folder of the plugin or theme.", 'wpml-translation-management'); ?>
         </p>
         <p>
-            <a href="https://wpml.org/?page_id=5526"><?php _e('Learn more', 'wpml-translation-management') ?></a>
+            <a href="http://wpml.org/?page_id=5526"><?php _e('Learn more', 'wpml-translation-management') ?></a>
         </p>
     </div>
 </div>
@@ -140,7 +140,7 @@ $cf_keys = array_unique(@array_merge($cf_keys, (array)$iclTranslationManagement-
             </p>
 
             <p>
-                <a href="https://wpml.org/?page_id=3416" target="_blank"><?php _e('Learn more about the different translation options') ?></a>
+                <a href="http://wpml.org/?page_id=3416" target="_blank"><?php _e('Learn more about the different translation options') ?></a>
             </p>
 
             <p class="buttons-wrap">

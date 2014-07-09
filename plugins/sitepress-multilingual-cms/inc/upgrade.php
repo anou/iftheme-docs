@@ -1,14 +1,13 @@
 <?php
-if (!defined('ICL_SITEPRESS_DEV_VERSION') && (version_compare( get_option( 'icl_sitepress_version' ), ICL_SITEPRESS_VERSION, '=' ) || ( isset( $_REQUEST[ 'action' ] ) && $_REQUEST[ 'action' ] == 'error_scrape' ) || ! isset( $wpdb ) )) {
-	return;
-}
+
+if(version_compare(get_option('icl_sitepress_version'), ICL_SITEPRESS_VERSION, '=') 
+    || (isset($_REQUEST['action']) && $_REQUEST['action'] == 'error_scrape') || !isset($wpdb) ) return;
 
 
-if ( get_option( 'icl_sitepress_version' ) && version_compare( get_option( 'icl_sitepress_version' ), '1.7.0', '<' ) ) {
-	define( 'WPML_UPGRADE_NOT_POSSIBLE', true );
-	add_action( 'admin_notices', 'icl_plugin_too_old' );
-
-	return;
+    if(get_option('icl_sitepress_version') && version_compare(get_option('icl_sitepress_version'), '1.7.0', '<')){
+    define('WPML_UPGRADE_NOT_POSSIBLE', true);
+    add_action('admin_notices', 'icl_plugin_too_old');
+    return;
 }
     
 add_action('plugins_loaded', 'icl_plugin_upgrade' , 1);
@@ -53,8 +52,8 @@ function icl_plugin_upgrade(){
             update_option('icl_sitepress_settings',$iclsettings);
         }
         
-        $wpdb->query("UPDATE {$wpdb->prefix}icl_translations SET element_type='tax_post_tag' WHERE element_type='tag'"); // @since 3.1.5 - mysql_* function deprecated in php 5.5+
-        $wpdb->query("UPDATE {$wpdb->prefix}icl_translations SET element_type='tax_category' WHERE element_type='category'");
+        mysql_query("UPDATE {$wpdb->prefix}icl_translations SET element_type='tax_post_tag' WHERE element_type='tag'");
+        mysql_query("UPDATE {$wpdb->prefix}icl_translations SET element_type='tax_category' WHERE element_type='category'");
     }
 
     if(get_option('icl_sitepress_version') && version_compare(get_option('icl_sitepress_version'), '1.7.8', '<')){    
@@ -64,13 +63,13 @@ function icl_plugin_upgrade(){
         }
         foreach($post_types as $type=>$ids){
             if(!empty($ids)){
-                $wpdb->query("UPDATE {$wpdb->prefix}icl_translations SET element_type='post_{$type}' WHERE element_type='post' AND element_id IN(".join(',',$ids).")");    // @since 3.1.5 - mysql_* function deprecated in php 5.5+
+                mysql_query("UPDATE {$wpdb->prefix}icl_translations SET element_type='post_{$type}' WHERE element_type='post' AND element_id IN(".join(',',$ids).")");    
             }
         }
         
         // fix categories & tags in icl_translations
-        $res = $wpdb->get_results("SELECT term_taxonomy_id, taxonomy FROM {$wpdb->term_taxonomy}"); 
-        foreach($res as $row) { 
+        $res = mysql_query("SELECT term_taxonomy_id, taxonomy FROM {$wpdb->term_taxonomy}");
+        while($row = mysql_fetch_object($res)) {
             $icltr = $wpdb->get_row("SELECT translation_id, element_type FROM {$wpdb->prefix}icl_translations WHERE element_id='{$row->term_taxonomy_id}' AND element_type LIKE 'tax\\_%'");
             if('tax_' . $row->taxonomy != $icltr->element_type){
                 $wpdb->update($wpdb->prefix . 'icl_translations', array('element_type'=>'tax_'.$row->taxonomy), array('translation_id'=>$icltr->translation_id));
@@ -89,7 +88,7 @@ function icl_plugin_upgrade(){
 
     if(get_option('icl_sitepress_version') && version_compare(get_option('icl_sitepress_version'), '2.0.4', '<')){    
         $sql = "ALTER TABLE {$wpdb->prefix}icl_translation_status ADD COLUMN `_prevstate` longtext";
-        $wpdb->query($sql);
+        mysql_query($sql);
     }
     
     icl_upgrade_version('2.0.5');
@@ -118,24 +117,16 @@ function icl_plugin_upgrade(){
     
 	icl_upgrade_version('3.1');
 
-	icl_upgrade_version('3.1.5');
-
-	//Forcing upgrade logic when ICL_SITEPRESS_DEV_VERSION is defined
-	//This allow to run the logic between different alpha/beta/RC versions
-	//since we are now storing only the formal version in the options
-	if(defined('ICL_SITEPRESS_DEV_VERSION')) {
-		icl_upgrade_version(ICL_SITEPRESS_VERSION, true);
-	}
-
     if(version_compare(get_option('icl_sitepress_version'), ICL_SITEPRESS_VERSION, '<')){
         update_option('icl_sitepress_version', ICL_SITEPRESS_VERSION);
     }
+    
 }
 
-function icl_upgrade_version($version, $force = false){
+function icl_upgrade_version($version){
     global $wpdb, $sitepress_settings, $sitepress, $iclsettings;
-
-	if($force || (get_option('icl_sitepress_version') && version_compare(get_option('icl_sitepress_version'), $version, '<' ))){
+                                                
+    if(get_option('icl_sitepress_version') && version_compare(get_option('icl_sitepress_version'), $version, '<')){    
         $upg_file = ICL_PLUGIN_PATH . '/inc/upgrade-functions/upgrade-' . $version . '.php';        
         if(file_exists($upg_file) && is_readable($upg_file)){
             if(!defined('WPML_DOING_UPGRADE')){

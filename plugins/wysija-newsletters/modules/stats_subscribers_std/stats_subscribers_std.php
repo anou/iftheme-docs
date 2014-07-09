@@ -71,19 +71,22 @@ class WYSIJA_module_stats_subscribers_std extends WYSIJA_module_statistics {
             return;
 
         $emails_count = count($emails);
-        // filter emails, keep opened ones only
-        foreach ($emails as $email_id => $email) {
-            if (empty($email['opened_at']) || $email['opened_at'] <= 0) {
-                unset($emails[$email_id]);
-            }
-        }
-        $opened_emails_count = count($emails);
+        
         // get urls by email
         $urls = $this->model_obj->get_urls_by_email_ids(array_keys($emails), $params['user_id']);
+        
         // combine
         foreach ($emails as $email_id => $email) {
             $emails[$email_id]['urls'] = !empty($urls[$email_id]) ? $urls[$email_id] : array();
         }
+        
+        // filter emails, keep opened or clicked ones only
+        foreach ($emails as $email_id => $email) {
+            if ((empty($email['opened_at']) || $email['opened_at'] <= 0) AND empty($email['urls'])) {
+                unset($emails[$email_id]);
+            }
+        }        
+        $opened_emails_count = count($emails);        
         return array(
             'stats' => array(
                 'emails_count' => $emails_count,

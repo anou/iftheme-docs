@@ -32,7 +32,11 @@ class WJ_Upgrade extends WYSIJA_object {
 	}
 
 	public function update_warning() {
-		if ( ! is_admin()  ){
+		if ( ! is_admin() ){
+			return;
+		}
+
+		if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
 			return;
 		}
 

@@ -28,7 +28,7 @@ class WYSIJA_view_back_premium extends WYSIJA_view_back{
 		<h2 class="about-headline-callout"><?php _e( 'All Your Stats in a Single Dashboard', WYSIJA ); ?></h2>
 		<img class="about-overview-img" src="http://ps.w.org/wysija-newsletters/assets/premium_va/stats-dashboard.png" />
 
-                <p style="text-align:center"><a target="_blank" href="http://ps.w.org/wysija-newsletters/assets/premium_va/full-screenshot.png"><?php _e( 'View full screenshot', WYSIJA) ?></a> (new tab).</p>
+                <p style="text-align:center"><a target="_blank" href="http://www.mailpoet.com/wp-content/uploads/2014/04/stats-page-screenshot.png"><?php _e( 'View full screenshot', WYSIJA) ?></a> (new tab).</p>
 
 		<div class="feature-section col three-col about-updates">
 			<div class="col-1">

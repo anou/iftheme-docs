@@ -3,7 +3,7 @@ Contributors: wysija, kgjerstad, benheu, JoN1oP, badshark, tung-wysija, bordoni
 Tags: newsletter, newsletters, wysija, newsletter signup, newsletter widget, subscribers, post notification, email subscription, email alerts, automatic newsletter, auto newsletter, autoresponder, follow up, email, marketing, emailing, subscription, mail poet, mailpoet
 Requires at least: 3.3
 Tested up to: 3.9
-Stable tag: 2.6.5
+Stable tag: 2.6.8
 Send newsletters, post notifications or autoresponders from WordPress easily, and beautifully.
 
 == Description ==
@@ -132,6 +132,34 @@ Our [support site](http://support.mailpoet.com/) has plenty of articles and a ti
 7. Importing subscribers with a CSV.
 
 == Changelog ==
+
+= 2.6.8 - 2014-07-04 =
+* Fixed security issue reported by Dominic
+
+= 2.6.7 - 2014-07-01 =
+* Added 1 more add-on to our plugin's listing
+* Implemented a new Email Rendering Engine, with a lot of bugs fixed for Outlook users and Mobile Users
+* Fixed broken "Automatic Latest Content" settings on sites with lots of tags
+* Fixed fatal error when sending to more than 1 million total subscribers
+* Fixed subscribers page being inaccessible on some Multisites (very rare bug)
+* Fixed Outlook 2013 paragraph spacing issue on previous beta
+* Fixed security issue reported by [Sucuri](http://sucuri.net/)
+* Fixed the HTML button on TinyMCE which was hidden in editor
+* Fixed the links popup on TinyMCE for IE11 in editor
+* Fixed "automated latest content" (ALC) bugs with multiple Custom Post Types
+* Fixed the upload image functionality in our plugin
+* Fixed default item selected on filter lists at the Subscribers page for Firefox and Opera users
+* Fixed warning message appearing on the subscription form for Admin Users
+* Fixed a few typos in the plugin
+* Improved the CSV export to expand its compatibility with Excel on Windows
+* Improved the performance of the plugin when loading admin assets
+
+= 2.6.6 - 2014-04-30 =
+* Fixed the Upload Image functionality in our plugin
+* Fixed default item selected on filter lists at the Users Page for Firefox and Opera users
+* Fixed warning message appearing on the Subscription form for Admin Users
+* Fixed some typos in the plugin
+* Improved the performance of the plugin when Loading admin assets
 
 = 2.6.5 - 2014-04-18 =
 * Fixed TinyMCE issue with WordPress 3.9, our editor in Step 2 is working again

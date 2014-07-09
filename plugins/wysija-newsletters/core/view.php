@@ -193,7 +193,13 @@ class WYSIJA_view extends WYSIJA_object{
 
                 if(count($messages)>0){
                    foreach($messages as $msg){
-                         $html.='<li>'.$msg.'</li>';
+                        // check type of msg variable
+                        if(is_array($msg)) {
+                            $msg = var_export($msg, true);
+                        }
+
+                        // display message
+                        $html.='<li>'.$msg.'</li>';
                     }
                 }
 

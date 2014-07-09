@@ -19,7 +19,7 @@ class WYSIJA_object{
 	 * Static variable holding core MailPoet's version
 	 * @var array
 	 */
-	static $version = '2.6.5';
+	static $version = '2.6.8';
 
 	function WYSIJA_object(){
 
@@ -60,7 +60,11 @@ class WYSIJA_object{
 		global $current_user;
 		if ( $field ) {
 			if ( function_exists( 'get_currentuserinfo' ) ) {
-				get_currentuserinfo();
+				// Here is an exception because of one of the weirdest bug
+				// the idea is to make sure we don't call get_currentuserinfo on the wysija_subscribers page when on a multisite
+				if ( ! ( isset( $_GET['page'] ) && $_GET['page'] === 'wysija_subscribers' && is_multisite() ) ){
+					get_currentuserinfo();
+				}
 			}
 			if ( isset( $current_user->{$field} ) ){
 				return $current_user->{$field};
@@ -95,14 +99,16 @@ class WYSIJA_object{
 	 * @global array $wysija_wpmsg
 	 * @param type $msg
 	 */
-	function wp_error($msg){
+	function wp_error( $msg ){
 		global $wysija_wpmsg;
 
 		//add the hook only once
-		if(!$wysija_wpmsg) add_action('admin_notices', array($this,'wp_msgs'));
+		if ( ! $wysija_wpmsg ){
+			add_action( 'admin_notices', array( $this, 'wp_msgs' ) );
+		}
 
 		//record msgs
-		$wysija_wpmsg['error'][]=$msg;
+		$wysija_wpmsg['error'][] = $msg;
 	}
 
 	/**
@@ -113,13 +119,15 @@ class WYSIJA_object{
 	 */
 	function wp_msgs() {
 		global $wysija_wpmsg;
-		foreach($wysija_wpmsg as $keymsg => $wp2){
-			$msgs= '<div class="'.$keymsg.' fade">';
-			foreach($wp2 as $mymsg)
-				$msgs.= '<p><strong>MailPoet</strong> : '.$mymsg.'</p>';
-			$msgs.= '</div>';
+		foreach ( $wysija_wpmsg as $keymsg => $wp2 ){
+			$msgs = '<div class="' . $keymsg . ' fade">';
+			foreach ( $wp2 as $mymsg ){
+				$msgs .= '<p><strong>MailPoet</strong> : ' . $mymsg . '</p>';
+			}
+			$msgs .= '</div>';
 		}
 
+		// This is bad, we should be checking for valid HTML here.
 		echo $msgs;
 	}
 
@@ -129,10 +137,12 @@ class WYSIJA_object{
 	 * @param boolean $public if set to true it will appear as a full message, otherwise it will appear behind a "Show more details." link
 	 * @param boolean $global if set to true it will appear on all of the backend interfaces, not only wysija's own
 	 */
-	function error($msg,$public=false,$global=false){
-		$status='error';
-		if($global) $status='g-'.$status;
-		$this->setInfo($status,$msg,$public);
+	function error( $msg, $public = false, $global = false ){
+		$status = 'error';
+		if ( $global ){
+			$status = 'g-' . $status;
+		}
+		$this->setInfo( $status, $msg, $public );
 	}
 
 	/**
@@ -141,10 +151,12 @@ class WYSIJA_object{
 	 * @param boolean $public if set to true it will appear as a full message, otherwise it will appear behind a "Show more details." link
 	 * @param boolean $global if set to true it will appear on all of the backend interfaces, not only wysija's own
 	 */
-	function notice($msg,$public=true,$global=false){
+	function notice( $msg, $public = true, $global = false ){
 		$status = 'updated';
-		if($global) $status='g-'.$status;
-		$this->setInfo($status,$msg,$public);
+		if ( $global ){
+			$status = 'g-' . $status;
+		}
+		$this->setInfo( $status, $msg, $public );
 	}
 
 	/**
@@ -197,16 +209,17 @@ class WYSIJA_object{
 
 
 class WYSIJA_help extends WYSIJA_object{
-	var $controller=null;
+	var $controller = null;
 
 	static $admin_body_class_runner = false;
 
 	function WYSIJA_help(){
+		add_action( 'widgets_init', array( $this, 'widgets_init' ), 1 );
 
-		if(!defined('DOING_AJAX')){
-			add_action('init', array($this, 'register_scripts'), 1);
+		// Only load this when ajax is not used
+		if ( !( defined( 'DOING_AJAX' ) && DOING_AJAX ) ) {
+                        add_action( 'init', array( $this, 'register_scripts' ), 1 );
 		}
-		add_action('widgets_init', array($this, 'widgets_init'), 1);
 
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
 		add_filter( 'admin_body_class', array( $this, 'admin_body_class' ) );
@@ -215,20 +228,21 @@ class WYSIJA_help extends WYSIJA_object{
 	function widgets_init() {
 		//load the widget file
 		require_once(WYSIJA_WIDGETS.'wysija_nl.php');
-		register_widget('WYSIJA_NL_Widget');
+		register_widget( 'WYSIJA_NL_Widget' );
 	}
 
 	public function admin_enqueue_scripts(){
-            if(WYSIJA_ITF){
-                wp_enqueue_script( 'mailpoet-global' );
-            }
-            wp_enqueue_style('mailpoet-dashicons');
+		if ( WYSIJA_ITF ){
+			wp_enqueue_script( 'mailpoet-global' );
+		}
+		wp_enqueue_style( 'mailpoet-dashicons' );
 	}
 
 	public function admin_body_class( $body_class_str ){
 
-		if ( WYSIJA_help::$admin_body_class_runner === true )
+		if ( WYSIJA_help::$admin_body_class_runner === true ){
 			return $body_class_str;
+		}
 
 		WYSIJA_help::$admin_body_class_runner = true;
 
@@ -255,8 +269,42 @@ class WYSIJA_help extends WYSIJA_object{
 	function register_scripts(){
 		$helper_toolbox = WYSIJA::get('toolbox','helper');
 		$wp_language_code = $helper_toolbox->get_language_code();
+		$valid_language = array(
+			'ar',
+			'ca',
+			'cs',
+			'cz',
+			'da',
+			'de',
+			'el',
+			'es',
+			'et',
+			'fa',
+			'fi',
+			'fr',
+			'he',
+			'hr',
+			'hu',
+			'id',
+			'it',
+			'ja',
+			'lt',
+			'nl',
+			'no',
+			'pl',
+			'pt',
+			'pt_BR',
+			'ro',
+			'ru',
+			'sv',
+			'tr',
+			'vi',
+			'zh_CN',
+			'zh_TW',
+		);
 
-		if(file_exists(WYSIJA_DIR.'js'.DS.'validate'.DS.'languages'.DS.'jquery.validationEngine-'.$wp_language_code.'.js')){
+
+		if ( in_array( $wp_language_code, $valid_language ) ) {
 			wp_register_script('wysija-validator-lang',WYSIJA_URL.'js/validate/languages/jquery.validationEngine-'.$wp_language_code.'.js', array( 'jquery' ),WYSIJA::get_version(),true );
 		}else{
 			wp_register_script('wysija-validator-lang',WYSIJA_URL.'js/validate/languages/jquery.validationEngine-en.js', array( 'jquery' ),WYSIJA::get_version(),true );
@@ -278,43 +326,58 @@ class WYSIJA_help extends WYSIJA_object{
 
 
 	/**
-	 * when doing an ajax request in admin this is the first place we come to
+	 * All the ajax requests are routed through here
 	 */
 	function ajax() {
 
-		$resultArray=array();
-		if(!$_REQUEST || !isset($_REQUEST['controller']) || !isset($_REQUEST['task'])){
-			$resultArray=array('result'=>false);
+		$result_array = array();
+		if( !$_REQUEST || !isset( $_REQUEST['controller'] ) || !isset( $_REQUEST['task'] ) ){
+			$result_array = array( 'result' => false );
 		}else{
-			$wysijapp='wysija-newsletters';
-			if(isset($_REQUEST['wysijaplugin'])) $wysijapp=$_REQUEST['wysijaplugin'];
+			$plugin_requesting_ajax = 'wysija-newsletters';
 
-			$this->controller=WYSIJA::get($_REQUEST['controller'],'controller', false, $wysijapp);
+                        // we override the plugin resquesting ajax if specified in the request
+			if( isset( $_REQUEST['wysijaplugin'] ) ){
+                            $plugin_requesting_ajax = $_REQUEST['wysijaplugin'];
+                        }
 
-			if(method_exists($this->controller, $_REQUEST['task'])){
-				$resultArray['result']=$this->controller->$_REQUEST['task']();
+                        // fetching the right controller
+			$this->controller = WYSIJA::get( $_REQUEST['controller'] , 'controller' , false, $plugin_requesting_ajax );
+
+                        // let's make sure the requested task exist
+			if( method_exists( $this->controller , $_REQUEST['task'] ) ){
+				$result_array['result'] = $this->controller->$_REQUEST['task']();
 			}else{
-				$this->error('Method "'.$_REQUEST['task'].'" doesn\'t exist for controller : "'.$_REQUEST['controller']);
+				$this->error( 'Method "' . $_REQUEST['task'] . '" doesn\'t exist for controller : "'.$_REQUEST['controller'] );
 			}
 		}
 
-		$resultArray['msgs'] = $this->getMsgs();
+                // get the appended messages triggerred during the task execution
+		$result_array['msgs'] = $this->getMsgs();
 
-		//this header will allow ajax request from the home domain, this can be a lifesaver when domain mapping is on
-		if(function_exists('home_url')) header('Access-Control-Allow-Origin: '.home_url());
+		// this header will allow ajax request from the home domain, this can be a lifesaver when domain mapping is on
+		if(function_exists('home_url')){
+                    header('Access-Control-Allow-Origin: '.home_url());
+                }
 
-		header('Content-type: application/json');
-		$jsonData = json_encode($resultArray);
+                // let's encode our response in the json format
+                $json_data = json_encode($result_array);
 
-		//in some case scenario our client will have jquery forcing the jsonp so we need to adapt ourselves
+		// in some case scenarios our client will have jQuery forcing the jsonp so we need to adapt ourselves
 		if(isset($_REQUEST['callback'])) {
-			$hJSONP = WYSIJA::get('jsonp', 'helper');
-			if($hJSONP->isValidCallback($_REQUEST['callback'])) {
-				print $_REQUEST['callback'] . '('.$jsonData.');';
-			}
+                    // special header for json-p
+                    header('Content-type: application/javascript');
+
+                    $helper_jsonp = WYSIJA::get('jsonp', 'helper');
+                    if($helper_jsonp->isValidCallback($_REQUEST['callback'])) {
+                            print $_REQUEST['callback'] . '('.$json_data.');';
+                    }
 		} else {
-			print $jsonData;
+                    // standard header for unwrapped classic json response
+                    header('Content-type: application/json');
+                    print $json_data;
 		}
+                // our ajax response is printed, no need to let WordPress or 3rd party plugin execute more code
 		die();
 	}
 }
@@ -333,9 +396,9 @@ class WYSIJA extends WYSIJA_object{
 	 * @param boolean $simple
 	 * @return type
 	 */
-	public static function get_permalink($pageid,$params=array(),$simple=false){
-		$hWPtools=WYSIJA::get('wp_tools','helper');
-		return $hWPtools->get_permalink($pageid,$params,$simple);
+	public static function get_permalink( $pageid, $params = array(), $simple = false ){
+		$hWPtools = WYSIJA::get( 'wp_tools', 'helper' );
+		return $hWPtools->get_permalink( $pageid, $params, $simple );
 	}
 
 	/**
@@ -344,11 +407,13 @@ class WYSIJA extends WYSIJA_object{
 	 * @param type $extendedplugin
 	 * @return boolean
 	 */
-	public static function load_lang($extendedplugin=false){
+	public static function load_lang( $extendedplugin = false ){
 		static $extensionloaded = false;
 
 		//we return the entire array of extensions loaded if non is specified
-		if(!$extendedplugin) return $extensionloaded;
+		if ( ! $extendedplugin ) {
+			return $extensionloaded;
+		}
 
 		//we only need to load this translation loader once on init
 		if(!$extensionloaded){
@@ -391,10 +456,9 @@ class WYSIJA extends WYSIJA_object{
 		//to allow wysija team members to work in english mode if debug is activated
 		global $current_user;
 
-		if((int)$debugmode>0 && empty($current_user)) return true;
+		if((int)$debugmode > 0 && empty($current_user)) return true;
 
-		if(isset($current_user->data->user_email) &&
-				(strpos($current_user->data->user_email, '@mailpoet.com') !== false)) {
+		if(isset($current_user->data->user_email) && (strpos($current_user->data->user_email, '@mailpoet.com') !== false)) {
 			return true;
 		}
 		return false;
@@ -402,16 +466,28 @@ class WYSIJA extends WYSIJA_object{
 
 	/**
 	 * this function exists just to fix the issue with qtranslate :/ (it only fix it partially)
-	 * @param type $extendedplugin
+	 * @param type $extended_plugin
 	 */
-	public static function load_lang_init($extendedplugin=false){
-		$config=WYSIJA::get('config','model');
-		$debugmode=(int)$config->getValue('debug_new');
-		if($debugmode==0 || ($debugmode>0 && !WYSIJA::is_wysija_admin($debugmode))){
-			$extensionloaded=WYSIJA::load_lang('get_all');
-			foreach($extensionloaded as $extendedplugin => $transstring){
-				$filename=WYSIJA_PLG_DIR.$extendedplugin.DS.'languages'.DS.$transstring.'-'.get_locale().'.mo';
-				if(file_exists($filename))  load_textdomain($transstring, $filename);
+	public static function load_lang_init($extended_plugin=false){
+		$model_config =  WYSIJA::get('config','model');
+		$debug_mode = (int)$model_config->getValue('debug_new');
+
+		if($debug_mode === 0 || ($debug_mode > 0 && WYSIJA::is_wysija_admin($debug_mode) === false)) {
+			$extensions_loaded = WYSIJA::load_lang('get_all');
+			foreach($extensions_loaded as $extended_plugin => $translation_string){
+
+				// check for translation file overriding from transstring wp-content/languages/wysija-newsletters/wysija-newsletters-en_US.mo
+				$filename = WP_CONTENT_DIR.DS.'languages'.DS.$extended_plugin.DS.$translation_string.'-'.get_locale().'.mo';
+
+				if( !file_exists($filename) ){
+					// get the translation file in our local file
+					$filename = WYSIJA_PLG_DIR.$extended_plugin.DS.'languages'.DS.$translation_string.'-'.get_locale().'.mo';
+				}
+
+				// load the translation file with WP's load_textdomain
+				if( file_exists( $filename ) ){
+					load_textdomain( $translation_string, $filename );
+				}
 			}
 		}
 	}

@@ -182,7 +182,8 @@ class WJ_Export extends WYSIJA_object {
 
 			$rows_count = count( $data );
 
-			fwrite( $this->_file_handle, "\xEF\xBB\xBF" );
+			// As required in Wysija/plugin#798 removed BOM from file
+			// fwrite( $this->_file_handle, "\xEF\xBB\xBF" );
 
 			// append content to the file
 			foreach ( $data as $k => $row ) {

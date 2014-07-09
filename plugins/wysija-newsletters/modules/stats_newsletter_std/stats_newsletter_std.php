@@ -161,7 +161,10 @@ class WYSIJA_module_stats_newsletter_std extends WYSIJA_module_statistics {
     }
 
     protected function hook_newsletter_top_links($params = array()) {
-        $this->data['top_links'] = $this->model_obj->get_top_links($params['email_id'],null);
+		$this->data['top_links'] = $this->model_obj->get_top_links($params['email_id'],null);
+		foreach ($this->data['top_links'] as &$top_link) {
+			$top_link['is_viewing'] = !empty($params['url_id']) && $top_link['url_id'] == $params['url_id'];
+		}
         $this->view_show = 'hook_newsletter_top_links';
         return $this->render();
     }
@@ -175,7 +178,7 @@ class WYSIJA_module_stats_newsletter_std extends WYSIJA_module_statistics {
         $this->view_show = 'hook_newsletter_action_buttons';
         return $this->render();
     }
-    
+
     /**
      * Get bounce email address
      * @return string

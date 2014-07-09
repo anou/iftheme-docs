@@ -52,7 +52,7 @@ class WYSIJA_module_view_stats_subscribers_std_view extends WYSIJA_view_back {
                                     <td>&nbsp;</td>
                                     <td>&nbsp;</td>
                                     <!--td><?php echo __('N/A', WYSIJA); ?></td-->
-                                    <td><?php echo $this->fieldListHTML_created_at($email['sent_at']); ?></td>
+                                    <td><?php echo $this->fieldListHTML_created_at($email['opened_at']); ?></td>
                                 </tr>
                                 <?php
                             } else {

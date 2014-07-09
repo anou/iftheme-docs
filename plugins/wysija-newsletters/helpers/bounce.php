@@ -543,7 +543,6 @@ class WYSIJA_help_bounce extends WYSIJA_help {
         }
 
         if (isset($one_rule['action_user']) && in_array($one_rule['action_user'], array('unsub'))) {
-            $status = $this->subClass->getSubscriptionStatus($this->_message->user_id);
             if (empty($this->_message->subemail)) {
                 $currentUser = $this->subClass->getObject($this->_message->user_id);
                 if (!empty($currentUser->email))

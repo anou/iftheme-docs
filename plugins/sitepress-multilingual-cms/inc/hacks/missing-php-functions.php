@@ -151,41 +151,19 @@ if(!function_exists('esc_textarea')):
     
 endif;
 
-if ( ! function_exists( 'wpml_is_ajax' ) ) {
-	/**
-	 * wpml_is_ajax - Returns true when the page is loaded via ajax.
-	 *
-	 * @since  3.1.5
-	 *         
-	 * @return bool
-	 */
-	function wpml_is_ajax() {
-		if ( defined( 'DOING_AJAX' ) ) {
-			return true;
-		}
-
-		return ( isset( $_SERVER[ 'HTTP_X_REQUESTED_WITH' ] ) && strtolower( $_SERVER[ 'HTTP_X_REQUESTED_WITH' ] ) == 'xmlhttprequest' ) ? true : false;
-	}
-}
-
 if ( ! function_exists( 'is_ajax' ) ) {
+
 	/**
 	 * is_ajax - Returns true when the page is loaded via ajax.
 	 *
-	 * @deprecated Deprecated since 3.1.5
-	 *
+	 * @access public
 	 * @return bool
 	 */
 	function is_ajax() {
-
-		// Deprecation notice will be added in a next release
-//		_deprecated_function( "WPML " . __FUNCTION__, "3.1.5", "wpml_is_ajax" );
-
-		if ( defined( 'DOING_AJAX' ) ) {
+		if ( defined('DOING_AJAX') )
 			return true;
-		}
 
-		return ( isset( $_SERVER[ 'HTTP_X_REQUESTED_WITH' ] ) && strtolower( $_SERVER[ 'HTTP_X_REQUESTED_WITH' ] ) == 'xmlhttprequest' ) ? true : false;
+		return ( isset( $_SERVER['HTTP_X_REQUESTED_WITH'] ) && strtolower( $_SERVER['HTTP_X_REQUESTED_WITH'] ) == 'xmlhttprequest' ) ? true : false;
 	}
 }
 

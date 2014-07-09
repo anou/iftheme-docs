@@ -3,19 +3,19 @@
 defined('WYSIJA') or die('Restricted access');
 
 class WYSIJA_module extends WYSIJA_control{
-    
+
     /**
      * ID of module
      * @var string
      */
     protected $name;
-    
+
     /**
      * view class of module
      * @var string
      */
     public $view;
-    
+
     /**
      * instance of view class of module
      * @var string
@@ -27,74 +27,74 @@ class WYSIJA_module extends WYSIJA_control{
      * action/view of a hook
      * @var string
      */
-    
+
     protected $view_show;
-    
+
     /**
      * data which view class will pull from
      * @var array
      */
     protected $data;
-    
+
     protected $extended_plugin='wysija-newsletters';
-    
+
 
 
     /**
      * Define hook name and list of modules of each hook
      * @var Array
      * @todo: implement hook management which allows to manage hooks from admin side
-     */    
-    
+     */
+
     protected $is_premium = false;
-        
+
     public static $hooks = array(
             'hook_stats' => array(
                 // 'stats_newsletters_in_time',
-		'stats_top_newsletters',		
+		'stats_top_newsletters',
                 'stats_top_subscribers',
                 'stats_top_links',
                 'stats_new_subscribers',
                 'stats_subscriptions',
                 'stats_top_domains'
             ),
-        
+
             // the left block in the page "subscriber detail"
             'hook_subscriber_left' => array(
             ),
-        
+
             // the righ block in the page "subscriber detail"
             'hook_subscriber_right' => array(
                 'stats_subscriber'
-            ),        
+            ),
             'hook_subscriber_bottom' => array(
                 'stats_subscribers_std',
                 // 'stats_newsletters_in_time' // not in use
             ),
             // top of newsletter (viewstats) page
             'hook_newsletter_top' => array(
-                
+
                 'stats_newsletter_std',
                 'stats_newsletter',
                 // 'stats_reportcards_std'
             ),
-            
+
             // Newsletters >> Newsletter detail: bottom block
             'hook_newsletter_bottom' => array(
                 //'stats_newsletter_std',
                 // 'stats_newsletters_in_time'
             ),
-        
+
             // the block "super advanced" in Settings >> Advanced tab
             'hook_settings_super_advanced' => array(
                 'archive_std'
             ),
-        
+
             // event: before saving settings (Admin)
             'hook_settings_before_save' => array(
                 'archive_std'
             )
-        );      
+        );
     /**
      * Constructor
      * This is neccessary to override default action of WYSIJA_control::WYSIJA_control(),
@@ -110,16 +110,16 @@ class WYSIJA_module extends WYSIJA_control{
         if (!empty($this->view_obj) && !empty($this->model_obj)){
             $this->view_obj->model = $this->model_obj;
         }
-        
+
         $this->data['module_name'] = $this->name;
-        
-            
+
+
         $model_config=WYSIJA::get('config','model');
         if($model_config->getValue('premium_key'))
             $this->is_premium = true;
         $this->data['is_premium'] = $this->is_premium;
     }
-    
+
     /**
      * get name of module
      * @return string
@@ -127,7 +127,7 @@ class WYSIJA_module extends WYSIJA_control{
     public function get_name(){
         return $this->name;
     }
-    
+
     /**
      * Get unique link to the module and hook. This link will be displayed as an independent page and actually it renders [wysijap] postype
      * @param string $module_name
@@ -147,7 +147,7 @@ class WYSIJA_module extends WYSIJA_control{
         ));
         return WYSIJA::get_permalink($model_config->getValue('confirm_email_link'),$params);
     }
-    
+
     /**
      * Return Hooks List
      * @param string $hook_name name of hook
@@ -161,7 +161,7 @@ class WYSIJA_module extends WYSIJA_control{
             return isset($modules[$module_name]) ? array($modules[$module_name]) : array();
         return $modules;
     }
-    
+
     /**
      * Get all registered hooks and modules
      * @return Array
@@ -175,9 +175,9 @@ class WYSIJA_module extends WYSIJA_control{
      * @param string $hook_name
      * @param string $params
      * @param string $extended_plugin
-     * 
-     * @todo Performance factor: 
-     * We are calling the same method for free / Premium version. 
+     *
+     * @todo Performance factor:
+     * We are calling the same method for free / Premium version.
      * Some modules don't exist at free side.
      * Some modules don't exist at Premium side.
      * This fact leads to an other fact: we have to check_exist() in both cases.
@@ -190,23 +190,23 @@ class WYSIJA_module extends WYSIJA_control{
             foreach (self::$hooks[$hook_name] as $module_name){
                 $module = WYSIJA::get($module_name,'module',false,$extended_plugin);
                 if(!empty($module) && method_exists($module, $hook_name))
-                    $hook_output .= $module->$hook_name($params);                
+                    $hook_output .= $module->$hook_name($params);
             }
         }
         return $hook_output;
     }
-    
+
     /**
      * get an instance of a module class
      * @param string $module_name module to be loaded
      * @param type $extended_plugin : used only when calling the url from a different plugin it is used watch those files :
      *                              -core/controller.php line 21, 23 ,24
      * @return an instance of WYSIJA_module or its derived classes
-     */    
+     */
     public static function get_instance_by_name($module_name,$extended_plugin='wysija-newsletters'){
         return WYSIJA::get($module_name,'module',false, $extended_plugin);
     }
-    
+
     /**
      * Render a view/action
      * @return string
@@ -226,22 +226,22 @@ class WYSIJA_module extends WYSIJA_control{
             }
         }
     }
-    
+
     /**
      * initialize WYSIJA_view instance
      * @return WYSIJA_view
      */
     protected function get_view_obj(){
         require_once(WYSIJA_CORE.'view.php');
-        require_once(WYSIJA_VIEWS.WYSIJA_SIDE.'.php');                
+        require_once(WYSIJA_VIEWS.WYSIJA_SIDE.'.php');
         if (empty($this->view_obj)){
-            
-            $view_dir=WYSIJA_PLG_DIR.$this->extended_plugin.DS.'modules'.DS.$this->name; // quickfix, @todo            
+
+            $view_dir=WYSIJA_PLG_DIR.$this->extended_plugin.DS.'modules'.DS.$this->name; // quickfix, @todo
             $class_path=$view_dir.DS.$this->view.'.php';// @todo: check exists
             $class_name = strtoupper('wysija').'_module_view_'.$this->view;
             require_once(WYSIJA_CORE.'view.php');
             require_once($class_path);
-            $this->view_obj = new $class_name();            
+            $this->view_obj = new $class_name();
         }
         return $this->view_obj;
     }

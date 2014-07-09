@@ -120,7 +120,10 @@ class WJ_Import extends WYSIJA_object {
                     'type' => $maybe_newfield[1],
                     'required' => false,
                     'settings' => array(
-                        'label' => $maybe_newfield[2]
+                        'label' => $maybe_newfield[2],
+                        'date_type' => 'year_month_day',
+                        'is_default_today' => 0,
+                        'date_order' => 'mm/dd/yyyy'
                     )
                 ));
 

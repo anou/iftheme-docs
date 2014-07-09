@@ -111,7 +111,7 @@ class WYSIJA_help_licence extends WYSIJA_help{
                             case 1: //Domain \'%1$s\' does not exist.
                                 //$error_msg=__('\'%1$s\' does not exist!',WYSIJA);
 
-                                $error_msg=__('Your website doesn\'t seem to have a license! Log in to your [link]account manager[/link] to add a license for this website.',WYSIJA);
+                                $error_msg=__('Your website doesn\'t seem to have a license! Log into your [link]account manager[/link] to add a license for this website.',WYSIJA);
                                 break;
                             case 2: //'Licence (id: %d) does not exist for domain "%s"
                                 $error_msg=__('There\'s no license for "%1$s". If you\'re Premium, add this domain in your [link]account manager[/link].',WYSIJA);

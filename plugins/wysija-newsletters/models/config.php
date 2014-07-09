@@ -365,7 +365,7 @@ class WYSIJA_model_config extends WYSIJA_object{
                 }
 
                 // when we switch the double optin value on to off or off to on, we refresh the total user count which is different in both cases
-                if(isset($data['confirm_dbleoptin']) && $data['confirm_dbleoptin'] != $this->values['confirm_dbleoptin']){
+                if(isset($data['confirm_dbleoptin']) && isset($this->values['confirm_dbleoptin']) && $data['confirm_dbleoptin'] != $this->values['confirm_dbleoptin']){
                     $helper_user = WYSIJA::get('user','helper');
                     $helper_user->refreshUsers();
                 }

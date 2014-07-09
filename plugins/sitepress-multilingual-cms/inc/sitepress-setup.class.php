@@ -84,9 +84,10 @@ class SitePress_Setup {
 					  UNIQUE KEY `english_name` (`english_name`)
 				  ) " . self::get_charset_collate();
 
-			if ($wpdb->query($sql) === false) {
+			$wpdb->query( $sql );
+			if ( $e = mysql_error() ) {
 				return false;
-			} 
+			}
 		}
 
 		return true;
@@ -95,12 +96,12 @@ class SitePress_Setup {
 	static function languages_table_is_complete() {
 		global $wpdb;
 		$table_name    = $wpdb->prefix . 'icl_languages';
-		$sql           = "SELECT count(id) FROM {$table_name}";
+		$sql           = $wpdb->prepare( "SELECT count(id) FROM {$table_name}", array() );
 		$records_count = $wpdb->get_var( $sql );
 
 		$languages_names_count = self::get_languages_names_count();
 
-		if( $records_count < $languages_names_count) return false;
+		if( $records_count != $languages_names_count) return false;
 
 		$languages_codes = self::get_languages_codes();
 
@@ -127,7 +128,6 @@ class SitePress_Setup {
 		global $wpdb, $sitepress;
 
 		$languages_codes = icl_get_languages_codes();
-        $lang_locales = icl_get_languages_locales();
 
 		$table_name = $wpdb->prefix . 'icl_languages';
 		if ( !self::create_languages() ) {
@@ -140,7 +140,7 @@ class SitePress_Setup {
 
 			$wpdb->hide_errors();
 
-			$sql = "TRUNCATE " . $table_name;
+			$sql = $wpdb->prepare( "TRUNCATE " . $table_name, array() );
 
 			$truncate_result = $wpdb->query( $sql );
 
@@ -163,9 +163,10 @@ class SitePress_Setup {
 						'default_locale' => $default_locale,
 						'tag'            => str_replace( '_', '-', $default_locale )
 					);
-					if ( $wpdb->insert( $table_name, $args )  === false) {
+					$wpdb->insert( $table_name, $args );
+					if ( $e = mysql_error() ) {
 						return false;
-					}                  
+					}
 				}
 			}
 		}
@@ -187,9 +188,10 @@ class SitePress_Setup {
                 `name` VARCHAR( 255 ) CHARACTER SET utf8 NOT NULL,
                 UNIQUE(`language_code`, `display_language_code`)
             ) " . self::get_charset_collate();
-			if ($wpdb->query($sql) === false) {
+			$wpdb->query( $sql );
+			if ( $e = mysql_error() ) {
 				return false;
-			}  
+			}
 		}
 
 		return true;
@@ -211,7 +213,7 @@ class SitePress_Setup {
 			//First truncate the table
 			$wpdb->hide_errors();
 
-			$sql =  "TRUNCATE " . $table_name;
+			$sql = $wpdb->prepare( "TRUNCATE " . $table_name, array() );
 
 			$truncate_result = $wpdb->query( $sql );
 
@@ -219,8 +221,7 @@ class SitePress_Setup {
 
 			if ( $truncate_result ) {
 
-				$languages_names = self::get_languages_names();
-				foreach ( $languages_names as $lang => $val ) {
+				foreach ( self::get_languages_names() as $lang => $val ) {
 					if ( strpos( $lang, 'Norwegian Bokm' ) === 0 ) {
 						$lang                     = 'Norwegian Bokmål';
 						$languages_codes[ $lang ] = 'nb';
@@ -239,9 +240,10 @@ class SitePress_Setup {
 								'display_language_code' => $languages_codes[ $k ],
 								'name'                  => $display
 							);
-							if ($wpdb->insert( $wpdb->prefix . 'icl_languages_translations', $args ) === false) {
+							$wpdb->insert( $wpdb->prefix . 'icl_languages_translations', $args );
+							if ( $e = mysql_error() ) {
 								return false;
-							}  
+							}
 						}
 					}
 				}
