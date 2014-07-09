@@ -1,18 +1,18 @@
 <?php
     /**
-    * @package Lightbox Plus ColorBox
+    * @package Lightbox Plus Colorbox
     * @subpackage lightbox.secondary.php
     * @internal 2013.01.16
     * @author Dan Zappone / 23Systems
-    * @version 2.6
-    * @$Id: lightbox.secondary.php 662394 2013-02-02 05:29:55Z dzappone $
-    * @$URL: http://plugins.svn.wordpress.org/lightbox-plus/tags/2.6/admin/lightbox.secondary.php $
+    * @version 2.7
+    * @$Id: lightbox.secondary.php 937945 2014-06-24 17:11:13Z dzappone $
+    * @$URL: http://plugins.svn.wordpress.org/lightbox-plus/tags/2.7/admin/lightbox.secondary.php $
     */
 ?>
 <!-- Secondary Lightbox Settings -->
 <div id="poststuff" class="lbp">
     <div class="postbox"> <!-- add  close-me  to class to set auto closed -->
-        <h3 class="handle"><?php _e( 'Lightbox Plus ColorBox - Secondary Lightbox Settings','lightboxplus' ); ?></h3>
+        <h3 class="handle"><?php _e( 'Lightbox Plus Colorbox - Secondary Lightbox Settings','lightboxplus' ); ?></h3>
         <div class="inside toggle">
             <div id="slbp-tabs">
                 <ul>
@@ -275,7 +275,7 @@
                                 <input type="checkbox" name="overlay_close_sec" id="overlay_close_sec" value="1"<?php checked('1', $lightboxPlusOptions['overlay_close_sec']);?> />
                                 <a class="lbp-info" title="<?php _e('Click for Help!', 'lightboxplus')?>"><img src="<?php echo $g_lightbox_plus_url.'admin/images/help.png'?>" alt="<?php _e('Click for Help!', 'lightboxplus'); ?>" /></a>
                                 <div class="lbp-bigtip" id="lbp_overlay_close_sec_tip">
-                                    <?php _e( 'If checked, enables closing Lightbox Plus ColorBox by clicking on the background overlay. <strong><em>Default: Checked</em></strong>', 'lightboxplus' )?>
+                                    <?php _e( 'If checked, enables closing Lightbox Plus Colorbox by clicking on the background overlay. <strong><em>Default: Checked</em></strong>', 'lightboxplus' )?>
                                 </div>
                             </td>
                         </tr>
@@ -287,7 +287,7 @@
                                 <input type="checkbox" name="esc_key_sec" id="esc_key_sec" value="1"<?php checked('1', $lightboxPlusOptions['esc_key_sec']);?> />
                                 <a class="lbp-info" title="<?php _e('Click for Help!', 'lightboxplus')?>"><img src="<?php echo $g_lightbox_plus_url.'admin/images/help.png'?>" alt="<?php _e('Click for Help!', 'lightboxplus'); ?>" /></a>
                                 <div class="lbp-bigtip" id="lbp_esc_key_sec_tip">
-                                    <?php _e( 'If checked, enables closing Lightbox Plus ColorBox using the ESC key. <strong><em>Default: Checked</em></strong>', 'lightboxplus' )?>
+                                    <?php _e( 'If checked, enables closing Lightbox Plus Colorbox using the ESC key. <strong><em>Default: Checked</em></strong>', 'lightboxplus' )?>
                                 </div>
                             </td>
                         </tr>
@@ -299,7 +299,7 @@
                                 <input type="checkbox" name="scrolling_sec" id="scrolling_sec" value="1"<?php checked('1', $lightboxPlusOptions['scrolling_sec']);?> />
                                 <a class="lbp-info" title="<?php _e('Click for Help!', 'lightboxplus')?>"><img src="<?php echo $g_lightbox_plus_url.'admin/images/help.png'?>" alt="<?php _e('Click for Help!', 'lightboxplus'); ?>" /></a>
                                 <div class="lbp-bigtip" id="lbp_scrolling_sec_tip">
-                                    <?php _e( 'If unchecked, Lightbox Plus ColorBox will hide scrollbars for overflowing content. <strong><em>Default: Checked</em></strong>', 'lightboxplus' )?>
+                                    <?php _e( 'If unchecked, Lightbox Plus Colorbox will hide scrollbars for overflowing content. <strong><em>Default: Checked</em></strong>', 'lightboxplus' )?>
                                 </div>
                             </td>
                         </tr>
@@ -327,7 +327,7 @@
                                 <input type="text" size="15" name="label_of_sec" id="label_of_sec" value="<?php if (empty( $lightboxPlusOptions['label_of_sec'] )) { echo ''; } else {echo $lightboxPlusOptions['label_of_sec'];}?>" />
                                 # <a class="lbp-info" title="<?php _e('Click for Help!', 'lightboxplus')?>"><img src="<?php echo $g_lightbox_plus_url.'admin/images/help.png'?>" alt="<?php _e('Click for Help!', 'lightboxplus'); ?>" /></a>
                                 <div class="lbp-bigtip" id="lbp_label_image_sec_tip">
-                                    <?php _e( 'Text format for the content group / gallery count. {current} and {total} are detected and replaced with actual numbers while ColorBox runs.<strong><em>Default: Image {current} of {total}</em></strong>', 'lightboxplus' )?>
+                                    <?php _e( 'Text format for the content group / gallery count. {current} and {total} are detected and replaced with actual numbers while Colorbox runs.<strong><em>Default: Image {current} of {total}</em></strong>', 'lightboxplus' )?>
                                 </div>
                             </td>
                         </tr>
@@ -462,7 +462,7 @@
                                 <input type="checkbox" name="photo_sec" id="photo_sec" value="1"<?php checked('1', $lightboxPlusOptions['photo_sec']);?> />
                                 <a class="lbp-info" title="<?php _e('Click for Help!', 'lightboxplus')?>"><img src="<?php echo $g_lightbox_plus_url.'admin/images/help.png'?>" alt="<?php _e('Click for Help!', 'lightboxplus'); ?>" /></a>
                                 <div class="lbp-bigtip" id="lbp_photo_sec_tip">
-                                    <?php _e( 'If checked, this setting forces Lightbox Plus ColorBox to display a link as a photo. Use this when automatic photo detection fails (such as using a url like "photo.php" instead of "photo.jpg"). <strong><em>Default: Unchecked</em></strong>', 'lightboxplus' )?>
+                                    <?php _e( 'If checked, this setting forces Lightbox Plus Colorbox to display a link as a photo. Use this when automatic photo detection fails (such as using a url like "photo.php" instead of "photo.jpg"). <strong><em>Default: Unchecked</em></strong>', 'lightboxplus' )?>
                                 </div>
                             </td>
                         </tr>
@@ -474,7 +474,7 @@
                                 <input type="checkbox" name="iframe_sec" id="iframe_sec" value="1"<?php checked('1', $lightboxPlusOptions['iframe_sec']);?> />
                                 <a class="lbp-info" title="<?php _e('Click for Help!', 'lightboxplus')?>"><img src="<?php echo $g_lightbox_plus_url.'admin/images/help.png'?>" alt="<?php _e('Click for Help!', 'lightboxplus'); ?>" /></a>
                                 <div class="lbp-bigtip" id="lbp_iframe_sec_tip">
-                                    <?php _e( 'If checked, specifies that content should be displayed in an iFrame. Must be used when using Lightbox Plus ColorBox to display content from another site.  Can be used to display external web pages, video and more. <strong><em>Default: Unchecked</em></strong>', 'lightboxplus' )?>
+                                    <?php _e( 'If checked, specifies that content should be displayed in an iFrame. Must be used when using Lightbox Plus Colorbox to display content from another site.  Can be used to display external web pages, video and more. <strong><em>Default: Unchecked</em></strong>', 'lightboxplus' )?>
                                 </div>
                             </td>
                         </tr>
@@ -488,7 +488,7 @@
                                 <input type="text" size="15" name="class_name_sec" id="class_name_sec" value="<?php if (empty( $lightboxPlusOptions['class_name_sec'] )) { echo 'lbpModal'; } else {echo $lightboxPlusOptions['class_name_sec'];}?>" />
                                 <a class="lbp-info" title="<?php _e('Click for Help!', 'lightboxplus')?>"> <img src="<?php echo $g_lightbox_plus_url.'admin/images/help.png'?>" alt="<?php _e('Click for Help!', 'lightboxplus'); ?>" /></a>
                                 <div class="lbp-bigtip" id="lbp_use_class_method_sec_tip">
-                                    <?php _e( 'If checked, Lightbox Plus ColorBox will only lightbox images using a class instead of the <code>rel=lightbox[]</code> attribute.  Using this method you can manually control which images are affected by Lightbox Plus ColorBox by adding the class to the Advanced Link Settings in the WordPress Edit Image tool or by adding it to the image link URL and checking the <strong>Do Not Auto-Lightbox Images</strong> option. You can also specify the name of the class instead of using the default. <strong><em>Default: Unchecked / Default cboxModal</em></strong>', 'lightboxplus' )?>
+                                    <?php _e( 'If checked, Lightbox Plus Colorbox will only lightbox images using a class instead of the <code>rel=lightbox[]</code> attribute.  Using this method you can manually control which images are affected by Lightbox Plus Colorbox by adding the class to the Advanced Link Settings in the WordPress Edit Image tool or by adding it to the image link URL and checking the <strong>Do Not Auto-Lightbox Images</strong> option. You can also specify the name of the class instead of using the default. <strong><em>Default: Unchecked / Default cboxModal</em></strong>', 'lightboxplus' )?>
                                 </div>
                             </td>
                         </tr>
@@ -501,7 +501,7 @@
                                 <input type="checkbox" name="no_display_title_sec" id="no_display_title_sec" value="1"<?php checked('1', $lightboxPlusOptions['no_display_title_sec']);?> />
                                 <a class="lbp-info" title="<?php _e('Click for Help!', 'lightboxplus')?>"><img src="<?php echo $g_lightbox_plus_url.'admin/images/help.png'?>" alt="<?php _e('Click for Help!', 'lightboxplus'); ?>" /></a>
                                 <div class="lbp-bigtip" id="lbp_no_display_title_sec_tip">
-                                    <?php _e( 'If checked, Lightbox Plus ColorBox <em>will not</em> display image titles automatically.  This has no effect if the <strong>Do Not Auto-Lightbox Images</strong> option is checked. <strong><em>Default: Unchecked</em></strong>', 'lightboxplus' )?>
+                                    <?php _e( 'If checked, Lightbox Plus Colorbox <em>will not</em> display image titles automatically.  This has no effect if the <strong>Do Not Auto-Lightbox Images</strong> option is checked. <strong><em>Default: Unchecked</em></strong>', 'lightboxplus' )?>
                                 </div>
                             </td>
                         </tr>
@@ -515,7 +515,7 @@
                                 <h4><?php _e( 'Secondary Lightbox General Usage','lightboxplus' ); ?></h4>
                                 <p><?php _e( 'A secondary lightbox can be used to display internal and external web pages, video or interactive flash. Secondary lightboxes must be set up manually and can use either a rel="lightbox[id]" attribute or a class="lbpModal" attribute to associate the link/content with the a lightbox.  The following examples show different methods to use secondary lightboxes.','lightboxplus' ); ?></p>
                                 <h4><?php _e( 'Using Secondary Lightbox for Video Content','lightboxplus' ); ?></h4>
-                                <p><?php _e( 'A secondary lightbox can be used to display video from either an internal or external source.  In order to display video using Lightbox Plus ColorBox and Colorbox you must at a minimum have the following items set: Inner Width, Inner Height, and Use Iframe must be checked.', 'lightboxplus' )?></p>
+                                <p><?php _e( 'A secondary lightbox can be used to display video from either an internal or external source.  In order to display video using Lightbox Plus Colorbox and Colorbox you must at a minimum have the following items set: Inner Width, Inner Height, and Use Iframe must be checked.', 'lightboxplus' )?></p>
                                 <div class="ui-state-highlight ui-corner-all" style="margin-top: 20px; padding: 0 .7em;">
                                     <h5><span class="ui-icon ui-icon-info" style="float: left; margin-right: .3em;"></span><?php _e( 'YouTube Example', 'lightboxplus' )?></h5>
                                     <p><?php _e( 'For YouTube videos to load you cannot use the share link which looks like this: <code>http://youtu.be/17jymDn0W6U</code>.  However you can get the required link from the embed option that you get from YouTube. The embed links look like this: <code>&lt;iframe width="420" height="315" src="http://www.youtube.com/embed/17jymDn0W6U" frameborder="0" allowfullscreen>&lt;/iframe></code>. You will need to copy the URL (in this case: <code>http://www.youtube.com/embed/17jymDn0W6U</code>) and create your link as follows:', 'lightboxplus' )?></p>
@@ -529,7 +529,7 @@
                                 <p><?php _e( 'For locally hosted video you must use the Inline Lightbox option unless you have a similar setup to YouTube or Vimeo for video display.  See inline lightbox usage for how to display locally hosted video.  Additional video options may be possible but you will have to experiment to see what works.', 'lightboxplus' )?></p>
 
                                 <h4><?php _e( 'Using Secondary Lightbox for External Content', 'lightboxplus' )?></h4>
-                                <p><?php _e( 'A secondary lightbox can be used to show a web page, text, or other content hosted either locally or on another server.  In order to display external content using Lightbox Plus ColorBox and Colorbox you must at a minimum has the following items set: Inner Width, Inner Height, and Use Iframe must be checked.', 'lightboxplus' )?></p>
+                                <p><?php _e( 'A secondary lightbox can be used to show a web page, text, or other content hosted either locally or on another server.  In order to display external content using Lightbox Plus Colorbox and Colorbox you must at a minimum has the following items set: Inner Width, Inner Height, and Use Iframe must be checked.', 'lightboxplus' )?></p>
                                 <div class="ui-state-highlight ui-corner-all" style="margin-top: 20px; padding: 0 .7em;">
                                     <h5><span class="ui-icon ui-icon-info" style="float: left; margin-right: .3em;"></span><?php _e( 'External Site Example', 'lightboxplus' )?></h5>
                                     <p><?php _e( 'In the case of an external webpage you merely need to specify the URL to display.  In this case we are using the class method for instantiating the lightbox.  When the user clicks the link instead of redirecting the browser to another page it opens the page within the lightbox.', 'lightboxplus' )?></p>
@@ -555,7 +555,7 @@
                     <table class="form-table">
                         <tr valign="top">
                             <td>
-                                <?php _e('Here you can test you settings with various different implementations of Lightbox Plus ColorBox for Video, External Pages and Interactive Flash.  If they do not work please check that you have the following items set: Inner Width, Inner Height, and Use Iframe must be checked.  You will not be able to display any of these without the minimum options set.',"lightboxplus"); ?>
+                                <?php _e('Here you can test you settings with various different implementations of Lightbox Plus Colorbox for Video, External Pages and Interactive Flash.  If they do not work please check that you have the following items set: Inner Width, Inner Height, and Use Iframe must be checked.  You will not be able to display any of these without the minimum options set.',"lightboxplus"); ?>
                             </td>
                         </tr>
                         <tr>
@@ -578,14 +578,14 @@
                                             if ( !empty($lightboxPlusOptions['class_name_sec']) ) { echo ' class="'.$lightboxPlusOptions['class_name_sec'].'"'; } 
                                             if ( $lightboxPlusOptions['output_htmlv'] ) { echo ' data-'.$lightboxPlusOptions['data_name'].'="secondary-demo"'; } else { echo ' rel="lightbox[secondary-demo]"';}
                                         ?> title="Secondary Lightbox - Video Test">Secondary Lightbox - Video Test&lt;/a></code></p>
-                                <p><a title="Lightbox Plus ColorBox Forums" href="http://wordpress.org/support/plugin/lightbox-plus"<?php 
+                                <p><a title="Lightbox Plus Colorbox Forums" href="http://wordpress.org/support/plugin/lightbox-plus"<?php 
                                             if ( !empty($lightboxPlusOptions['class_name_sec']) ) { echo ' class="'.$lightboxPlusOptions['class_name_sec'].'"'; } 
                                             if ( $lightboxPlusOptions['output_htmlv'] ) { echo ' data-'.$lightboxPlusOptions['data_name'].'="secondary-demo"'; } else { echo ' rel="lightbox[secondary-demo]"';}
                                         ?>>Secondary Lightbox - External Page Test</a></p>
                                 <p class="codebox"><code>&lt;a href="http://wordpress.org/support/plugin/lightbox-plus"<?php 
                                             if ( !empty($lightboxPlusOptions['class_name_sec']) ) { echo ' class="'.$lightboxPlusOptions['class_name_sec'].'"'; } 
                                             if ( $lightboxPlusOptions['output_htmlv'] ) { echo ' data-'.$lightboxPlusOptions['data_name'].'="secondary-demo"'; } else { echo ' rel="lightbox[secondary-demo]"';}
-                                        ?> title="Lightbox Plus ColorBox Forums">Secondary Lightbox - External Page Test&lt;/a></code></p>
+                                        ?> title="Lightbox Plus Colorbox Forums">Secondary Lightbox - External Page Test&lt;/a></code></p>
                                 <p><a href="<?php echo $g_lightbox_plus_url ?>trivia.swf"<?php 
                                             if ( !empty($lightboxPlusOptions['class_name_sec']) ) { echo ' class="'.$lightboxPlusOptions['class_name_sec'].'"'; } 
                                             if ( $lightboxPlusOptions['output_htmlv'] ) { echo ' data-'.$lightboxPlusOptions['data_name'].'="secondary-demo"'; } else { echo ' rel="lightbox[secondary-demo]"';}
@@ -600,7 +600,7 @@
                 </div>
             </div>
             <p class="submit">
-                <input type="submit" style="padding:5px 30px 5px 30px;" name="Submit" title="<?php _e( 'Save all Lightbox Plus ColorBox settings', 'lightboxplus' )?>" value="<?php _e( 'Save all settings', 'lightboxplus' )?> &raquo;" />
+                <input type="submit" style="padding:5px 30px 5px 30px;" name="Submit" title="<?php _e( 'Save all Lightbox Plus Colorbox settings', 'lightboxplus' )?>" value="<?php _e( 'Save all settings', 'lightboxplus' )?> &raquo;" />
             </p>
         </div>
     </div>

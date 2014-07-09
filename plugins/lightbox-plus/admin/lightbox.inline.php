@@ -1,18 +1,18 @@
 <?php
     /**
-    * @package Lightbox Plus ColorBox
+    * @package Lightbox Plus Colorbox
     * @subpackage lightbox.inline.php
     * @internal 2013.01.16
     * @author Dan Zappone / 23Systems
-    * @version 2.6
-    * @$Id: lightbox.inline.php 662394 2013-02-02 05:29:55Z dzappone $
-    * @$URL: http://plugins.svn.wordpress.org/lightbox-plus/tags/2.6/admin/lightbox.inline.php $
+    * @version 2.7
+    * @$Id: lightbox.inline.php 937945 2014-06-24 17:11:13Z dzappone $
+    * @$URL: http://plugins.svn.wordpress.org/lightbox-plus/tags/2.7/admin/lightbox.inline.php $
     */
 ?>
 <!-- Inline Lightbox Settings -->
 <div id="poststuff" class="lbp">
     <div class="postbox">
-        <h3 class="handle"><?php _e( 'Lightbox Plus ColorBox - Inline Lightbox Settings','lightboxplus' ); ?></h3>
+        <h3 class="handle"><?php _e( 'Lightbox Plus Colorbox - Inline Lightbox Settings','lightboxplus' ); ?></h3>
         <div class="inside toggle">
             <div id="ilbp-tabs">
                 <ul>
@@ -154,7 +154,7 @@
                             <td>
                                 <h4><?php _e('Using Inline Lightboxes', 'lightboxplus')?></h4>
                                 <div id="lbp_for_inline_tip">
-                                <p><?php _e( 'Inline lightboxes are used to display content that exists on the current page.  It can be used to display a form, video or any other content that is contained on the page.  In order to display inline content using Lightbox Plus ColorBox and Colorbox you must at a minimum has the following items set: Link Class, Content ID, Width, Height, and Opacity.', 'lightboxplus')?></p>
+                                <p><?php _e( 'Inline lightboxes are used to display content that exists on the current page.  It can be used to display a form, video or any other content that is contained on the page.  In order to display inline content using Lightbox Plus Colorbox and Colorbox you must at a minimum has the following items set: Link Class, Content ID, Width, Height, and Opacity.', 'lightboxplus')?></p>
                                 <div class="ui-state-highlight ui-corner-all" style="margin-top: 20px; padding: 0 .7em;">
                                     <h5><span class="ui-icon ui-icon-info" style="float: left; margin-right: .3em;"></span><?php _e('Example', 'lightboxplus')?></h5>
                                     <p><?php _e( 'The following example shows how to setup content for display in a lightbox.  You will need to create a link to the content that contains a class that has the same value as the Link Class for the inline lightbox you are using.', 'lightboxplus')?></p>
@@ -180,7 +180,7 @@
                     <table class="form-table">
                         <tr valign="top">
                             <td>
-                                <?php _e('Here you can test you settings with various different implementation of Lightbox Plus ColorBox using inline content.  This demo makes use of the first inline lightbox you have set up.  If they do not work try reloading the page and please check that you have the following items set: Link Class, Content ID, Width, Height, and Opacity.  You will not be able to display this example without the minimum options set.',"lightboxplus"); ?>
+                                <?php _e('Here you can test you settings with various different implementation of Lightbox Plus Colorbox using inline content.  This demo makes use of the first inline lightbox you have set up.  If they do not work try reloading the page and please check that you have the following items set: Link Class, Content ID, Width, Height, and Opacity.  You will not be able to display this example without the minimum options set.',"lightboxplus"); ?>
                                 <p class="inline_link_test_item">
                                     <a class="<?php echo $inline_links[0]; ?>" href="#"><?php _e('Inline Content Test including form',"lightboxplus"); ?></a>
                                 </p>
@@ -207,7 +207,7 @@
                 </div>
             </div>
             <p class="submit">
-                <input type="submit" style="padding:5px 30px 5px 30px;" name="Submit" title="<?php _e( 'Save all Lightbox Plus ColorBox settings', 'lightboxplus' )?>" value="<?php _e( 'Save all settings', 'lightboxplus' )?> &raquo;" />
+                <input type="submit" style="padding:5px 30px 5px 30px;" name="Submit" title="<?php _e( 'Save all Lightbox Plus Colorbox settings', 'lightboxplus' )?>" value="<?php _e( 'Save all settings', 'lightboxplus' )?> &raquo;" />
             </p>
         </div>
     </div>

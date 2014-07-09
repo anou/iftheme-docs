@@ -1,13 +1,13 @@
 /**
-* @package Lightbox Plus ColorBox
+* @package Lightbox Plus Colorbox
 * @subpackage lightbox.admin.css
 * @internal 2012.03.30
 * @author Dan Zappone / 23Systems
-* @version 2.6
-* @$Id: lightbox.admin.css 662394 2013-02-02 05:29:55Z dzappone $
-* @$URL: http://plugins.svn.wordpress.org/lightbox-plus/tags/2.6/admin/lightbox.admin.css $
+* @version 2.7
+* @$Id: lightbox.admin.css 937945 2014-06-24 17:11:13Z dzappone $
+* @$URL: http://plugins.svn.wordpress.org/lightbox-plus/tags/2.7/admin/lightbox.admin.css $
 */
-/*---- Lightbox Plus ColorBox Styles ----*/
+/*---- Lightbox Plus Colorbox Styles ----*/
 .notice{background:#dff0f5 url(images/information.png) center no-repeat;background-position:15px 50%;text-align:left;border:1px solid #3796b3;display:block;padding:5px 20px 5px 45px;color:#046380;width:90%;margin:10px auto;-webkit-border-radius:10px;-moz-border-radius:10px;-khtml-border-radius:10px;}
 .about{background:#dff0f5;text-align:left;border:1px solid #3796b3;display:block;padding:5px 20px 5px 20px;color:#046380;width:90%;margin:10px auto;-webkit-border-radius:10px;-moz-border-radius:10px;-khtml-border-radius:10px;}
 .alert{background:#faf0e6 url(images/exclamation.png) no-repeat center;background-position:15px 50%;text-align:left;border:1px solid #800000;display:block;padding:5px 20px 5px 45px;color:#800000;width:90%;margin:10px auto;-webkit-border-radius:10px;-moz-border-radius:10px;-khtml-border-radius:10px;}

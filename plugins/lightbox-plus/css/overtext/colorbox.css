@@ -1,5 +1,5 @@
 /**
- * ColorBox Core Style:
+ * Colorbox Core Style:
  * The following CSS is consistent between example themes and should not be altered.
  */
 #colorbox, #cboxOverlay, #cboxWrapper {
@@ -119,6 +119,13 @@
         left: 60px;
         color: #949494;
       }
+      
+        /* these elements are buttons, and may need to have additional styles reset to avoid unwanted base styles */
+        #cboxPrevious, #cboxNext, #cboxSlideshow, #cboxClose {border:0; padding:0; margin:0; overflow:visible; width:auto; background:none; }
+        /* avoid outlines on :active (mouseclick), but preserve outlines on :focus (tabbed navigating) */
+        #cboxPrevious:active, #cboxNext:active, #cboxSlideshow:active, #cboxClose:active {outline:0;}
+
+      
       .cboxSlideshow_on #cboxSlideshow {
         position: absolute;
         bottom: 0px;

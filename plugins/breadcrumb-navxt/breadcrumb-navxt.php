@@ -3,14 +3,14 @@
 Plugin Name: Breadcrumb NavXT
 Plugin URI: http://mtekk.us/code/breadcrumb-navxt/
 Description: Adds a breadcrumb navigation showing the visitor&#39;s path to their current location. For details on how to use this plugin visit <a href="http://mtekk.us/code/breadcrumb-navxt/">Breadcrumb NavXT</a>. 
-Version: 5.0.1
+Version: 5.1.0
 Author: John Havlik
 Author URI: http://mtekk.us/
 License: GPL2
 TextDomain: breadcrumb-navxt
 DomainPath: /languages/
 */
-/*  Copyright 2007-2013  John Havlik  (email : mtekkmonkey@gmail.com)
+/*  Copyright 2007-2014  John Havlik  (email : john.havlik@mtekk.us)
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ $breadcrumb_navxt = NULL;
 //TODO change to extends mtekk_plugKit
 class breadcrumb_navxt
 {
-	private $version = '5.0.1';
+	const version = '5.1.0';
 	protected $name = 'Breadcrumb NavXT';
 	protected $identifier = 'breadcrumb-navxt';
 	protected $unique_prefix = 'bcn';
@@ -127,6 +127,7 @@ class breadcrumb_navxt
 						'itemscope' => true,
 						'itemtype' => true,
 						'xmlns:v' => true,
+						'typeof' => true,
 						'property' => true
 					),
 					'img' => array(
@@ -145,6 +146,7 @@ class breadcrumb_navxt
 						'itemscope' => true,
 						'itemtype' => true,
 						'xmlns:v' => true,
+						'typeof' => true,
 						'property' => true
 					),
 					'span' => array(
@@ -163,6 +165,7 @@ class breadcrumb_navxt
 						'itemscope' => true,
 						'itemtype' => true,
 						'xmlns:v' => true,
+						'typeof' => true,
 						'property' => true
 					),
 					'h1' => array(
@@ -181,6 +184,7 @@ class breadcrumb_navxt
 						'itemscope' => true,
 						'itemtype' => true,
 						'xmlns:v' => true,
+						'typeof' => true,
 						'property' => true
 					),
 					'h2' => array(
@@ -199,6 +203,7 @@ class breadcrumb_navxt
 						'itemscope' => true,
 						'itemtype' => true,
 						'xmlns:v' => true,
+						'typeof' => true,
 						'property' => true
 					)
 		);
@@ -206,7 +211,7 @@ class breadcrumb_navxt
 	}
 	public function get_version()
 	{
-		return $this->version;
+		return self::version;
 	}
 	public function wp_loaded()
 	{
@@ -245,12 +250,19 @@ class breadcrumb_navxt
 			if(!$post_type->_builtin)
 			{
 				//If the post type does not have settings in the options array yet, we need to load some defaults
-				if(!array_key_exists('Hpost_' . $post_type->name . '_template', $opts) || !$post_type->hierarchical && !array_key_exists('Spost_' . $post_type->name . '_taxonomy_type', $opts))
+				if(!isset($opts['Hpost_' . $post_type->name . '_template']) || !$post_type->hierarchical && !isset($opts['Spost_' . $post_type->name . '_taxonomy_type']))
 				{
 					//Add the necessary option array members
-					$opts['Hpost_' . $post_type->name . '_template'] = __('<a title="Go to %title%." href="%link%">%htitle%</a>', 'breadcrumb-navxt');
-					$opts['Hpost_' . $post_type->name . '_template_no_anchor'] = __('%htitle%', 'breadcrumb-navxt');
-					$opts['bpost_' . $post_type->name . '_archive_display'] = $post_type->has_archive;
+					$opts['Hpost_' . $post_type->name . '_template'] = __('<span typeof="v:Breadcrumb"><a rel="v:url" property="v:title" title="Go to %title%." href="%link%">%htitle%</a></span>', 'breadcrumb-navxt');
+					$opts['Hpost_' . $post_type->name . '_template_no_anchor'] = __('<span typeof="v:Breadcrumb"><span property="v:title">%htitle%</span></span>', 'breadcrumb-navxt');
+					if($post_type->has_archive == true || is_string($post_type->has_archive))
+					{
+						$opts['bpost_' . $post_type->name . '_archive_display'] = true;
+					}
+					else
+					{
+						$opts['bpost_' . $post_type->name . '_archive_display'] = false;		
+					}
 					//Do type dependent tasks
 					if($post_type->hierarchical)
 					{
@@ -268,6 +280,11 @@ class breadcrumb_navxt
 					//Loop through all of the possible taxonomies
 					foreach($wp_taxonomies as $taxonomy)
 					{
+						//Check for non-public taxonomies
+						if(!apply_filters('bcn_show_tax_private', $taxonomy->public, $taxonomy->name))
+						{
+							continue;
+						}
 						//Activate the first taxonomy valid for this post type and exit the loop
 						if($taxonomy->object_type == $post_type->name || in_array($post_type->name, $taxonomy->object_type))
 						{
@@ -300,11 +317,11 @@ class breadcrumb_navxt
 			if(!$taxonomy->_builtin)
 			{
 				//If the taxonomy does not have settings in the options array yet, we need to load some defaults
-				if(!array_key_exists('H' . $taxonomy->name . '_template', $opts))
+				if(!isset($opts['Htax_' . $taxonomy->name . '_template']))
 				{
 					//Add the necessary option array members
-					$opts['H' . $taxonomy->name . '_template'] = __(sprintf('<a title="Go to the %%title%% %s archives." href="%%link%%">%%htitle%%</a>', $taxonomy->labels->singular_name), 'breadcrumb-navxt');
-					$opts['H' . $taxonomy->name . '_template_no_anchor'] = __(sprintf('%%htitle%%', $taxonomy->labels->singular_name), 'breadcrumb-navxt');
+					$opts['Htax_' . $taxonomy->name . '_template'] = __(sprintf('<span typeof="v:Breadcrumb"><a rel="v:url" property="v:title" title="Go to the %%title%% %s archives." href="%%link%%">%%htitle%%</a></span>', $taxonomy->labels->singular_name), 'breadcrumb-navxt');
+					$opts['Htax_' . $taxonomy->name . '_template_no_anchor'] = __(sprintf('<span typeof="v:Breadcrumb"><span property="v:title">%%htitle%%</span></span>', $taxonomy->labels->singular_name), 'breadcrumb-navxt');
 				}
 			}
 		}
@@ -335,12 +352,12 @@ class breadcrumb_navxt
 		{
 			if(defined('BCN_SETTINGS_USE_LOCAL') && BCN_SETTINGS_USE_LOCAL)
 			{
-				//Grab the current settings from the db
+				//Grab the current settings for the current local site from the db
 				$this->breadcrumb_trail->opt = wp_parse_args(get_option('bcn_options'), $this->opt);
 			}
 			else if(defined('BCN_SETTINGS_FAVOR_LOCAL') && BCN_SETTINGS_FAVOR_LOCAL)
 			{
-				//Grab the current settings from the db
+				//Grab the current settings for the current local site from the db
 				$this->breadcrumb_trail->opt = wp_parse_args(get_option('bcn_options'), $this->breadcrumb_trail->opt);
 			}
 			else if(defined('BCN_SETTINGS_FAVOR_NETWORK') && BCN_SETTINGS_FAVOR_NETWORK)

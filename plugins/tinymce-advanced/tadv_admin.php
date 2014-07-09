@@ -12,19 +12,6 @@ if ( ! current_user_can( 'manage_options' ) ) {
 $message = '';
 
 // TODO admin || SA
-if ( isset( $_POST['tadv_uninstall'] ) ) {
-	check_admin_referer( 'tadv-uninstall' );
-	$this->remove_settings(true);
-
-	?>
-	<div class="updated" style="margin-top:30px;">
-	<p><?php _e( 'All options have been removed from the database. You can', 'tadv'); ?> <a href="plugins.php"><?php _e('deactivate TinyMCE Advanced', 'tadv'); ?></a> <?php _e('or', 'tadv'); ?> <a href=""> <?php _e('reload this page', 'tadv'); ?></a> <?php _e('to reset them to the default values.', 'tadv'); ?></p>
-	</div>
-	<?php
-
-	return;
-}
-
 if ( ! $this->check_minimum_supported_version() ) {
 	?>
 	<div class="error" style="margin-top:30px;">
@@ -45,7 +32,15 @@ if ( isset( $_POST['tadv-save'] ) ) {
 
 	// User settings
 	for ( $i = 1; $i < 5; $i++ ) {
-		$buttons = $this->parse_buttons( 'tb' . $i );
+		$tb = 'tb' . $i;
+
+		if ( $i > 1 && ! empty( $_POST[$tb] ) && is_array( $_POST[$tb] ) &&
+			( $wp_adv = array_search( 'wp_adv', $_POST[$tb] ) ) !== false ) {
+			// Remove the "Toolbar toggle" button from row 2, 3 or 4.
+			unset( $_POST[$tb][$wp_adv] );
+		}
+
+		$buttons = $this->parse_buttons( $tb );
 		// Layer plugin buttons??
 		$buttons = str_replace( 'insertlayer', 'insertlayer,moveforward,movebackward,absolute', $buttons );
 		$settings['toolbar_' . $i] = $buttons;
@@ -57,6 +52,10 @@ if ( isset( $_POST['tadv-save'] ) ) {
 
 	if ( ! empty( $_POST['contextmenu'] ) ) {
 		$options_array[] = 'contextmenu';
+	}
+
+	if ( ! empty( $_POST['advlink'] ) ) {
+		$options_array[] = 'advlink';
 	}
 
 	if ( ! empty( $_POST['menubar'] ) ) {
@@ -94,12 +93,21 @@ if ( isset( $_POST['tadv-save'] ) ) {
 
 	// User options
 	// TODO allow editors, authors and contributors some access
+	$this->settings = $settings;
+	$this->load_settings();
+
+	// Special case
+	if ( in_array( 'image', $this->used_buttons, true ) ) {
+		$options_array[] = 'image';
+	}
+
 	$settings['options'] = implode( ',', $options_array );
 	$this->settings = $settings;
 	$this->load_settings();
 
 	// Merge the submitted plugins and from the buttons
 	$settings['plugins'] = implode( ',', $this->get_plugins( $plugins_array ) );
+	$this->settings = $settings;
 	$this->plugins = $settings['plugins'];
 
 	// Save the new settings
@@ -275,15 +283,13 @@ for ( $i = 1; $i < 5; $i++ ) {
 		if ( strpos( $name, '<!' ) === 0 )
 			$name = '';
 
-		?>
-		<li class="tadvmodule" id="<?php echo $button; ?>">
+		?><li class="tadvmodule" id="<?php echo $button; ?>">
 		<div class="tadvitem">
 			<i class="mce-ico mce-i-<?php echo $button; ?>" title="<?php echo $name; ?>"></i>
 			<span class="descr"> <?php echo $name; ?></span>
 			<input type="hidden" class="tadv-button" name="tb<?php echo $i; ?>[]" value="<?php echo $button; ?>" />
 		</div>
-		</li>
-		<?php
+		</li><?php
 
 	}
 
@@ -295,14 +301,11 @@ for ( $i = 1; $i < 5; $i++ ) {
 ?>
 </div>
 
-<p><?php _e('Drag and drop buttons onto the toolbars above, or drag the buttons to rearrange them.', 'tadv'); ?></p>
-<!--
-<div id="length-error-message" class="tadv-error">
-<?php _e('Adding too many buttons will make the toolbar too long and will not display correctly in TinyMCE!', 'tadv'); ?>
-</div>
--->
+<p><?php _e('Drag buttons from the unused buttons below and drop them in the toolbars above, or drag the buttons in the toolbars to rearrange them.', 'tadv'); ?></p>
+
 <div id="unuseddiv">
-<ul id="unused">
+<h3><?php _e('Unused Buttons', 'tadv'); ?></h3>
+<ul id="unused" class="container">
 <?php
 
 foreach( $all_buttons as $button => $name ) {
@@ -335,58 +338,63 @@ foreach( $all_buttons as $button => $name ) {
 	</label>
 
 	<label>
-	<input type="checkbox"  name="contextmenu" id="contextmenu" <?php if ( $this->check_setting('contextmenu') ) echo ' checked="checked"'; ?> />
+	<input type="checkbox" name="contextmenu" id="contextmenu" <?php if ( $this->check_setting('contextmenu') ) echo ' checked="checked"'; ?> />
 	<?php _e('Context Menu', 'tadv'); ?>
+	</label>
+
+	<label>
+	<input type="checkbox" name="advlink" id="advlink" <?php if ( $this->check_setting('advlink') ) echo ' checked="checked"'; ?> />
+	<?php _e('Link (replaces the Insert/Edit Link dialog)', 'tadv'); ?>
 	</label>
 </p>
 
 <?php
 
-if ( ! is_multisite() && current_user_can( 'manage_options' ) ) {
+if ( ! is_multisite() || current_user_can( 'manage_sites' ) ) {
 
 	?>
 	<div class="advanced-options">
 	<h3><?php _e('Advanced Options', 'tadv'); ?></h3>
 	<?php
 	
-	if ( ! current_theme_supports( 'editor-style' ) ) {
+	if ( ! is_multisite() && ! current_theme_supports( 'editor-style' ) ) {
 	
 		?>
-		<p><?php
-		_e('It seems your theme doesn\'t support customised styles for the editor. ', 'tadv');
-		_e('You can create a CSS file named <code>editor-style.css</code> and upload it to your theme\'s directory. ', 'tadv');
-		_e('After that, enable this setting.', 'tadv');
-		?></p>
-
-		<p>
-			<label><input type="checkbox" name="editorstyle" id="editorstyle" <?php if ( $this->check_setting( 'editorstyle', true ) ) echo ' checked="checked"'; ?> />
+		<div>
+			<label><input type="checkbox" name="editorstyle" id="editorstyle" <?php if ( $this->check_admin_setting( 'editorstyle' ) ) echo ' checked="checked"'; ?> />
 			<?php _e('Import editor-style.css.', 'tadv'); ?></label>
-		</p>
+			<p><?php
+				_e('It seems your theme doesn\'t support customised styles for the editor. ', 'tadv');
+				_e('You can create a CSS file named <code>editor-style.css</code> and upload it to your theme\'s directory. ', 'tadv');
+				_e('After that, enable this setting.', 'tadv');
+			?></p>
+		</div>
 		<?php
 	}
 
 	?>
-	<p>
-		<label><input type="checkbox" name="importcss" id="importcss" <?php if ( $this->check_setting( 'importcss', true ) ) echo ' checked="checked"'; ?> />
-		<?php _e('Load the CSS classes used in editor-style.css and replace the Styles sub-menu.', 'tadv'); ?></label>
-	</p>
+	<div>
+		<label><input type="checkbox" name="importcss" id="importcss" <?php if ( $this->check_admin_setting( 'importcss' ) ) echo ' checked="checked"'; ?> />
+		<?php _e('Load the CSS classes used in editor-style.css and replace the Formats button and sub-menu.', 'tadv'); ?></label>
+	</div>
 
-	<p>
-		<label><input type="checkbox" name="no_autop" id="no_autop" <?php if ( $this->check_setting( 'no_autop', true ) ) echo ' checked="checked"'; ?> />
+	<div>
+		<label><input type="checkbox" name="no_autop" id="no_autop" <?php if ( $this->check_admin_setting( 'no_autop' ) ) echo ' checked="checked"'; ?> />
 		<?php _e('Stop removing the &lt;p&gt; and &lt;br /&gt; tags when saving and show them in the Text editor', 'tadv'); ?></label>
-		<br>
-		<?php
+		<p><?php
 		_e('This will make it possible to use more advanced coding in the HTML editor without the back-end filtering affecting it much. ', 'tadv');
 		_e('However it may behave unexpectedly in rare cases, so test it thoroughly before enabling it permanently. ', 'tadv');
 		_e('Line breaks in the HTML editor would still affect the output, in particular do not use empty lines, line breaks inside HTML tags or multiple &lt;br /&gt; tags.', 'tadv');
-		?>
-	</p>
-
-	<p>
-		<button class="button" type="button" id="tadv-remove-settings"><?php _e('Remove Settings', 'tadv'); ?></button>
-		<input type="submit" class="button" name="tadv-export-settings" value="<?php _e( 'Export Settings', 'tadv' ); ?>" />
+		?></p>
+	</div>
+	</div>
+	
+	<div class="advanced-options">
+	<h3><?php _e('Administration', 'tadv'); ?></h3>
+	<div>
+		<input type="submit" class="button" name="tadv-export-settings" value="<?php _e( 'Export Settings', 'tadv' ); ?>" /> &nbsp; 
 		<input type="submit" class="button" name="tadv-import-settings" value="<?php _e( 'Import Settings', 'tadv' ); ?>" />
-	</p>
+	</div>
 	</div>
 	<?php
 
@@ -403,14 +411,4 @@ if ( ! is_multisite() && current_user_can( 'manage_options' ) ) {
 <div id="wp-adv-error-message" class="tadv-error">
 <?php _e('The "Toolbar toggle" button shows/hides the second, third, and forth button rows. It will only work when it is in the first row and there are buttons in the second row.', 'tadv'); ?>
 </div>
-
-<div id="tadv-confirm-uninstall" style="">
-<form method="post" action="">
-<?php wp_nonce_field('tadv-uninstall'); ?>
-<div><?php _e('Remove all settings from the database?', 'tadv'); ?>
-	<input class="button" type="button" id="tadv-cancel" value="<?php _e('Cancel', 'tadv'); ?>" />
-	<input class="button" type="submit" name="tadv_uninstall" value="<?php _e('Continue', 'tadv'); ?>" />
-</div>
-</form>
-</div>
-</div>
+</div><!-- /wrap -->

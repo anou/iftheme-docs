@@ -1,7 +1,7 @@
 /*
-* ColorBox Core Style
-* The following rules are the styles that are consistant between all ColorBox themes
-* @version 2.6
+* Colorbox Core Style
+* The following rules are the styles that are consistant between all Colorbox themes
+* @version 2.7
 * @$Id: colorbox.css 651378 2013-01-11 17:20:40Z dzappone $
 * @$URL: http://plugins.svn.wordpress.org/lightbox-plus/trunk/css/black/colorbox.css $
 */
@@ -19,7 +19,7 @@
 
 /* 
     User Style:
-    Change the following styles to modify the appearance of ColorBox.  They are
+    Change the following styles to modify the appearance of Colorbox.  They are
     ordered & tabbed in a way that represents the nesting of the generated HTML.
 */
 #cboxOverlay{background:#000;}
@@ -30,6 +30,12 @@
         #cboxLoadedContent{background:#fff; padding:10px 10px 34px; border-radius:10px; -moz-border-radius:10px; -webkit-border-radius:10px;}
         #cboxTitle{overflow:auto; position:absolute; bottom:12px; left:10px; text-align:center; color:#555; word-wrap: break-word; font-size:0.9em; border: 1px solid #ccc; max-width:40%; background:#fff; padding:1px 7px; border-radius:10px; -moz-border-radius:10px; -webkit-border-radius:10px; box-shadow: 1px 1px 3px #888; -moz-box-shadow: 1px 1px 3px #888; -webkit-box-shadow: 1px 1px 3px #888;}
         #cboxCurrent{position:absolute; bottom:11px; right:36px; color:#333; font-weight:bold; padding:1px 7px; border: 1px solid #ccc; border-radius:10px; -moz-border-radius:10px; -webkit-border-radius:10px; box-shadow: 1px 1px 3px #888; -moz-box-shadow: 1px 1px 3px #888; -webkit-box-shadow: 1px 1px 3px #888;}
+        
+        /* these elements are buttons, and may need to have additional styles reset to avoid unwanted base styles */
+        #cboxPrevious, #cboxNext, #cboxSlideshow, #cboxClose {border:0; padding:0; margin:0; overflow:visible; width:auto; background:none; }
+        /* avoid outlines on :active (mouseclick), but preserve outlines on :focus (tabbed navigating) */
+        #cboxPrevious:active, #cboxNext:active, #cboxSlideshow:active, #cboxClose:active {outline:0;}
+        
         #cboxSlideshow{position:absolute; bottom:11px; right:150px; color:#eee; overflow:visible; border: 1px solid #555; background:#666; padding:1px 7px; border-radius:10px; -moz-border-radius:10px; -webkit-border-radius:10px; box-shadow: 1px 1px 3px #888; -moz-box-shadow: 1px 1px 3px #888; -webkit-box-shadow: 1px 1px 3px #888;}
         #cboxPrevious{opacity:0.5;filter:alpha(opacity=50);position:absolute; top:36%; left:10px; margin-top:-32px; background:url(images/prev.png) no-repeat; width:64px; height:32px; text-indent:-9999px;}
         #cboxPrevious:hover{opacity:1;filter:alpha(opacity=100);background-position:bottom left;}

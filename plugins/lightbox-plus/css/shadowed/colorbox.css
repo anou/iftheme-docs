@@ -1,12 +1,12 @@
 /*
-* ColorBox Core Style:
+* Colorbox Core Style:
 * The following CSS is consistent between example themes and should not be altered.
-* @version 2.6
-* @$Id: colorbox.css 662394 2013-02-02 05:29:55Z dzappone $
-* @$URL: http://plugins.svn.wordpress.org/lightbox-plus/tags/2.6/css/shadowed/colorbox.css $
+* @version 2.7
+* @$Id: colorbox.css 937945 2014-06-24 17:11:13Z dzappone $
+* @$URL: http://plugins.svn.wordpress.org/lightbox-plus/tags/2.7/css/shadowed/colorbox.css $
 */
 /*
-    ColorBox Core Style:
+    Colorbox Core Style:
     The following CSS is consistent between example themes and should not be altered.
 */
 #colorbox, #cboxOverlay, #cboxWrapper{position:absolute; top:0; left:0; z-index:9999; overflow:hidden;}
@@ -23,7 +23,7 @@
 
 /* 
     User Style:
-    Change the following styles to modify the appearance of ColorBox.  They are
+    Change the following styles to modify the appearance of Colorbox.  They are
     ordered & tabbed in a way that represents the nesting of the generated HTML.
 */
 #cboxOverlay{background:#fff;}
@@ -42,6 +42,12 @@
         #cboxLoadedContent{margin-bottom:20px;}
         #cboxTitle{position:absolute; bottom:0px; left:0; text-align:center; width:100%; color:#999;}
         #cboxCurrent{position:absolute; bottom:0px; left:100px; color:#999;}
+        
+        /* these elements are buttons, and may need to have additional styles reset to avoid unwanted base styles */
+        #cboxPrevious, #cboxNext, #cboxSlideshow, #cboxClose {border:0; padding:0; margin:0; overflow:visible; width:auto; background:none; }
+        /* avoid outlines on :active (mouseclick), but preserve outlines on :focus (tabbed navigating) */
+        #cboxPrevious:active, #cboxNext:active, #cboxSlideshow:active, #cboxClose:active {outline:0;}
+        
         #cboxSlideshow{position:absolute; bottom:0px; right:42px; color:#444;}
         #cboxPrevious{position:absolute; bottom:0px; left:0; color:#444;}
         #cboxNext{position:absolute; bottom:0px; left:63px; color:#444;}

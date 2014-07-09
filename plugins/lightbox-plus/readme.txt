@@ -1,47 +1,52 @@
-=== Lightbox Plus ColorBox ===
+=== Lightbox Plus Colorbox ===
 Contributors: dzappone
 Donate link: http://www.23systems.net/plugins/donate/
 Tags: lightbox, photo, photos, image, images, video, ajax, gallery, colorbox, lightview, picture, overlay
-Requires at least: 3.0
-Tested up to: 3.6-alpha
-Stable tag: 2.6
+Requires at least: 3.6
+Tested up to: 3.9.1
+Stable tag: 2.7
 License: GPLv2 and (components under MIT License)
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Lightbox Plus ColorBox permits users to view larger versions of images, simple slide shows, videos and content all in an overlay.
+Lightbox Plus Colorbox permits users to view larger versions of images, simple slide shows, videos and content all in an overlay.
 
 == Description ==
 
-Lightbox Plus ColorBox implements ColorBox as a lightbox image overlay tool for WordPress.  <a href="http://www.jacklmoore.com/colorbox">ColorBox</a> was created by Jack Moore and is licensed under the <a href="http://www.opensource.org/licenses/mit-license.php">MIT License</a>.  Lightbox Plus ColorBox for WordPress implements ColorBox as a lightbox image overlay tool for WordPress. ColorBox was created by Jack Moore and is licensed under the MIT License. Lightbox Plus ColorBox permits users to view larger versions of images without having to leave the current page. Lightbox is able to add a lightbox to WordPress gallery images, display simple slide shows, video, forms and external content in overlays. The use of the dark or light background, which dims the page over which the image has been overlaid, also serves to highlight the image or video being viewed. Lightbox Plus ColorBox captures the image title for display in the overlay.
+Lightbox Plus Colorbox implements Colorbox as a lightbox image overlay tool for WordPress.  <a href="http://www.jacklmoore.com/colorbox">Colorbox</a> was created by Jack Moore and is licensed under the <a href="http://www.opensource.org/licenses/mit-license.php">MIT License</a>.  Lightbox Plus Colorbox for WordPress implements Colorbox as a lightbox image overlay tool for WordPress. Colorbox was created by Jack Moore and is licensed under the MIT License. Lightbox Plus Colorbox permits users to view larger versions of images without having to leave the current page. Lightbox is able to add a lightbox to WordPress gallery images, display simple slide shows, video, forms and external content in overlays. The use of the dark or light background, which dims the page over which the image has been overlaid, also serves to highlight the image or video being viewed. Lightbox Plus Colorbox captures the image title for display in the overlay.
 
-Lightbox Plus ColorBox uses WordPress' built in jQuery library. Lightbox Plus ColorBox also uses the <a href="http://simplehtmldom.sourceforge.net/" title="PHP Simple HTML DOM Parser">PHP Simple HTML DOM Parser</a> helper class to navigate page content for inserting the Lightbox attibutes into elements.
+Lightbox Plus Colorbox uses WordPress' built in jQuery library. Lightbox Plus Colorbox also uses the <a href="http://simplehtmldom.sourceforge.net/" title="PHP Simple HTML DOM Parser">PHP Simple HTML DOM Parser</a> helper class to navigate page content for inserting the Lightbox attibutes into elements.
+
+NOTE: Lightbox Plus Colorbox is underoing a complete rewrite to improve performanace and bring it in line with the latest WordPress coding standard.  This will be release as with a new version matching the latest version of WordPress when released.
 
 = Troubleshooting =
 
 Please read the <a href="http://www.23systems.net/plugins/lightbox-plus/frequently-asked-questions/">FAQ</a> first if you are having problems.
 
-We offer limited support for Lightbox Plus ColorBox via the <a href="http://wordpress.org/support/plugin/lightbox-plus" title="Lightbox Plus ColorBox Direct Support">support forums</a>. 
+At present due to other commitments and that the prugin is provided freely we can offer no support and it is provided as is.
 
-For more in-depth support or if you need extra help you may place a service request using the form on the <a title="Get technical support for 23Systems free WordPress plugins" href="http://www.23systems.net/services/support/plugin-support/">Plugin Support Request</a> page.  Due to the volume of questions, I cannot may not be able to offer individual support though in an effort to resolve the issue I may contact you. The issue may be resolved by a new release of Lightbox Plus ColorBox but it does help me get a better understanding of the issue.
+You can get community support for Lightbox Plus Colorbox via the <a href="http://wordpress.org/support/plugin/lightbox-plus" title="Lightbox Plus Colorbox Direct Support">support forums</a>. 
 
 = Requirements =
 
 Server
 
-* WordPress 3.0+
+* WordPress 3.6+ (May word with ealier versions)
 * PHP 5+ (Required)
  * PHP mbstring extension (preferred but no longer required)
 * jQuery 1.4.3+
 
-Support for PHP 4 has been completely removed - DO NOT UPDATE if you want Lightbox Plus ColorBox to work with PHP 4.
+Support for PHP 4 has been completely removed - DO NOT UPDATE if you want Lightbox Plus Colorbox to work with PHP 4.
 
 Client
 
-* IE 7+, Firefox 2+, Chrome, Safari 3+, Opera 8+
+* Modern Browsers
+ * Firefox, Chrome, Safari, Opera, IE 10+
+* Legacy Browsers
+ * IE 8, IE 9 (limited style support)
 
 = Usage =
 
-Note that getting the caption to appear in the overlay image by using the caption options built into WordPress Lightbox Plus ColorBox uses the image title which is generated by "Edit Image Title" field and not the "Edit Caption Field."  You can also manually add lightbox tags to your images using the following instructions.
+Note that getting the caption to appear in the overlay image by using the caption options built into WordPress Lightbox Plus Colorbox uses the image title which is generated by "Edit Image Title" field and not the "Edit Caption Field."  You can also manually add lightbox tags to your images using the following instructions.
 
 1. Add a rel="lightbox[uniqueID|filename]" attribute to any link tag to activate the lightbox, include a name between square brackets in the rel attibute. For example:
 
@@ -60,22 +65,22 @@ Optional: Use the title attribute if you want to show a caption.
 = Automatic =
 
 1. In the admin panel plugins page click Add New
-2. Search for Lightbox Plus ColorBox
-3. Find Lightbox Plus ColorBox in the list an click Install Now
+2. Search for Lightbox Plus Colorbox
+3. Find Lightbox Plus Colorbox in the list an click Install Now
 4. Click OK when prompted
 5. Enjoy!
 
 = Manual =
 
 1. Extract lightbox-plus.zip to your `wp-content/plugins` directory.
-2. In the admin panel under plugins activate Lightbox Plus ColorBox.
-3. In the admin panel under Appearance click on Lightbox Plus ColorBox to configure to your taste.
+2. In the admin panel under plugins activate Lightbox Plus Colorbox.
+3. In the admin panel under Appearance click on Lightbox Plus Colorbox to configure to your taste.
 4. It should now be completely set up and functional
 5. Enjoy!
 
 = Caveats =
 
-Flash (i.e. YouTube videos, etc.) will sit atop the Lightbox Plus ColorBox display no matter what the z-index is.  This is an issue with Flash.
+Flash (i.e. YouTube videos, etc.) will sit atop the Lightbox Plus Colorbox display no matter what the z-index is.  This is an issue with Flash.
 
 See <a href="http://go.adobe.com/kb/ts_tn_15523_en-us">Flash content displays on top of all DHTML layers</a> at Adobe for details.
 
@@ -86,11 +91,11 @@ To work around this issue you will need to add something like the following to y
 
 == Frequently Asked Questions ==
 
-= Lightbox Plus ColorBox doesn't work =
+= Lightbox Plus Colorbox doesn't work =
 
-Well, yes, it does.  It's used by thousands of websites and if it doesn't work for you that because there is some problem with how it interacts with your site.
+Well, yes, it probably does.  It's used by thousands of websites and if it doesn't work for you then it is likely because there is some problem with how it interacting with other JavaScript on your site.
 
-The most common cause for it not working is a jQuery conflict cause by a theme or a plugin that either does not properly instantiate jQuery or instantiate s avery old version of jQuery.
+The most common cause for it not working is a jQuery conflict cause by a theme or a plugin that either does not properly instantiate jQuery or instantiates a very old version of jQuery.
 
 Here are things to try in order to see what the problem is.
 
@@ -114,15 +119,15 @@ The problem may be with your WordPress theme, mangling image display properties.
 
 It also seems that some more recent version of WordPress (or perhaps the plugin is causing this in some way I am not aware of) do not automatically add the link to the full size image.  You must also make sure that when you are adding an image from the WordPress media dialog control you must make sure there is a link to the image in the Link URL field.  The easiest way to get the correct link is to click on the link to image button beneath the field.  <a href="http://www.23systems.net/wp-content/uploads/2008/07/file.png">Visual depiction</a> of what is required when adding images in order for lightbox to function correctly.
 
-= Lightbox Plus ColorBox doesn't work properly in browser X, Y, or Z (Chrome, Safari, Firefox, Opera, Explorer 6, 7, etc.)? =
+= Lightbox Plus Colorbox doesn't work properly in browser X, Y, or Z (Chrome, Safari, Firefox, Opera, Explorer 6, 7, etc.)? =
 
 Yes it probably does, the problems may be the same as above or there may be a conflict with another plugin or a style conflict.  It has been tested in Chrome, IE 7+, Firefox 2+, Chrome, Safari 3+, Opera 8+ since development began.
 
-= Does Lightbox Plus ColorBox work with PHP 4? If not, why not? =
+= Does Lightbox Plus Colorbox work with PHP 4? If not, why not? =
 
-No it doesn't.  PHP 4 reached end of life on August 8th 2008 (almost years ago.)  WordPress no longer supports PHP 4 and all plugin developers are encourage to follow.  The best solution at this time is to ask your host provider to upgrade to PHP 5.
+No it doesn't.  PHP 4 reached end of life on August 8th 2008 (about 6 years ago.)  WordPress no longer supports PHP 4 and all plugin developers are encourage to follow.  The best solution at this time is to ask your host provider to upgrade to PHP 5.
 
-You will know that Lightbox Plus ColorBox is not working because of PHP if you receive the following error:
+You will know that Lightbox Plus Colorbox is not working because of PHP if you receive the following error:
 
 <b>Plugin couldn't be activated because of fatal error</b>
 
@@ -136,33 +141,33 @@ Maybe, but probably not as they will most likely interfere with each other as th
 
 Yes, you can easily create additional styles by checking the use custom styles checkbox.  It will copy the existing styles to <code>wp-content/lbp-css</code> and you can modify any of the existing styles.  You can all adding a new folder to that directory and using the existing styles as examples create your completely custom styles.
 
-= How does Lightbox Plus ColorBox differ from other Lightbox plugins for WordPress? =
+= How does Lightbox Plus Colorbox differ from other Lightbox plugins for WordPress? =
 
-Performance wise the ColorBox jQuery plugin is smaller and generally faster and has more options than most lightbox JavaScript plugins.  The regular expressions that handle the text are more robust handling a wider variety of characters and in addition it will also grab the image title from the image to use for the overlay image caption.
+Performance wise the Colorbox jQuery plugin is smaller and generally faster and has more options than most lightbox JavaScript plugins.  The regular expressions that handle the text are more robust handling a wider variety of characters and in addition it will also grab the image title from the image to use for the overlay image caption.
 
-= Does Lightbox Plus ColorBox work with WordPress' built in gallery =
+= Does Lightbox Plus Colorbox work with WordPress' built in gallery =
 
-Yes it does.  There are few simple requirements however.  You must set <strong>Link thumbnails to: Image File</strong> or use <code>[gallery link="file"</code> for the gallery options.  You must check <em>Use For WP Gallery</em> box under <strong>Other Lightbox Plus ColorBox Settings</strong>
+Yes it does.  There are few simple requirements however.  You must set <strong>Link thumbnails to: Image File</strong> or use <code>[gallery link="file"</code> for the gallery options.  You must check <em>Use For WP Gallery</em> box under <strong>Other Lightbox Plus Colorbox Settings</strong>
 
 = When resetting/re-initializing LBP the setting do not appear correctly when the page reloads, what gives? =
 
-This problem is only apparent in Chrome and Opera.  It seems to works fine in Internet Explorer, Firefox and Safari.  There are some browser related issues and I am investigating the problem at this time.  For Chrome the settings are being saved but not displayed immediately, click on the Lightbox Plus ColorBox link under appearance and you will see the current settings.  Opera for whatever reason is completely failing to save re-initialization settings, you must manually set and save them or use another browser.  And, no, it doesn't make sense since it's server side activity.
+This problem is only apparent in Chrome and Opera.  It seems to works fine in Internet Explorer, Firefox and Safari.  There are some browser related issues and I am investigating the problem at this time.  For Chrome the settings are being saved but not displayed immediately, click on the Lightbox Plus Colorbox link under appearance and you will see the current settings.  Opera for whatever reason is completely failing to save re-initialization settings, you must manually set and save them or use another browser.  And, no, it doesn't make sense since it's server side activity.
 
 = Additional FAQs from Colorbox =
 
-For addtional information please see <a href="http://www.jacklmoore.com/colorbox/faq" title="ColorBox FAQ">ColorBox FAQ</a> for information about the jQuery plugin used by Lightbox Plus ColorBox.
+For addtional information please see <a href="http://www.jacklmoore.com/colorbox/faq" title="Colorbox FAQ">Colorbox FAQ</a> for information about the jQuery plugin used by Lightbox Plus Colorbox.
 
 = Other Problems =
 
-If your problem isn't covered in this FAQ, your best bet would be to post your question to the WordPress <a href="http://wordpress.org/support/plugin/lightbox-plus" title="Lightbox Plus ColorBox Forum Support">support forums</a>.
+At present due to other commitments and that the prugin is provided freely we can offer no support and it is provided as is.
 
-<strong>Please do not contact Jack Moore the author of ColorBox for issues with Lightbox Plus ColorBox.</strong>
+You can get community support for Lightbox Plus Colorbox via the <a href="http://wordpress.org/support/plugin/lightbox-plus" title="Lightbox Plus Colorbox Direct Support">support forums</a>. 
 
-If you have read and tried the above and you are still having problems, and require more in-depth support or if you need extra help you may place a service request using the form on the <a title="Get technical support for 23Systems free WordPress plugins" href="http://www.23systems.net/services/support/plugin-support/">Plugin Support Request</a> page.  Due to the volume of questions, I cannot may not be able to offer individual support though in an effort to resolve the issue I may contact you. The issue may be resolved by a new release of Lightbox Plus ColorBox but it does help me get a better understanding of the issue.
+<strong>Please do not contact Jack Moore the author of Colorbox for issues with Lightbox Plus Colorbox.</strong>
 
 = Known Problems =
 
-* Does not work correctly with W3 Total Cache if you are using automatic minify settings.  You can manually set up minify to work correctly bypassing Lightbox Plus ColorBox (jquery-colorbox.min.js)
+* Does not work correctly with W3 Total Cache if you are using automatic minify settings.  You can manually set up minify to work correctly bypassing Lightbox Plus Colorbox (jquery-colorbox.min.js)
 * No support for iPad (if someone wants to donate an iPad to me I will guarantee support)
  * It generally seems to work though I just don't support it as I don't have an iPad.
 * In some instances performance may be slow in older versions IE - this may be due to plugin conflicts or slow JavaScript performance in IE.
@@ -170,24 +175,93 @@ If you have read and tried the above and you are still having problems, and requ
 
 = Plugin Conflicts =
 
-* Jetpack Carousel - When carousel is activate it take precedence over Lightbox Plus ColorBox for image use as of LBP 2.x
+* Jetpack Carousel - When carousel is activate it take precedence over Lightbox Plus Colorbox for image use as of LBP 2.x
 * Flickr Mini Gallery - Verified.  Download hot fix for <a href="http://23systems.net/downloads/file/flickr-mini-gallery-jquery-hotfix.zip">Flickr Mini Gallery</a> (includes instructions) as of LBP 1.6.3
 * Tabbed Widgets - Verified as of LBP 1.6.3
 * DMSGuestbook - Un-verified as of LBP 1.6.3
 * Gengo - Un-verified as of LBP 1.6.3
 
-Note: Some of these conflicts were with very old versions of Lightbox Plus ColorBox and may be mitigated
+Note: Some of these conflicts were with very old versions of Lightbox Plus Colorbox and may be mitigated
 
 == Screenshots ==
 
-1. Lightbox Plus ColorBox - Image
-2. Lightbox Plus ColorBox - Video
-3. Lightbox Plus ColorBox - External Content
-4. Lightbox Plus ColorBox - Inline Content (Form)
-5. Lightbox Plus ColorBox - Options Page
-6. Lightbox Plus ColorBox - Style Examples
+1. Lightbox Plus Colorbox - Image
+2. Lightbox Plus Colorbox - Video
+3. Lightbox Plus Colorbox - External Content
+4. Lightbox Plus Colorbox - Inline Content (Form)
+5. Lightbox Plus Colorbox - Options Page
+6. Lightbox Plus Colorbox - Style Examples
 
 == Change Log ==
+
+= 2.7 =
+* Initial release of version 2.7
+* Validated against WordPress 3.9.x
+* Updated Colorbox to version 1.5.9 which inlcudes the following fixes
+ * Fixed inline content bug when using child selectors.  Fixes #599
+ * Fixed accidental leak of global variable.  References #591
+ * Enabled strict mode. Fixes #597
+ * Fix potential error when calling Colorbox directly. References #591
+ * Potentially worked around browser limitation of reporting that an image height and width is 0 immediately after onload.  Fixes #535
+ * Applied maxWidth and maxHeight to the initialWidth and initialHeight.  Fixes #391
+ * Allow setting the overlay opacity through CSS, rather than having to use Colorbox's opacity property.  Fixes #580
+ * Fixed potential issue where IE9+ wouldn't close the modal when clicking on the overlay.  Fixes #576
+ * Added access to settings object in callbacks.
+ * Added svg to image types regex.
+ * Fixed regression that broke direct calls to Colorbox, ie. $.colorbox(…)
+ * Changed when the className is applied: immediately on open, but only updated immediately prior to transition.  Fixes #565
+ * Fixed potential style flash if #cboxLoadedContent is given a background.  Fixes #567
+ * Misc. code cleanup
+ * Fixed potential error when resizing.  Fixes #254
+ * Added Microsoft's JPEG XR to photo detection regex.
+ * Fixed an issue where private events propagated to the document in versions of jQuery prior to 1.7.  Fixes #525, Fixes #526
+ * Updated stylesheets to avoid issue with using `div {max-width:100%}` (Fixes #520)
+ * Used setAttribute to set londesc, so that the value is accessible via DOM Node longDesc property #508
+ * Added longdesc and aria-describedby attributes to photos.  Fixes #508
+ * Fixed a slideshow regression from 1.4.27
+ * Fixed a potential issue with the starting size of #cboxLoadedContent
+ * Fixed a potential issue with using the open property with mixed slideshow and non-slideshow groups
+ * Fixed a width calculation issue relating to using margin:auto on #cboxLoadedContent.
+ * Fixed a regression in IE7 and IE8 that was causing an error.
+ * Use an animation speed of zero between same-sized content (fixed).
+ * Removed temporary fix for jQuery UI 1.8
+ * Added closeButton option.  Set to false to remove the close button.
+ * Bugfix loading overlay/graphic append order
+ * Updated manifest files for the jQuery plugin repository and Bower (no changes to plugin)
+ * Replaced new Image() with document.createElement('img') to avoid a potential bug in Chrome 27.
+ * Fixing bug/typo from last update.
+ * Fixed bug where Colorbox was capturing ctrl+click on assigned links on windows browsers with jQuery 1.7+, rather than ignoring.
+ * Fixed a scroll position issue when using $.colorbox.resize()
+ * Possible fix for a Chrome 27 issue (https://github.com/jackmoore/colorbox/pull/438#issuecomment-18334804)
+ * Added trapFocus setting to allow disabling of focus trapping
+ * Added .webp to list of recognized image extensions
+ * Added fadeOut property to control the closing fadeOut speed.
+ * Removed longdesc attribute for now.
+ * Fixed an error involving IE7/IE8 and legacy versions of jQuery
+ * Fixed a potential conflict with Twitter Bootstrap default img styles.
+ * Added `type='button'` to buttons to prevent accidental form submission
+ * Added alt and longdesc attributes to photo content if they are present on the calling element.
+ * Better 'old IE' feature detection that fixes an error with jQuery 2.0.0pre.
+ * Fixes bug introduced in previous version.
+ * Dropped IE6 support.
+ * Fixed other issues with $.colorbox.remove.
+ * Prevented an error if $.colorbox.remove is called during the transition.
+ * Minor change to work around a jQuery 1.4.2 bug for legacy users.
+ * Minor change to apply the close and className properties sooner.
+ * Fixed an issue with percent-based heights in iOS
+ * Fixed an issue with ajax requests being applied at the wrong time.
+ * Made image preloading aware of retina settings.
+ * Removed $.contains for compatibility with jQuery 1.3.x
+ * Ignored left and right arrow keypresses if combined with the alt key.
+ * Better accessibility:
+ * Replaced div controls with buttons
+ * Tabbed navigation confined to modal window
+ * Added aria role
+ * Updated manifest for plugins.jquery.com
+ * Added retina display properties: retinaImage, retinaUrl, retinaSuffix
+ * Fixed iframe scrolling on iOS devices.
+* Update themes to work with correctly with Colorbox verison 1.5.9
+ * Added styles to clean up borders around buttons in the lightbox
 
 = 2.6 =
 * Added option to generate HTML5 valid code.  Checkbox under Base Settings -> Advanced.  
@@ -210,26 +284,26 @@ Note: Some of these conflicts were with very old versions of Lightbox Plus Color
  * Now creates correct gallery output for specific versions of WordPress
 * Moved 'Use for WordPress Galleries' option to first tab to ease location
  * Located on General tab of Primary Settings
-* Added ColorBox version loading newer/older depending on WordPress version
- * It seems older verions of WordPress were having jQuery conflict with the latest version of ColorBox
+* Added Colorbox version loading newer/older depending on WordPress version
+ * It seems older verions of WordPress were having jQuery conflict with the latest version of Colorbox
 * Added information to submit for support under the support tab
 * Fixed issue where PHP HTML DOM Parser would throw error when getting title if link had no child img to get title from.
-* Renamed plugin to Lightbox Plus ColorBox to reflect long time usage or ColorBox as the lightbox tool
-* Updated ColorBox to version 1.3.32
+* Renamed plugin to Lightbox Plus Colorbox to reflect long time usage or Colorbox as the lightbox tool
+* Updated Colorbox to version 1.3.32
  * Improved internal event subscribing & fixed event bug introduced in v1.3.21
  * Fixed a size-calculation bug
- * Delayed border-width calculations until after opening, to avoid a bug in FF when using ColorBox in a hidden iframe.
+ * Delayed border-width calculations until after opening, to avoid a bug in FF when using Colorbox in a hidden iframe.
  * Fixes bug with bubbling delegated events
  * Fixed compatibility issue with old versions of jQuery (1.3.2-1.4.2)
  * Added className property.
  * Minor bugfix: clear the onload event handler after photo has loaded.
- * Minor bugfix for calling ColorBox on empty jQuery collections without a selector.
+ * Minor bugfix for calling Colorbox on empty jQuery collections without a selector.
 * Minor internal fixes and changes
 
 = 2.5.5 =
 * Fixed some issues when default jQuery of versions less than 1.4.3 (minimum required) were causing images to not load
 * Fixed some jQuery methods in admin panel to work with versions of jQuery older than 1.6
-* Updated ColorBox to version 1.3.21.1
+* Updated Colorbox to version 1.3.21.1
  * Fixed global event issue for jQuery 1.9
 
 = 2.5.4 =
@@ -276,13 +350,13 @@ Note: Some of these conflicts were with very old versions of Lightbox Plus Color
 * Image grouping
  * Added more control over image grouping
  * Fixed image X of X problem, can disable Image X of X
-* Scrolling - If 'false' ColorBox will hide scrollbars for overflowing content. This could be used on conjunction with the resize method (see below) for a smoother transition if you are appending content to an already open instance of ColorBox.
+* Scrolling - If 'false' Colorbox will hide scrollbars for overflowing content. This could be used on conjunction with the resize method (see below) for a smoother transition if you are appending content to an already open instance of Colorbox.
 * Numerous bug fixes
  * Fixed use WP Caption option.  Works with singles images and WordPress built in galleries now.
  * Fixed text links getting lightboxed even of option is not set.
  * Fixed many small issues and text errors.
 * Added class check for php html dom classes to prevent stomping on other plugins using the class.
-* Updated ColorBox to version 1.3.20
+* Updated Colorbox to version 1.3.20
  * Added temporary workaround for jQuery-UI 1.8 bug (http://bugs.jquery.com/ticket/12273)
  * Added *.jpe extension to the list of image types.
 
@@ -291,13 +365,13 @@ Note: Some of these conflicts were with very old versions of Lightbox Plus Color
 
 = 2.4.5 =
 * Updated compatibility with WordPress 3.3
-* Updated ColorBox to version 1.3.19
+* Updated Colorbox to version 1.3.19
  * Fixed bug related to using the 'fixed' property.
  * Optimized the setup procedure to be more efficient.
  * Removed $.colorbox.init() as it will no longer be needed (will self-init when called).
  * Removed use of $.browser.
- * Fixed a regression where Flash content displayed in ColorBox would be reloaded if the browser window was resized.
- * Added safety check to make sure that ColorBox's markup is only added to the DOM a single time, even if $.colorbox.init() is called multiple times.  This will allow site owners to manually initialize ColorBox if they need it before the DOM has finished loading.
+ * Fixed a regression where Flash content displayed in Colorbox would be reloaded if the browser window was resized.
+ * Added safety check to make sure that Colorbox's markup is only added to the DOM a single time, even if $.colorbox.init() is called multiple times.  This will allow site owners to manually initialize Colorbox if they need it before the DOM has finished loading.
  * Updated the example index.html files to be HTML5 compliant.
  * Changed the slideshow behavior so that it immediately moves to the next slide when the slideshow is started.
  * Minor regex bug fix to allow automatic detection of image URLs that include fragments. 
@@ -315,7 +389,7 @@ Note: Some of these conflicts were with very old versions of Lightbox Plus Color
  * The correct solution is to add the <b>mbstring</b> library to PHP (contact you host/support to resolve)
 
 = 2.3.1 =
-* Changed wp_enqueue_script of jquery.colorbox-min.js to reduce chance of conflict with other implementations of ColorBox (should update for this reason)
+* Changed wp_enqueue_script of jquery.colorbox-min.js to reduce chance of conflict with other implementations of Colorbox (should update for this reason)
 * Updated PHP Simple HTML DOM Parser from version 1.1 to 1.5
  * Memory leak fixed!
  * Added support for detecting the source html character set.  This is used to convert characters when plaintext is requested.
@@ -341,13 +415,13 @@ Note: Some of these conflicts were with very old versions of Lightbox Plus Color
 * Minor bug fixes
 * Some minor text fixes
 * Added option to allow up to 100 inline lightboxes
-* Updated ColorBox to verion 1.3.17
+* Updated Colorbox to verion 1.3.17
  * Added properties "top", "bottom", "left" and "right" to specify a position relative to the viewport, rather than using the default centering.
- * Added property "data" to specify GET or POST data when using Ajax.  ColorBox's ajax functionality is handled by jQuery's .load() method, so the data property works the same way as it does with .load().
- * Added property "fixed" which can provide fixed positioning for ColorBox, rather than absolute positioning.  This will allow ColorBox to remain in a fixed position within the visitors viewport, despite scrolling.  IE6 support for this was not added, it will continue to use the default absolute positioning.
+ * Added property "data" to specify GET or POST data when using Ajax.  Colorbox's ajax functionality is handled by jQuery's .load() method, so the data property works the same way as it does with .load().
+ * Added property "fixed" which can provide fixed positioning for Colorbox, rather than absolute positioning.  This will allow Colorbox to remain in a fixed position within the visitors viewport, despite scrolling.  IE6 support for this was not added, it will continue to use the default absolute positioning.
  * Fixed ClearType problem with IE7.
  * Minor fixes.
-* Updated ColorBox to verion 1.3.16  
+* Updated Colorbox to verion 1.3.16  
  * Better IE related transparency workarounds.  IE7 and up now uses the same background image sprite as other browsers.
  * Added error handling for broken image links. A message will be displayed telling the user that the image could not be loaded.
  * Added new property: 'fastIframe' and set it to true by default.  Setting to fastIframe:false will delay the loading graphic removal and onComplete event until iframe has completely loaded.
@@ -359,18 +433,18 @@ Note: Some of these conflicts were with very old versions of Lightbox Plus Color
 
 = 2.2.1 =
 * Require HTML Parser only for PHP 5.X.  Was causing errors with PHP 4.X.
-* Updated ColorBox to verion 1.3.15
+* Updated Colorbox to verion 1.3.15
  * In IE6, closing an iframe when using HTTPS no longer generates a security warning.
  * Changed the index.html example files to use YouTube's new embedded link format.
- * By default, ColorBox returns focus to the element it was launched from once it closes.  This can now be disabled by setting the 'returnFocus' property to false.  Focus was causing problems for some users who had their anchor elements inside animated containers.
+ * By default, Colorbox returns focus to the element it was launched from once it closes.  This can now be disabled by setting the 'returnFocus' property to false.  Focus was causing problems for some users who had their anchor elements inside animated containers.
  * Minor bug fix involved in using a combination of slideshow and non-slideshow content.
  * Minor bug fix involved in preloading images when using a function as a value for the href property.
  * The slideshow now respects the loop property.
  * Fixed compatibility with jQuery 1.4.3
  * The 'open' property now accepts a function as a value, like all of the other properties.
  * Preloading now loads the correct href for images when using a dynamic (function) value for the href property.
- * Fixed bug in Safari 3 for Win where ColorBox centered on the document, rather than the visitor's viewport.
- * May have fixed an issue in Opera 10.6+ where ColorBox would rarely/randomly freeze up while switching between photos in a group.
+ * Fixed bug in Safari 3 for Win where Colorbox centered on the document, rather than the visitor's viewport.
+ * May have fixed an issue in Opera 10.6+ where Colorbox would rarely/randomly freeze up while switching between photos in a group.
  * Some functionality better encapsulated & minor performance improvements.
 
 = 2.2 =
@@ -398,7 +472,7 @@ Note: Some of these conflicts were with very old versions of Lightbox Plus Color
  * Lightbox Plus no longer stores stylesheet path in options, it is now pulled from global definitions
  * It should now be easier to use on multiple servers with different paths.
 * Added support for multiple galleries on a single page displaying separate slide shows
-* Updated ColorBox to version 1.3.9
+* Updated Colorbox to version 1.3.9
  * Fixed a bug in IE where iframed YouTube videos were not opening correctly.
 
 = 2.0.5 =
@@ -444,20 +518,20 @@ Note: Some of these conflicts were with very old versions of Lightbox Plus Color
  * Provides demos and examples for secondary lightbox using video, external webpages and interactive flash
  * Provides demos and examples for inline lightbox using inline content
 * Fixed issue with saving setting and changes not being reflected.
-* Updated ColorBox to version 1.3.8
+* Updated Colorbox to version 1.3.8
  * Fixed a bug in Chrome where it would sometimes render photos at 0 by 0 width and height (behavior introduced in recent update to Chrome).
  * Fixed a bug where the onClosed callback would fire twice (only affected 1.3.7).
- * Fixed a bug in IE7 that existed with some iframed websites that use JS to reposition the viewport caused ColorBox to move out of position.
+ * Fixed a bug in IE7 that existed with some iframed websites that use JS to reposition the viewport caused Colorbox to move out of position.
  * Abstracted the identifiers (HTML ids & classes, and JS plugin name, method, and events) so that the plugin can be easily rebranded.
  * Small changes to improve either code readability or compression.
 
 = 1.7 =
-* Updated ColorBox to verion 1.3.7
+* Updated Colorbox to verion 1.3.7
  * $.colorbox can now be used for direct calls and accessing public methods.  Example: $.colorbox.close();
  * Resize now accepts 'width', 'innerWidth', 'height' and 'innerHeight'. Example: $.colorbox.resize({width:"100%"})
  * Added option (loop:false) to disable looping in a group.
  * Added options (escKey:false, arrowKey:false) to disable esc-key and arrow-key bindings.
- * Added method for removing ColorBox from a document: $.colorbox.remove();
+ * Added method for removing Colorbox from a document: $.colorbox.remove();
  * Fixed a bug where iframed URLs would be truncated if they contained an unencoded apostrophe.
  * Now uses the exact href specified on an anchor, rather than the version returned by 'this.href'. This was causing "#example" to be normalized to "http://domain/#example" which interfered with how some users were setting up links to inline content.
 
@@ -511,7 +585,7 @@ Note: Some of these conflicts were with very old versions of Lightbox Plus Color
  * Quick links in plugins list
  * Added additional support and FAQ links to admin panel
 * Readme and FAQ update
-* Actually includes ColorBox 1.3.6 which somehow was replaced by 1.3.1 in last release (1.6.6) for which I apologize.
+* Actually includes Colorbox 1.3.6 which somehow was replaced by 1.3.1 in last release (1.6.6) for which I apologize.
 * Includes `lightbox-plus.pot` for language translations for interested parties.
 
 = 1.6.6 =
@@ -525,19 +599,19 @@ Note: Some of these conflicts were with very old versions of Lightbox Plus Color
  * Fixed a bug introduced in 1.3.4 with IE7's display of example 2 and example 3, and auto-width in Opera.
  * Fixed a bug introduced in 1.3.4 where colorbox could not be launched by triggering an element's click event through JavaScript.
  * Minor refinements.
- * Event delegation is now used for elements that ColorBox is assigned to, rather than individual click events.
- * Additional callbacks have been added to represent other stages of ColorBox's lifecycle. Available callbacks, in order of their execution: `onOpen`, `onLoad`, `onComplete`, `onCleanup`, `onClosed` These take place at the same time as the event hooks, but will be better suited than the hooks for targeting specific instances of ColorBox.
+ * Event delegation is now used for elements that Colorbox is assigned to, rather than individual click events.
+ * Additional callbacks have been added to represent other stages of Colorbox's lifecycle. Available callbacks, in order of their execution: `onOpen`, `onLoad`, `onComplete`, `onCleanup`, `onClosed` These take place at the same time as the event hooks, but will be better suited than the hooks for targeting specific instances of Colorbox.
  * Ajax content is now immediately added to the DOM to be more compatible if that content contains script tags.
  * Focus is now returned to the calling element on closing.
  * Fixed a bug where `maxHeight` and `maxWidth` did not work for non-photo content.
  * Direct calls no longer need `'open:true'`, it is assumed.  Example: `$.fn.colorbox({html:"<p>Hi</p>"});`
  * Changed `$.fn.colorbox.element()` to return a jQuery object rather the DOM element.
  * jQuery.colorbox-min.js is compressed with Google's Closure Compiler rather than YUI Compressor.
- * Added `'innerWidth'` and `'innerHeight'` options to allow people to easily set the size dimensions for ColorBox, without having to anticipate the size of the borders and buttons.
+ * Added `'innerWidth'` and `'innerHeight'` options to allow people to easily set the size dimensions for Colorbox, without having to anticipate the size of the borders and buttons.
  * Renamed `'scrollbars'` option to `'scrolling'` to be in keeping with the existing HTML attribute.  The option now also applies to iframes.
  * Bug fix: In Safari, positioning occassionally incorrect when using '100%' dimensions.
  * Bug fix: In IE6, the background overlay is briefly not full size when first viewing.
- * Bug fix: In Firefox, opening ColorBox causes a split second shift with a small minority of webpage layouts.
+ * Bug fix: In Firefox, opening Colorbox causes a split second shift with a small minority of webpage layouts.
  * Simplified code in a few areas.
 * Special thanks for navjotjsingh for the include, excude fix for WordPress built in gallery
 
@@ -568,15 +642,15 @@ Note: Some of these conflicts were with very old versions of Lightbox Plus Color
 = 1.6 =
 * Added the much requested feature for Lightbox Plus to work with WordPress' built in gallery
  * Added checkbox to select whether to use with WP built in gallery.
-* Updated Lightbox Plus to use new version of ColorBox
-* Updated ColorBox to version 1.3.1 with the following changes
+* Updated Lightbox Plus to use new version of Colorbox
+* Updated Colorbox to version 1.3.1 with the following changes
   * Removed the IE-only stylesheets and conditional comments.  All CSS is handled by a single CSS file for all examples.
   * Removed user-agent sniffing from the js and replaced it with feature detection.  This will allow correct rendering for visitors masking their agent type.
-  * Added `$.fn.colorbox.resize()` method to allow ColorBox to resize it's height if it's contents change.
+  * Added `$.fn.colorbox.resize()` method to allow Colorbox to resize it's height if it's contents change.
   * Added `scrollbars` option to allow users to turn off scrollbars when using the `resize()` method.
   * Renamed the `resize` option to be less ambiguous.  It's now `scalePhotos`.
   * Renamed the `cbox_close` event to be less ambiguous.  It's now `cbox_cleanup`.  It is the first thing to happen in the close method while the 'cbox_closed' event is the last to happen.
-  * Fixed a bug with the slideshow mouseover graphics that appeared after ColorBox is opened a 2nd time.
+  * Fixed a bug with the slideshow mouseover graphics that appeared after Colorbox is opened a 2nd time.
   * Fixed a bug where Clear Type may not work in IE 6 & 7 if using the fade transition.
   * Minor code optimizations to increase compression.
 * Minor corrections to admin interface.
@@ -591,7 +665,7 @@ Note: Some of these conflicts were with very old versions of Lightbox Plus Color
 * Fixed bug where titles were being broken when DO NOT USE TITLE was checked.
 * Fixed issue with limited character sets - should allow any characters in the title (diacritics, umlauts, etc.)
 * Optimized code to use less memory and run faster
-* Updated ColorBox to version 1.2.9
+* Updated Colorbox to version 1.2.9
 * No new features at this time
 
 = 1.5.3.1 =
@@ -603,7 +677,7 @@ Note: Some of these conflicts were with very old versions of Lightbox Plus Color
  * Using this method you can manually control which images are affected by Lightbox Plus by adding the cpModal class the image link URL and checking the Don't Auto-Lightbox Images option.
 * Added option to not automatically add attributes required for Lightbox Plus to work.  This allows for more manual image control.
 * Added option not to display image titles.
-* Updated ColorBox to version 1.2.5
+* Updated Colorbox to version 1.2.5
 
 = 1.5.2 =
 * Reset/re-initialize button on the plugin page will now remove the old files that were not removed during upgrade to 1.5.x from pre 1.5 versions.
@@ -614,14 +688,14 @@ Note: Some of these conflicts were with very old versions of Lightbox Plus Color
 * Fixed the need to have <code>class="imagebox"</code> added to image links
 
 = 1.5 =
-* Rebuilt Lightbox Plus to utilize ColorBox for its image overlay functions
+* Rebuilt Lightbox Plus to utilize Colorbox for its image overlay functions
  * Supports photos, photo groups, slideshow, ajax, inline, and iframed content.
  * Appearance is completely controlled through CSS so users can restyle the box.
  * Written in jQuery plugin format and can be chained with other jQuery commands.
  * Generates W3C valid XHTML and CSS, adds no JS global variables & passes JSLint.
 * <strong>README!</strong> - If you are upgrading from a previous version you will need to reset your Lightbox Plus settings as they have all changed and the old values are no longer useful.
 * <strong>README!</strong> - There is a reset button that will remove your old options and replace them with the new options, Lightbox Plus will act funny until you either reset it or update the settings.
-* <strong>README!</strong> - If you have custom styles back them up before proceeding.  You will need to convert them to the new directory and ColorBox format to use them again.
+* <strong>README!</strong> - If you have custom styles back them up before proceeding.  You will need to convert them to the new directory and Colorbox format to use them again.
 * <strong>README!</strong> - Only the black and white existing styles have been ported to the new format, it is very easy to convert any of the other color styles to the new format.
 * Added reset button to allow for resetting to default settings.
 * Tested In: Firefox 2, 3, Safari 3, 4, Opera 9, 10, Chrome 1, 2, Internet Explorer 6, 7, 8.
@@ -675,7 +749,7 @@ Note: Some of these conflicts were with very old versions of Lightbox Plus Color
 * navjotsingh (for bug fix in gallery shortcode with version 1.6.x)
 * <a href="http://www.dev4press.com/">Milan Petrovic</a> for some quick debugging of version 2.0 admin panel
 * <a href="http://www.melaniesallis.com">Melanie Sallis</a> for needing a lightbox for her site which prompted me to create this plugin
-* <a href="http://www.jacklmoore.com/colorbox">Jack Moore</a> for creating the awesome jQuery plugin, ColorBox, and everyone who has contributed to the support in developing this plugin.
+* <a href="http://www.jacklmoore.com/colorbox">Jack Moore</a> for creating the awesome jQuery plugin, Colorbox, and everyone who has contributed to the support in developing this plugin.
 
 == More Information ==
 

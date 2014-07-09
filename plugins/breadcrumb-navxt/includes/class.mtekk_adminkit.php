@@ -1,6 +1,6 @@
 <?php
 /*  
-	Copyright 2009-2013  John Havlik  (email : mtekkmonkey@gmail.com)
+	Copyright 2009-2014  John Havlik  (email : john.havlik@mtekk.us)
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 require_once(dirname(__FILE__) . '/block_direct_access.php');
 abstract class mtekk_adminKit
 {
-	private $__version = '1.2';
+	const __version = '1.2';
 	protected $version;
 	protected $full_name;
 	protected $short_name;
@@ -56,7 +56,7 @@ abstract class mtekk_adminKit
 	 */
 	function get_admin_class_version()
 	{
-		return $__version;
+		return self::__version;
 	}
 	/**
 	 * Return the URL of the settings page for the plugin
@@ -344,6 +344,7 @@ abstract class mtekk_adminKit
 	 * 
 	 * @param array $opts good, clean array
 	 * @param array $input unsanitzed input array, not trusted at all
+	 * @todo This function should probably get a filter thrown within it to be more extensible
 	 */
 	protected function opts_update_loop(&$opts, $input)
 	{
@@ -395,10 +396,13 @@ abstract class mtekk_adminKit
 							$opts[$option] = esc_html($input[$option]);
 						}
 						break;
-					//Treat everything else as a normal string
+					//Deal with strings that can be null
 					case 's':
-					default:
 						$opts[$option] = esc_html($input[$option]);
+						break;
+					//By default we have nothing to do, allows for internal settings
+					default:
+						break;
 				}
 			}
 		}
@@ -583,7 +587,7 @@ abstract class mtekk_adminKit
 				if($options->getAttribute('name') === $this->short_name)
 				{
 					//Grab the file version
-					$version = explode('.', $options->getAttribute('version'));
+					$version = $options->getAttribute('version');
 					//Loop around all of the options
 					foreach($options->getelementsByTagName('option') as $child)
 					{

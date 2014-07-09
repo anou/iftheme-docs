@@ -11,14 +11,14 @@ Enables the advanced features of TinyMCE, the WordPress WYSIWYG editor.
 == Description ==
 
 This plugin will let you add, remove and arrange the buttons that are shown on the Visual Editor toolbar.
-It includes 14 plugins for [TinyMCE](http://tinymce.com/) that are automatically enabled or disabled depending on what buttons are chosen.
+It includes 15 plugins for [TinyMCE](http://tinymce.com/) that are automatically enabled or disabled depending on what buttons are chosen.
 
 = Some of the features added by this plugin =
 
 * Support for creating and editing tables.
 * More options when inserting lists.
 * Search and Replace in the editor.
-* Abitity to set Font Family and Font Size.
+* Ability to set Font Family and Font Size.
 * And many others.
 
 With this plugin you will also be able to enable the TinyMCE menu. It is a convenient way to access a lot of features that are not used frequently.
@@ -28,6 +28,13 @@ With this plugin you will also be able to enable the TinyMCE menu. It is a conve
 Best is to install directly from WordPress. If manual installation is required, please make sure that the plugin files are in a folder named "tinymce-advanced" (not two nested folders) in the WordPress plugins folder, usually "wp-content/plugins".
 
 == Changelog ==
+
+= 4.0.2 =
+* Fix showing of the second, third and forth button rows when the Toolbar Toggle button is not used.
+* Fix adding the ''directionality'' plugin when RTL or LTR button is selected.
+* Show the ''Advanced Options'' to super admins on multisite installs.
+* Add the ''link'' plugin including link rel setting. Replaces the Insert/Edit Link dialog when enabled.
+* Include updated ''table'' plugin that has support for vertical align for cells.
 
 = 4.0.1 =
 Fix warnings on pages other than Edit Post. Update the description.
@@ -57,7 +64,7 @@ Updated for WordPress 3.3 or later and TinyMCE 3.4.5.
 Fix the removal of the *media* plugin so it does not require re-saving the settings.
 
 = 3.4.2 =
-Compatibility with WordPress 3.2 and TinyMCE 3.4.2, removed the options for suport for iframe and HTML 5.0 elements as they are supported by default in WordPress 3.2, removed the *media* plugin as it is included by default.
+Compatibility with WordPress 3.2 and TinyMCE 3.4.2, removed the options for support for iframe and HTML 5.0 elements as they are supported by default in WordPress 3.2, removed the *media* plugin as it is included by default.
 
 = 3.3.9.1 =
 Added advanced options: stop removing iframes, stop removing HTML 5.0 elements, moved the support for custom editor styles to editor-style.css in the current theme.
@@ -77,7 +84,7 @@ Compatibility with WordPress 2.8 and TinyMCE 3.2.4, minor bug fixes.
 Compatibility with WordPress 2.7 and TinyMCE 3.2, minor bug fixes.
 
 = 3.1 =
-Compatibility with WordPress 2.6 and TinyMCE 3.1, keeps empty paragrarhs when disabling the removal of P and BR tags, the buttons for MCImageManager and MCFileManager can be arranged (if installed).
+Compatibility with WordPress 2.6 and TinyMCE 3.1, keeps empty paragraphs when disabling the removal of P and BR tags, the buttons for MCImageManager and MCFileManager can be arranged (if installed).
 
 = 3.0.1 =
 Compatibility with WordPress 2.5.1 and TinyMCE 3.0.7, added option to disable the removal of P and BR tags when saving and in the HTML editor (autop), added two more buttons to the HTML editor: autop and undo, fixed the removal of non-default TinyMCE buttons.
@@ -94,6 +101,10 @@ Improved language selection, improved compatibility with WordPress 2.3 and TinyM
 = 2.0 =
 Includes an admin page for arranging the TinyMCE toolbar buttons, easy installation, a lot of bugfixes, customized "Smilies" plugin that uses the built-in WordPress smilies, etc. The admin page uses jQuery and jQuery UI that lets you "drag and drop" the TinyMCE buttons to arrange your own toolbars and enables/disables the corresponding plugins depending on the used buttons.
 
+== Upgrade Notice ==
+
+= 4.0.2 =
+Fixes for showing of all toolbars, advanced options for superadmins, vertical align for table cells, and more.
 
 == Frequently Asked Questions ==
 

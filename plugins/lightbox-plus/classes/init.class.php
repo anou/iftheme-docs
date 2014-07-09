@@ -1,12 +1,12 @@
 <?php
     /**
-    * @package Lightbox Plus ColorBox
+    * @package Lightbox Plus Colorbox
     * @subpackage init.class.php
     * @internal 2013.01.16
     * @author Dan Zappone / 23Systems
-    * @version 2.6
-    * @$Id: init.class.php 662394 2013-02-02 05:29:55Z dzappone $
-    * @$URL: http://plugins.svn.wordpress.org/lightbox-plus/tags/2.6/classes/init.class.php $
+    * @version 2.7
+    * @$Id: init.class.php 937945 2014-06-24 17:11:13Z dzappone $
+    * @$URL: http://plugins.svn.wordpress.org/lightbox-plus/tags/2.7/classes/init.class.php $
     */
     if (!class_exists('lbp_init')) {
         class lbp_init extends lbp_actions {
@@ -44,7 +44,7 @@
                     $savedOptions = get_option('lightboxplus_options');
 
                     /**
-                    * If Lightbox Plus ColorBox has been initialized - set to true
+                    * If Lightbox Plus Colorbox has been initialized - set to true
                     */
                     if ($savedOptions) { update_option('lightboxplus_init', true); }
                 } else {

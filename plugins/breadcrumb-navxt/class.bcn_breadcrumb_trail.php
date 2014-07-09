@@ -1,6 +1,6 @@
 <?php
 /*  
-	Copyright 2007-2013  John Havlik  (email : mtekkmonkey@gmail.com)
+	Copyright 2007-2014  John Havlik  (email : john.havlik@mtekk.us)
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ require_once(dirname(__FILE__) . '/includes/block_direct_access.php');
 class bcn_breadcrumb_trail
 {
 	//Our member variables
-	private $version = '5.0.1';
+	private $version = '5.1.0';
 	//An array of breadcrumbs
 	public $breadcrumbs = array();
 	public $trail = array();
@@ -30,11 +30,8 @@ class bcn_breadcrumb_trail
 	//Default constructor
 	public function __construct()
 	{
-		global $l10n;
-		// the global and the check might become obsolete in
-		// further wordpress versions
-		// @see https://core.trac.wordpress.org/ticket/10527		
-		if(!isset($l10n['breadcrumb-navxt']))
+		//@see https://core.trac.wordpress.org/ticket/10527
+		if(!is_textdomain_loaded('breadcrumb-navxt'))
 		{
 			load_plugin_textdomain('breadcrumb-navxt', false, 'breadcrumb-navxt/languages');
 		}
@@ -46,35 +43,35 @@ class bcn_breadcrumb_trail
 			//Should the mainsite be shown
 			'bmainsite_display' => true,
 			//The breadcrumb template for the main site, this is global, four keywords are available %link%, %title%, %htitle%, and %type%
-			'Hmainsite_template' => __('<a title="Go to %title%." href="%link%" class="%type%">%htitle%</a>', 'breadcrumb-navxt'),
+			'Hmainsite_template' => __('<span typeof="v:Breadcrumb"><a rel="v:url" property="v:title" title="Go to %title%." href="%link%" class="%type%">%htitle%</a></span>', 'breadcrumb-navxt'),
 			//The breadcrumb template for the main site, used when an anchor is not needed, this is global, four keywords are available %link%, %title%, %htitle%, and %type%
-			'Hmainsite_template_no_anchor' => '%htitle%',
+			'Hmainsite_template_no_anchor' => '<span typeof="v:Breadcrumb"><span property="v:title">%htitle%</span></span>',
 			//Should the home page be shown
 			'bhome_display' => true,
 			//The breadcrumb template for the home page, this is global, four keywords are available %link%, %title%, %htitle%, and %type%
-			'Hhome_template' => __('<a title="Go to %title%." href="%link%" class="%type%">%htitle%</a>', 'breadcrumb-navxt'),
+			'Hhome_template' => __('<span typeof="v:Breadcrumb"><a rel="v:url" property="v:title" title="Go to %title%." href="%link%" class="%type%">%htitle%</a></span>', 'breadcrumb-navxt'),
 			//The breadcrumb template for the home page, used when an anchor is not needed, this is global, four keywords are available %link%, %title%, %htitle%, and %type%
-			'Hhome_template_no_anchor' => '%htitle%',
+			'Hhome_template_no_anchor' => '<span typeof="v:Breadcrumb"><span property="v:title">%htitle%</span></span>',
 			//Should the blog page be shown globally
 			'bblog_display' => true,
 			//The breadcrumb template for the blog page only in static front page mode, this is global, four keywords are available %link%, %title%, %htitle%, and %type%
-			'Hblog_template' => __('<a title="Go to %title%." href="%link%" class="%type%">%htitle%</a>', 'breadcrumb-navxt'),
+			'Hblog_template' => __('<span typeof="v:Breadcrumb"><a rel="v:url" property="v:title" title="Go to %title%." href="%link%" class="%type%">%htitle%</a></span>', 'breadcrumb-navxt'),
 			//The breadcrumb template for the blog page only in static front page mode, used when an anchor is not needed, this is global, four keywords are available %link%, %title%, %htitle%, and %type%
-			'Hblog_template_no_anchor' => '%htitle%',
+			'Hblog_template_no_anchor' => '<span typeof="v:Breadcrumb"><span property="v:title">%htitle%</span></span>',
 			//Separator that is placed between each item in the breadcrumb trial, but not placed before
 			//the first and not after the last breadcrumb
 			'hseparator' => ' &gt; ',
 			//Whether or not we should trim the breadcrumb titles
 			'blimit_title' => false,
-			//The maximum title lenght
+			//The maximum title length
 			'amax_title_length' => 20,
 			//Current item options, really only applies to static pages and posts unless other current items are linked
 			'bcurrent_item_linked' => false,
 			//Static page options
 			//The anchor template for page breadcrumbs, four keywords are available %link%, %title%, %htitle%, and %type%
-			'Hpost_page_template' => __('<a title="Go to %title%." href="%link%" class="%type%">%htitle%</a>', 'breadcrumb-navxt'),
+			'Hpost_page_template' => __('<span typeof="v:Breadcrumb"><a rel="v:url" property="v:title" title="Go to %title%." href="%link%" class="%type%">%htitle%</a></span>', 'breadcrumb-navxt'),
 			//The anchor template for page breadcrumbs, used when an anchor is not needed, four keywords are available %link%, %title%, %htitle%, and %type%
-			'Hpost_page_template_no_anchor' => '%htitle%',
+			'Hpost_page_template_no_anchor' => '<span typeof="v:Breadcrumb"><span property="v:title">%htitle%</span></span>',
 			//Just a link to the page on front property
 			'apost_page_root' => get_option('page_on_front'),
 			//Paged options
@@ -84,9 +81,9 @@ class bcn_breadcrumb_trail
 			'bpaged_display' => false,
 			//The post options previously singleblogpost
 			//The breadcrumb template for post breadcrumbs, four keywords are available %link%, %title%, %htitle%, and %type%
-			'Hpost_post_template' => __('<a title="Go to %title%." href="%link%" class="%type%">%htitle%</a>', 'breadcrumb-navxt'),
+			'Hpost_post_template' => __('<span typeof="v:Breadcrumb"><a rel="v:url" property="v:title" title="Go to %title%." href="%link%" class="%type%">%htitle%</a></span>', 'breadcrumb-navxt'),
 			//The breadcrumb template for post breadcrumbs, used when an anchor is not needed, four keywords are available %link%, %title%, %htitle%, and %type%
-			'Hpost_post_template_no_anchor' => '%htitle%',
+			'Hpost_post_template_no_anchor' => '<span typeof="v:Breadcrumb"><span property="v:title">%htitle%</span></span>',
 			//Just a link for the page for posts
 			'apost_post_root' => get_option('page_for_posts'),
 			//Should the trail include the taxonomy of the post
@@ -96,12 +93,12 @@ class bcn_breadcrumb_trail
 			//Attachment settings
 			//TODO: Need to move attachments to support via normal post handlers
 			//The breadcrumb template for attachment breadcrumbs, four keywords are available %link%, %title%, %htitle%, and %type%
-			'Hpost_attachment_template' => __('<a title="Go to %title%." href="%link%" class="%type%">%htitle%</a>', 'breadcrumb-navxt'),
+			'Hpost_attachment_template' => __('<span typeof="v:Breadcrumb"><a rel="v:url" property="v:title" title="Go to %title%." href="%link%" class="%type%">%htitle%</a></span>', 'breadcrumb-navxt'),
 			//The breadcrumb template for attachment breadcrumbs, used when an anchor is not needed, four keywords are available %link%, %title%, %htitle%, and %type%
-			'Hpost_attachment_template_no_anchor' => '%htitle%',
+			'Hpost_attachment_template_no_anchor' => '<span typeof="v:Breadcrumb"><span property="v:title">%htitle%</span></span>',
 			//404 page settings
 			//The template for 404 breadcrumbs, four keywords are available %link%, %title%, %htitle%, and %type%
-			'H404_template' => '%htitle%',
+			'H404_template' => '<span typeof="v:Breadcrumb"><span property="v:title">%htitle%</span></span>',
 			//The text to be shown in the breadcrumb for a 404 page
 			'S404_title' => __('404', 'breadcrumb-navxt'),
 			//Search page options
@@ -111,14 +108,14 @@ class bcn_breadcrumb_trail
 			'Hsearch_template_no_anchor' => __('Search results for &#39;%htitle%&#39;', 'breadcrumb-navxt'),
 			//Tag related stuff
 			//The breadcrumb template for tag breadcrumbs, four keywords are available %link%, %title%, %htitle%, and %type%
-			'Hpost_tag_template' => __('<a title="Go to the %title% tag archives." href="%link%" class="%type%">%htitle%</a>', 'breadcrumb-navxt'),
+			'Htax_post_tag_template' => __('<span typeof="v:Breadcrumb"><a rel="v:url" property="v:title" title="Go to the %title% tag archives." href="%link%" class="%type%">%htitle%</a></span>', 'breadcrumb-navxt'),
 			//The breadcrumb template for tag breadcrumbs, used when an anchor is not needed, four keywords are available %link%, %title%, %htitle%, and %type%
-			'Hpost_tag_template_no_anchor' => '%htitle%',
+			'Htax_post_tag_template_no_anchor' => '<span typeof="v:Breadcrumb"><span property="v:title">%htitle%</span></span>',
 			//Post format related stuff
 			//The breadcrumb template for post format breadcrumbs, four keywords are available %link%, %title%, %htitle%, and %type%
-			'Hpost_format_template' => __('<a title="Go to the %title% tag archives." href="%link%" class="%type%">%htitle%</a>', 'breadcrumb-navxt'),
+			'Hpost_format_template' => __('<span typeof="v:Breadcrumb"><a rel="v:url" property="v:title" title="Go to the %title% tag archives." href="%link%" class="%type%">%htitle%</a></span>', 'breadcrumb-navxt'),
 			//The breadcrumb template for post format breadcrumbs, used when an anchor is not needed, four keywords are available %link%, %title%, %htitle%, and %type%
-			'Hpost_format_template_no_anchor' => '%htitle%',
+			'Hpost_format_template_no_anchor' => '<span typeof="v:Breadcrumb"><span property="v:title">%htitle%</span></span>',
 			//Author page stuff
 			//The anchor template for author breadcrumbs, four keywords are available %link%, %title%, %htitle%, and %type%
 			'Hauthor_template' => __('Articles by: <a title="Go to the first page of posts by %title%." href="%link%" class="%type%">%htitle%</a>', 'breadcrumb-navxt'),
@@ -128,13 +125,13 @@ class bcn_breadcrumb_trail
 			'Sauthor_name' => 'display_name',
 			//Category stuff
 			//The breadcrumb template for category breadcrumbs, four keywords are available %link%, %title%, %htitle%, and %type%
-			'Hcategory_template' => __('<a title="Go to the %title% category archives." href="%link%" class="%type%">%htitle%</a>', 'breadcrumb-navxt'),
+			'Htax_category_template' => __('<span typeof="v:Breadcrumb"><a rel="v:url" property="v:title" title="Go to the %title% category archives." href="%link%" class="%type%">%htitle%</a></span>', 'breadcrumb-navxt'),
 			//The breadcrumb template for category breadcrumbs, used when anchors are not needed, four keywords are available %link%, %title%, %htitle%, and %type%
-			'Hcategory_template_no_anchor' => '%htitle%',
+			'Htax_category_template_no_anchor' => '<span typeof="v:Breadcrumb"><span property="v:title">%htitle%</span></span>',
 			//The breadcrumb template for date breadcrumbs, four keywords are available %link%, %title%, %htitle%, and %type%
-			'Hdate_template' => __('<a title="Go to the %title% archives." href="%link%" class="%type%">%htitle%</a>', 'breadcrumb-navxt'),
+			'Hdate_template' => __('<span typeof="v:Breadcrumb"><a rel="v:url" property="v:title" title="Go to the %title% archives." href="%link%" class="%type%">%htitle%</a></span>', 'breadcrumb-navxt'),
 			//The breadcrumb template for date breadcrumbs, used when anchors are not needed, four keywords are available %link%, %title%, %htitle%, and %type%
-			'Hdate_template_no_anchor' => '%htitle%'
+			'Hdate_template_no_anchor' => '<span typeof="v:Breadcrumb"><span property="v:title">%htitle%</span></span>'
 		);
 	}
 	/**
@@ -185,9 +182,7 @@ class bcn_breadcrumb_trail
 	 */
 	protected function do_author()
 	{
-		global $author;
-		//Get the Author name, note it is an object
-		$curauth = (isset($_GET['author_name'])) ? get_userdatabylogin($author_name) : get_userdata(intval($author));
+		global $authordata;
 		//Setup array of valid author_name values
 		$valid_author_name = array('display_name', 'nickname', 'first_name', 'last_name');
 		//This translation allows us to easily select the display type later on
@@ -197,13 +192,13 @@ class bcn_breadcrumb_trail
 		{
 			//TODO Evaluate the need for this filter call
 			//Place the breadcrumb in the trail, uses the constructor to set the title, prefix, and suffix, get a pointer to it in return
-			$breadcrumb = $this->add(new bcn_breadcrumb(apply_filters('the_author', $curauth->$author_name), $this->opt['Hauthor_template_no_anchor'], array('author', 'current-item'), NULL, $curauth->ID));
+			$breadcrumb = $this->add(new bcn_breadcrumb(apply_filters('the_author', $authordata->$author_name), $this->opt['Hauthor_template_no_anchor'], array('author', 'current-item'), NULL, $authordata->ID));
 			//If we're paged, or allowing the current item to be linked, let's link to the first page
 			if($this->opt['bcurrent_item_linked'] || (is_paged() && $this->opt['bpaged_display']))
 			{
 				//Set the template to our one containing an anchor
 				$breadcrumb->set_template($this->opt['Hauthor_template']);
-				$breadcrumb->set_url(get_author_posts_url($curauth->ID));
+				$breadcrumb->set_url(get_author_posts_url($authordata->ID));
 			}
 		}
 	}
@@ -281,7 +276,7 @@ class bcn_breadcrumb_trail
 	 * @param int $id The id of the post to find the terms for.
 	 * @param string $taxonomy The name of the taxonomy that the term belongs to
 	 * 
-	 * TODO Need to implement this cleaner, fix up the entire tag_ thing, as this is now generic
+	 * TODO Need to implement this cleaner
 	 * TODO This still needs to be updated to the new method of adding breadcrumbs to the trail
 	 */
 	protected function post_terms($id, $taxonomy)
@@ -308,7 +303,7 @@ class bcn_breadcrumb_trail
 				$bcn_breadcrumb->set_title($bcn_breadcrumb->get_title() . str_replace(
 					array('%title%', '%link%', '%htitle%', '%type%'),
 					array($term->name, get_term_link($term, $taxonomy), $term->name, $term->taxonomy),
-					$this->opt['H' . $term->taxonomy . '_template']));
+					$this->opt['Htax_' . $term->taxonomy . '_template']));
 				$is_first = false;
 			}
 		}
@@ -319,14 +314,13 @@ class bcn_breadcrumb_trail
 	 * This recursive functions fills the trail with breadcrumbs for parent terms.
 	 * @param int $id The id of the term.
 	 * @param string $taxonomy The name of the taxonomy that the term belongs to
-	 * @TODO Evaluate if we need to do tax_ for a prefix
 	 */
 	protected function term_parents($id, $taxonomy)
 	{
 		//Get the current category object, filter applied within this call
 		$term = get_term($id, $taxonomy);
 		//Place the breadcrumb in the trail, uses the constructor to set the title, template, and type, get a pointer to it in return
-		$breadcrumb = $this->add(new bcn_breadcrumb($term->name, $this->opt['H' . $taxonomy . '_template'], array('taxonomy', $taxonomy), get_term_link($term, $taxonomy), $id));
+		$breadcrumb = $this->add(new bcn_breadcrumb($term->name, $this->opt['Htax_' . $taxonomy . '_template'], array('taxonomy', $taxonomy), get_term_link($term, $taxonomy), $id));
 		//Make sure the id is valid, and that we won't end up spinning in a loop
 		if($term->parent && $term->parent != $id)
 		{
@@ -358,12 +352,14 @@ class bcn_breadcrumb_trail
 	 * A Breadcrumb Trail Filling Function
 	 * 
 	 * This functions fills a breadcrumb for posts
+	 * 
+	 * @param $post WP_Post Instance of WP_Post object to create a breadcrumb for
 	 */
-	protected function do_post()
+	protected function do_post(WP_Post $post)
 	{
-		global $post, $page;
+		global $page;
 		//Place the breadcrumb in the trail, uses the bcn_breadcrumb constructor to set the title, template, and type
-		$breadcrumb = $this->add(new bcn_breadcrumb(get_the_title(), $this->opt['Hpost_' . $post->post_type . '_template_no_anchor'], array('post', 'post-' . $post->post_type, 'current-item'), NULL, $post->ID));
+		$breadcrumb = $this->add(new bcn_breadcrumb(get_the_title($post), $this->opt['Hpost_' . $post->post_type . '_template_no_anchor'], array('post', 'post-' . $post->post_type, 'current-item'), NULL, $post->ID));
 		//If the current item is to be linked, or this is a paged post, add in links
 		if($this->opt['bcurrent_item_linked'] || ($page > 1 && $this->opt['bpaged_display']))
 		{
@@ -394,8 +390,6 @@ class bcn_breadcrumb_trail
 	 * A Breadcrumb Trail Filling Function
 	 * 
 	 * This functions fills a breadcrumb for an attachment page.
-	 * 
-	 * @TODO Evaluate if this can be merged in with the do_post function
 	 */
 	protected function do_attachment()
 	{
@@ -411,29 +405,8 @@ class bcn_breadcrumb_trail
 		}
 		//Get the parent's information
 		$parent = get_post($post->post_parent);
-		//Place the breadcrumb in the trail, uses the constructor to set the title, template, and type, get a pointer to it in return
-		$breadcrumb = $this->add(new bcn_breadcrumb(get_the_title($post->post_parent), $this->opt['Hpost_' . $parent->post_type . '_template'], array($parent->post_type), get_permalink($post->post_parent), $post->post_parent));
-		//We need to treat flat and hiearchical post attachment hierachies differently
-		if(is_post_type_hierarchical($parent->post_type))
-		{
-			//Done with the current item, now on to the parents
-			$frontpage = get_option('page_on_front');
-			//If there is a parent page let's find it
-			if($parent->post_parent && $parent->ID != $parent->post_parent && $frontpage != $parent->post_parent)
-			{
-				$this->post_parents($parent->post_parent, $frontpage);
-			}
-			else if(!$this->is_builtin($parent->post_type))
-			{
-				//Handle the post's taxonomy
-				$this->post_hierarchy($post->post_parent, $parent->post_type);	
-			}
-		}
-		else
-		{
-			//Handle the post's taxonomy
-			$this->post_hierarchy($post->post_parent, $parent->post_type);
-		}
+		//Take care of the parent's breadcrumb
+		$this->do_post($parent);
 	}
 	/**
 	 * A Breadcrumb Trail Filling Function
@@ -447,11 +420,11 @@ class bcn_breadcrumb_trail
 		//Simmilar to using $post, but for things $post doesn't cover
 		$term = $wp_query->get_queried_object();
 		//Place the breadcrumb in the trail, uses the constructor to set the title, template, and type, get a pointer to it in return
-		$breadcrumb = $this->add(new bcn_breadcrumb($term->name, $this->opt['H' . $term->taxonomy . '_template_no_anchor'], array('archive', 'taxonomy', $term->taxonomy, 'current-item'), NULL, $term->term_id));
+		$breadcrumb = $this->add(new bcn_breadcrumb($term->name, $this->opt['Htax_' . $term->taxonomy . '_template_no_anchor'], array('archive', 'taxonomy', $term->taxonomy, 'current-item'), NULL, $term->term_id));
 		//If we're paged, let's link to the first page
 		if($this->opt['bcurrent_item_linked'] || (is_paged() && $this->opt['bpaged_display']))
 		{
-			$breadcrumb->set_template($this->opt['H' . $term->taxonomy . '_template']);
+			$breadcrumb->set_template($this->opt['Htax_' . $term->taxonomy . '_template']);
 			//Figure out the anchor for current category
 			$breadcrumb->set_url(get_term_link($term, $term->taxonomy));
 		}
@@ -631,7 +604,7 @@ class bcn_breadcrumb_trail
 		return $type->has_archive;
 	}
 	/**
-	 * This function populates our type_str and posts_id variables
+	 * This function populates our type_str and root_id variables
 	 * 
 	 * @param post $type A post object we are using to figureout the type
 	 * @param string $type_str The type string variable, passed by reference
@@ -675,7 +648,7 @@ class bcn_breadcrumb_trail
 		}
 		else
 		{
-			$type_str = "post";
+			$type_str = 'post';
 		}
 	}
 	/**
@@ -699,21 +672,29 @@ class bcn_breadcrumb_trail
 			$type = $wp_query->get_queried_object();
 		}
 		$root_id = -1;
+		$type_str = '';
 		//Find our type string and root_id
 		$this->find_type($type, $type_str, $root_id);
-		//These two are for taxonomy archives and for a single custom post type
+		/**
+		 * TODO: Split this portion off into its own function
+		 */
+		//If this is a custom post type with a post type archive, add it
 		if(isset($type->post_type) && !$this->is_builtin($type->post_type) && $this->opt['bpost_' . $type->post_type . '_archive_display'] && $this->has_archive($type->post_type))
 		{
 			//Place the breadcrumb in the trail, uses the constructor to set the title, prefix, and suffix, get a pointer to it in return
 			$breadcrumb = $this->add(new bcn_breadcrumb($this->post_type_archive_title(get_post_type_object($type->post_type)), $this->opt['Hpost_' . $type->post_type . '_template'], array('post', 'post-' . $type->post_type . '-archive'), get_post_type_archive_link($type->post_type)));
 		}
-		else if(isset($type->taxonomy) && !$this->is_builtin($wp_taxonomies[$type->taxonomy]->object_type[0]) && $this->opt['bpost_' . $wp_taxonomies[$type->taxonomy]->object_type[0] . '_archive_display'] && $this->has_archive($wp_taxonomies[$type->taxonomy]->object_type[0]))
+		//Otherwise, if this is a custom taxonomy with an archive, add it
+		else if(isset($type->taxonomy) && isset($wp_taxonomies[$type->taxonomy]->object_type[0]) && !$this->is_builtin($wp_taxonomies[$type->taxonomy]->object_type[0]) && $this->opt['bpost_' . $wp_taxonomies[$type->taxonomy]->object_type[0] . '_archive_display'] && $this->has_archive($wp_taxonomies[$type->taxonomy]->object_type[0]))
 		{
 			//We end up using the post type in several places, give it a variable
 			$post_type = $wp_taxonomies[$type->taxonomy]->object_type[0];
 			//Place the breadcrumb in the trail, uses the constructor to set the title, prefix, and suffix, get a pointer to it in return
 			$breadcrumb = $this->add(new bcn_breadcrumb($this->post_type_archive_title(get_post_type_object($post_type)), $this->opt['Hpost_' . $post_type . '_template'], array('post', 'post-' . $post_type . '-archive'), get_post_type_archive_link($post_type)));
 		}
+		/**
+		 * End TODO
+		 */
 		//We only need the "blog" portion on members of the blog, and only if we're in a static frontpage environment
 		if($root_id > 1 || $this->opt['bblog_display'] && get_option('show_on_front') == 'page' && (is_home() || is_single() || is_tax() || is_category() || is_tag() || is_date()))
 		{
@@ -727,7 +708,7 @@ class bcn_breadcrumb_trail
 			if($root_id && $root_id != $frontpage_id)
 			{
 				//Place the breadcrumb in the trail, uses the constructor to set the title, template, and type, we get a pointer to it in return
-				$breadcrumb = $this->add(new bcn_breadcrumb(get_the_title($root_id), $this->opt['Hpost_' . $type_str . '_template_no_anchor'], array($type_str . '-root', 'post', 'post-' . $type_str)));
+				$breadcrumb = $this->add(new bcn_breadcrumb(get_the_title($root_id), $this->opt['Hpost_' . $type_str . '_template_no_anchor'], array($type_str . '-root', 'post', 'post-' . $type_str), NULL, $root_id));
 				//If we are at home, then we need to add the current item type
 				if(is_home())
 				{
@@ -823,7 +804,7 @@ class bcn_breadcrumb_trail
 			//For all other post types
 			else
 			{
-				$this->do_post();
+				$this->do_post($GLOBALS['post']);
 			}
 		}
 		//For searches
@@ -895,7 +876,9 @@ class bcn_breadcrumb_trail
 	 * @return string String-Data of breadcrumb trail.
 	 * @param bool $return Whether to return data or to echo it.
 	 * @param bool $linked[optional] Whether to allow hyperlinks in the trail or not.
-	 * @param bool $reverse[optional] Whether to reverse the output or not. 
+	 * @param bool $reverse[optional] Whether to reverse the output or not.
+	 * 
+	 * TODO: Fold display and display_list together, two functions are very simmilar 
 	 */
 	public function display($return = false, $linked = true, $reverse = false)
 	{
@@ -906,7 +889,7 @@ class bcn_breadcrumb_trail
 		//The main compiling loop
 		foreach($this->breadcrumbs as $key => $breadcrumb)
 		{
-			//Must branch if we are reversing the output or not
+			//We do different things for the separator based on the breadcrumb order
 			if($reverse)
 			{
 				//Add in the separator only if we are the 2nd or greater element
@@ -947,8 +930,8 @@ class bcn_breadcrumb_trail
 	/**
 	 * This functions outputs or returns the breadcrumb trail in list form.
 	 *
-	 * @return void Void if Option to print out breadcrumb trail was chosen.
-	 * @return string String-Data of breadcrumb trail.
+	 * @return void Void if option to print out breadcrumb trail was chosen.
+	 * @return string String version of the breadcrumb trail.
 	 * @param bool $return Whether to return data or to echo it.
 	 * @param bool $linked[optional] Whether to allow hyperlinks in the trail or not.
 	 * @param bool $reverse[optional] Whether to reverse the output or not. 
@@ -964,10 +947,9 @@ class bcn_breadcrumb_trail
 		//The main compiling loop
 		foreach($this->breadcrumbs as $key => $breadcrumb)
 		{
-			$trail_str .= '<li';
 			$li_class = '';
 			//On the first run we need to add in a class for the home breadcrumb
-			if($trail_str === '<li')
+			if($trail_str === '')
 			{
 				$li_class .= ' class="home';
 				if($key === 0)
@@ -983,16 +965,15 @@ class bcn_breadcrumb_trail
 				$li_class .= ' class="current_item"';
 			}
 			//Filter li_attributes adding attributes to the li element
-			$trail_str .= apply_filters('bcn_li_attributes', $li_class, $breadcrumb->type, $breadcrumb->get_id());
-			//Trim titles, if needed
+			$li_attribs = apply_filters('bcn_li_attributes', $li_class, $breadcrumb->type, $breadcrumb->get_id());
+			//Trim titles, if requested
 			if($this->opt['blimit_title'] && $this->opt['amax_title_length'] > 0)
 			{
 				//Trim the breadcrumb's title
 				$breadcrumb->title_trim($this->opt['amax_title_length']);
 			}
-			//Place in the breadcrumb's assembled elements
-			$trail_str .= '>' . $breadcrumb->assemble($linked);
-			$trail_str .= "</li>\n";
+			//Assemble the breadrumb and wrap with li's
+			$trail_str .= sprintf("<li%s>%s</li>\n", $li_attribs, $breadcrumb->assemble($linked));
 		}
 		//Should we return or echo the assembled trail?
 		if($return)

@@ -1,12 +1,12 @@
 <?php
     /**
-    * @package Lightbox Plus ColorBox
+    * @package Lightbox Plus Colorbox
     * @subpackage actions.class.php
     * @internal 2013.01.16
     * @author Dan Zappone / 23Systems
-    * @version 2.6
-    * @$Id: actions.class.php 662616 2013-02-02 21:11:54Z dzappone $
-    * @$URL: http://plugins.svn.wordpress.org/lightbox-plus/tags/2.6/classes/actions.class.php $
+    * @version 2.7
+    * @$Id: actions.class.php 937945 2014-06-24 17:11:13Z dzappone $
+    * @$URL: http://plugins.svn.wordpress.org/lightbox-plus/tags/2.7/classes/actions.class.php $
     */
     if (!class_exists('lbp_actions')) {
         class lbp_actions extends lbp_filters {
@@ -96,7 +96,7 @@
                     $lightboxPlusOptions = $this->setMissingOptions($lightboxPlusOptions);
 
                     $lightboxPlusJavaScript  = "";
-                    $lightboxPlusJavaScript .= '<!-- Lightbox Plus ColorBox v'.$g_lbp_version.'/'.$g_lbp_colorbox_version.' - 2013.01.24 - Message: '.$lightboxPlusOptions['lightboxplus_multi'].'-->'.PHP_EOL;
+                    $lightboxPlusJavaScript .= '<!-- Lightbox Plus Colorbox v'.$g_lbp_version.'/'.$g_lbp_colorbox_version.' - 2013.01.24 - Message: '.$lightboxPlusOptions['lightboxplus_multi'].'-->'.PHP_EOL;
                     $lightboxPlusJavaScript .= '<script type="text/javascript">'.PHP_EOL;
                     $lightboxPlusJavaScript .= 'jQuery(document).ready(function($){'.PHP_EOL;
                     $lbpArrayPrimary = array();
@@ -265,7 +265,7 @@
             * Add new admin panel to WordPress under the Appearance category
             */
             function lightboxPlusAddPanel() {
-                $plugin_page = add_theme_page( 'Lightbox Plus ColorBox', __('Lightbox Plus ColorBox', 'lightboxplus'), 'manage_options', 'lightboxplus', array( &$this, 'lightboxPlusAdminPanel' ) );
+                $plugin_page = add_theme_page( 'Lightbox Plus Colorbox', __('Lightbox Plus Colorbox', 'lightboxplus'), 'manage_options', 'lightboxplus', array( &$this, 'lightboxPlusAdminPanel' ) );
                 add_action('admin_print_scripts-'.$plugin_page, array( &$this, 'lightboxPlusAdminScripts'));
                 add_action('admin_head-'.$plugin_page, array( &$this, 'lightboxPlusColorbox'));
                 add_action('admin_print_styles-'.$plugin_page, array( &$this, 'lightboxPlusAdminStyles'));
@@ -332,7 +332,7 @@
             }
 
             function lightboxPlusMetaBox() {
-                add_meta_box( 'lbp-meta-box', __('Lightbox Plus ColorBox Per Page', 'lightboxplus'), array(&$this,'drawLightboxPlusMeta'), 'page', 'side', 'high' );
+                add_meta_box( 'lbp-meta-box', __('Lightbox Plus Colorbox Per Page', 'lightboxplus'), array(&$this,'drawLightboxPlusMeta'), 'page', 'side', 'high' );
             }
 
             function drawLightboxPlusMeta($post) {
@@ -357,7 +357,7 @@
                     </td>
                 </tr>
                 <tr>
-                    <th scope="row" colspan="2"><?php _e('Lightbox Plus ColorBox unique ID for this page:','lightboxplus'); ?>: </th>
+                    <th scope="row" colspan="2"><?php _e('Lightbox Plus Colorbox unique ID for this page:','lightboxplus'); ?>: </th>
                 </tr>
                 <tr>
                     <td colspan="2">

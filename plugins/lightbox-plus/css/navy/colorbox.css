@@ -1,7 +1,7 @@
 /*
-* ColorBox Core Style
-* The following rules are the styles that are consistant between all ColorBox themes
-* @version 2.6
+* Colorbox Core Style
+* The following rules are the styles that are consistant between all Colorbox themes
+* @version 2.7
 * @$Id: colorbox.css 651378 2013-01-11 17:20:40Z dzappone $
 * @$URL: http://plugins.svn.wordpress.org/lightbox-plus/trunk/css/blue/colorbox.css $
 */
@@ -17,7 +17,7 @@
 #colorbox, #cboxContent, #cboxLoadedContent{box-sizing:content-box; -moz-box-sizing:content-box; -webkit-box-sizing:content-box;}
 
 /* 
-    ColorBox example user style
+    Colorbox example user style
     These rules are ordered and tabbed in a way that represents the order/nesting of the generated HTML, 
     in hope that this will make the relationship easier to understand. Thanks, jack@colorpowered.com
 */
@@ -29,6 +29,12 @@
         #cboxLoadedContent{background:#003; padding:5px;}
                 #cboxTitle{position:absolute; bottom:-25px; left:5px; color:#ccc;}
                 #cboxCurrent{position:absolute; bottom:-25px; right:35px; color:#ccc;}
+                
+                /* these elements are buttons, and may need to have additional styles reset to avoid unwanted base styles */
+                #cboxPrevious, #cboxNext, #cboxSlideshow, #cboxClose {border:0; padding:0; margin:0; overflow:visible; width:auto; background:none; }
+                /* avoid outlines on :active (mouseclick), but preserve outlines on :focus (tabbed navigating) */
+                #cboxPrevious:active, #cboxNext:active, #cboxSlideshow:active, #cboxClose:active {outline:0;}
+                
                 #cboxSlideshow{position:absolute; top:-20px; right:90px; color:#fff;}
                 #cboxPrevious{position:absolute; top:50%; left:5px; margin-top:-41px; background-image: url(data:image/gif;base64,AAAA); width:49%; height:100%; text-indent:-9999px;}
                 #cboxPrevious.hover{background-position:bottom left; background:url(images/prevblue.png) top left no-repeat;}

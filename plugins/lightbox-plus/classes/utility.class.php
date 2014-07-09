@@ -1,17 +1,17 @@
 <?php
     /**
-    * @package Lightbox Plus ColorBox
+    * @package Lightbox Plus Colorbox
     * @subpackage utility.class.php
     * @internal 2013.01.16
     * @author Dan Zappone / 23Systems
-    * @version 2.6
-    * @$Id: utility.class.php 662394 2013-02-02 05:29:55Z dzappone $
-    * @$URL: http://plugins.svn.wordpress.org/lightbox-plus/tags/2.6/classes/utility.class.php $
+    * @version 2.7
+    * @$Id: utility.class.php 937945 2014-06-24 17:11:13Z dzappone $
+    * @$URL: http://plugins.svn.wordpress.org/lightbox-plus/tags/2.7/classes/utility.class.php $
     */
     if (!class_exists('lbp_utilities')) {
 
         /**
-        * Lightbox Plus ColorBox Utiltiy Functions used throughout plugin
+        * Lightbox Plus Colorbox Utiltiy Functions used throughout plugin
         *
         * Not sure if WordPress has equivelents but cannot locate in API docs if so
         */
