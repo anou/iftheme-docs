@@ -6,6 +6,7 @@ class ICLMenusSync
 	var $menus;
 	var $is_preview = false;
 	var $sync_data = false;
+	var $string_translation_links = array();
 
 	function __construct()
 	{
@@ -535,7 +536,7 @@ class ICLMenusSync
 						wp_delete_post( $item_id, true );
 						$delete_trid = $sitepress->get_element_trid( $item_id, 'post_nav_menu_item' );
 						if ( $delete_trid ) {
-							$sitepress->delete_element_translation( $delete_trid, 'post_nav_menu_item', $language_code );
+							$sitepress->delete_element_translation( $delete_trid, 'post_nav_menu_item' );
 						}
 					}
 				}
@@ -912,24 +913,28 @@ class ICLMenusSync
 									$this->operations[ 'mov' ] = empty( $this->operations[ 'mov' ] ) ? 1 : $this->operations[ 'mov' ]++;
 									$need_sync++;
 								} elseif ( $item_translation[ 'label_missing' ] ) {
+									$this->string_translation_links[$this->menus[$menu_id]['name']] = 1;
 									// item translation does not exist but is a custom item that will be created
 									echo '<span class="icl_msync_item icl_msync_label_missing">' . $item_translation[ 'title' ] . '</span>';
 									echo '<input type="hidden" name="sync[label_missing][' . $menu_id . '][' . $item[ 'ID' ] . '][' . $language[ 'code' ] . ']" value="' . esc_attr( $item_translation[ 'title' ] ) . '" />';
 									$this->operations[ 'label_missing' ] = empty( $this->operations[ 'label_missing' ] ) ? 1 : $this->operations[ 'label_missing' ]++;
 									$need_sync++;
 								} elseif ( $item_translation[ 'label_changed' ] ) {
+									$this->string_translation_links[$this->menus[$menu_id]['name']] = 1;
 									// item translation does not exist but is a custom item that will be created
 									echo '<span class="icl_msync_item icl_msync_label_changed">' . $item_translation[ 'title' ] . '</span>';
 									echo '<input type="hidden" name="sync[label_changed][' . $menu_id . '][' . $item[ 'ID' ] . '][' . $language[ 'code' ] . ']" value="' . esc_attr( $item_translation[ 'title' ] ) . '" />';
 									$this->operations[ 'label_changed' ] = empty( $this->operations[ 'label_changed' ] ) ? 1 : $this->operations[ 'label_changed' ]++;
 									$need_sync++;
 								} elseif ( $item_translation[ 'url_missing' ] ) {
+									$this->string_translation_links[$this->menus[$menu_id]['name']] = 1;
 									// item translation does not exist but is a custom item that will be created
 									echo '<span class="icl_msync_item icl_msync_url_missing">' . $item_translation[ 'url' ] . '</span>';
 									echo '<input type="hidden" name="sync[url_missing][' . $menu_id . '][' . $item[ 'ID' ] . '][' . $language[ 'code' ] . ']" value="' . esc_attr( $item_translation[ 'url' ] ) . '" />';
 									$this->operations[ 'url_missing' ] = empty( $this->operations[ 'url_missing' ] ) ? 1 : $this->operations[ 'url_missing' ]++;
 									$need_sync++;
 								} elseif ( $item_translation[ 'url_changed' ] ) {
+									$this->string_translation_links[$this->menus[$menu_id]['name']] = 1;
 									// item translation does not exist but is a custom item that will be created
 									echo '<span class="icl_msync_item icl_msync_url_changed">' . $item_translation[ 'url' ] . '</span>';
 									echo '<input type="hidden" name="sync[url_changed][' . $menu_id . '][' . $item[ 'ID' ] . '][' . $language[ 'code' ] . ']" value="' . esc_attr( $item_translation[ 'url' ] ) . '" />';

@@ -131,15 +131,17 @@ function icl_quote_get_step_one($saved) {
                     continue;
                 }
                 $source_code = $saved['from'] == $sitepress->get_default_language() ? 'IS NULL' : "= '" . $saved['from'] . "'";
-                $posts = $wpdb->get_results("SELECT p.ID, p.post_title, p.post_content
+								$posts_query = "SELECT p.ID, p.post_title, p.post_content
                     FROM {$wpdb->prefix}posts p
                     JOIN {$wpdb->prefix}icl_translations t
-                    WHERE p.post_type = '" . $name . "'
-                    AND t.element_type = 'post_" . $name . "'
+                    WHERE p.post_type = %s
+                    AND t.element_type = %s
                     AND t.element_id = p.ID
-                    AND t.language_code = '" . $saved['from'] . "'
+                    AND t.language_code = %s
                     AND p.post_status = 'publish'
-                ");
+                ";
+								$posts_query_prepared = $wpdb->prepare($posts_query, array($name, "post_".$name, $saved['from']) );
+                $posts = $wpdb->get_results($posts_query_prepared);
                 $rows[$name]['ID'] = $name;
                 $rows[$name]['title'] = $type->label;
                 if (empty($posts)) {

@@ -283,7 +283,9 @@ class iclNavMenu{
     function wp_delete_nav_menu($id){
         global $wpdb;
         $menu_id_tt = $wpdb->get_var($wpdb->prepare("SELECT term_taxonomy_id FROM {$wpdb->term_taxonomy} WHERE term_id=%d AND taxonomy='nav_menu'",$id));
-        $wpdb->query("DELETE FROM {$wpdb->prefix}icl_translations WHERE element_id='{$menu_id_tt}' AND element_type='tax_nav_menu' LIMIT 1");
+        $q = "DELETE FROM {$wpdb->prefix}icl_translations WHERE element_id=%d AND element_type='tax_nav_menu' LIMIT 1";
+				$q_prepared = $wpdb->prepare($q, $menu_id_tt);
+				$wpdb->query($q_prepared);
     }
     
     function wp_update_nav_menu_item($menu_id, $menu_item_db_id, $args){
@@ -310,7 +312,9 @@ class iclNavMenu{
         global $wpdb;
         $post = get_post($menu_item_id);
         if(!empty($post->post_type) && $post->post_type == 'nav_menu_item'){
-            $wpdb->query("DELETE FROM {$wpdb->prefix}icl_translations WHERE element_id='{$menu_item_id}' AND element_type='post_nav_menu_item' LIMIT 1");
+						$q = "DELETE FROM {$wpdb->prefix}icl_translations WHERE element_id=%d AND element_type='post_nav_menu_item' LIMIT 1";
+						$q_prepared = $wpdb->prepare($q, $menu_item_id);
+            $wpdb->query($q_prepared);
         }        
     }
     
@@ -424,15 +428,18 @@ class iclNavMenu{
     
     function get_menus_without_translation($lang){
         global $sitepress, $wpdb;
-        $res = $wpdb->get_results("
+				$res_query = "
             SELECT ts.element_id, ts.trid, t.name 
             FROM {$wpdb->prefix}icl_translations ts
             JOIN {$wpdb->term_taxonomy} tx ON ts.element_id = tx.term_taxonomy_id
             JOIN {$wpdb->terms} t ON tx.term_id = t.term_id
             WHERE ts.element_type='tax_nav_menu' 
-                AND ts.language_code='{$sitepress->get_default_language()}'
+                AND ts.language_code=%s
                 AND tx.taxonomy = 'nav_menu'
-        ");
+        ";
+				$default_language = $sitepress->get_default_language();
+				$res_query_prepared = $wpdb->prepare($res_query, $default_language);
+        $res = $wpdb->get_results($res_query_prepared);
         $menus = array();
         foreach($res as $row){            
             if(!$wpdb->get_var("SELECT translation_id FROM {$wpdb->prefix}icl_translations WHERE trid='{$row->trid}' AND language_code='{$lang}'")){
@@ -469,17 +476,20 @@ class iclNavMenu{
     function get_menus_by_language(){
         global $wpdb, $sitepress;
         $langs = array();
-        $res = $wpdb->get_results("
+				$res_query = "
             SELECT lt.name AS language_name, l.code AS lang, COUNT(ts.translation_id) AS c
             FROM {$wpdb->prefix}icl_languages l
                 JOIN {$wpdb->prefix}icl_languages_translations lt ON lt.language_code = l.code
                 JOIN {$wpdb->prefix}icl_translations ts ON l.code = ts.language_code            
-            WHERE lt.display_language_code='".$sitepress->get_admin_language()."'
+            WHERE lt.display_language_code=%s
                 AND l.active = 1
                 AND ts.element_type = 'tax_nav_menu'
             GROUP BY ts.language_code
             ORDER BY major DESC, english_name ASC
-        ");
+        ";
+				$admin_language = $sitepress->get_admin_language();
+				$res_query_prepared = $wpdb->prepare($res_query, $admin_language);
+        $res = $wpdb->get_results($res_query_prepared);
         foreach($res as $row){
             $langs[$row->lang] = $row;
         }        
@@ -610,8 +620,8 @@ class iclNavMenu{
     function option_nav_menu_options($val){
         global $wpdb, $sitepress;
         // special case of getting menus with auto-add only in a specific language
-        $db = debug_backtrace();
-        if(isset($db[4]) && $db[4]['function'] == '_wp_auto_add_pages_to_menu' && !empty($val['auto_add'])){
+		$debug_backtrace = $sitepress->get_backtrace( 5 ); //Ignore objects and limit to first 5 stack frames, since 4 is the highest index we use
+        if(isset($debug_backtrace[4]) && $debug_backtrace[4]['function'] == '_wp_auto_add_pages_to_menu' && !empty($val['auto_add'])){
             $post_lang = isset($_POST['icl_post_language']) ? $_POST['icl_post_language'] : (isset($_POST['lang']) ? $_POST['lang'] : false);
 
 			//$val['auto_add'] = false;
@@ -646,11 +656,10 @@ class iclNavMenu{
             }            
             add_filter('theme_mod_nav_menu_locations', array($this, 'theme_mod_nav_menu_locations'));    
         }
-        
-        
+
         if ( $args['menu'] ){            
-            $db = debug_backtrace();
-            if($db[4]['function']=='widget'){
+			$debug_backtrace = $sitepress->get_backtrace( 5 ); //Ignore objects and limit to first 5 stack frames, since 4 is the highest index we use
+            if($debug_backtrace[4]['function']=='widget'){
                 if(is_integer($args['menu'])){
                     $args['menu'] = wp_get_nav_menu_object( icl_object_id($args['menu'], 'nav_menu') );    
                 }elseif(!empty($args['menu']->term_id)){

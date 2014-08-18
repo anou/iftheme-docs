@@ -188,7 +188,7 @@ if(!defined('ICL_DONT_PROMOTE') || !ICL_DONT_PROMOTE){
                                                    'not' => __('Not translated or needs updating', 'wpml-translation-management'),
                                                    'need-update' => __('Needs updating', 'wpml-translation-management'),
                                                    'in_progress' => __('Translation in progress', 'wpml-translation-management'),
-                                                   'complete' => __('Translation complete', 'wpml-translation-management'));
+                                                   'complete' => __('Translation complete or duplicated', 'wpml-translation-management'));
                         ?>
                         <?php foreach($option_status as $k=>$v):?>
                         <option value="<?php echo $k ?>" <?php if($icl_translation_filter['tstatus']==$k):?>selected="selected"<?php endif?>><?php echo $v ?></option>
@@ -578,7 +578,7 @@ if(!defined('ICL_DONT_PROMOTE') || !ICL_DONT_PROMOTE){
     <br />
     <?php $ICL_Pro_Translation->get_icl_manually_tranlations_box('icl_cyan_box'); // shows only when translation polling is on and there are translations in progress ?>
 
-<?php if ($sitepress->icl_account_configured() && $sitepress->get_setting('icl_html_status')): ?>
+<?php if ($sitepress->icl_account_configured() && method_exists($sitepress,'get_setting') && $sitepress->get_setting('icl_html_status')): ?>
     <div class="icl_cyan_box">
         <h3><?php _e('ICanLocalize account status', 'wpml-translation-management') ?></h3>
     <?php echo $sitepress->get_setting('icl_html_status'); ?>

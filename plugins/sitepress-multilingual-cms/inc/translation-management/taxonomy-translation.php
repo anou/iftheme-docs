@@ -336,99 +336,92 @@ class WPML_Taxonomy_Translation{
         
         $inst = new WPML_Taxonomy_Translation($taxonomy, $args);
         
-        ob_start();
         $inst->render();
-        $html = ob_get_contents();
-        ob_end_clean();
-        
-        echo json_encode(array('html' => $html));
         exit;
         
-        
     }
-    
-    public static function save_term_translation(){
-        global $sitepress, $wpdb;
-        
-        $original_element   = $_POST['translation_of'];
-        $taxonomy           = $_POST['taxonomy'];
-        $language           = $_POST['language'];
-        $trid = $sitepress->get_element_trid($original_element, 'tax_' . $taxonomy);
-        $translations = $sitepress->get_element_translations($trid, 'tax_' . $taxonomy);
 
-        $_POST['icl_tax_' . $taxonomy . '_language'] = $language;
-        $_POST['icl_trid'] = $trid;
-        $_POST['icl_translation_of'] = $original_element;
-        
-        $errors = '';
-        
-        $term_args = array(
-              'name'        => $_POST['name'],
-              'slug'        => $_POST['slug'],
-              'description' => $_POST['description']
-        ); 
-        
-        $original_tax = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->term_taxonomy} WHERE taxonomy=%s AND term_taxonomy_id = %d", $_POST['taxonomy'], $original_element));
-        
-        // hierarchy - parents
-        if(is_taxonomy_hierarchical($_POST['taxonomy'])){
-            // fix hierarchy            
-            if($original_tax->parent){
-                $original_parent_translated = icl_object_id($original_tax->parent, $_POST['taxonomy'], false, $_POST['language']);
-                if($original_parent_translated){
-                    $term_args['parent'] = $original_parent_translated;    
-                }
-            }
-            
-        }
-                
-        if(isset($translations[$language])){
-            
-            $result = wp_update_term($translations[$language]->term_id, $taxonomy, $term_args);           
-            
-        }else{
-            
-            $result = wp_insert_term($_POST['name'], $taxonomy, $term_args);
-            
-        }
-        
-        if(is_wp_error($result)){
-            foreach($result->errors as $ers){
-                $errors .= join('<br />', $ers);
-            }
-            $errors .= '<br />'   ;
-        }else{
-            
-            // hiearchy - children            
-            if(is_taxonomy_hierarchical($_POST['taxonomy'])){
-                
-                // get children of original
-                $children = $wpdb->get_col($wpdb->prepare("SELECT term_id FROM {$wpdb->term_taxonomy} WHERE taxonomy=%s AND parent=%d", $_POST['taxonomy'], $original_element));
-                
-                if($children) foreach($children as $child){
-                    $child_translated = icl_object_id($child, $_POST['taxonomy'], false, $_POST['language']);
-                    if($child_translated){
-                        $wpdb->update($wpdb->term_taxonomy, array('parent' => $result['term_id']), array('taxonomy' => $_POST['taxonomy'], 'term_id' => $child_translated));
-                    }    
-                }
-                
-                delete_option($_POST['taxonomy'] . '_children');
-                
-            }
-            
-            
-            $term = get_term($result['term_id'], $_POST['taxonomy']);
-            
-            do_action('icl_save_term_translation', $original_tax, $result);
-                        
-        }
-        
-        $html = '';
-                
-        echo json_encode(array('html' => $html, 'slug' => isset($term) ? urldecode($term->slug) : '',  'errors' => $errors));
-        exit;
-        
-    }
+	public static function save_term_translation() {
+		global $sitepress, $wpdb;
+
+		$original_element = $_POST[ 'translation_of' ];
+		$taxonomy         = $_POST[ 'taxonomy' ];
+		$language         = $_POST[ 'language' ];
+		$trid             = $sitepress->get_element_trid( $original_element, 'tax_' . $taxonomy );
+		$translations     = $sitepress->get_element_translations( $trid, 'tax_' . $taxonomy );
+
+		$_POST[ 'icl_tax_' . $taxonomy . '_language' ] = $language;
+		$_POST[ 'icl_trid' ]                           = $trid;
+		$_POST[ 'icl_translation_of' ]                 = $original_element;
+
+		$errors = '';
+
+		$term_args = array(
+				'name'        => $_POST[ 'name' ],
+				'slug'        => $_POST[ 'slug' ],
+				'description' => $_POST[ 'description' ]
+		);
+
+		$original_tax_sql      = "SELECT * FROM {$wpdb->term_taxonomy} WHERE taxonomy=%s AND term_taxonomy_id = %d";
+		$original_tax_prepared = $wpdb->prepare( $original_tax_sql, array( $taxonomy, $original_element ) );
+		$original_tax          = $wpdb->get_row( $original_tax_prepared );
+
+		// hierarchy - parents
+		if ( is_taxonomy_hierarchical( $taxonomy ) ) {
+			// fix hierarchy
+			if ( $original_tax->parent ) {
+				$original_parent_translated = icl_object_id( $original_tax->parent, $taxonomy, false, $_POST[ 'language' ] );
+				if ( $original_parent_translated ) {
+					$term_args[ 'parent' ] = $original_parent_translated;
+				}
+			}
+		}
+
+		if ( isset( $translations[ $language ] ) ) {
+			$result = wp_update_term( $translations[ $language ]->term_id, $taxonomy, $term_args );
+		} else {
+			$result = wp_insert_term( $_POST[ 'name' ], $taxonomy, $term_args );
+		}
+
+		if ( is_wp_error( $result ) ) {
+			foreach ( $result->errors as $ers ) {
+				$errors .= join( '<br />', $ers );
+			}
+			$errors .= '<br />';
+		} else {
+
+			// hierarchy - children
+			if ( is_taxonomy_hierarchical( $taxonomy ) ) {
+
+				// get children of original
+				$children_sql      = "SELECT term_id FROM {$wpdb->term_taxonomy} WHERE taxonomy=%s AND parent=%d";
+				$children_prepared = $wpdb->prepare( $children_sql, array( $taxonomy, $original_tax->term_id ) );
+				$children          = $wpdb->get_col( $children_prepared );
+
+				if ( $children ) {
+					foreach ( $children as $child ) {
+						$child_translated = icl_object_id( $child, $taxonomy, false, $_POST[ 'language' ] );
+						if ( $child_translated ) {
+							$wpdb->update( $wpdb->term_taxonomy, array( 'parent' => $result[ 'term_id' ] ), array( 'taxonomy' => $taxonomy, 'term_id' => $child_translated ) );
+						}
+					}
+				}
+
+				$sitepress->update_terms_relationship_cache( $children, $taxonomy );
+				//delete_option($_POST['taxonomy'] . '_children');
+
+			}
+
+			$term = get_term( $result[ 'term_id' ], $taxonomy );
+
+			do_action( 'icl_save_term_translation', $original_tax, $result );
+		}
+
+		$html = '';
+
+		echo json_encode( array( 'html' => $html, 'slug' => isset( $term ) ? urldecode( $term->slug ) : '', 'errors' => $errors ) );
+		exit;
+	}
 
 	public static function save_labels_translation() {
 
@@ -508,7 +501,7 @@ class WPML_Taxonomy_Translation{
         global $sitepress, $wp_post_types, $wp_taxonomies,$wpdb;
 
 		$default_language = $sitepress->get_default_language();
-		$posts            = get_posts( array( 'post_type' => $object_type, 'suppress_filters' => false ) );
+		$posts            = get_posts( array( 'post_type' => $object_type, 'suppress_filters' => false, 'posts_per_page' => -1  ) );
 
 		foreach($posts as $post){
             
@@ -544,7 +537,7 @@ class WPML_Taxonomy_Translation{
                             $updated_terms = array();
                             foreach($current_terms as $cterm){
                                 if($cterm->term_id != $term->term_id){
-                                    $updated_terms[] = is_taxonomy_hierarchical($taxonomy) ? $term->term_id : $term->term_name;        
+                                    $updated_terms[] = is_taxonomy_hierarchical($taxonomy) ? $term->term_id : $term->name;        
                                 } 
                                 if(!$preview){
                                     wp_set_post_terms($translation->element_id, $updated_terms, $taxonomy);                                                                 

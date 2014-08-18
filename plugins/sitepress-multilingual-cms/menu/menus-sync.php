@@ -212,7 +212,7 @@ if ( $icl_menus_sync->is_preview ) {
 								<td><?php echo $lang_details[ 'display_name' ]; ?></td>
 								<td><?php
 									printf( __( 'Untranslated string %s', 'sitepress' ), '<strong>' . $name . '</strong>' );
-									?> </td>
+									?>&nbsp;<?php printf(__('The selected strings can now be translated using the <a%s>string translation</a> screen', 'wpml-string-translation'), ' href="admin.php?page='.WPML_ST_FOLDER.'/menu/string-translation.php&context=admin_texts_theme_'.get_option('template').'"');?></td>
 							</tr>
 						<?php
 						}
@@ -305,6 +305,8 @@ if ( $icl_menus_sync->is_preview ) {
 									<input type="text" name="sync[menu_translations][<?php echo $menu_id ?>][<?php echo $l[ 'code' ] ?>]" class="icl_msync_add" value="<?php
 									echo esc_attr( $menu[ 'name' ] ) . ' - ' . $l[ 'display_name' ] ?>"/>
 									<small><?php _e( 'Auto-generated title. Edit to change.', 'sitepress' ) ?></small>
+									<input type="hidden" name="sync[menu_options][<?php echo $menu_id ?>][<?php echo $l[ 'code' ] ?>][auto_add]"
+																				value=""/>
 								<?php
 								}
 								if ( isset( $menu[ 'translations' ][ $l[ 'code' ] ][ 'auto_add' ] ) ) {
@@ -343,6 +345,7 @@ if ( $icl_menus_sync->is_preview ) {
 
 	<?php
 	if ( !empty( $icl_menus_sync->operations ) ) {
+		$show_string_translation_link = false;
 		foreach ( $icl_menus_sync->operations as $op => $c ) {
 			if ( $op == 'add' ) {
 				?>
@@ -374,14 +377,32 @@ if ( $icl_menus_sync->is_preview ) {
 			<?php
 			} elseif ( $op == 'label_missing' ) {
 				?>
-				<span class="icl_msync_item icl_msync_label_missing"><?php _e( 'Untranslated strings for menus', 'sitepress' ); ?></span>
+				<span class="icl_msync_item icl_msync_label_missing">
+					<?php _e( 'Untranslated strings for menus', 'sitepress' ); ?>
+				</span>
 			<?php
 			} elseif ( $op == 'url_missing' ) {
 				?>
-				<span class="icl_msync_item icl_msync_url_missing"><?php _e( 'Untranslated URLs for menus', 'sitepress' ); ?></span>
+				<span class="icl_msync_item icl_msync_url_missing">
+					<?php _e( 'Untranslated URLs for menus', 'sitepress' ); ?>
+				</span>
 			<?php
 			}
 		}
+	}
+	if ( $icl_menus_sync->string_translation_links ) {
+		echo '<p>';
+		echo __( 'Translate menu strings and URLs for:', 'wpml-string-translation' ) . ' ';
+		$url_pattern = ' href="admin.php?page=' . WPML_ST_FOLDER . '/menu/string-translation.php&context=%s"';
+		$menu_names       = array_keys( $icl_menus_sync->string_translation_links );
+		$menu_links  = array();
+		foreach ( $menu_names as $menu_name ) {
+			$menu_url_pattern = sprintf($url_pattern, urlencode($menu_name . ' menu'));
+			$menu_links[ ] = sprintf( __( '<a%s>%s</a>', 'wpml-string-translation' ), $menu_url_pattern, $menu_name );
+		}
+		$menu_links_string = join( ', ', $menu_links );
+		echo $menu_links_string;
+		echo '</p>';
 	}
 }
 do_action( 'icl_menu_footer' );

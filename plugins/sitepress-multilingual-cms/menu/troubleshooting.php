@@ -19,6 +19,7 @@ if ( isset( $_GET[ 'debug_action' ] ) && $_GET[ 'nonce' ] == wp_create_nonce( $_
 		case 'fix_languages':
 			SitePress_Setup::fill_languages();
 			SitePress_Setup::fill_languages_translations();
+            icl_cache_clear();
 			exit;
 		case 'reset_pro_translation_configuration':
 			$sitepress_settings = get_option( 'icl_sitepress_settings' );
@@ -40,11 +41,12 @@ if ( isset( $_GET[ 'debug_action' ] ) && $_GET[ 'nonce' ] == wp_create_nonce( $_
 
 			update_option( 'icl_sitepress_settings', $sitepress_settings );
 
-			mysql_query( "TRUNCATE TABLE {$wpdb->prefix}icl_core_status" );
-			mysql_query( "TRUNCATE TABLE {$wpdb->prefix}icl_content_status" );
-			mysql_query( "TRUNCATE TABLE {$wpdb->prefix}icl_string_status" );
-			mysql_query( "TRUNCATE TABLE {$wpdb->prefix}icl_node" );
-			mysql_query( "TRUNCATE TABLE {$wpdb->prefix}icl_reminders" );
+			global $wpdb;
+			$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}icl_core_status" ); 
+			$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}icl_content_status" );
+			$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}icl_string_status" );
+			$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}icl_node" );
+			$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}icl_reminders" );
 
 			echo "<script type=\"text/javascript\">location.href='admin.php?page=" .
 				basename( ICL_PLUGIN_PATH ) . '/menu/troubleshooting.php&message=' . __( 'PRO translation was reset.', 'sitepress' ) . "'</script>";
@@ -67,7 +69,9 @@ if ( isset( $_GET[ 'debug_action' ] ) && $_GET[ 'nonce' ] == wp_create_nonce( $_
                 FROM {$wpdb->prefix}icl_translations t 
                 LEFT JOIN {$wpdb->comments} c ON t.element_id = c.comment_ID
                 WHERE t.element_type = 'comment' AND c.comment_ID IS NULL " );
-			echo mysql_error();
+			if ( false === $orphans ) {
+				echo $wpdb->last_result; 
+			}
 			if ( !empty( $orphans ) ) {
 				$wpdb->query( "DELETE FROM {$wpdb->prefix}icl_translations WHERE translation_id IN (" . join( ',', $orphans ) . ")" );
 			}
@@ -157,7 +161,7 @@ if ( isset( $_GET[ 'debug_action' ] ) && $_GET[ 'nonce' ] == wp_create_nonce( $_
                                 AND element_type LIKE 'post\\_%'
                             ", ARRAY_N );
 							if ( $trid ) {
-								$wpdb->query( "DELETE FROM {$wpdb->prefix}icl_translations WHERE trid={$trid} AND language_code='{$target_language}'" );
+								$wpdb->query( $wpdb->prepare("DELETE FROM {$wpdb->prefix}icl_translations WHERE trid=%d AND language_code=%s", array($trid, $target_language) ) );
 								$recover = array(
 									'translation_id'       => $request[ 'cms_id' ],
 									'element_type'         => $element_type,
@@ -178,7 +182,7 @@ if ( isset( $_GET[ 'debug_action' ] ) && $_GET[ 'nonce' ] == wp_create_nonce( $_
 
 			global $iclTranslationManagement;
 
-			$res_prepared = $wpdb->prepare( "SELECT rid, status, needs_update, md5, translation_package FROM {$wpdb->prefix}icl_translation_status", false );
+			$res_prepared = "SELECT rid, status, needs_update, md5, translation_package FROM {$wpdb->prefix}icl_translation_status";
 			$res = $wpdb->get_results( $res_prepared );
 			foreach ( $res as $row ) {
 				if ( $row->status == ICL_TM_NOT_TRANSLATED || $row->needs_update == 1 ) {
@@ -202,8 +206,11 @@ if ( isset( $_GET[ 'debug_action' ] ) && $_GET[ 'nonce' ] == wp_create_nonce( $_
 		case 'icl_cms_id_fix':
 			$iclq = new ICanLocalizeQuery( $sitepress_settings[ 'site_id' ], $sitepress_settings[ 'access_key' ] );
 
-			$p = $wpdb->get_row( "SELECT t.* FROM {$wpdb->prefix}icl_translations t JOIN {$wpdb->prefix}icl_translation_status s ON t.translation_id=s.translation_id
-                WHERE t.element_type LIKE 'post\\_%' AND t.source_language_code IS NOT NULL AND s.translation_service='icanlocalize' LIMIT {$_REQUEST['offset']}, 1" );
+			$q = "SELECT t.* FROM {$wpdb->prefix}icl_translations t JOIN {$wpdb->prefix}icl_translation_status s ON t.translation_id=s.translation_id
+                WHERE t.element_type LIKE 'post\\_%' AND t.source_language_code IS NOT NULL AND s.translation_service='icanlocalize' LIMIT %d, 1";
+			$offset = (int) $_REQUEST['offset'];
+			$q_prepared = $wpdb->prepare($q, $offset);
+			$p = $wpdb->get_row( $q_prepared );
 			if ( !empty( $p ) ) {
 
 				$original_id = $wpdb->get_var( $wpdb->prepare( "SELECT element_id FROM {$wpdb->prefix}icl_translations WHERE trid=%d AND source_language_code IS NULL", $p->trid ) );
@@ -330,15 +337,17 @@ if ( isset( $_GET[ 'debug_action' ] ) && $_GET[ 'nonce' ] == wp_create_nonce( $_
 				}
 
 			// get jobs that are in progress
-			$translations = $wpdb->get_results( "
+			$translations_query = "
                 SELECT t.element_id, t.element_type, t.language_code, t.source_language_code, t.trid, 
                     s.rid, s._prevstate, s.translation_id 
                 FROM {$wpdb->prefix}icl_translation_status s 
                 JOIN {$wpdb->prefix}icl_translations t
                     ON t.translation_id = s.translation_id    
                 WHERE s.translation_service='icanlocalize'
-                AND s.status = " . ICL_TM_IN_PROGRESS . "
-            " );
+                AND s.status = %d
+            ";
+			$translations_query_prepared = $wpdb->prepare($translations_query, ICL_TM_IN_PROGRESS);
+			$translations = $wpdb->get_results( $translations_query_prepared );
 
 			$job2delete = $rids2cancel = array();
 			foreach ( $translations as $t ) {
@@ -536,7 +545,7 @@ echo '</textarea>';
 		jQuery.post(location.href + '&debug_action=link_post_type&nonce=<?php echo wp_create_nonce('link_post_type'); ?>&new_value=' + select.val() + '&old_value=' + old_value, function () {
 			alert('<?php echo esc_js(__('Done', 'sitepress')) ?>');
 			select.next().fadeOut();
-			window.location.href = window.location.href
+			location.reload();
 		});
 	}
 
@@ -547,21 +556,52 @@ echo '</textarea>';
 		jQuery.post(location.href + '&debug_action=link_taxonomy&nonce=<?php echo wp_create_nonce('link_taxonomy'); ?>&new_value=' + select.val() + '&old_value=' + old_value, function () {
 			alert('<?php echo esc_js(__('Done', 'sitepress')) ?>');
 			select.next().fadeOut();
-			window.location.href = window.location.href
+			location.reload();
 		});
+	}
+
+	function parse_xhr_error(xhr, status, error) {
+		return xhr.statusText || status || error;
 	}
 
 	jQuery(document).ready(function () {
 		jQuery('#icl_fix_languages').click(function () {
 			jQuery(this).attr('disabled', 'disabled');
 			jQuery(this).after(icl_ajxloaderimg);
-			jQuery.post(location.href + '&debug_action=fix_languages&nonce=<?php echo wp_create_nonce('fix_languages'); ?>', function () {
-//				jQuery('#icl_fix_languages').removeAttr('disabled');
-				alert('<?php echo esc_js(__('Done', 'sitepress')) ?>');
-				jQuery('#icl_fix_languages').next().fadeOut();
-				location.reload();
+
+
+			var icl_fix_languages = jQuery('#icl_fix_languages');
+
+			jQuery.ajax({
+				type: 'POST',
+				contentType: "application/json; charset=utf-8",
+				url: location.href + '&debug_action=fix_languages&nonce=<?php echo wp_create_nonce('fix_languages'); ?>',
+				timeout: 60000,
+				success: function () {
+					icl_fix_languages.removeAttr('disabled');
+					alert('<?php echo esc_js(__('Done', 'sitepress')) ?>');
+					icl_fix_languages.next().fadeOut();
+					location.reload();
+				},
+				error: function (jqXHR, status, error) {
+					var parsed_response = parse_xhr_error(jqXHR, status, error);
+
+					<?php
+					$timeout_message = 'The operation timed out, but languages may still get fixed in the background.\n';
+					$timeout_message .= 'Please wait 5-10 minutes, then refresh or come back to this page.\n';
+					$timeout_message .= 'If languages are still not fixed, please retry or contact the WPML support.'
+					?>
+
+					if(parsed_response=='timeout') {
+						alert('<?php echo __($timeout_message, 'sitepress');?>');
+					} else {
+						alert(parsed_response);
+					}
+					icl_fix_languages.next().fadeOut();
+				}
 			});
-		})
+		});
+
 		jQuery('#icl_remove_ghost').click(function () {
 			jQuery(this).attr('disabled', 'disabled');
 			jQuery(this).after(icl_ajxloaderimg);
@@ -585,6 +625,7 @@ echo '</textarea>';
 		jQuery('#icl_cleanup').click(function () {
 			jQuery(this).attr('disabled', 'disabled');
 			jQuery(this).after(icl_ajxloaderimg);
+
 			jQuery.post(location.href + '&debug_action=icl_cleanup&nonce=<?php echo wp_create_nonce('icl_cleanup'); ?>', function () {
 				jQuery('#icl_cleanup').removeAttr('disabled');
 				alert('<?php echo esc_js(__('Done', 'sitepress')) ?>');
@@ -662,20 +703,7 @@ echo '</textarea>';
 					}
 				},
 				error: function (xhr, status, error) {
-
-					var err;
-					if(xhr.status) {
-						err += '| Status: ' + xhr.status;
-					}
-					if(xhr.statusText) {
-						err += '| Status Text: ' + xhr.statusText;
-					}
-					if(xhr.responseText) {
-						err += '| Response: ' + eval("(" + xhr.responseText + ")");
-					}
-
-					var parsed_response = err;
-
+					var parsed_response = parse_xhr_error(xhr, status, error);
 					response_element.text('');
 					response_element.html(parsed_response);
 					assign_translation_status_to_duplicates_loader.fadeOut(function() {
@@ -800,12 +828,16 @@ echo '</textarea>';
 <div class="icl_cyan_box">
 	<h3><?php _e( 'Clean up', 'sitepress' ) ?></h3>
 
-	<p class="error" style="padding:6px;"><?php _e( 'Please make backup of your database before using this.', 'sitepress' ) ?></p>
+	<p class="icl_form_errors" style="padding:6px;"><?php _e( 'Please make backup of your database before using this.', 'sitepress' ) ?></p>
 
 	<?php if ( !SitePress_Setup::languages_complete() ){ ?>
 		<p>
-			<input id="icl_fix_languages" type="button" class="button-secondary" value="<?php _e( 'Fix languages', 'sitepress' ) ?>"/><br/>
-			<small style="margin-left:10px;"><?php _e( 'Fixes languages tables.', 'sitepress' ) ?></small>
+            <br />
+            <label><input type="checkbox" onchange="if(jQuery(this).prop('checked')){jQuery('#icl_fix_languages').prop('disabled', false);}else{jQuery('#icl_fix_languages').prop('disabled', true);}">
+                &nbsp;<?php _e("This operation will reset WPML's language tables and reinstall it. Any custom languages that you added will be removed.", 'sitepress') ?></label><br /><br />
+			<input disabled="disabled" id="icl_fix_languages" type="button" class="button-secondary" value="<?php _e( 'Clear language information and repopulate languages', 'sitepress' ) ?>"/><br/><br />
+			<small style="margin-left:10px;"><?php _e( "This operation will remove WPML's language table and recreate it. You should use it if you just installed WPML and you're not seeing a complete list of avaialble languages.", 'sitepress' ) ?></small>
+            <br /><br />
 		</p>
 	<?php } ?>
 
@@ -823,7 +855,9 @@ echo '</textarea>';
 		<p>
 			<input id="icl_cms_id_fix" type="button" class="button-secondary" value="<?php _e( 'CMS ID fix', 'sitepress' ) ?>"/>
 			<span id="icl_cms_id_fix_prgs"
-				  style="display: none;"><?php printf( __( 'fixing %s/%d', 'sitepress' ), '<span id="icl_cms_id_fix_prgs_cnt">0</span>', $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}icl_translations t JOIN {$wpdb->prefix}icl_translation_status s ON t.translation_id=s.translation_id WHERE t.element_type LIKE 'post\\_%' AND t.source_language_code IS NOT NULL AND s.translation_service='icanlocalize'" ) ) ?></span><br/>
+				  style="display: none;"><?php printf( __( 'fixing %s/%d', 'sitepress' ), '<span id="icl_cms_id_fix_prgs_cnt">0</span>', $wpdb->get_var( 
+									$wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}icl_translations t JOIN {$wpdb->prefix}icl_translation_status s ON t.translation_id=s.translation_id WHERE t.element_type LIKE %s AND t.source_language_code IS NOT NULL AND s.translation_service=%s",
+													array( like_escape('post_') . '%', 'icanlocalize' ) ) ) ) ?></span><br/>
 			<small
 				style="margin-left:10px;"><?php _e( "Updates translation in progress with new style identifiers for documents. The new identifiers depend on the document being translated and the languages so it's not possible to get out of sync when translations are being deleted locally.", 'sitepress' ) ?></small>
 		</p>
@@ -864,7 +898,9 @@ echo '</textarea>';
 
 		<?php
 		$translatable_posts = $sitepress->get_translatable_documents();
-		$res = $wpdb->get_col( "SELECT DISTINCT element_type FROM {$wpdb->prefix}icl_translations WHERE element_type LIKE 'post\\_%'" );
+		$res = $wpdb->get_col( 
+						$wpdb->prepare("SELECT DISTINCT element_type FROM {$wpdb->prefix}icl_translations WHERE element_type LIKE %s",
+										array( like_escape('post_') . '%' ) ) );
 		echo '<table class="widefat" style="width:300px;">';
 
 		foreach ( $res as $row ) {
@@ -912,7 +948,9 @@ echo '</textarea>';
 		}
 		$translatable_taxs = array_unique( $translatable_taxs );
 
-		$res = $wpdb->get_col( "SELECT DISTINCT element_type FROM {$wpdb->prefix}icl_translations WHERE element_type LIKE 'tax\\_%'" );
+		$res = $wpdb->get_col( 
+						$wpdb->prepare("SELECT DISTINCT element_type FROM {$wpdb->prefix}icl_translations WHERE element_type LIKE %s",
+										array( like_escape('tax_') . '%' ) ) );
 		echo '<table class="widefat" style="width:300px;">';
 
 		foreach ( $res as $row ) {
@@ -975,19 +1013,7 @@ echo '</textarea>';
 
 	<br clear="all"/>
 <?php } ?>
-<br/>
 
-<?php
-// Enable DB Dump if user is a network (super) admin. Will also check if user is admin if network mode is disabled.
-if ( is_super_admin() ) {
-	?>
-	<div class="icl_cyan_box">
-		<h3><?php _e( 'Database dump', 'sitepress' ) ?></h3>
-		<a class="button" href="admin.php?page=<?php echo ICL_PLUGIN_FOLDER ?>/menu/troubleshooting.php&amp;icl_action=dbdump&amp;nonce=<?php echo wp_create_nonce( 'dbdump' ) ?>"><?php _e( 'Download', 'sitepress' ) ?></a>
-	</div>
-<?php
-}
-?>
 
 <br clear="all"/>
 <?php if ( !defined( 'ICL_DONT_PROMOTE' ) || !ICL_DONT_PROMOTE ){ ?>

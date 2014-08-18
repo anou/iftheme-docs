@@ -1,4 +1,6 @@
 <?php
+global $sitepress;
+
 icl_st_reset_current_trasnslator_notifications();
 
 if((!isset($sitepress_settings['existing_content_language_verified']) || !$sitepress_settings['existing_content_language_verified']) /*|| 2 > count($sitepress->get_active_languages())*/){
@@ -549,7 +551,7 @@ function _icl_string_translation_rtl_textarea($language) {
                                             <label><input type="checkbox" id="icl_st_track_strings" name="icl_st[track_strings]" value="1" <?php
                                             if(!empty($sitepress_settings['st']['track_strings'])): ?>checked="checked"<?php endif ?> />
                                         <?php _e('Track where strings appear on the site', 'wpml-string-translation'); ?></label>
-                                        <p><a href="http://wpml.org/?p=9073"><?php _e('Performance considerations', 'wpml-string-translation') ?>&nbsp;&raquo;</a></p>
+                                        <p><a href="https://wpml.org/?p=9073"><?php _e('Performance considerations', 'wpml-string-translation') ?>&nbsp;&raquo;</a></p>
                                         </li>
                                         <li>
                                             <label>
@@ -603,7 +605,7 @@ function _icl_string_translation_rtl_textarea($language) {
                                                 <input type="radio" name="icl_auto_reg_type" value="auto-always" <?php if($sitepress_settings['st']['icl_st_auto_reg'] == 'auto-always'):?>checked="checked"<?php endif?> />
                                                 <?php echo __('Auto-register strings always', 'sitepress') ?>
                                             </label>
-                                            <p><a href="http://wpml.org/?p=9073"><?php _e('Performance considerations', 'wpml-string-translation') ?>&nbsp;&raquo;</a></p>
+                                            <p><a href="https://wpml.org/?p=9073"><?php _e('Performance considerations', 'wpml-string-translation') ?>&nbsp;&raquo;</a></p>
                                         </li>
                                     </ul>
                                     <p>

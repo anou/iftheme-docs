@@ -2,7 +2,7 @@
 
 class WPML_Slug_Translation{
     
-    
+    //Todo: candidate to be removed, as it has no actual logic in it
     static function setup(){
         global $sitepress_settings;
         /*
@@ -47,7 +47,12 @@ class WPML_Slug_Translation{
     static function rewrite_rules_filter($value){
         global $sitepress, $sitepress_settings, $wpdb;
         
-        $strings_language = $sitepress_settings['st']['strings_language'];
+    	if (isset($sitepress_settings['st']['strings_language'])) {
+    		$strings_language = $sitepress_settings['st']['strings_language'];    
+    	} else {
+    		$strings_language = false;
+    	}
+        
 
 		$current_language = $sitepress->get_current_language();
 		if( $current_language != $strings_language){

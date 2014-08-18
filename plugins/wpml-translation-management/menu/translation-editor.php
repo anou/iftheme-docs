@@ -1,4 +1,6 @@
 <?php
+global $wpdb, $post, $sitepress, $iclTranslationManagement, $current_user, $wp_version;
+
 $job = $iclTranslationManagement->get_translation_job((int)$_GET['job_id'], false, true, 1); // don't include not-translatable and auto-assign
 
 if(empty($job)){
@@ -106,16 +108,15 @@ require_once(ABSPATH . 'wp-admin/includes/media.php');
                             <p>
                                 <?php _e('Translated content', 'wpml-translation-management'); echo ' - ' . $job->to_language; ?>
                                 <?php if(empty($icl_tm_translated_content)):?>
-                                <span>| &nbsp;<a class="icl_tm_copy_link" id="icl_tm_copy_link_<?php echo $element->field_type 
+                                <span>| &nbsp;<a class="icl_tm_copy_link" id="icl_tm_copy_link_<?php echo sanitize_title($element->field_type)
                                     ?>" href="#"><?php printf(__('Copy from %s', 'wpml-translation-management'), $job->from_language)?></a></span>
                                 <?php endif; ?>
                             </p>
-                            
+
                             <?php // CASE 1 - body *********************** ?>
                             <?php if($element->field_type=='body'): ?>
                             <div id="poststuff">
-                            <?php 
-                                global $post;
+                            <?php
                                 if(is_null($post) && !is_null($opost)) $post = clone $opost;
                                 if(version_compare($wp_version, '3.3', '>=')){
                                     $settings = array(
@@ -124,9 +125,9 @@ require_once(ABSPATH . 'wp-admin/includes/media.php');
                                         'textarea_rows'     => 20,
                                         'editor_css'        => $rtl_translation ? ' <style type="text/css">.wp-editor-container textarea.wp-editor-area{direction:rtl;}</style>' : ''
                                     );
-                                    wp_editor($icl_tm_translated_content, 'fields['.$element->field_type.'][data]', $settings);                               
+									wp_editor($icl_tm_translated_content, $element->field_type, $settings);
                                 }else{
-                                    the_editor($icl_tm_translated_content, 'fields['.$element->field_type.'][data]', false, false); 
+									the_editor($icl_tm_translated_content, 'fields['.$element->field_type.'][data]', false, false);
                                 }
                             ?>
                             </div>    
@@ -144,7 +145,7 @@ require_once(ABSPATH . 'wp-admin/includes/media.php');
                                     $icl_tm_f_translated = false;
                                 }
                             ?>
-                            <label><input class="icl_multiple" type="text" name="fields[<?php echo esc_attr($element->field_type)
+                            <label><input id="<?php echo sanitize_title($element->field_type)?>" class="icl_multiple" type="text" name="fields[<?php echo esc_attr($element->field_type)
                                 ?>][data][<?php echo $k ?>]" value="<?php if(isset($icl_tm_translated_content[$k])) 
                                     echo esc_attr($icl_tm_translated_content[$k]); ?>"<?php echo $rtl_translation_attribute; ?> /></label>
                             <?php if($icl_tm_f_translated): ?>
@@ -154,7 +155,7 @@ require_once(ABSPATH . 'wp-admin/includes/media.php');
                             
                             <?php // CASE 3 - multiple lines *********************** ?>         
                             <?php elseif(0 === strpos($element->field_type, 'field-') && $element_field_style == 1): ?>
-                                <textarea style="width:100%;" name="fields[<?php echo esc_attr($element->field_type) ?>][data]"<?php
+                                <textarea id="<?php echo sanitize_title($element->field_type) ?>" style="width:100%;" name="fields[<?php echo esc_attr($element->field_type) ?>][data]"<?php
                                     echo $rtl_translation_attribute; ?>><?php echo esc_html($icl_tm_translated_content); ?></textarea>
 
                             <?php // CASE 4 - wysiwyg *********************** ?>         
@@ -165,7 +166,7 @@ require_once(ABSPATH . 'wp-admin/includes/media.php');
                                             'textarea_name'     => 'fields['.$element->field_type.'][data]',
                                             'textarea_rows'     => 4
                                         );
-                                        wp_editor($icl_tm_translated_content, 'fields['.$element->field_type.'][data]', $settings);
+										wp_editor($icl_tm_translated_content, $element->field_type, $settings);
                                     }else{                                        
                                         ?>
                                         <textarea style="width:100%;" name="fields[<?php echo esc_attr($element->field_type) ?>][data]"<?php
@@ -175,7 +176,7 @@ require_once(ABSPATH . 'wp-admin/includes/media.php');
                             ?>
                             <?php // CASE 5 - one-liner *********************** ?>         
                             <?php else: ?>
-                            <label><input type="text" name="fields[<?php echo esc_attr($element->field_type) ?>][data]" value="<?php
+                            <label><input id="<?php echo sanitize_title($element->field_type) ?>" type="text" name="fields[<?php echo esc_attr($element->field_type) ?>][data]" value="<?php
                                 echo esc_attr($icl_tm_translated_content); ?>"<?php echo $rtl_translation_attribute; ?> /></label>
                             <?php endif; ?> 
                             
@@ -240,7 +241,7 @@ require_once(ABSPATH . 'wp-admin/includes/media.php');
                                     ?>" width="100%" height="<?php echo $icl_wysiwyg_height ?>" frameborder="0"></iframe>
                                 
                                 <br clear="all"/></div>
-                                <div class="html"><textarea id="icl_tm_original_<?php echo $element->field_type ?>" readonly="readonly"><?php 
+                                <div class="html"><textarea id="icl_tm_original_<?php echo $element->field_type ?>" readonly="readonly"><?php
                                     echo $icl_tm_original_content_html ?></textarea></div>
                                 <?php elseif($element->field_format == 'csv_base64'): ?>
                                 <?php foreach($icl_tm_original_content as $c): ?>
@@ -251,7 +252,7 @@ require_once(ABSPATH . 'wp-admin/includes/media.php');
                                 </div>
                                 <?php endforeach;?>
                                 <?php else: ?>
-                                <div class="icl_single"<?php if ($rtl_original) echo ' dir="rtl" style="text-align:right;"'; else echo ' dir="ltr" style="text-align:left;"'; ?>><span style="white-space:pre-wrap;" id="icl_tm_original_<?php echo str_replace(' ', '__20__', $element->field_type) ?>"><?php echo esc_html($icl_tm_original_content) ?></span><br clear="all"/></div>
+                                <div class="icl_single"<?php if ($rtl_original) echo ' dir="rtl" style="text-align:right;"'; else echo ' dir="ltr" style="text-align:left;"'; ?>><span style="white-space:pre-wrap;" id="icl_tm_original_<?php echo sanitize_title($element->field_type) ?>"><?php echo esc_html($icl_tm_original_content) ?></span><br clear="all"/></div>
                                 <?php endif; ?>
                             </div>
                             <?php /* ORIGINAL CONTENT */ ?>

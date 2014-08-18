@@ -1,4 +1,5 @@
 <?php 
+global $sitepress, $WPML_ST_MO_Downloader;
 
 $language = isset($_GET['download_mo']) ? $_GET['download_mo']  : false;
 $active_languages = $sitepress->get_active_languages();

@@ -62,6 +62,9 @@ $cf_keys = array_unique(@array_merge($cf_keys, (array)$iclTranslationManagement-
          <li><a href="#ml-content-setup-sec-4"><?php _e('Custom posts slug translation options', 'wpml-string-translation'); ?></a></li>
     <?php endif; ?>
     <li><a href="#ml-content-setup-sec-5"><?php _e('Translation pickup mode', 'wpml-translation-management'); ?></a></li>
+		<?php if (defined('WPML_XLIFF_VERSION')): ?>
+			<li><a href="#ml-content-setup-sec-5-1"><?php _e('XLIFF file options', 'wpml-xliff'); ?></a></li>
+		<?php endif; ?>
 	<li><a href="#ml-content-setup-sec-6"><?php _e('Custom fields translation', 'wpml-translation-management'); ?></a></li>
 	<?php
 
@@ -95,7 +98,7 @@ $cf_keys = array_unique(@array_merge($cf_keys, (array)$iclTranslationManagement-
             <?php _e("WPML can read a configuration file that tells it what needs translation in themes and plugins. The file is named wpml-config.xml and it's placed in the root folder of the plugin or theme.", 'wpml-translation-management'); ?>
         </p>
         <p>
-            <a href="http://wpml.org/?page_id=5526"><?php _e('Learn more', 'wpml-translation-management') ?></a>
+            <a href="https://wpml.org/?page_id=5526"><?php _e('Learn more', 'wpml-translation-management') ?></a>
         </p>
     </div>
 </div>
@@ -140,7 +143,7 @@ $cf_keys = array_unique(@array_merge($cf_keys, (array)$iclTranslationManagement-
             </p>
 
             <p>
-                <a href="http://wpml.org/?page_id=3416" target="_blank"><?php _e('Learn more about the different translation options') ?></a>
+                <a href="https://wpml.org/?page_id=3416" target="_blank"><?php _e('Learn more about the different translation options') ?></a>
             </p>
 
             <p class="buttons-wrap">
@@ -284,6 +287,8 @@ $cf_keys = array_unique(@array_merge($cf_keys, (array)$iclTranslationManagement-
     </div> <!-- .wpml-section-content -->
 
 </div> <!-- .wpml-section -->
+
+<?php if(defined('WPML_XLIFF_VERSION')) include WPML_XLIFF_PATH . '/menu/_xliff-options.php'; ?>
 
 <div class="wpml-section wpml-section-cf-translation" id="ml-content-setup-sec-6">
 

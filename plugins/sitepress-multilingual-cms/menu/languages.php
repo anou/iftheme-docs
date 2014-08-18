@@ -389,7 +389,7 @@ global $language_switcher_defaults, $language_switcher_defaults_alt;
                         					<li><?php _e("URL rewriting is not enabled in your web server.",'sitepress') ?></li>
                                             <li><?php _e("The web server cannot write to the .htaccess file",'sitepress') ?></li>
                     					</ul>
-                                        <a href="http://wpml.org/?page_id=1010"><?php _e('How to fix','sitepress') ?></a>
+                                        <a href="https://wpml.org/?page_id=1010"><?php _e('How to fix','sitepress') ?></a>
                                             <p>
                                                 <?php printf(__('When WPML accesses <a target="_blank" href="%s">%s</a> it gets:', 'sitepress'), $__url = get_home_url().'/' . $sample_lang['code'] .'/?____icl_validate_domain=1', $__url); ?>
                                                 <br />
@@ -445,7 +445,7 @@ global $language_switcher_defaults, $language_switcher_defaults_alt;
                                                     <td>&nbsp;</td>
                                                     <td>&nbsp;</td>
                                                 <?php else: ?>
-                                                    <td><label for="language_domains<?php echo $lang['code'] ?>"><input type="text" id="language_domain_<?php echo $lang['code'] ?>" name="language_domains[<?php echo $lang['code'] ?>]" value="<?php echo $language_domains[$lang['code']] ?>" size="40" /></label></td>
+                                                    <td><label for="language_domains<?php echo $lang['code'] ?>"><input type="text" id="language_domain_<?php echo $lang['code'] ?>" name="language_domains[<?php echo $lang['code'] ?>]" value="<?php echo isset($language_domains[$lang['code']]) ? $language_domains[$lang['code']] : ''; ?>" size="40" /></label></td>
                                                     <td><label for="validate_language_domains_<?php echo $lang['code'] ?>"><input class="validate_language_domain" type="checkbox" id="validate_language_domains_<?php echo $lang['code'] ?>" name="validate_language_domains[]" value="<?php echo $lang['code'] ?>" checked /> <?php _e('Validate on save', 'sitepress') ?></label></td>
                                                     <td><span id="ajx_ld_<?php echo $lang['code'] ?>"></span></td>
                                                 <?php endif; ?>
@@ -494,34 +494,84 @@ global $language_switcher_defaults, $language_switcher_defaults_alt;
                             <?php endif; ?>
                             <h4><?php _e('Language switcher widget', 'sitepress')?></h4>
                             <?php
-                                global $wp_registered_sidebars;
-                                $swidgets = wp_get_sidebars_widgets();
-                                $sb = '';
-                                foreach($swidgets as $k=>$v){
-                                    if(is_array($v) && in_array('icl_lang_sel_widget', $v)){
-                                        $sb = $k;
-                                        $active_sidebar_check = $k;
-                                    }
-                                }
+                            global $wp_registered_widgets, $wp_registered_sidebars;
+                            $sidebar_widgets = wp_get_sidebars_widgets();
+
+                            if ( ! $sidebar_widgets ) {
+	                            echo __( 'Your theme has no registered sidebars.', 'sitepress' );
+                            } elseif(is_array( $sidebars_widgets )) {
+	                            ?>
+	                            <ul id="icl_language_switcher_sidebars">
+		                            <?php
+		                            foreach ( $wp_registered_sidebars as $sidebar_id => $sidebar_settings ) {
+			                            // Widgets registered in wp_inactive_widgets or orphaned_widgets_* sidebars
+			                            if ( in_array( $sidebar_id, array( 'array_version', 'wp_inactive_widgets' ) ) || strpos($sidebar_id, 'orphaned_widgets_')!==false ) {
+				                            continue;
+			                            }
+
+			                            // Widgets registered in sidebars that does not exists anymore (e.g. just switched theme)
+			                            if(!isset($sidebar_widgets[ $sidebar_id ])) {
+				                            $widgets = array();
+			                            } else {
+				                            $widgets = $sidebar_widgets[ $sidebar_id ];
+			                            }
+
+			                            $sidebar_data = $wp_registered_sidebars[ $sidebar_id ];
+			                            $sidebar_name = $sidebar_data[ 'name' ];
+			                            ?>
+			                            <li>
+				                            <?php
+				                            $has_language_switcher = false;
+				                            $language_switcher_widgets = array();
+				                            if ( count( $widgets ) >= 0 ) {
+					                            foreach ( $widgets as $index => $widget ) {
+						                            $is_language_switcher_widget = strpos( $widget, 'icl_lang_sel_widget-' ) !== false;
+						                            if ( $is_language_switcher_widget ) {
+							                            $language_switcher_widgets[ $index ] = $widget;
+							                            $has_language_switcher = true;
+							                            break;
+						                            }
+					                            }
+				                            }
+				                            $element_id   = 'icl_language_switcher_sidebar_' . $sidebar_id;
+				                            $element_name = 'icl_language_switcher_sidebars[' . $sidebar_id . ']';
+
+				                            $html_checked = '';
+				                            if($has_language_switcher) {
+					                            $html_checked = 'checked="checked"';
+				                            }
+
+				                            ?>
+				                            <label for="<?php echo $element_id; ?>">
+					                            <input <?php echo $html_checked; ?>
+					                                   name="toggle_<?php echo $element_name; ?>"
+					                                   type="checkbox" class="toggle"
+					                                   value="<?php echo $sidebar_id; ?>"
+					                                   id="<?php echo $element_id; ?>"
+					                                   data-toggle_value_name="<?php echo $element_name; ?>"
+					                                   data-toggle_checked_value="1"
+					                                   data-toggle_unchecked_value="0">&nbsp;<?php echo $sidebar_name; ?>
+				                            </label>
+				                            <?php
+				                            ?>
+			                            </li>
+			                            <?php
+			                            ?>
+		                            <?php
+		                            }
+		                            ?>
+	                            </ul>
+                            <?php
+                            }
+
                             ?>
-                            <?php if (!empty( $setup_complete ) && !empty($active_sidebar_check) && !array_key_exists($active_sidebar_check, $wp_registered_sidebars)): ?>
-                                <span class="icl_error_text"><strong><?php sprintf(__('Theme has changed and widget is not active. Please visit %swidgets page%s.', 'sitepress'), '<a href="widgets.php">', '</a>'); ?></strong></span>
-                            <?php else: ?>
-                                <label for="icl_language_switcher_sidebar"><?php _e('Choose where to display the language switcher widget:', 'sitepress') ?></label>
-                                <select id="icl_language_switcher_sidebar" name="icl_language_switcher_sidebar">
-                                    <?php foreach($wp_registered_sidebars as $rs): ?>
-                                        <option value="<?php echo $rs['id']?>" <?php if($sb == $rs['id']) echo 'selected="selected"'?>><?php echo $rs['name']?>&nbsp;</option>
-                                    <?php endforeach;?>
-                                    <option value="" <?php if(!$sb && !empty( $setup_complete )) echo 'selected="selected"' ?> ><?php _e('--none--', 'sitepress'); ?></option>
-                                </select>
-                            <?php endif; ?>
 
                             <p class="icl_advanced_feature">
                                 <?php printf(__('The drop-down language switcher can be added to your theme by inserting this PHP code: %s or as a widget','sitepress'),'<code class="php">&lt;?php do_action(\'icl_language_selector\'); ?&gt;</code>'); ?>.
                             </p>
 
                             <p class="icl_advanced_feature"><?php _e('You can also create custom language switchers, such as a list of languages or country flags.','sitepress'); ?>
-                                <a href="http://wpml.org/?page_id=989"><?php _e('Custom language switcher creation guide','sitepress')?></a>.
+                                <a href="https://wpml.org/?page_id=989"><?php _e('Custom language switcher creation guide','sitepress')?></a>.
                             </p>
                             <p>
                                 <label>
@@ -529,6 +579,10 @@ global $language_switcher_defaults, $language_switcher_defaults_alt;
                                     <?php _e('Display \'Languages\' as the widget title', 'sitepress'); ?>
                                 </label>
                             </p>
+
+	                        <?php if ( ! empty( $setup_complete ) ): ?>
+		                        <button class="button-primary" name="save" type="submit">Save</button>
+	                        <?php endif; ?>
                         </div> <!-- .wpml-section-content-inner -->
 
                         <div class="wpml-section-content-inner">
@@ -778,25 +832,25 @@ global $language_switcher_defaults, $language_switcher_defaults_alt;
                         <p id="icl_hidden_languages_status">
                             <?php
                                 if (!empty( $hidden_languages )){
-									//While checking for hidden languages, it cleans any possible leftover from inactive or deleted languages
-									if ( 1 == count( $hidden_languages ) ) {
-										if ( isset( $active_languages[ $hidden_languages[ 0 ] ] ) ) {
-											printf( __( '%s is currently hidden to visitors.', 'sitepress' ), $active_languages[ $hidden_languages[ 0 ] ][ 'display_name' ] );
-											$hidden_languages[] = $hidden_languages[ 0 ];
-										}
-									} else {
-										$_hlngs = array();
-										foreach ( $hidden_languages as $l ) {
-											if ( isset( $active_languages[ $l ] ) ) {
-												$_hlngs[ ] = $active_languages[ $l ][ 'display_name' ];
-												$hidden_languages[] = $l;
-											}
-										}
-										$hlangs = join( ', ', $_hlngs );
-										printf( __( '%s are currently hidden to visitors.', 'sitepress' ), $hlangs );
-									}
-
-									$sitepress->set_setting('hidden_languages', $hidden_languages);
+																		//While checking for hidden languages, it cleans any possible leftover from inactive or deleted languages
+																		if ( 1 == count( $hidden_languages ) ) {
+																			if ( isset( $active_languages[ $hidden_languages[ 0 ] ] ) ) {
+																				printf( __( '%s is currently hidden to visitors.', 'sitepress' ), $active_languages[ $hidden_languages[ 0 ] ][ 'display_name' ] );
+																				$hidden_languages[] = $hidden_languages[ 0 ];
+																			}
+																		} else {
+																			$_hlngs = array();
+																			foreach ( $hidden_languages as $l ) {
+																				if ( isset( $active_languages[ $l ] ) ) {
+																					$_hlngs[ ] = $active_languages[ $l ][ 'display_name' ];
+																				}
+																			}
+																			$hlangs = join( ', ', $_hlngs );
+																			printf( __( '%s are currently hidden to visitors.', 'sitepress' ), $hlangs );
+																		}
+																		
+																		$hidden_languages = array_unique($hidden_languages);
+																		$sitepress->set_setting('hidden_languages', $hidden_languages);
 
                                      echo '<p>';
                                         printf(__('You can enable its/their display for yourself, in your <a href="%s">profile page</a>.', 'sitepress'),'profile.php#wpml');
@@ -918,7 +972,7 @@ global $language_switcher_defaults, $language_switcher_defaults_alt;
                     <?php wp_nonce_field('icl_promote_form_nonce', '_icl_nonce'); ?>
                     <p>
                         <label><input type="checkbox" name="icl_promote" <?php if($sitepress->get_setting('promote_wpml')) echo 'checked="checked"' ?> value="1" />
-                        <?php printf(__("Tell the world your site is running multilingual with WPML (places a message in your site's footer) - <a href=\"%s\">read more</a>", 'sitepress'),'http://wpml.org/?page_id=4560'); ?></label>
+                        <?php printf(__("Tell the world your site is running multilingual with WPML (places a message in your site's footer) - <a href=\"%s\">read more</a>", 'sitepress'),'https://wpml.org/?page_id=4560'); ?></label>
                     </p>
                     <p class="buttons-wrap">
                         <span class="icl_ajx_response" id="icl_ajx_response_lv"></span>

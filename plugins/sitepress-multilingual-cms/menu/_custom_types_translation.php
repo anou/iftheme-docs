@@ -112,19 +112,25 @@ if(!empty($custom_posts)){
                                                             JOIN {$wpdb->prefix}icl_string_translations st
                                                             ON st.string_id = s.id
                                                             WHERE st.language=%s AND s.value=%s AND s.name LIKE %s
-                                                    ", $default_language, $custom_post->rewrite[ 'slug' ], 'URL slug: %' );
-													$string_id = $wpdb->get_var( $string_id_prepared );
-
+                                                    ", array( $default_language, $custom_post->rewrite[ 'slug' ], 'URL slug: %' ) );
                                                 }
                                                 else {
-                                                    $string_id = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}icl_strings WHERE name = %s AND value = %s ", 'Url slug: ' . $custom_post->rewrite['slug'], $custom_post->rewrite['slug']));
+													$string_id_prepared = $wpdb->prepare( "SELECT id FROM {$wpdb->prefix}icl_strings WHERE name = %s AND value = %s ", array(
+																																										 'Url slug: ' . $custom_post->rewrite[ 'slug' ],
+																																										 $custom_post->rewrite[ 'slug' ]
+																																									 ) );
                                                 }
+												$string_id = $wpdb->get_var( $string_id_prepared );
+												if($_translate && !$string_id) {
+													$message = sprintf( __( "%s slugs are set to be translated, but they are missing their translation", 'sitepress'), $custom_post->labels->name);
+													ICL_AdminNotifier::displayInstantMessage( $message, 'error', 'below-h2', false );
+												}
                                                 $_slug_translations = icl_get_string_translations_by_id($string_id);
                                             } else {
                                                 $_slug_translations = false;
                                             }
                                         ?>
-                                        <?php //if($_has_slug): ?>
+                                        <?php if($_has_slug && isset($sitepress_settings['posts_slug_translation']['on']) && $sitepress_settings['posts_slug_translation']['on']): ?>
                                             <div class="icl_slug_translation_choice <?php echo $is_hidden; ?>">
                                                 <p>
                                                     <label>
@@ -180,7 +186,7 @@ if(!empty($custom_posts)){
 
                                                 </table>
                                             </div>
-                                        <?php //endif; ?>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                 </td>
                                 <td align="right">
@@ -293,24 +299,23 @@ function cpt_warnings()
 function cpt_default_and_st_language_warning()
 {
 	static $called = false;
-	if ( !$called ) {
+	if (defined('WPML_ST_FOLDER') && !$called ) {
 		global $sitepress, $sitepress_settings;
 		$st_language_code = $sitepress_settings[ 'st' ][ 'strings_language' ];
 		$st_language      = $sitepress->get_display_language_name( $st_language_code, $sitepress->get_admin_language() );
 
-		$st_page_url = admin_url( 'admin.php?page=wpml-string-translation/menu/string-translation.php' );
+		$st_page_url = admin_url( 'admin.php?page=' . WPML_ST_FOLDER . '/menu/string-translation.php' );
 
-		$message = 'The strings language in your site is set to %s instead of English. ';
-		$message .= 'This means that the original slug will appear in the URL when displaying content in %s.';
-		$message .= ' ';
-		$message .= '<strong><a href="%s" target="_blank">Read more</a> | ';
-		$message .= '<a href="%s#icl_st_sw_form">Change strings language</a></strong>';
+		$message = __(
+			'The strings language in your site is set to %s instead of English.
+			This means that the original slug will appear in the URL when displaying content in %s.
+			<strong><a href="%s" target="_blank">Read more</a> |  <a href="%s#icl_st_sw_form">Change strings language</a></strong>',
+		'wpml-string-translation' );
 
-		$message = __( $message, 'wpml-string-translation' );
-		$message = sprintf( $message, $st_language, $st_language, 'http://wpml.org/faq/string-translation-default-language-not-english/', $st_page_url );
+		$message = sprintf( $message, $st_language, $st_language, 'https://wpml.org/faq/string-translation-default-language-not-english/', $st_page_url );
 
-		$fallback_message = _( '<a href="%s" target="_blank">How to translate strings when default language is not English</a>' );
-		$fallback_message = sprintf( $fallback_message, 'http://wpml.org/faq/string-translation-default-language-not-english/' );
+		$fallback_message = __( '<a href="%s" target="_blank">How to translate strings when default language is not English</a>', 'wpml-string-translation'  );
+		$fallback_message = sprintf( $fallback_message, 'https://wpml.org/faq/string-translation-default-language-not-english/' );
 
 		ICL_AdminNotifier::addMessage( 'cpt_default_and_st_language_warning', $message, 'icl-admin-message-warning', true, $fallback_message, false, 'cpt-translation' );
 		$called = true;

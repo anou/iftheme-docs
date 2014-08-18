@@ -45,7 +45,7 @@ foreach ($active_languages as $lang) {
 
                                 <div><a href="javascript:void(0)" onclick="jQuery(this).parent().next('.wrapper').slideToggle();" style="display:block; padding:5px; border: 1px solid #eee; margin-bottom:2px; background-color: #F7F7F7;"><?php _e('Help resources', 'sitepress'); ?></a></div>
                                 <div class="wrapper" style="display:none; padding: 5px 10px; border: 1px solid #eee; border-top: 0px; margin:-11px 0 2px 0;">
-                                    <p><img src="<?php echo ICL_PLUGIN_URL; ?>/res/img/question1.png" width="16" height="16" style="position: relative; top: 4px;" alt="<?php _e('WPML home page', 'sitepress'); ?>" />&nbsp;<a href="http://wpml.org/"><?php _e('WPML home page', 'sitepress'); ?></a>
+                                    <p><img src="<?php echo ICL_PLUGIN_URL; ?>/res/img/question1.png" width="16" height="16" style="position: relative; top: 4px;" alt="<?php _e('WPML home page', 'sitepress'); ?>" />&nbsp;<a href="https://wpml.org/"><?php _e('WPML home page', 'sitepress'); ?></a>
                                         <br /><img src="<?php echo ICL_PLUGIN_URL; ?>/res/img/RO-Mx1-16_tool-wrench.png" width="16" height="16" style="position: relative; top: 4px;" alt="<?php _e('Commercial support', 'sitepress'); ?>" />&nbsp;<a href="<?php echo admin_url('admin.php?page=' . ICL_PLUGIN_FOLDER . '/menu/support.php') ?>"><?php _e('Commercial support', 'sitepress'); ?></a></p>
                                     
                                     </div>
@@ -53,7 +53,7 @@ foreach ($active_languages as $lang) {
 <?php do_action('icl_dashboard_widget_content'); ?>
 
 <?php
-$rss = fetch_feed('http://wpml.org/feed/');
+$rss = fetch_feed('https://wpml.org/feed/');
 if (!is_wp_error($rss)) { // Checks that the object is created correctly
     // Figure out how many total items there are, but limit it to 2.
     $maxitems = $rss->get_item_quantity(2);

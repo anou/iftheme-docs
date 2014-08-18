@@ -1,11 +1,7 @@
 <?php
 define('WPML_ST_FOLDER', basename(WPML_ST_PATH));
 
-if((defined('WP_ADMIN') && defined('FORCE_SSL_ADMIN') && FORCE_SSL_ADMIN) || is_ssl()){
-    define('WPML_ST_URL', rtrim(str_replace('http://','https://', WP_PLUGIN_URL), '/') . '/' . WPML_ST_FOLDER );
-}else{
-    define('WPML_ST_URL', WP_PLUGIN_URL . '/' . WPML_ST_FOLDER );
-}
+define('WPML_ST_URL', plugins_url('', dirname(__FILE__)));
 
 define('ICL_STRING_TRANSLATION_NOT_TRANSLATED', 0);
 define('ICL_STRING_TRANSLATION_COMPLETE', 1);

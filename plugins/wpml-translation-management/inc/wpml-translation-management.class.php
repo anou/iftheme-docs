@@ -65,14 +65,14 @@ class WPML_Translation_Management{
     function _no_wpml_warning(){
         ?>
         <div class="message error"><p><?php printf(__('WPML Translation Management is enabled but not effective. It requires <a href="%s">WPML</a> in order to work.', 'wpml-translation-management'), 
-            'http://wpml.org/'); ?></p></div>
+            'https://wpml.org/'); ?></p></div>
         <?php
     }
     
     function _old_wpml_warning(){
         ?>
         <div class="message error"><p><?php printf(__('WPML Translation Management is enabled but not effective. It is not compatible with  <a href="%s">WPML</a> versions prior 2.0.5.', 'wpml-translation-management'), 
-            'http://wpml.org/'); ?></p></div>
+            'https://wpml.org/'); ?></p></div>
         <?php
     }    
     
@@ -81,6 +81,7 @@ class WPML_Translation_Management{
     }
     
     function _icl_hook_top_menu(){
+	    if(!defined('ICL_PLUGIN_PATH')) return;
     	$top_page = apply_filters('icl_menu_main_page', basename(ICL_PLUGIN_PATH).'/menu/languages.php');
         add_submenu_page($top_page, 
             __('Translation Management','wpml-translation-management'), 
@@ -89,9 +90,10 @@ class WPML_Translation_Management{
     }
     
     function menu(){
+	    if(!defined('ICL_PLUGIN_PATH')) return;
         global $sitepress, $iclTranslationManagement;
         
-        if (method_exists($sitepress, 'setup') && $sitepress->setup() && 1 < count($sitepress->get_active_languages())) {
+        if ($iclTranslationManagement && method_exists($sitepress, 'setup') && $sitepress->setup() && 1 < count($sitepress->get_active_languages())) {
             
             $current_translator = $iclTranslationManagement->get_current_translator();
             if(!empty($current_translator->language_pairs) || current_user_can('wpml_manage_translation_management')){
@@ -303,9 +305,11 @@ class WPML_Translation_Management{
 		global $pagenow;
 
 		//@since 3.1	Calls made only when in Translation Management pages
-		$allowed_pages = array(
-			'wpml-translation-management/menu/main.php',
-		);
+		$allowed_pages = array();
+		if(defined('WPML_TM_FOLDER')) {
+			$allowed_pages[] = WPML_TM_FOLDER . '/menu/main.php';
+		}
+
 		if(!isset($_REQUEST['page']) || !in_array($_REQUEST['page'], $allowed_pages)) {
 			return;
 		}
