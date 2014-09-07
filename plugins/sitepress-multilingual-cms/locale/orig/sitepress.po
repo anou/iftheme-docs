@@ -1812,7 +1812,7 @@ msgstr ""
 msgid "Clear language information and repopulate languages"
 msgstr ""
 
-msgid "This operation will remove WPML's language table and recreate it. You should use it if you just installed WPML and you're not seeing a complete list of avaialble languages."
+msgid "This operation will remove WPML's language table and recreate it. You should use it if you just installed WPML and you're not seeing a complete list of available languages."
 msgstr ""
 
 msgid "Remove ghost entries from the translation tables"
@@ -2097,7 +2097,7 @@ msgstr ""
 msgid "Fix languages tables"
 msgstr ""
 
-msgid "This warning will disappear once this issue is issue is fixed."
+msgid "This warning will disappear once this issue is fixed."
 msgstr ""
 
 msgid "- (No translators available - please %sprovide more information about your site%s)"

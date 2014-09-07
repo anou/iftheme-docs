@@ -637,39 +637,53 @@ class iclNavMenu{
 
         return $val;
     }
-    
-    function wp_nav_menu_args_filter($args){
-        global $sitepress;
-        
-        if ( ! $args['menu'] ){                   
-            $locations = get_nav_menu_locations();
-            if(isset( $args['theme_location'] ) && isset($locations[$args['theme_location']])){
-                $args['menu'] = icl_object_id($locations[$args['theme_location']], 'nav_menu');    
-            }
-        }; 
-        
-        if ( ! $args['menu'] ){            
-            remove_filter('theme_mod_nav_menu_locations', array($this, 'theme_mod_nav_menu_locations'));
-            $locations = get_nav_menu_locations();
-            if(isset( $args['theme_location'] ) && isset($locations[$args['theme_location']])){
-                $args['menu'] = icl_object_id($locations[$args['theme_location']], 'nav_menu');    
-            }            
-            add_filter('theme_mod_nav_menu_locations', array($this, 'theme_mod_nav_menu_locations'));    
-        }
 
-        if ( $args['menu'] ){            
+	function wp_nav_menu_args_filter( $args ) {
+		global $sitepress;
+
+		if ( ! $args[ 'menu' ] ) {
+			$locations = get_nav_menu_locations();
+			if ( isset( $args[ 'theme_location' ] ) && isset( $locations[ $args[ 'theme_location' ] ] ) ) {
+				$args[ 'menu' ] = icl_object_id( $locations[ $args[ 'theme_location' ] ], 'nav_menu' );
+			}
+		};
+
+		if ( ! $args[ 'menu' ] ) {
+			remove_filter( 'theme_mod_nav_menu_locations', array( $this, 'theme_mod_nav_menu_locations' ) );
+			$locations = get_nav_menu_locations();
+			if ( isset( $args[ 'theme_location' ] ) && isset( $locations[ $args[ 'theme_location' ] ] ) ) {
+				$args[ 'menu' ] = icl_object_id( $locations[ $args[ 'theme_location' ] ], 'nav_menu' );
+			}
+			add_filter( 'theme_mod_nav_menu_locations', array( $this, 'theme_mod_nav_menu_locations' ) );
+		}
+
+		if ( $args[ 'menu_id' ] ) {
+			$args[ 'menu' ] = wp_get_nav_menu_object( icl_object_id( $args[ 'menu_id' ], 'nav_menu' ) );
+		}
+
+		if ( $args[ 'menu' ] ) {
 			$debug_backtrace = $sitepress->get_backtrace( 5 ); //Ignore objects and limit to first 5 stack frames, since 4 is the highest index we use
-            if($debug_backtrace[4]['function']=='widget'){
-                if(is_integer($args['menu'])){
-                    $args['menu'] = wp_get_nav_menu_object( icl_object_id($args['menu'], 'nav_menu') );    
-                }elseif(!empty($args['menu']->term_id)){
-                    $args['menu'] = wp_get_nav_menu_object( icl_object_id($args['menu']->term_id, 'nav_menu') );
-                }
-            }
-        }
-        
-        return $args;
-    }
+			if ( $debug_backtrace[ 4 ][ 'function' ] == 'widget' ) {
+				if ( is_integer( $args[ 'menu' ] ) ) {
+					$args[ 'menu' ] = wp_get_nav_menu_object( icl_object_id( $args[ 'menu' ], 'nav_menu' ) );
+				} elseif ( ! empty( $args[ 'menu' ]->term_id ) ) {
+					$args[ 'menu' ] = wp_get_nav_menu_object( icl_object_id( $args[ 'menu' ]->term_id, 'nav_menu' ) );
+				}
+			} elseif ( is_string( $args[ 'menu' ] ) ) {
+				$term = get_term_by( 'slug', $args[ 'menu' ], 'nav_menu' );
+				if ( $term ) {
+					$args[ 'menu' ] = wp_get_nav_menu_object( icl_object_id( $term->term_id, 'nav_menu' ) );
+				} else {
+					$term = get_term_by( 'name', $args[ 'menu' ], 'nav_menu' );
+					if ( $term ) {
+						$args[ 'menu' ] = wp_get_nav_menu_object( icl_object_id( $term->term_id, 'nav_menu' ) );
+					}
+				}
+			}
+		}
+
+		return $args;
+	}
     
     function wp_nav_menu_items_filter($items){
         $items = preg_replace(

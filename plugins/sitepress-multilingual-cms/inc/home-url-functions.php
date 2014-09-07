@@ -168,6 +168,11 @@ function wpml_home_url_setup_root_page()
 
 }
 
+/**
+ * @param WP_Query $q
+ *
+ * @return mixed
+ */
 function wpml_home_url_parse_query( $q )
 {
 	if (!$q->is_main_query()) {
@@ -175,7 +180,9 @@ function wpml_home_url_parse_query( $q )
 	}
 	global $sitepress;
 
-	$parts = parse_url( get_site_url() );
+	$site_url = get_site_url();
+
+	$parts = parse_url( $site_url );
 
 	if ( !isset( $parts[ 'path' ] ) ) {
 		$parts[ 'path' ] = '';
@@ -183,6 +190,13 @@ function wpml_home_url_parse_query( $q )
 
 	// fix for root page when it has any parameters
 	$server_request_parts = explode('?', $_SERVER[ 'REQUEST_URI' ]);
+
+	if ( in_array( 'preview=true', $server_request_parts ) ) {
+		//previews of the root have to get redirected to the url including the actual id of the root page
+		$root_page_id = $sitepress->ROOT_URL_PAGE_ID;
+		wp_redirect( $site_url .'/?page_id=' . $root_page_id . '&preview=true', 301 );
+		exit();
+	}
 	
 	$server_request_without_get = $server_request_parts[0];
 	
@@ -201,24 +215,53 @@ function wpml_home_url_parse_query( $q )
 	return $q;
 }
 
-function wpml_home_url_redirect_home()
-{
+function wpml_home_url_redirect_home() {
 	global $sitepress_settings;
 
 	$queried_object = get_queried_object();
 	$home           = get_site_url();
 	$parts          = parse_url( $home );
 
-	if ( !isset( $parts[ 'path' ] ) ) {
+	if ( ! isset( $parts[ 'path' ] ) ) {
 		$parts[ 'path' ] = '';
 	}
 
 	$request_url = $_SERVER[ 'REQUEST_URI' ];
-	if ( $queried_object && isset( $queried_object->ID ) && $queried_object->ID == $sitepress_settings[ 'urls' ][ 'root_page' ] && trim( $parts[ 'path' ], '/' ) != trim( $request_url, '/' ) ) {
+
+	//turn request into array for editing
+	$request_url_array = explode( '/', $request_url );
+
+	//unset all empty parts for more robustness
+	foreach ( (array) $request_url_array as $key => $request_part ) {
+		if ( empty( $request_url_array[ $key ] ) || $request_url_array[ $key ] == "" ) {
+			unset( $request_url_array[ $key ] );
+		}
+	}
+
+	//reorder array to account for now missing indexes
+	$request_url_array = array_values( $request_url_array );
+
+	//get the position of the root slug in the request
+	$cutoff = array_search( basename( get_permalink( $sitepress_settings[ 'urls' ][ 'root_page' ] ) ), $request_url_array );
+	if ( $cutoff ) {
+		for ( $i = 0; $i <= $cutoff; $i ++ ) {
+			//remove everything before the root slug and the root slug since it does not get redirected
+			//but can obviously be found at the root of the wp-site
+			unset( $request_url_array[ $i ] );
+		}
+		//redirect home and add all get parameters
+		$request_stub = implode( '/', $request_url_array );
+		wp_redirect( $home . '/' . $request_stub, 301 );
+	}
+
+	//if we did not find the root slug we just get the remaining attributes behind it if there are any
+	$request_stub = implode( '/', $request_url_array );
+
+	if ( ! strpos( $request_stub, 'preview' ) && $queried_object && isset( $queried_object->ID ) && $queried_object->ID == $sitepress_settings[ 'urls' ][ 'root_page' ] && trim( $parts[ 'path' ], '/' ) != trim( $request_url, '/' ) ) {
+		//if we did not have a preview get parameter we just redirect to plain home
 		wp_redirect( $home, 301 );
 		exit;
 	}
-
 }
 
 function wpml_home_url_template_include($template) {

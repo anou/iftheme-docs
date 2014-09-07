@@ -49,10 +49,10 @@ class WPSEO_XML_Sitemaps_Filter {
         }
 
         // Triggered when sitemap or XSL is requested
-        if ( ( !empty( $_REQUEST['sitemap'] )
-                || basename( $_SERVER['REQUEST_URI'], 'sitemap_index.xml' ) !== false
-                || strpos( basename( $_SERVER['REQUEST_URI'], '-sitemap.xml' ) ) !== false
-                || basename( $_SERVER['REQUEST_URI'] ) == 'main-sitemap.xsl' ) ) {
+        if ( !empty( $_REQUEST['sitemap'] )
+					|| basename( $_SERVER['REQUEST_URI'] ) == 'sitemap_index.xml'
+					|| strpos( basename( $_SERVER['REQUEST_URI'] ), '-sitemap.xml' ) !== false
+					|| basename( $_SERVER['REQUEST_URI'] ) == 'main-sitemap.xsl' ) {
             if ( $this->_is_per_domain
                     && $sitepress->get_default_language() != $sitepress->get_current_language()){
                 add_action( 'init', array($this, 'init') );

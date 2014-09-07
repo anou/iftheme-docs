@@ -241,10 +241,7 @@ function icl_object_id($element_id, $element_type='post', $return_original_if_mi
     $element_types = array_merge($post_types, $taxonomies);
     $element_types[] = 'comment';
 
-    if (!in_array($element_type, $element_types)) {
-        trigger_error(sprintf(__('Invalid object kind: %s', 'sitepress'), $element_type), E_USER_NOTICE);
-        return null;
-    } elseif (!$element_id) {
+    if (!$element_id) {
         trigger_error(__('Invalid object id', 'sitepress'), E_USER_NOTICE);
         return null;
     }
@@ -633,6 +630,9 @@ function icl_template_paged($template) {
    // get template slug for custom page chosen as front page
    $template_slug = get_page_template_slug( get_option('page_on_front') );
    
+   // "The function get_page_template_slug() returns an empty string when the value of '_wp_page_template' is either empty or 'default'."
+   if ( !$template_slug ) return $template;
+   
    $templates = array();
    
    $templates[] = $template_slug;
@@ -644,3 +644,12 @@ function icl_template_paged($template) {
 
 // apply this filter only on non default language
 add_filter('template_include', 'icl_template_paged');
+
+function icl_language_selector() {
+	global $sitepress;
+	return $sitepress->get_language_selector();
+}
+
+function icl_language_selector_footer() {
+	return SitePressLanguageSwitcher::get_language_selector_footer();
+}

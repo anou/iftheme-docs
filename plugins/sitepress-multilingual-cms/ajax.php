@@ -75,11 +75,14 @@ switch($_REQUEST['icl_ajx_action']){
 
                    $tmp = term_exists($tr_cat, 'category');
                    if(!$tmp){
-                       $tmp = wp_insert_term($tr_cat, 'category');
-											 if (is_wp_error($tmp)) {
-												 trigger_error($tmp->get_error_message(), E_USER_ERROR);
-												 continue;
-											 }
+						 $tmp = wp_insert_term($tr_cat, 'category');
+						 if (is_wp_error($tmp)) {
+							trigger_error($tmp->get_error_message(), E_USER_ERROR);
+							continue;
+						}
+						//during installation sitepress filters are disabled
+						//we have to manually add entries to icl_translations table
+						$sitepress->create_term( $tmp['term_id'], $tmp['term_taxonomy_id'] );
                    }
                    $default_categories[$lang['code']] = $tmp['term_taxonomy_id'];
                 }
@@ -228,8 +231,8 @@ switch($_REQUEST['icl_ajx_action']){
         $iclsettings['icl_lso_display_lang'] = @intval($_POST['icl_lso_display_lang']);
 
         if(!$this->get_setting('setup_complete')){
-            $iclsettings['setup_wizard_step'] = 3;
-            $iclsettings['setup_complete'] = 1;
+            $iclsettings['setup_wizard_step'] = 4;
+            //$iclsettings['setup_complete'] = 1;
             if(isset($iclsettings['setup_reset'])) unset($iclsettings['setup_reset']);
 
             $active_languages = $this->get_active_languages();
@@ -291,6 +294,58 @@ switch($_REQUEST['icl_ajx_action']){
             echo 1;
         }
         break;
+    
+    case 'registration_form_submit':
+        
+        $ret['error'] = '';
+        
+        if($_POST['button_action'] == 'later'){
+            
+            //success
+            $ret['success'] = sprintf(__('WPML will work on your site, but you will not receive updates. WPML updates are essential for keeping your site running smoothly and secure. To receive automated updates, you need to complete the registration, in the %splugins admin%s page.', 'sitepress'), 
+                '<a href="' . admin_url('plugin-install.php?tab=commercial') . '">', '</a>');
+            
+            
+        }elseif($_POST['button_action'] == 'finish'){
+            
+            $iclsettings['setup_complete'] = 1;        
+            
+        }else{
+        
+            if(empty($_POST['installer_site_key'])){
+                $ret['error'] = __('Missing site key.');
+            }else{
+                
+                $iclsettings['site_key'] = $_POST['installer_site_key'];
+                
+                if(class_exists('WP_Installer')){
+                    $args['repository_id'] = 'wpml';
+                    $args['nonce'] = wp_create_nonce('save_site_key_' . $args['repository_id']) ;
+                    $args['site_key'] = $_POST['installer_site_key'];
+                    $args['return']   = 1;
+                    $r = WP_Installer()->save_site_key($args);    
+                    if(!empty($r['error'])){
+                        $ret['error'] = $r['error'];
+                        
+                    }else{
+                        
+                        //success
+                        $ret['success'] = __('Thank you for registering WPML on this site. You will receive automatic updates when new versions are available.', 'sitepress');
+                    }
+                }
+                
+            }
+        }
+        
+        if(!empty($iclsettings)){
+            $this->save_settings($iclsettings);    
+        }
+        
+        
+        echo json_encode($ret);
+    
+        break;
+    
     case 'icl_admin_language_options':
         $iclsettings['admin_default_language'] = $_POST['icl_admin_default_language'];
         $this->save_settings($iclsettings);
@@ -877,25 +932,37 @@ switch($_REQUEST['icl_ajx_action']){
         }
         echo '1|';
         break;
-    case 'copy_from_original':
-        $post_id = $wpdb->get_var($wpdb->prepare("SELECT element_id FROM {$wpdb->prefix}icl_translations WHERE trid=%d AND language_code=%s", $_POST['trid'], $_POST['lang']));
-        $post = get_post($post_id);
-
-        $error = false;
-        $json  = array();
-        if(!empty($post)){
-            if($_POST['editor_type'] == 'rich'){
-                $json['body'] = htmlspecialchars_decode(wp_richedit_pre($post->post_content));
-            }else{
-                $json['body'] = htmlspecialchars_decode(wp_htmledit_pre($post->post_content));
-            }
-
-        }else{
-            $json['error'] = __('Post not found', 'sitepress');
-        }
-        do_action('icl_copy_from_original', $post_id);
-        echo json_encode($json);
-        break;
+	case 'copy_from_original':
+		/*
+		 * apply filtering as to add further elements
+		 * filters will have to like as such
+		 * add_filter('wpml_copy_from_original_fields', 'my_copy_from_original_fields');
+		 *
+		 * function my_copy_from_original_fields( $elements ) {
+		 *  $custom_field = 'editor1';
+		 *  $elements[ 'customfields' ][ $custom_fields ] = array(
+		 *    'editor_name' => 'custom_editor_1',
+		 *    'editor_type' => 'editor',
+		 *    'value'       => 'test'
+		 *  );
+		 *
+		 *  $custom_field = 'editor2';
+		 *  $elements[ 'customfields' ][ $custom_fields ] = array(
+		 *    'editor_name' => 'textbox1',
+		 *    'editor_type' => 'text',
+		 *    'value'       => 'testtext'
+		 *  );
+		 *
+		 *  return $elements;
+		 * }
+		 * This filter would result in custom_editor_1 beeing populated with the value "test"
+		 * and the textfield with id #textbox1 to be populated with "testtext".
+		 * editor type is always either text when populating general fields or editor when populating
+		 * a wp editor. The editor id can be either judged from the arguments used in the wp_editor() call
+		 * or from looking at the tinyMCE.Editors object that the custom post type's editor sends to the browser.
+		 */
+		echo json_encode( wpml_copy_from_original_fields() );
+		break;
     case 'save_user_preferences':
         $user_preferences = $this->get_user_preferences();
 		$this->set_user_preferences(array_merge_recursive( $user_preferences, $_POST['user_preferences']));
@@ -951,7 +1018,7 @@ switch($_REQUEST['icl_ajx_action']){
 		$accepted_languages = explode(';', $http_accept_language);
 		$default_accepted_language = $accepted_languages[0];
 		$default_accepted_language_codes = explode(',', $default_accepted_language);
-		echo strtolower($default_accepted_language_codes[0]);
+		echo mb_strtolower($default_accepted_language_codes[0]);
         break;
 	case 'connect_translations':
 		$new_trid = $_POST['new_trid'];
@@ -1011,4 +1078,69 @@ switch($_REQUEST['icl_ajx_action']){
 
 if (!isset($_POST['unit-test'])) {
     exit;
+}
+
+/**
+ * wpml_copy_from_original_fields
+ * Gets the content of a post, its excerpt as well as its title and returns it as an array
+ *
+ * @param
+ *
+ * @return array containing all the fields information
+ */
+function wpml_copy_from_original_fields() {
+	global $wpdb;
+	$post_id = $wpdb->get_var( $wpdb->prepare( "SELECT element_id FROM {$wpdb->prefix}icl_translations WHERE trid=%d AND language_code=%s", $_POST[ 'trid' ], $_POST[ 'lang' ] ) );
+	$post    = get_post( $post_id );
+
+	$fields_to_copy            = array( 'content' => 'post_content' );
+	$fields_to_copy[ 'title' ] = 'post_title';
+
+	$fields_contents = array();
+	if ( ! empty( $post ) ) {
+		foreach ( $fields_to_copy as $editor_key => $editor_field ) { //loops over the three fields to be inserted into the array
+			if ( $editor_key == 'content' || $editor_key == 'excerpt' ) { //
+				if ( $editor_key == 'content' ) {
+					$editor_var = $_POST[ 'content_type' ]; //these variables are supplied by a javascript call in scripts.js icl_copy_from_original(lang, trid)
+				} elseif ( $editor_key == 'excerpt' ) {
+					$editor_var = $_POST[ 'excerpt_type' ];
+				}
+				if (isset($editor_var) && isset($_POST[ $editor_var ]) && $_POST[ $editor_var ] == 'rich' ) {
+					$fields_contents[ $editor_key ] = htmlspecialchars_decode( wp_richedit_pre( $post->$editor_field ) );
+				} else {
+					$fields_contents[ $editor_key ] = htmlspecialchars_decode( wp_htmledit_pre( $post->$editor_field ) );
+				}
+			} elseif ( $editor_key == 'title' ) {
+				$fields_contents[ $editor_key ] = strip_tags( $post->$editor_field );
+			}
+		}
+		$fields_contents[ 'customfields' ] = apply_filters( 'wpml_copy_from_original_custom_fields', wpml_copy_from_original_custom_fields( $post ) );
+	} else {
+		$fields_contents[ 'error' ] = __( 'Post not found', 'sitepress' );
+	}
+	do_action( 'icl_copy_from_original', $post_id );
+
+	return $fields_contents;
+}
+
+/**
+ * wpml_copy_from_original_custom_fields
+ * Gets the content of a custom posts custom field , its excerpt as well as its title and returns it as an array
+ *
+ * @param  (type) about this param
+ *
+ * @return array (type)
+ */
+
+function wpml_copy_from_original_custom_fields( $post ) {
+
+	$elements                 = array();
+	$elements [ 'post_type' ] = $post->post_type;
+	$elements[ 'excerpt' ]    = array(
+		'editor_name' => 'excerpt',
+		'editor_type' => 'text',
+		'value'       => $post->post_excerpt
+	);
+
+	return $elements;
 }

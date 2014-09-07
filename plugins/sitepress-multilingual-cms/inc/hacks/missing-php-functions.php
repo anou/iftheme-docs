@@ -164,7 +164,7 @@ if ( ! function_exists( 'wpml_is_ajax' ) ) {
 			return true;
 		}
 
-		return ( isset( $_SERVER[ 'HTTP_X_REQUESTED_WITH' ] ) && strtolower( $_SERVER[ 'HTTP_X_REQUESTED_WITH' ] ) == 'xmlhttprequest' ) ? true : false;
+		return ( isset( $_SERVER[ 'HTTP_X_REQUESTED_WITH' ] ) && mb_strtolower( $_SERVER[ 'HTTP_X_REQUESTED_WITH' ] ) == 'xmlhttprequest' ) ? true : false;
 	}
 }
 
@@ -185,7 +185,7 @@ if ( ! function_exists( 'is_ajax' ) ) {
 			return true;
 		}
 
-		return ( isset( $_SERVER[ 'HTTP_X_REQUESTED_WITH' ] ) && strtolower( $_SERVER[ 'HTTP_X_REQUESTED_WITH' ] ) == 'xmlhttprequest' ) ? true : false;
+		return ( isset( $_SERVER[ 'HTTP_X_REQUESTED_WITH' ] ) && mb_strtolower( $_SERVER[ 'HTTP_X_REQUESTED_WITH' ] ) == 'xmlhttprequest' ) ? true : false;
 	}
 }
 

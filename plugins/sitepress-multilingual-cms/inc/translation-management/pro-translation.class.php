@@ -1498,7 +1498,7 @@ class ICL_Pro_Translation{
 
     function unparse_url($parsed){
         if (! is_array($parsed)) return false;
-        $uri = isset($parsed['scheme']) ? $parsed['scheme'].':'.((strtolower($parsed['scheme']) == 'mailto') ? '':'//'): '';
+        $uri = isset($parsed['scheme']) ? $parsed['scheme'].':'.((mb_strtolower($parsed['scheme']) == 'mailto') ? '':'//'): '';
         $uri .= isset($parsed['user']) ? $parsed['user'].($parsed['pass']? ':'.$parsed['pass']:'').'@':'';
         $uri .= isset($parsed['host']) ? $parsed['host'] : '';
         $uri .= isset($parsed['port']) ? ':'.$parsed['port'] : '';
@@ -1854,40 +1854,44 @@ class ICL_Pro_Translation{
                 $words += count(preg_split(
                     '/[\s\/]+/', strip_tags($data->post_content), 0, PREG_SPLIT_NO_EMPTY));
             }
-        }        
-        return (int)$words;
-    } 
-    
-    public static function estimate_custom_field_word_count($post_id, $lang_code) {
-        global $sitepress_settings;
-        $words = 0;
-        $custom_fields = array();
-        foreach((array)$sitepress_settings['translation-management']['custom_fields_translation'] as $cf => $op){
-            if ($op == 2) {
-                $custom_fields[] = $cf;
-            }
-        }
-        foreach($custom_fields as $cf){
-            $custom_fields_value = get_post_meta($post_id, $cf);
-            if ($custom_fields_value && is_scalar($custom_fields_value)) {
-                if(in_array($lang_code, self::$__asian_languages)){
-                    $words += strlen(strip_tags($custom_fields_value)) / 6;
-                } else {
-                    $words += count(preg_split(
-                        '/[\s\/]+/', strip_tags($custom_fields_value), 0, 
-                        PREG_SPLIT_NO_EMPTY));
-                }
-            } else {
-				foreach($custom_fields_value as $custom_fields_value_item) {
-					if ($custom_fields_value_item && is_scalar($custom_fields_value_item)) {
-						 if(in_array($lang_code, self::$__asian_languages)){
-							 $words += strlen(strip_tags($custom_fields_value_item)) / 6;
-						 } else {
-							 $words += count(preg_split(
-								 '/[\s\/]+/', strip_tags($custom_fields_value_item), 0,
-								 PREG_SPLIT_NO_EMPTY));
-						 }
-					 }
+		}
+
+		return (int) $words;
+	}
+
+	public static function estimate_custom_field_word_count( $post_id, $lang_code ) {
+		global $sitepress;
+
+		$tm_settings = $sitepress->get_setting('translation-management');
+		$tm_cf_settings = ($tm_settings && isset($tm_settings['custom_fields_translation']) ? $tm_settings['custom_fields_translation'] : false);
+		if(!$tm_cf_settings) {
+			$tm_cf_settings = array();
+		}
+
+		$words         = 0;
+		$custom_fields = array();
+		foreach ( $tm_cf_settings as $cf => $op ) {
+			if ( $op == 2 ) {
+				$custom_fields[ ] = $cf;
+			}
+		}
+		foreach ( $custom_fields as $cf ) {
+			$custom_fields_value = get_post_meta( $post_id, $cf );
+			if ( $custom_fields_value && is_scalar( $custom_fields_value ) ) {
+				if ( in_array( $lang_code, self::$__asian_languages ) ) {
+					$words += strlen( strip_tags( $custom_fields_value ) ) / 6;
+				} else {
+					$words += count( preg_split( '/[\s\/]+/', strip_tags( $custom_fields_value ), 0, PREG_SPLIT_NO_EMPTY ) );
+				}
+			} else {
+				foreach ( $custom_fields_value as $custom_fields_value_item ) {
+					if ( $custom_fields_value_item && is_scalar( $custom_fields_value_item ) ) {
+						if ( in_array( $lang_code, self::$__asian_languages ) ) {
+							$words += strlen( strip_tags( $custom_fields_value_item ) ) / 6;
+						} else {
+							$words += count( preg_split( '/[\s\/]+/', strip_tags( $custom_fields_value_item ), 0, PREG_SPLIT_NO_EMPTY ) );
+						}
+					}
 				}
 			}
         }        

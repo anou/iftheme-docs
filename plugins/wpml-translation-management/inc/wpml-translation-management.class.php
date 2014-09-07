@@ -11,7 +11,9 @@ class WPML_Translation_Management{
     }
     
     function init(){
-        
+
+	      global $sitepress;
+
         $this->plugin_localization();
         
         // Check if WPML is active. If not display warning message and not load Sticky links
@@ -19,7 +21,10 @@ class WPML_Translation_Management{
             if ( !function_exists('is_multisite') || !is_multisite() ) {
                 add_action('admin_notices', array($this, '_no_wpml_warning'));
             }
-            return false;            
+            return false;
+        } elseif (!$sitepress->get_setting( 'setup_complete' )){
+	        add_action('admin_notices', array($this, '_wpml_not_installed_warning'));
+	        return false;
         }elseif(version_compare(ICL_SITEPRESS_VERSION, '2.0.5', '<')){
             add_action('admin_notices', array($this, '_old_wpml_warning'));
             return false;            
@@ -68,6 +73,11 @@ class WPML_Translation_Management{
             'https://wpml.org/'); ?></p></div>
         <?php
     }
+		function _wpml_not_installed_warning(){
+			?>
+			<div class="message error"><p><?php printf(__('WPML Translation Management is enabled but not effective. Please finish the installation of WPML first.', 'wpml-translation-management') ); ?></p></div>
+		<?php
+		}
     
     function _old_wpml_warning(){
         ?>

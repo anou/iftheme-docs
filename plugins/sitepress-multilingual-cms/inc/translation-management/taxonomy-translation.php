@@ -105,34 +105,36 @@ class WPML_Taxonomy_Translation{
             $joins[]    = " LEFT JOIN {$wpdb->prefix}icl_translations t{$lcode_alias} ON t{$lcode_alias}.trid = t.trid AND t{$lcode_alias}.language_code='{$language['code']}'";
             $selects[]  = "t{$lcode_alias}.element_id AS element_id_{$lcode_alias}";
         }
-        $joins      = join(' ', $joins);
-        $selects    = join(', ', $selects);
-        if($this->status == WPML_TT_TAXONOMIES_NOT_TRANSLATED){
-            $res = $wpdb->get_results($wpdb->prepare("
-                SELECT t.element_id, {$selects}
-                FROM {$wpdb->prefix}icl_translations t
-                    {$joins}
-                WHERE t.element_type = %s AND t.language_code = %s
-            ", 'tax_' . $this->taxonomy, $default_language ));
-            
-            foreach($res as $row){
-                $translations = 0;
-                foreach($row as $r){
-                    if($r > 0 ) $translations++;
-                }
-                if($translations == count($this->selected_languages) + 1){
-                    $excludes[] = $row->element_id;
-                }
-            }
-            
-            if(!empty($excludes)){                
-                $get_terms_args['exclude'] = $wpdb->get_col($wpdb->prepare("SELECT term_id FROM {$wpdb->term_taxonomy} WHERE taxonomy=%s AND term_taxonomy_id IN (" .  join(',', $excludes) . ")", $this->taxonomy));
-            }
-            
-        }
-                
 
-        // get_terms args        
+		    if ( isset( $joins ) && isset( $selects ) ) {
+			    $joins   = join( ' ', $joins );
+			    $selects = join( ', ', $selects );
+			    if ( $this->status == WPML_TT_TAXONOMIES_NOT_TRANSLATED ) {
+				    $res = $wpdb->get_results( $wpdb->prepare( "
+		                SELECT t.element_id, {$selects}
+		                FROM {$wpdb->prefix}icl_translations t
+		                    {$joins}
+		                WHERE t.element_type = %s AND t.language_code = %s
+		            ", 'tax_' . $this->taxonomy, $default_language ) );
+
+				    foreach ( $res as $row ) {
+					    $translations = 0;
+					    foreach ( $row as $r ) {
+						    if ( $r > 0 ) {
+							    $translations ++;
+						    }
+					    }
+					    if ( $translations == count( $this->selected_languages ) + 1 ) {
+						    $excludes[ ] = $row->element_id;
+					    }
+				    }
+			    }
+		    }
+		    if ( ! empty( $excludes ) ) {
+			    $get_terms_args[ 'exclude' ] = $wpdb->get_col( $wpdb->prepare( "SELECT term_id FROM {$wpdb->term_taxonomy} WHERE taxonomy=%s AND term_taxonomy_id IN (" . join( ',', $excludes ) . ")", $this->taxonomy ) );
+		    }
+
+	    // get_terms args
         $get_terms_args['hide_empty'] = false;
         $get_terms_args['orderby'] = 'name';
         if(!empty($this->args['search'])){
@@ -601,17 +603,17 @@ class WPML_Taxonomy_Translation{
                 $out .= '<input type="hidden" name="post" value="' . $object_type . '" />';
                 $out .= '<input type="hidden" name="taxonomy" value="' . $taxonomy . '" />';
                 $out .= sprintf(__('Some translated %s have different %s assignments.', 'sitepress'), 
-                    '<strong>' . strtolower($wp_post_types[$object_type]->labels->name) . '</strong>',
-                    '<strong>' . strtolower($wp_taxonomies[$taxonomy]->labels->name) . '</strong>');
+                    '<strong>' . mb_strtolower($wp_post_types[$object_type]->labels->name) . '</strong>',
+                    '<strong>' . mb_strtolower($wp_taxonomies[$taxonomy]->labels->name) . '</strong>');
                 $out .= '&nbsp;<a class="submit button-secondary" href="#">' . sprintf(__('Update %s for all translated %s', 'sitepress'), 
-                    '<strong>' . strtolower($wp_taxonomies[$taxonomy]->labels->name) . '</strong>',
-                    '<strong>' . strtolower($wp_post_types[$object_type]->labels->name) . '</strong>') . '</a>' . 
+                    '<strong>' . mb_strtolower($wp_taxonomies[$taxonomy]->labels->name) . '</strong>',
+                    '<strong>' . mb_strtolower($wp_post_types[$object_type]->labels->name) . '</strong>') . '</a>' .
                     '&nbsp;<img src="'. ICL_PLUGIN_URL . '/res/img/ajax-loader.gif" alt="loading" height="16" width="16" class="wpml_tt_spinner" />';
                 $out .= "</form>";
             }else{
                 $out .= sprintf(__('All %s have the same %s assignments.', 'sitepress'), 
-                    '<strong>' . strtolower($wp_taxonomies[$taxonomy]->labels->name) . '</strong>', 
-                    '<strong>' . strtolower($wp_post_types[$object_type]->labels->name) . '</strong>');
+                    '<strong>' . mb_strtolower($wp_taxonomies[$taxonomy]->labels->name) . '</strong>',
+                    '<strong>' . mb_strtolower($wp_post_types[$object_type]->labels->name) . '</strong>');
             }
             $out .= "</div>";
             

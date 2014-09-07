@@ -395,10 +395,14 @@ function icl_sitepress_activate() {
 	//Set new caps for all administrator role
 	icl_enable_capabilities();
 
+
+    //Set cron job to update WPML config index file from CDN
+    wp_schedule_event( time(), 'daily', 'update_wpml_config_index' );
 }
 
 function icl_sitepress_deactivate() {
 	icl_disable_capabilities();
+        wp_clear_scheduled_hook( 'update_wpml_config_index' );
 	require_once ICL_PLUGIN_PATH . '/inc/cache.php';
 	icl_cache_clear();
 }
@@ -457,7 +461,7 @@ if ( isset( $_GET[ 'activate' ] ) ) {
 	global $wpdb;
 	if ( isset( $wpdb ) ) {
 		$table_name = $wpdb->prefix . 'icl_languages';
-		if ( strtolower( $wpdb->get_var( "SHOW TABLES LIKE '{$table_name}'" ) ) != strtolower( $table_name ) ) {
+		if ( mb_strtolower( $wpdb->get_var( "SHOW TABLES LIKE '{$table_name}'" ) ) != mb_strtolower( $table_name ) ) {
 			add_action( 'admin_notices', 'icl_cant_create_table' );
 			function icl_cant_create_table() {
 				echo '<div class="error"><ul><li><strong>';

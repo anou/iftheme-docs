@@ -836,7 +836,7 @@ echo '</textarea>';
             <label><input type="checkbox" onchange="if(jQuery(this).prop('checked')){jQuery('#icl_fix_languages').prop('disabled', false);}else{jQuery('#icl_fix_languages').prop('disabled', true);}">
                 &nbsp;<?php _e("This operation will reset WPML's language tables and reinstall it. Any custom languages that you added will be removed.", 'sitepress') ?></label><br /><br />
 			<input disabled="disabled" id="icl_fix_languages" type="button" class="button-secondary" value="<?php _e( 'Clear language information and repopulate languages', 'sitepress' ) ?>"/><br/><br />
-			<small style="margin-left:10px;"><?php _e( "This operation will remove WPML's language table and recreate it. You should use it if you just installed WPML and you're not seeing a complete list of avaialble languages.", 'sitepress' ) ?></small>
+			<small style="margin-left:10px;"><?php _e( "This operation will remove WPML's language table and recreate it. You should use it if you just installed WPML and you're not seeing a complete list of available languages.", 'sitepress' ) ?></small>
             <br /><br />
 		</p>
 	<?php } ?>
@@ -857,7 +857,7 @@ echo '</textarea>';
 			<span id="icl_cms_id_fix_prgs"
 				  style="display: none;"><?php printf( __( 'fixing %s/%d', 'sitepress' ), '<span id="icl_cms_id_fix_prgs_cnt">0</span>', $wpdb->get_var( 
 									$wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}icl_translations t JOIN {$wpdb->prefix}icl_translation_status s ON t.translation_id=s.translation_id WHERE t.element_type LIKE %s AND t.source_language_code IS NOT NULL AND s.translation_service=%s",
-													array( like_escape('post_') . '%', 'icanlocalize' ) ) ) ) ?></span><br/>
+													array( wpml_like_escape('post_') . '%', 'icanlocalize' ) ) ) ) ?></span><br/>
 			<small
 				style="margin-left:10px;"><?php _e( "Updates translation in progress with new style identifiers for documents. The new identifiers depend on the document being translated and the languages so it's not possible to get out of sync when translations are being deleted locally.", 'sitepress' ) ?></small>
 		</p>
@@ -900,7 +900,7 @@ echo '</textarea>';
 		$translatable_posts = $sitepress->get_translatable_documents();
 		$res = $wpdb->get_col( 
 						$wpdb->prepare("SELECT DISTINCT element_type FROM {$wpdb->prefix}icl_translations WHERE element_type LIKE %s",
-										array( like_escape('post_') . '%' ) ) );
+										array( wpml_like_escape('post_') . '%' ) ) );
 		echo '<table class="widefat" style="width:300px;">';
 
 		foreach ( $res as $row ) {
@@ -950,7 +950,7 @@ echo '</textarea>';
 
 		$res = $wpdb->get_col( 
 						$wpdb->prepare("SELECT DISTINCT element_type FROM {$wpdb->prefix}icl_translations WHERE element_type LIKE %s",
-										array( like_escape('tax_') . '%' ) ) );
+										array( wpml_like_escape('tax_') . '%' ) ) );
 		echo '<table class="widefat" style="width:300px;">';
 
 		foreach ( $res as $row ) {

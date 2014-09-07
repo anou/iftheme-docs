@@ -56,3 +56,4 @@ define('ICL_PRO_TRANSLATION_PICKUP_XMLRPC', 0);
 define('ICL_PRO_TRANSLATION_PICKUP_POLLING', 1);
 
 define('ICL_WP_UPDATE_LOCALE', 'en_US');
+define('ICL_REMOTE_WPML_CONFIG_FILES_INDEX', 'https://wpmlorg.s3.amazonaws.com/');

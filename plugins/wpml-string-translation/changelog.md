@@ -1,3 +1,23 @@
+**2.0.9**
+
+* **Fix**
+	* the previously fixed dependency bug still didn't cover the case of String Translation being activate by users before WPML and was still causing an issue, making the plugin not visible. This should be now fixed.
+
+**2.0.8**
+
+* **Fix**
+	* Fixed dependency bug: plugin should avoid any functionality when WPML is not active
+
+**2.0.7**
+
+* **Improvements**
+	* New way to translate strings from plugins and themes: being on plugin/theme configuration screen, switch language using switcher in admin bar and provide translation.
+* **Compatibility**
+	* "woocommerce_email_from_name" and "woocommerce_email_from_address" are translatable now
+* **Fix**
+	* Removed PHP notices
+
+
 **2.0.6**
 
 * **Improvements**

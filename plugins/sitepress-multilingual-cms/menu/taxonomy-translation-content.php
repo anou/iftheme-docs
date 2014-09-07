@@ -33,9 +33,9 @@ global $wp_taxonomies;
 		<?php _e( 'Show', 'sitepress' ) ?>
 		<select name="status">
 			<option value="<?php echo WPML_TT_TAXONOMIES_NOT_TRANSLATED ?>" <?php if ($this->status == WPML_TT_TAXONOMIES_NOT_TRANSLATED):
-			?>selected="selected"<?php endif; ?> ><?php printf( __( 'untranslated %s', 'sitepress' ), strtolower( $this->taxonomy_obj->labels->name ) ) ?></option>
+			?>selected="selected"<?php endif; ?> ><?php printf( __( 'untranslated %s', 'sitepress' ), mb_strtolower( $this->taxonomy_obj->labels->name ) ) ?></option>
 			<option value="<?php echo WPML_TT_TAXONOMIES_ALL ?>" <?php if ($this->status == WPML_TT_TAXONOMIES_ALL):
-			?>selected="selected"<?php endif; ?>><?php printf( __( 'all %s', 'sitepress' ), strtolower( $this->taxonomy_obj->labels->name ) ) ?></option>
+			?>selected="selected"<?php endif; ?>><?php printf( __( 'all %s', 'sitepress' ), mb_strtolower( $this->taxonomy_obj->labels->name ) ) ?></option>
 		</select>
 		&nbsp;
 		<?php _e( 'in', 'sitepress' ); ?>

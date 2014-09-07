@@ -2,6 +2,7 @@
 class WPML_Config
 {
 	static $wpml_config_files = array();
+    static $active_plugins = array();
 
 	public static function load_config()
 	{
@@ -61,6 +62,9 @@ class WPML_Config
 			$plugins = get_site_option( 'active_sitewide_plugins' );
 			if ( !empty( $plugins ) ) {
 				foreach ( $plugins as $p => $dummy ) {
+                    if(!self::check_on_config_file($dummy)){
+                        continue;
+                    }
 					$plugin_slug = dirname( $p );
 					$config_file = WP_PLUGIN_DIR . '/' . $plugin_slug . '/wpml-config.xml';
 					if ( trim( $plugin_slug, '\/.' ) && file_exists( $config_file ) ) {
@@ -74,6 +78,10 @@ class WPML_Config
 		$plugins = get_option( 'active_plugins' );
 		if ( !empty( $plugins ) ) {
 			foreach ( $plugins as $p ) {
+                if(!self::check_on_config_file($p)){
+                    continue;
+                }
+
 				$plugin_slug = dirname( $p );
 				$config_file = WP_PLUGIN_DIR . '/' . $plugin_slug . '/wpml-config.xml';
 				if ( trim( $plugin_slug, '\/.' ) && file_exists( $config_file ) ) {
@@ -84,8 +92,13 @@ class WPML_Config
 
 		// Get the must-use plugins
 		$mu_plugins = wp_get_mu_plugins();
+
 		if ( !empty( $mu_plugins ) ) {
 			foreach ( $mu_plugins as $mup ) {
+                if(!self::check_on_config_file($mup)){
+                    continue;
+                }
+
 				$plugin_dir_name  = dirname( $mup );
 				$plugin_base_name = basename( $mup, ".php" );
 				$plugin_sub_dir   = $plugin_dir_name . '/' . $plugin_base_name;
@@ -99,8 +112,65 @@ class WPML_Config
 		return self::$wpml_config_files;
 	}
 
+    static function check_on_config_file( $name ){
+
+        if(empty(self::$active_plugins)){
+            if ( ! function_exists( 'get_plugins' ) ) {
+                require_once ABSPATH . 'wp-admin/includes/plugin.php';
+            }
+            self::$active_plugins = get_plugins();
+        }
+        $config_index_file_data = maybe_unserialize(get_option('wpml_config_index'));
+        $config_files_arr = maybe_unserialize(get_option('wpml_config_files_arr'));
+
+        if(!$config_index_file_data || !$config_files_arr){
+            return true;
+        }
+
+
+        if(isset(self::$active_plugins[$name])){
+            $plugin_info = self::$active_plugins[$name];
+            $plugin_slug = dirname( $name );
+            $name = $plugin_info['Name'];
+            $config_data = $config_index_file_data->plugins;
+            $config_files_arr = $config_files_arr->plugins;
+            $config_file = WP_PLUGIN_DIR . '/' . $plugin_slug . '/wpml-config.xml';
+            $type = 'plugin';
+
+        }else{
+            $config_data = $config_index_file_data->themes;
+            $config_files_arr = $config_files_arr->themes;
+            $config_file = get_template_directory() . '/wpml-config.xml';
+            $type = 'theme';
+        }
+
+        foreach($config_data as $item){
+            if($name == $item->name && isset($config_files_arr[$item->name])){
+                if($item->override_local || !file_exists( $config_file )){
+                    end(self::$wpml_config_files);
+                    $key = key(self::$wpml_config_files)+1;
+                    self::$wpml_config_files[$key] = new stdClass();
+                    self::$wpml_config_files[$key]->config = icl_xml2array($config_files_arr[$item->name]);
+                    self::$wpml_config_files[$key]->type = $type;
+                    self::$wpml_config_files[$key]->admin_text_context = basename( dirname( $config_file ) );;
+                    return false;
+                }else{
+                    return true;
+                }
+            }
+        }
+
+        return true;
+
+    }
+
 	static function load_theme_wpml_config()
 	{
+        $theme_data = wp_get_theme();
+        if(!self::check_on_config_file($theme_data->get('Name'))){
+            return self::$wpml_config_files;
+        }
+
 		if ( get_template_directory() != get_stylesheet_directory() ) {
 			$config_file = get_stylesheet_directory() . '/wpml-config.xml';
 			if ( file_exists( $config_file ) ) {
@@ -129,7 +199,13 @@ class WPML_Config
 			);
 
 			foreach ( self::$wpml_config_files as $file ) {
+                if(is_object($file)){
+                    $config = $file->config;
+                    $type = $file->type;
+                    $admin_text_context = $file->admin_text_context;
+                }else{
 				$config = icl_xml2array( file_get_contents( $file ) );
+                }
 
 				if ( isset( $config[ 'wpml-config' ] ) ) {
 
@@ -169,8 +245,14 @@ class WPML_Config
 					//admin-texts
 					if ( isset( $config[ 'wpml-config' ][ 'admin-texts' ][ 'key' ] ) ) {
 
+                        if(!isset($type)){
 						$type               = ( dirname( $file ) == get_template_directory() || dirname( $file ) == get_stylesheet_directory() ) ? 'theme' : 'plugin';
+                        }
+
+						if(!isset($admin_text_context)){
 						$admin_text_context = basename( dirname( $file ) );
+                        }
+
 
 						if ( ! is_numeric( key( @current( $config[ 'wpml-config' ][ 'admin-texts' ] ) ) ) ) { //single
 							$config[ 'wpml-config' ][ 'admin-texts' ][ 'key' ][ 'type' ]    = $type;
@@ -513,7 +595,7 @@ class WPML_Config
 
 							// wildcard? register all matching options in wp_options
 							global $wpdb;
-							$src     = str_replace( '*', '%', like_escape( $key ) );
+							$src     = str_replace( '*', '%', wpml_like_escape( $key ) );
 							$matches = $wpdb->get_results( "SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name LIKE '{$src}'" );
 							foreach ( $matches as $match ) {
 								icl_register_string( 'admin_texts_' . $type . '_' . $admin_text_context, $match->option_name, $match->option_value );

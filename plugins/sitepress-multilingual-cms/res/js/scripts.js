@@ -246,6 +246,23 @@ jQuery(document).ready(function($){
         return false;
     });
 
+	var icl_untranslated_blog_posts = $("input[name=icl_untranslated_blog_posts]");
+	var icl_untranslated_blog_posts_help = $('#icl_untranslated_blog_posts_help');
+
+	var update_icl_untranslated_blog_posts = function () {
+		//Get the value of currently selected radio option
+		var value = icl_untranslated_blog_posts.filter(':checked').val();
+
+		if (value == 0) {
+			icl_untranslated_blog_posts_help.fadeOut('slow');
+		} else {
+			icl_untranslated_blog_posts_help.fadeIn('slow');
+		}
+	};
+
+	update_icl_untranslated_blog_posts();
+	icl_untranslated_blog_posts.bind('click', update_icl_untranslated_blog_posts);
+
 });
 
 var icl_tn_initial_value   = '';
@@ -687,39 +704,76 @@ function icl_pt_reload_translation_box(){
 }
 
 function icl_copy_from_original(lang, trid){
-    jQuery('#icl_cfo').after(icl_ajxloaderimg).attr('disabled', 'disabled');
+	jQuery('#icl_cfo').after(icl_ajxloaderimg).attr('disabled', 'disabled');
 
-    if ( typeof tinyMCE != 'undefined' && ( ed = tinyMCE.activeEditor ) && !ed.isHidden() ) {
-        var editor_type = 'rich';
-    }else{
-        var editor_type = 'html';
-    }
+	if (typeof tinyMCE != 'undefined' && ( ed = tinyMCE.get('content') ) && !ed.isHidden() && ed.hasVisual === true) { //has visual = set to normal non-html editing mode
+		var content_type = 'rich';
+	} else {
+		var content_type = 'html';
+	}
 
-    jQuery.ajax({
-        type: "POST",
-        dataType: 'json',
-        url: icl_ajx_url,
-        data: "icl_ajx_action=copy_from_original&lang="+lang+'&trid='+trid+'&editor_type='+editor_type+'&_icl_nonce='+jQuery('#_icl_nonce_cfo_' + trid).val(),
-        success: function(msg){
-            if(msg.error){
-                alert(msg.error);
-            }else{
-                try{ // we may not have the content edtiro
-                    if ( typeof tinyMCE != 'undefined' && ( ed = tinyMCE.activeEditor ) && !ed.isHidden() ) {
-                        ed.focus();
-                        if (tinymce.isIE)
-                            ed.selection.moveToBookmark(tinymce.EditorManager.activeEditor.windowManager.bookmark);
-                        ed.execCommand('mceInsertContent', false, msg.body);
-                    } else {
-                        if(typeof wpActiveEditor == 'undefined') wpActiveEditor = 'content';
-                        edInsertContent(edCanvas, msg.body);
-                    }
-                }catch(err){;}
-            }
-            jQuery('#icl_cfo').next().fadeOut();
-        }
-    });
-    return false;
+	if (typeof tinyMCE != 'undefined' && ( ed = tinyMCE.get('excerpt') ) && !ed.isHidden() && ed.hasVisual === true) {
+		var excerpt_type = 'rich';
+	} else {
+		var excerpt_type = 'html';
+	}
+	// figure out all available editors and their types
+
+	var custom_types = '';
+	jQuery.ajax({
+		            type:     "POST",
+		            dataType: 'json',
+		            url:      icl_ajx_url,
+		            data:     "icl_ajx_action=copy_from_original&lang=" + lang + '&trid=' + trid + '&content_type=' + content_type + '&excerpt_type=' + excerpt_type + '&_icl_nonce=' + jQuery('#_icl_nonce_cfo_' + trid).val(),
+		            success:  function (msg) {
+			            if (msg.error) {
+				            alert(msg.error);
+			            } else {
+				            try {
+					            if (msg.content) {
+						            if (typeof tinyMCE != 'undefined' && ( ed = tinyMCE.get('content') ) && !ed.isHidden()) {
+							            ed.focus();
+							            if (tinymce.isIE) {
+								            ed.selection.moveToBookmark(tinymce.EditorManager.activeEditor.windowManager.bookmark);
+							            }
+							            ed.execCommand('mceInsertContent', false, msg.content);
+						            } else {
+							            wpActiveEditor = 'content';
+							            edInsertContent(edCanvas, msg.content);
+						            }
+					            }
+					            if (typeof msg.title != "undefined") {
+						            jQuery('#title-prompt-text').hide();
+						            jQuery('#title').val(msg.title);
+					            }
+					            //handling of custom fields
+					            //these have to be of array type with the indexes editor_type editor_name and value
+					            //possible types are editor or text
+					            //in case of text te prompt to be removed might have to be provided
+					            for (var element in msg.customfields) {
+						            if (msg.customfields[element].editor_type === 'editor') {
+							            if (typeof tinyMCE != 'undefined' && ( ed = tinyMCE.get(msg.customfields[element].editor_name) ) && !ed.isHidden()) {
+								            ed.focus();
+								            if (tinymce.isIE) {
+									            ed.selection.moveToBookmark(tinymce.EditorManager.activeEditor.windowManager.bookmark);
+								            }
+								            ed.execCommand('mceInsertContent', false, msg.customfields[element].value);
+							            } else {
+								            wpActiveEditor = msg.customfields[element].editor_name;
+								            edInsertContent(edCanvas, msg.customfields[element].value);
+							            }
+						            } else {
+							            jQuery('#' + msg.customfields[element].editor_name).val(msg.customfields[element].value);
+						            }
+					            }
+				            } catch (err) {
+					            ;
+				            }
+			            }
+			            jQuery('#icl_cfo').next().fadeOut();
+		            }
+	            });
+	return false;
 }
 
 function icl_make_translatable(){

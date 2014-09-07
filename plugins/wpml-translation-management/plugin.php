@@ -3,14 +3,14 @@
 Plugin Name: WPML Translation Management
 Plugin URI: https://wpml.org/
 Description: Add a complete translation process for WPML. <a href="https://wpml.org">Documentation</a>.
-Author: ICanLocalize
-Author URI: https://wpml.org
-Version: 1.9.5
+Author: OnTheGoSystems
+Author URI: http://www.onthegosystems.com/
+Version: 1.9.6
 */
 
 if(defined('WPML_TM_VERSION')) return;
 
-define('WPML_TM_VERSION', '1.9.5');
+define('WPML_TM_VERSION', '1.9.6');
 define('WPML_TM_PATH', dirname(__FILE__));
 
 require WPML_TM_PATH . '/inc/constants.php';

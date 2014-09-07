@@ -3,20 +3,40 @@
 Plugin Name: WPML Multilingual CMS
 Plugin URI: https://wpml.org/
 Description: WPML Multilingual CMS. <a href="https://wpml.org">Documentation</a>.
-Author: ICanLocalize
-Author URI: https://wpml.org
-Version: 3.1.6
+Author: OnTheGoSystems
+Author URI: http://www.onthegosystems.com/
+Version: 3.1.7.2
 */
 
 if(preg_match('#' . basename(__FILE__) . '#', $_SERVER['PHP_SELF'])) { die('You are not allowed to call this page directly.'); }
 
 if(defined('ICL_SITEPRESS_VERSION')) return;
-define('ICL_SITEPRESS_VERSION', '3.1.6');
-//define('ICL_SITEPRESS_DEV_VERSION', '3.1.6');
+define('ICL_SITEPRESS_VERSION', '3.1.7.2');
+//define('ICL_SITEPRESS_DEV_VERSION', '3.1.7.2');
 define('ICL_PLUGIN_PATH', dirname(__FILE__));
 define('ICL_PLUGIN_FOLDER', basename(ICL_PLUGIN_PATH));
 
-define('ICL_PLUGIN_URL', rtrim( plugin_dir_url(__FILE__), DIRECTORY_SEPARATOR ));
+define( 'ICL_PLUGIN_URL', filter_include_url( rtrim( plugin_dir_url( __FILE__ ), DIRECTORY_SEPARATOR ) ) );
+
+require ICL_PLUGIN_PATH . '/inc/template-functions.php';
+
+add_action( 'plugins_loaded', 'apply_include_filters' );
+
+function apply_include_filters() {
+	if ( icl_get_setting( 'language_domains' ) ) {
+		add_filter( 'plugins_url', 'filter_include_url' ); //so plugin includes get the correct path
+		add_filter( 'template_directory_uri', 'filter_include_url' ); //js includes get correct path
+		add_filter( 'stylesheet_directory_uri', 'filter_include_url' ); //style.css gets included right
+	}
+}
+
+function filter_include_url( $result ) {
+	$http_host_parts = explode( ':', $_SERVER[ 'HTTP_HOST' ] );
+	unset( $http_host_parts[ 1 ] );
+	$http_host_without_port = implode( $http_host_parts );
+	$path                   = str_replace( parse_url( $result, PHP_URL_HOST ), $http_host_without_port, $result );
+	return $path;
+}
 
 require ICL_PLUGIN_PATH . '/inc/lang-data.php';
 require ICL_PLUGIN_PATH . '/inc/sitepress-setup.class.php';
@@ -33,8 +53,6 @@ require ICL_PLUGIN_PATH . '/inc/not-compatible-plugins.php';
 if(!empty($icl_ncp_plugins)){
     return;
 }
-
-require ICL_PLUGIN_PATH . '/inc/template-functions.php';
 
 if ( function_exists('is_multisite') && is_multisite() ) {    
     $wpmu_sitewide_plugins = (array) maybe_unserialize( get_site_option( 'active_sitewide_plugins' ) );
@@ -99,6 +117,22 @@ if(
     require ICL_PLUGIN_PATH . '/inc/wp-login-filters.php';
     
     require_once ICL_PLUGIN_PATH . '/inc/plugins-integration.php';
+    
+    // installer hook - start    
+    include_once ICL_PLUGIN_PATH . '/inc/installer/loader.php'; //produces global variable $wp_installer_instance
+    WP_Installer_Setup($wp_installer_instance, 
+        array(
+            'site_key_nags' => array(
+                array(
+                    'repository_id' => 'wpml', 
+                    'product_name'  => 'WPML', 
+                    'condition_cb'  => array($sitepress, 'setup')
+                )
+            )
+        )
+    );
+    // installer hook - end
+    
 
 }
 

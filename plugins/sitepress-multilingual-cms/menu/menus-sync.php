@@ -270,10 +270,12 @@ if ( $icl_menus_sync->is_preview ) {
 			<tr>
 				<th><?php echo $default_language_details[ 'display_name' ]; ?></th>
 				<?php
-				foreach ( $secondary_languages as $lang ) {
-					?>
-					<th><?php echo $lang[ 'display_name' ]; ?></th>
-				<?php
+				if ( ! empty( $secondary_languages ) ) {
+					foreach ( $secondary_languages as $lang ) {
+						?>
+						<th><?php echo $lang[ 'display_name' ]; ?></th>
+					<?php
+					}
 				}
 				?>
 			</tr>

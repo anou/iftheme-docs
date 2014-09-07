@@ -1,5 +1,11 @@
 <?php
 
+/* 
+ * DEPRECATED FILE!
+ * 
+ * please use $sitepress->get_desktop_language_selector() instead of including this file. 
+ */
+
 if(function_exists('wpml_home_url_ls_hide_check') && wpml_home_url_ls_hide_check()){
     return;
 }
@@ -31,37 +37,37 @@ if(empty($main_language)){
             <?php if( $this->settings['icl_lso_flags'] || $icl_language_switcher_preview):?>                
             <img <?php if( !$this->settings['icl_lso_flags'] ):?>style="display:none"<?php endif?> class="iclflag" src="<?php echo $main_language['country_flag_url'] ?>" alt="<?php echo $main_language['language_code'] ?>"  title="<?php echo $this->settings['icl_lso_display_lang'] ? esc_attr($main_language['translated_name']) : esc_attr($main_language['native_name']) ; ?>" />                                
             &nbsp;<?php endif;
-                if($icl_language_switcher_preview){
-                    $lang_native = $main_language['native_name'];
-                    if($this->settings['icl_lso_native_lang']){
-                        $lang_native_hidden = false;
-                    }else{
-                        $lang_native_hidden = true;
-                    }
-                    $lang_translated = $main_language['translated_name'];
-                    if($this->settings['icl_lso_display_lang']){
-                        $lang_translated_hidden = false;
-                    }else{
-                        $lang_translated_hidden = true;
-                    }                            
-                }else{
-                    if($this->settings['icl_lso_native_lang']){
-                        $lang_native = $main_language['native_name'];
-                    }else{
-                        $lang_native = false;
-                    }
-                    if($this->settings['icl_lso_display_lang']){
-                        $lang_translated = $main_language['translated_name'];
-                    }else{
-                        $lang_translated = false;
-                    }
-                    
-                    $lang_native_hidden = false;
-                    $lang_translated_hidden = false;
-                    
-                }
+if($icl_language_switcher_preview){
+		$lang_native = $main_language['native_name'];
+		if($this->settings['icl_lso_native_lang']){
+				$lang_native_hidden = false;
+		}else{
+				$lang_native_hidden = true;
+		}
+		$lang_translated = $main_language['translated_name'];
+		if($this->settings['icl_lso_display_lang']){
+				$lang_translated_hidden = false;
+		}else{
+				$lang_translated_hidden = true;
+		}                            
+}else{
+		if($this->settings['icl_lso_native_lang']){
+				$lang_native = $main_language['native_name'];
+		}else{
+				$lang_native = false;
+		}
+		if($this->settings['icl_lso_display_lang']){
+				$lang_translated = $main_language['translated_name'];
+		}else{
+				$lang_translated = false;
+		}
+
+		$lang_native_hidden = false;
+		$lang_translated_hidden = false;
+
+}
                 echo icl_disp_language($lang_native, $lang_translated, $lang_native_hidden, $lang_translated_hidden);                
-            
+
 			 if(!isset($ie_ver) || $ie_ver > 6): ?></a><?php endif; ?>
             <?php if(!empty($active_languages)): ?>
             <?php if(isset($ie_ver) && $ie_ver <= 6): ?><table><tr><td><?php endif ?>            
@@ -74,37 +80,37 @@ if(empty($main_language)){
                     <img <?php if( !$this->settings['icl_lso_flags'] ):?>style="display:none"<?php endif?> class="iclflag" src="<?php echo $lang['country_flag_url'] ?>" alt="<?php echo $lang['language_code'] ?>" title="<?php echo $this->settings['icl_lso_display_lang'] ? esc_attr($lang['translated_name']) : esc_attr($lang['native_name']) ; ?>" />&nbsp;                    
                     <?php endif; ?>
                     <?php 
-                        if($icl_language_switcher_preview){
-                            $lang_native = $lang['native_name'];
-                            if($this->settings['icl_lso_native_lang']){
-                                $lang_native_hidden = false;
-                            }else{
-                                $lang_native_hidden = true;
-                            }
-                            $lang_translated = $lang['translated_name'];
-                            if($this->settings['icl_lso_display_lang']){
-                                $lang_translated_hidden = false;
-                            }else{
-                                $lang_translated_hidden = true;
-                            }                            
-                        }else{
-                            if($this->settings['icl_lso_native_lang']){
-                                $lang_native = $lang['native_name'];
-                            }else{
-                                $lang_native = false;
-                            }
-                            if($this->settings['icl_lso_display_lang']){
-                                $lang_translated = $lang['translated_name'];
-                            }else{
-                                $lang_translated = false;
-                            }
-                        }
+		if($icl_language_switcher_preview){
+				$lang_native = $lang['native_name'];
+				if($this->settings['icl_lso_native_lang']){
+						$lang_native_hidden = false;
+				}else{
+						$lang_native_hidden = true;
+				}
+				$lang_translated = $lang['translated_name'];
+				if($this->settings['icl_lso_display_lang']){
+						$lang_translated_hidden = false;
+				}else{
+						$lang_translated_hidden = true;
+				}                            
+		}else{
+				if($this->settings['icl_lso_native_lang']){
+						$lang_native = $lang['native_name'];
+				}else{
+						$lang_native = false;
+				}
+				if($this->settings['icl_lso_display_lang']){
+						$lang_translated = $lang['translated_name'];
+				}else{
+						$lang_translated = false;
+				}
+		}
                         echo icl_disp_language($lang_native, $lang_translated, $lang_native_hidden, $lang_translated_hidden);
                          ?>
                     </a>
                 </li>
                 <?php endforeach; ?>
-            </ul>            
+    </ul>    
             <?php if(isset($ie_ver) && $ie_ver <= 6): ?></td></tr></table></a><?php endif ?> 
             <?php endif; ?>
         </li>

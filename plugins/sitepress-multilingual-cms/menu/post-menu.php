@@ -74,7 +74,7 @@ $icl_meta_box_globals = array(
 
 $icl_lang_duplicate_of = get_post_meta($post->ID, '_icl_lang_duplicate_of', true);
 
-$post_type_label = strtolower( $wp_post_types[ $post->post_type ]->labels->singular_name != "" ? $wp_post_types[ $post->post_type ]->labels->singular_name : $wp_post_types[ $post->post_type ]->labels->name );
+$post_type_label = mb_strtolower( $wp_post_types[ $post->post_type ]->labels->singular_name != "" ? $wp_post_types[ $post->post_type ]->labels->singular_name : $wp_post_types[ $post->post_type ]->labels->name );
 
 if($icl_lang_duplicate_of): ?>
 <div class="icl_cyan_box"><?php

@@ -572,7 +572,7 @@ For each language, you need to enter the following information:
                 // delete posts
                 $post_ids = $wpdb->get_col(
 												$wpdb->prepare("SELECT element_id FROM {$wpdb->prefix}icl_translations WHERE element_type LIKE %s AND language_code=%s", 
-																array( like_escape('post_') . '%', $lang->code ) )
+																array( wpml_like_escape('post_') . '%', $lang->code ) )
 																);
                 remove_action('delete_post', array($sitepress,'delete_post_actions'));
                 foreach($post_ids as $post_id){
@@ -584,7 +584,7 @@ For each language, you need to enter the following information:
                 remove_action('delete_term',  array($sitepress, 'delete_term'),1,3);
                 $tax_ids = $wpdb->get_col(
 												$wpdb->prepare("SELECT element_id FROM {$wpdb->prefix}icl_translations WHERE element_type LIKE %s AND language_code=%s", 
-																array( like_escape('tax_') . '%', $lang->code ) )
+																array( wpml_like_escape('tax_') . '%', $lang->code ) )
 																);
                 foreach($tax_ids as $tax_id){
                     $row = $wpdb->get_row($wpdb->prepare("SELECT term_id, taxonomy FROM {$wpdb->term_taxonomy} WHERE term_taxonomy_id=%d", $tax_id));
@@ -646,7 +646,7 @@ For each language, you need to enter the following information:
 
 	function check_extension($file) {        
 		$extension = substr($file, strrpos($file, '.') + 1);
-		if (!in_array(strtolower($extension),array('png','gif','jpg'))) {
+		if (!in_array(mb_strtolower($extension),array('png','gif','jpg'))) {
 			$this->error(__('File extension not allowed.','sitepress'));
 			return false;
 		}

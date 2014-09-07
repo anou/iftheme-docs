@@ -16,7 +16,7 @@ class AbsoluteLinks{
 
 		//custom posts query vars
 		foreach ( $wp_post_types as $k => $v ) {
-			if ( in_array( $k, array( 'post', 'page' ) ) ) {
+			if ( $k === 'post' || $k === 'page' ) {
 				continue;
 			}
 			if ( $v->query_var ) {
@@ -25,7 +25,7 @@ class AbsoluteLinks{
 		}
 		//taxonomies query vars
 		foreach ( $wp_taxonomies as $k => $v ) {
-			if ( in_array( $k, array( 'category' ) ) ) {
+			if ( $k === 'category' ) {
 				continue;
 			}
 			if ( $k == 'post_tag' && !$v->query_var ) {
@@ -280,7 +280,7 @@ class AbsoluteLinks{
 						$def_url[ $regk ] = $regv;
 					} else {
 						$alp_broken_links[ $alp_matches[ 2 ][ $k ] ] = array();
-						$name                                        = like_escape( $post_name );
+						$name                                        = wpml_like_escape( $post_name );
 						$p                                           = $wpdb->get_results( "SELECT ID, post_type FROM {$wpdb->posts} WHERE post_name LIKE '{$name}%' AND post_type IN('post','page')" );
 						if ( $p ) {
 							foreach ( $p as $post_suggestion ) {

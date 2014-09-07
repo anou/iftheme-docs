@@ -1,34 +1,34 @@
 <?php
 class ICL_Debug_Information {
 
-    function __construct() {
+	function __construct() {
 	}
 	
-    function __destruct() {
-    }
+	function __destruct() {
+	}
 
 	function get_debug_info($info=array()) {
-		if (!is_array($info)) {
-			$info = explode(',', $info);
+		if ( ! is_array( $info ) ) {
+			$info = explode( ',', $info );
 		}
-		if (empty($info)) {
-			$info = array('core', 'plugins', 'theme', 'extra-debug');
+		if ( empty( $info ) ) {
+			$info = array( 'core', 'plugins', 'theme', 'extra-debug' );
 		}
-	
+
 		$output = array();
-		foreach ($info as $type) {
-			switch ($type) {
+		foreach ( $info as $type ) {
+			switch ( $type ) {
 				case 'core':
-					$output['core'] = $this->get_core_info();
+					$output[ 'core' ] = $this->get_core_info();
 					break;
 				case 'plugins':
-					$output['plugins'] = $this->get_plugins_info();
+					$output[ 'plugins' ] = $this->get_plugins_info();
 					break;
 				case 'theme':
-					$output['theme'] = $this->get_theme_info();
+					$output[ 'theme' ] = $this->get_theme_info();
 					break;
 				case 'extra-debug':
-					$output['extra-debug'] = $this->get_extra_debug_info();
+					$output['extra-debug'] = apply_filters( 'icl_get_extra_debug_info', array());
 					break;
 			}
 		}
@@ -38,28 +38,28 @@ class ICL_Debug_Information {
 	function get_core_info() {
 		
 		global $wpdb;
-		
+
 		$core = array(
 			'Wordpress' => array(
-				'Multisite' => is_multisite() ? 'Yes' : 'No',
-				'SiteURL' => site_url(),
-				'HomeURL' => home_url(),
-				'Version' => get_bloginfo( 'version' ),
-				'PermalinkStructure' => get_bloginfo( 'permalink_structure' ),
-				'PostTypes' => implode( ', ', get_post_types( '', 'names' ) ),
-				'PostSatus' => implode( ', ', get_post_stati() )
+				'Multisite'          => is_multisite() ? 'Yes' : 'No',
+				'SiteURL'            => site_url(),
+				'HomeURL'            => home_url(),
+				'Version'            => get_bloginfo( 'version' ),
+				'PermalinkStructure' => get_option( 'permalink_structure' ),
+				'PostTypes'          => implode( ', ', get_post_types( '', 'names' ) ),
+				'PostSatus'          => implode( ', ', get_post_stati() )
 			),
-			'Server' => array(
-				'jQueryVersion' => wp_script_is( 'jquery', 'registered' ) ? $GLOBALS['wp_scripts']->registered['jquery']->ver : __( 'n/a', 'bbpress' ),
-				'PHPVersion' => phpversion(),
-				'MySQLVersion' => $wpdb->db_version(),
-				'ServerSoftware' => $_SERVER['SERVER_SOFTWARE']
+			'Server'    => array(
+				'jQueryVersion'  => wp_script_is( 'jquery', 'registered' ) ? $GLOBALS[ 'wp_scripts' ]->registered[ 'jquery' ]->ver : __( 'n/a', 'bbpress' ),
+				'PHPVersion'     => phpversion(),
+				'MySQLVersion'   => $wpdb->db_version(),
+				'ServerSoftware' => $_SERVER[ 'SERVER_SOFTWARE' ]
 			),
-			'PHP' => array(
-				'MemoryLimit' => ini_get( 'memory_limit' ),
-				'UploadMax' => ini_get( 'upload_max_filesize' ),
-				'PostMax' => ini_get( 'post_max_size' ),
-				'TimeLimit' => ini_get( 'max_execution_time' ),
+			'PHP'       => array(
+				'MemoryLimit'  => ini_get( 'memory_limit' ),
+				'UploadMax'    => ini_get( 'upload_max_filesize' ),
+				'PostMax'      => ini_get( 'post_max_size' ),
+				'TimeLimit'    => ini_get( 'max_execution_time' ),
 				'MaxInputVars' => ini_get( 'max_input_vars' ),
 			),
 		);
@@ -99,6 +99,7 @@ class ICL_Debug_Information {
 	
 	function get_theme_info() {
 		
+		/** @var WP_Theme $current_theme */
 		if ( get_bloginfo( 'version' ) < '3.4' ) {
 			$current_theme = get_theme_data( get_stylesheet_directory() . '/style.css' );
 			$theme = $current_theme;
@@ -108,12 +109,12 @@ class ICL_Debug_Information {
 		} else {
 			$current_theme = wp_get_theme();
 			$theme = array(
-				'Name' => $current_theme->Name,
-				'ThemeURI' => $current_theme->ThemeURI,
-				'Author' => $current_theme->Author,
-				'AuthorURI' => $current_theme->AuthorURI,
-				'Template' => $current_theme->Template,
-				'Version' => $current_theme->Version,
+				'Name'       => $current_theme->Name,
+				'ThemeURI'   => $current_theme->ThemeURI,
+				'Author'     => $current_theme->Author,
+				'AuthorURI'  => $current_theme->AuthorURI,
+				'Template'   => $current_theme->Template,
+				'Version'    => $current_theme->Version,
 				'TextDomain' => $current_theme->TextDomain,
 				'DomainPath' => $current_theme->DomainPath,
 			);
@@ -122,12 +123,6 @@ class ICL_Debug_Information {
 		return $theme;
 	}
 
-	function get_extra_debug_info() {
-		global $sitepress;
-		$extra_debug = $sitepress->get_settings();
-		return $extra_debug;
-	}
-	
 	function do_json_encode($data) {
 		$json_options = 0;
 		if (defined('JSON_HEX_TAG')) {

@@ -6,6 +6,7 @@
         <div class="icl_setup_wizard_step"><?php _e('1. Language for existing contents', 'sitepress')?></div>
         <div class="icl_setup_wizard_step"><?php _e('2. Select languages', 'sitepress')?></div>
         <div class="icl_setup_wizard_step"><?php _e('3. Add a language switcher', 'sitepress')?></div>
+        <div class="icl_setup_wizard_step"><?php _e('4. Register', 'sitepress')?></div>
     </div>
     <br clear="all" />
     <div id="icl_setup_wizard_progress">

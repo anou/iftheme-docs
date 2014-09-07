@@ -1,3 +1,5 @@
+**Next version**
+
 **1.9.5**
 * **Improvements**
     * New way to define plugin url is now tolerant for different server settings

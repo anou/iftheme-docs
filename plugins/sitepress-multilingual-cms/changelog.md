@@ -1,3 +1,42 @@
+**3.1.7.2**
+
+* **Improvements**
+  * Installer support for WordPress Multisite
+* **Fixes**
+	* Fixed: Caching issue when duplicating posts 
+	
+
+**3.1.7.1**
+
+* **Fixes**
+	* Fixed: Cannot send documents to translation
+	* Fixed: WordPress database error: Duplicate entry during post delete
+	* Fixed: Preview page does not work on Root page
+	* Fixed: Fatal error: Call to a member function get_setting() on a non-object
+
+
+**3.1.7**
+
+* **Improvements**
+	* Added template functions for reading/saving WPML settings, for future use
+	* When wp-admin language is switched to non default and user will update any plugin or theme configuration, this value will be recognized as translation and updated correctly
+	* Added "Remote WPML config files" functionality
+	* New version of installer
+	* Added various descriptions of WPML settings, displayed on configuration screens
+	* Added shortcodes for language switchers
+* **Compatibility** 
+	* WP SEO plugin compatibility enhancements
+	* Compatibility with WP 4.0: Removed like_escape() calls
+* **Fixes**
+	* get_custom_post_type_archive_link() now always returns correct link
+	* Fixed url filters for different languages in different domains configured
+	* In icl_object_id we were checking if post type is registered: WordPress doesn't require this, so we removed this to be compatible with filters from other plugins
+	* Fixed hreflang atribute for tag/category archive pages
+	* Fixed permissions checking for document translators
+	* Fixed: media tags added to default language instead of translation
+	* Fixed broken relationship consistency when translating posts 
+	* Replaced strtolower() function calls with mb_strtolower() and gained better compatibility with non-ASCII languages
+
 **3.1.6**
 
 * **Improvements**

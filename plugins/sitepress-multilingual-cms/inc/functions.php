@@ -5,13 +5,75 @@
  * @package wpml-core
  */
 
+/**
+ * @param string $key
+ * @param bool   $default
+ *
+ * @return bool|mixed
+ */
+function icl_get_setting( $key, $default = false ) {
+	global $sitepress;
+
+	if ( isset( $sitepress ) ) {
+		return $sitepress->get_setting( $key, $default );
+	} else {
+		//We don't have an instance of SitePress class: let's try with $sitepress_settings
+		global $sitepress_settings;
+
+		if ( ! isset( $sitepress_settings ) ) {
+			//We don't have an instance of $sitepress_settings variable.
+			//This means that probably we are in a stage where this instance can't be created
+			//Therefore, let's directly read the settings from the DB
+			$sitepress_settings = get_option( 'icl_sitepress_settings' );
+		}
+
+		return isset( $sitepress_settings[ $key ] ) ? $sitepress_settings[ $key ] : $default;
+	}
+}
+
+/**
+ * @param string $key
+ * @param mixed  $value
+ * @param bool   $save_now Must call icl_save_settings() to permanently store the value
+ */
+function icl_set_setting( $key, $value, $save_now = false ) {
+	global $sitepress;
+	if ( isset( $sitepress ) ) {
+		$sitepress->set_setting( $key, $value, $save_now );
+	} else {
+		//We don't have an instance of SitePress class: let's try with $sitepress_settings
+		global $sitepress_settings;
+
+		if ( ! isset( $sitepress_settings ) ) {
+			//We don't have an instance of $sitepress_settings variable.
+			//This means that probably we are in a stage where this instance can't be created
+			//Therefore, let's directly read the settings from the DB
+			$sitepress_settings = get_option( 'icl_sitepress_settings' );
+		}
+		$sitepress_settings[$key] = $value;
+
+		//We need to save settings anyway, in this case
+		update_option( 'icl_sitepress_settings', $sitepress_settings );
+
+		do_action( 'icl_save_settings', $sitepress_settings );
+	}
+}
+
+function icl_save_settings() {
+	global $sitepress;
+	$sitepress->save_settings();
+}
 
 /**
  * Add settings link to plugin page.
-*/
+ *
+ * @param $links
+ * @param $file
+ *
+ * @return array
+ */
 function icl_plugin_action_links($links, $file) {
     $this_plugin = basename(ICL_PLUGIN_PATH) . '/sitepress.php';
-    global $sitepress_settings;
     if($file == $this_plugin) {
         $links[] = '<a href="admin.php?page='.basename(ICL_PLUGIN_PATH).'/menu/languages.php">' . __('Configure', 'sitepress') . '</a>';
     }
@@ -113,7 +175,6 @@ function icl_get_tax_children_recursive($id, $taxonomy = 'category'){
 }
 
 function _icl_trash_restore_prompt(){
-    global $sitepress;
     if(isset($_GET['lang'])){
         $post = get_post(intval($_GET['post']));
         if(isset($post->post_status) && $post->post_status == 'trash'){
@@ -193,4 +254,77 @@ function icl_makes_duplicates( $master_post_id )
 	if ( $sitepress->is_translated_post_type( $post_type ) ) {
 		$iclTranslationManagement->make_duplicates_all( $master_post_id );
 	}
+}
+
+/**
+ * Build duplicated posts from a master post only in case of the duplicate not being present at the time.
+ *
+ * @param  string                $master_post_id The ID of the post to duplicate from. Master post doesn't need to be in the default language.
+ *
+ * @uses SitePress
+ */
+function icl_makes_duplicates_public( $master_post_id ) {
+
+	global $sitepress;
+
+	$master_post = get_post( $master_post_id );
+
+	if ( $master_post->post_status == 'auto-draft' || $master_post->post_type == 'revision' ) {
+		return;
+	}
+
+	$active_langs = $sitepress->get_active_languages();
+
+	foreach ( $active_langs as $lang_to => $one ) {
+
+		$trid = $sitepress->get_element_trid( $master_post->ID, 'post_' . $master_post->post_type );
+		$lang_from = $sitepress->get_source_language_by_trid( $trid );
+
+		if ( $lang_from == $lang_to ) {
+			continue;
+		}
+
+		$post_array[ 'post_author' ]    = $master_post->post_author;
+		$post_array[ 'post_date' ]      = $master_post->post_date;
+		$post_array[ 'post_date_gmt' ]  = $master_post->post_date_gmt;
+		$post_array[ 'post_content' ]   = addslashes_gpc( apply_filters( 'icl_duplicate_generic_string', $master_post->post_content, $lang_to, array( 'context' => 'post', 'attribute' => 'content', 'key' => $master_post->ID ) ) );
+		$post_array[ 'post_title' ]     = addslashes_gpc( apply_filters( 'icl_duplicate_generic_string', $master_post->post_title, $lang_to, array( 'context' => 'post', 'attribute' => 'title', 'key' => $master_post->ID ) ) );
+		$post_array[ 'post_excerpt' ]   = addslashes_gpc( apply_filters( 'icl_duplicate_generic_string', $master_post->post_excerpt, $lang_to, array( 'context' => 'post', 'attribute' => 'excerpt', 'key' => $master_post->ID ) ) );
+		$post_array[ 'post_status' ]    = $master_post->post_status;
+		$post_array[ 'post_category' ]  = $master_post->post_category;
+		$post_array[ 'comment_status' ] = $master_post->comment_status;
+		$post_array[ 'ping_status' ]    = $master_post->ping_status;
+		$post_array[ 'post_name' ]      = $master_post->post_name;
+		$post_array[ 'menu_order' ]     = $master_post->menu_order;
+		$post_array[ 'post_type' ]      = $master_post->post_type;
+		$post_array[ 'post_mime_type' ] = $master_post->post_mime_type;
+
+		if ( $master_post->post_parent ) {
+			$parent                      = icl_object_id( $master_post->post_parent, $master_post->post_type, false, $lang_to );
+			$post_array[ 'post_parent' ] = $parent;
+		}
+
+		$id = wp_insert_post( $post_array );
+
+		$sitepress->set_element_language_details( $id, 'post_' . $post_array[ 'post_type' ], $trid, $lang_to, $lang_from, false );
+	}
+}
+
+
+/**
+ * Wrapper function for deprecated like_escape() and recommended wpdb::esc_like()
+ * 
+ * @global wpdb $wpdb
+ * @param string $text
+ * @return string
+ */
+function wpml_like_escape($text) {
+	global $wpdb;
+	
+	if (method_exists($wpdb, 'esc_like')) {
+		return $wpdb->esc_like($text);
+	}
+
+	/** @noinspection PhpDeprecationInspection */
+	return like_escape($text);
 }

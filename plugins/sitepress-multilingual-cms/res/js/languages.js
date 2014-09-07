@@ -192,7 +192,7 @@ function iclLntDomains() {
         }
     }
 
-    if (jQuery(this).val() !== 1) {
+    if (jQuery(this).val() != 1) {
         jQuery('#icl_use_directory_wrap').hide();
     } else {
         jQuery('#icl_use_directory_wrap').fadeIn();
@@ -827,6 +827,57 @@ function iclEnableContentTranslation() {
     return false;
 }
 
+function installer_registration_form_submit(){
+    
+    var thisf = jQuery(this);
+    
+    
+    var action = jQuery('#installer_registration_form input[name=button_action]').val();
+    
+    thisf.find('.status_msg').html('');
+    
+    thisf.find(':submit').attr('disabled', 'disabled');
+    jQuery('<span class="spinner"></span>').css({display: 'inline-block', float: 'none'}).prependTo(thisf.find(':submit:first').parent());        
+
+    if(action == 'later'){
+        thisf.find('input[name=installer_site_key]').parent().remove();            
+    }
+
+    jQuery.ajax({
+        type: "POST",
+        url: icl_ajx_url,
+        dataType: 'json',
+        data: "icl_ajx_action=registration_form_submit&" + thisf.serialize(),
+        success: function (msg) {
+            
+            if(action == 'register' || action == 'later'){
+                
+                thisf.find('.spinner').remove();    
+
+                if(msg.error){
+                    thisf.find('.status_msg').html(msg.error).addClass('icl_error_text');            
+                    
+                }else{
+                    thisf.find('.status_msg').html(msg.success).addClass('icl_valid_text');                
+                    
+                    thisf.find(':submit:visible').hide();
+                    thisf.find(':submit[name=finish]').show();
+                }
+                
+                thisf.find(':submit').removeAttr('disabled', 'disabled');
+                
+            }else{ // action = finish
+            
+                location.href = location.href.replace(/#[\w\W]*/, '');                    
+            }
+            
+        }
+    });
+
+    return false;
+    
+}
+
 
 addLoadEvent(function () {
 	var icl_lang_preview_config_footer, icl_lang_preview_config, icl_flag_visible, icl_hide_languages, icl_save_language_switcher_options;
@@ -951,18 +1002,6 @@ addLoadEvent(function () {
 	jQuery('#icl_lang_sel_color_scheme').change(iclUpdateLangSelColorScheme);
 	jQuery('#icl_lang_sel_footer_color_scheme').change(iclUpdateLangSelColorSchemeFooter);
 
-	icl_save_language_switcher_options.find(':checkbox[name="icl_lang_sel_footer"]').change(function () {
-		if (jQuery(this).attr('checked')) {
-			jQuery('#icl_lang_sel_footer_preview_wrap').show();
-			jQuery('#icl_lang_sel_footer_preview_link').show();
-			//jQuery('#icl_lang_preview_config_footer_editor_wrapper').show();
-		} else {
-			jQuery('#icl_lang_sel_footer_preview_wrap').hide();
-			jQuery('#icl_lang_sel_footer_preview_link').hide();
-			jQuery('#icl_lang_preview_config_footer_editor_wrapper').hide();
-		}
-	});
-
 	var icl_arrow_img = icl_ajxloaderimg_src.replace("ajax-loader.gif", "nav-arrow-down.png");
 	icl_save_language_switcher_options.find(':radio[name="icl_lang_sel_type"]').change(function () {
 		if (jQuery(this).val() === 'dropdown') {
@@ -1024,5 +1063,12 @@ addLoadEvent(function () {
 			});
 		}
 	});
-
+    
+    
+    jQuery(document).on('submit', '#installer_registration_form', installer_registration_form_submit)
+    jQuery(document).on('click', '#installer_registration_form :submit', function(){
+        jQuery('#installer_registration_form input[name=button_action]').val(jQuery(this).attr('name'));
+        
+    })
+    
 });

@@ -31,7 +31,6 @@
 	$icl_lang_sel_stype = $sitepress->get_setting( 'icl_lang_sel_stype' );
 	$seo = $sitepress->get_setting( 'seo' );
 
-
 	$default_language = $sitepress->get_default_language();
 
 	$sample_lang = false;
@@ -80,21 +79,24 @@ global $language_switcher_defaults, $language_switcher_defaults_alt;
     <h2><?php _e('Setup WPML', 'sitepress') ?></h2>
 
     <?php
+    
 	if( empty( $setup_complete ) ){ /* setup wizard */
 
             if(!$existing_content_language_verified ){
-                $sw_width = 20;
+                $sw_width = 15;
             }elseif(count($sitepress->get_active_languages()) < 2 || $setup_wizard_step == 2){
-                $sw_width = 50;
+                $sw_width = 35;
+            }elseif($setup_wizard_step == 3){
+                $sw_width = 60;
             }else{
-                $sw_width = 80;
+                $sw_width = 85;
             }
 
 			include 'setup/setup_001.php';
 
 	} /* setup wizard */
 
-	if(!$existing_content_language_verified || $setup_wizard_step<=1 ): ?>
+	if(!$existing_content_language_verified || $setup_wizard_step <= 1 ): ?>
     <div class="wpml-section">
         <div class="wpml-section-header">
             <h3><?php _e('Current content language', 'sitepress') ?></h3>
@@ -270,10 +272,49 @@ global $language_switcher_defaults, $language_switcher_defaults_alt;
 
                 </div> <!-- .wcml-section-content -->
             </div> <!-- .wpml-section-languages -->
-
+            
+        <?php 
+        elseif($setup_wizard_step == 4): ?>
+        <?php $site_key = WP_Installer()->get_site_key('wpml'); ?>    
+        <div class="wpml-section" id="lang-sec-0">
+            <div class="wpml-section-header">
+                <h3><?php _e('Registration', 'sitepress'); ?></h3>
+            </div>
+            <div class="wpml-section-content">
+                <p><?php _e('Enter the site key, from your wpml.org account, to receive automatic updates for WPML on this site.', 'sitepress'); ?></p>
+                <form id="installer_registration_form">
+                    <input type="hidden" name="action" value="installer_save_key" />
+                    <input type="hidden" name="button_action" value="installer_save_key" />
+                    <label>
+                        <?php _e('Site key:', 'sitepress'); ?>
+                        <input type="text" name="installer_site_key" value="<?php echo $site_key ?>" <?php if(!empty($site_key)): ?>disabled="disabled"<?php endif; ?> />
+                    </label>
+                    
+                    
+                    <div class="status_msg<?php if(!empty($site_key)): ?> icl_valid_text<?php endif; ?>">
+                        <?php if($site_key) _e('Thank you for registering WPML on this site. You will receive automatic updates when new versions are available.', 'sitepress'); ?>
+                    </div>
+                    
+                    <div style="text-align:right">
+                        <?php if(empty($site_key)): ?>
+                        <input class="button-primary" name="register" value="<?php echo __('Register', 'sitepress') ?>" type="submit" />                        
+                        <input class="button-secondary" name="later" value="<?php echo __('Remind me later', 'sitepress') ?>" type="submit" />
+                        <?php endif; ?>
+                        <input <?php if(empty($site_key)): ?>style="display: none;"<?php endif; ?> class="button-primary" name="finish" value="<?php echo __('Finish', 'sitepress') ?>" type="submit" />
+                        
+                        <?php wp_nonce_field('registration_form_submit_nonce', '_icl_nonce'); ?>
+                    </div>
+                    
+                </form>
+                
+                <p><?php printf(__("Don't have a key for this site? %sLog in to your WPML.org account and generate the site key%s.", 'sitepress'), '<a href="http://wpml.org/my-account/" target="_blank">', '</a>') ?></p>
+                <p><?php printf(__("If you don't have a WPML.org account or a valid subscription, you can %spurchase%s one and get later upgrades, full support and 30 days money-back guarantee." , 'sitepress'), '<a href="http://wpml.org/purchase/" target="_blank">', '</a>') ?></p>
+            </div>
+        </div>
+            
         <?php endif; ?>
 
-
+        
         <?php if(!empty( $setup_complete )): ?>
             <?php if(count($active_languages) > 1): ?>
                 <div class="wpml-section wpml-section-url-format" id="lang-sec-2">
@@ -736,7 +777,7 @@ global $language_switcher_defaults, $language_switcher_defaults_alt;
                             <div id="icl_setup_nav_3" style="text-align:right">
                                 <input id="icl_setup_back_2" class="button-primary" name="save" value="<?php echo __('Back', 'sitepress') ?>" type="button" />
                                 <?php wp_nonce_field('setup_got_to_step2_nonce', '_icl_nonce_gts2'); ?>
-                                <input class="button-primary" name="save" value="<?php echo __('Finish', 'sitepress') ?>" type="submit" />
+                                <input class="button-primary" name="save" value="<?php echo __('Next', 'sitepress') ?>" type="submit" />
                             </div>
                             <script type="text/javascript">
                                 addLoadEvent(function(){
@@ -793,23 +834,37 @@ global $language_switcher_defaults, $language_switcher_defaults_alt;
                     <h3><?php _e('Blog posts to display', 'sitepress') ?></h3>
                 </div>
                 <div class="wpml-section-content">
-                    <form id="icl_blog_posts" name="icl_blog_posts" action="">
-                        <?php wp_nonce_field('icl_blog_posts_nonce', '_icl_nonce'); ?>
-                        <p>
-                            <label>
-                                <input type="radio" name="icl_untranslated_blog_posts" <?php if(empty( $show_untranslated_blog_posts )) echo 'checked="checked"' ?> value="0" /> <?php _e('Only translated posts.','sitepress'); ?>
-                            </label>
-                        </p>
-                        <p>
-                            <label>
-                                <input type="radio" name="icl_untranslated_blog_posts" <?php if(!empty( $show_untranslated_blog_posts )) echo 'checked="checked"' ?> value="1" /> <?php _e('All posts (display translation if it exists or posts in default language otherwise).','sitepress'); ?>
-                            </label>
-                        </p>
-                        <p class="buttons-wrap">
-                            <span class="icl_ajx_response" id="icl_ajx_response_bp"></span>
-                            <input class="button button-primary" name="save" value="<?php _e('Save','sitepress') ?>" type="submit" />
-                        </p>
-                    </form>
+	                <form id="icl_blog_posts" name="icl_blog_posts" action="">
+		                <?php wp_nonce_field( 'icl_blog_posts_nonce', '_icl_nonce' ); ?>
+		                <p>
+			                <?php
+			                $icl_only_translated_posts_checked = checked( 0, icl_get_setting( 'show_untranslated_blog_posts', 0 ), false )
+			                ?>
+			                <label>
+				                <input type="radio" name="icl_untranslated_blog_posts" <?php echo $icl_only_translated_posts_checked; ?> value="0"/>
+				                <?php _e( 'Only translated posts.', 'sitepress' ); ?>
+			                </label>
+		                </p>
+
+		                <p>
+			                <label>
+				                <?php
+				                $icl_all_posts_checked = checked( 1, icl_get_setting( 'show_untranslated_blog_posts', 0 ), false )
+				                ?>
+				                <input type="radio" name="icl_untranslated_blog_posts" <?php echo $icl_all_posts_checked; ?> value="1"/>
+				                <?php _e( 'All posts (display translation if it exists or posts in default language otherwise).', 'sitepress' ); ?>
+			                </label>
+
+		                </p>
+
+		                <div id="icl_untranslated_blog_posts_help" style="display: none">
+			                <?php _e( "Please note that this setting affects only blog posts queried by the main loop in a theme's index.php template.", "sitepress" ); ?>
+		                </div>
+		                <p class="buttons-wrap">
+			                <span class="icl_ajx_response" id="icl_ajx_response_bp"></span>
+			                <input class="button button-primary" name="save" value="<?php _e( 'Save', 'sitepress' ) ?>" type="submit"/>
+		                </p>
+	                </form>
                 </div>
             </div>
 
