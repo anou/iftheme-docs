@@ -5,12 +5,12 @@ Plugin URI: https://wpml.org/
 Description: Adds theme and plugins localization capabilities to WPML. <a href="https://wpml.org">Documentation</a>.
 Author: OnTheGoSystems
 Author URI: http://www.onthegosystems.com/
-Version: 2.0.9.1
+Version: 2.0.14
 */
 
 if(defined('WPML_ST_VERSION')) return;
 
-define('WPML_ST_VERSION', '2.0.9.1');
+define('WPML_ST_VERSION', '2.0.14');
 define('WPML_ST_PATH', dirname(__FILE__));
 
 require WPML_ST_PATH . '/inc/constants.php';

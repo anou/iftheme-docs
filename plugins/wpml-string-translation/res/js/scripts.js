@@ -12,7 +12,10 @@ jQuery(document).ready(function(){
     jQuery('#icl_st_delete_selected').click(icl_st_delete_selected);
     //jQuery('#icl_st_send_need_translation').click(icl_st_send_need_translation);
     //jQuery('#icl_st_do_send_strings').submit(icl_st_do_send_strings);
-    
+
+		jQuery('.icl_auto_reg_type').click(icl_st_auto_register_notes);
+		icl_st_auto_register_notes();
+
     jQuery('#icl_st_po_translations').click(function(){
         if(jQuery(this).attr('checked')){
             jQuery('#icl_st_po_language').removeAttr('disabled').fadeIn();
@@ -515,6 +518,15 @@ function icl_st_cancel_local_translation(ahref){
         }
     });
     return false;
+}
+
+function icl_st_auto_register_notes() {
+	var selected_value = jQuery('.icl_auto_reg_type:checked');
+	if(selected_value.length && selected_value.val()!='disable') {
+		jQuery('#auto_register_notes').fadeIn();
+	} else {
+		jQuery('#auto_register_notes').fadeOut();
+	}
 }
 
 

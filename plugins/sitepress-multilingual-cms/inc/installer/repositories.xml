@@ -5,4 +5,9 @@
         <apiurl>http://api.wpml.org/</apiurl>
         <products>https://wpmlorg.s3.amazonaws.com/wpml-products.json</products>
     </repository>
+    <repository>
+        <id>toolset</id>
+        <apiurl>http://api.wp-types.com/</apiurl>
+        <products>https://wptypes.s3.amazonaws.com/toolset-products.json</products>
+    </repository>
 </repositories>

@@ -6,9 +6,22 @@ if(empty($args['repository']) || empty($args['package']) || empty($args['product
     return;
 }
 
-if(isset($this->settings['repositories'][$repository_id]['data']['packages'][$args['package']]['products'][$args['product']])){
-    $product = $this->settings['repositories'][$repository_id]['data']['packages'][$args['package']]['products'][$args['product']];
-}else{
+$product = false;
+foreach($this->settings['repositories'][$repository_id]['data']['packages'] as $package_idx => $package){
+    
+    //pre 1.3 backwardds compatibility
+    if(!isset($package['id'])){
+        $package['id'] = sanitize_title_with_dashes($package['name']);
+    }
+    
+    if($package['id'] == $args['package']){
+        $product = $this->settings['repositories'][$repository_id]['data']['packages'][$package_idx]['products'][$args['product']];
+        break;
+    }
+}
+
+
+if(!$product){
     echo __('Invalid product', 'installer');
     return;
 }
@@ -20,14 +33,14 @@ if(isset($this->settings['repositories'][$repository_id])){
         $site_key = false;
     }
 }else{
-    echo __('Unknonw repository', 'installer');
+    echo __('Unknown repository', 'installer');
     return;
 }
 
 $subscription_type = $this->get_subscription_type_for_repository($repository_id);    
 $expired = false;
 
-if($subscription_type != $product['subscription_type'] && !$this->have_supperior_subscription($subscription_type, $product) && $site_key){
+if($subscription_type != $product['subscription_type'] && !$this->have_superior_subscription($subscription_type, $product) && $site_key){
     $subscription_no_match = sprintf(__(' Your current site key (%s) does not match the selected product (%s).', 'installer'), $site_key, $product['name']);     
 }
 
@@ -49,7 +62,7 @@ if(!isset($args['product_name'])) $args['product_name'] = $product['name'];
             <br />
             <?php endif; ?>
             
-            <a class="button-primary" href="<?php echo $this->append_parameters_to_buy_url($product['url']) ?>"><?php printf(__('Buy %s', 'installer'), $args['product_name']) ?></a> 
+            <a class="button-primary" href="<?php echo $this->append_parameters_to_buy_url($product['url'], $args) ?>"><?php printf(__('Buy %s', 'installer'), $args['product_name']) ?></a> 
             
             <div>
                 <br />
@@ -78,7 +91,7 @@ if(!isset($args['product_name'])) $args['product_name'] = $product['name'];
             <ul class="installer-products-list">    
             <?php foreach($product['renewals'] as $renewal): ?>
                 <li>
-                    <a href="<?php echo $this->append_parameters_to_buy_url($renewal['url']) ?>"><?php printf(__('Renew %s', 'installer'), $args['product_name']) ?></a>
+                    <a href="<?php echo $this->append_parameters_to_buy_url($renewal['url'], $args) ?>"><?php printf(__('Renew %s', 'installer'), $args['product_name']) ?></a>
                 </li>
             <?php endforeach; ?>
             </ul>
@@ -91,15 +104,25 @@ if(!isset($args['product_name'])) $args['product_name'] = $product['name'];
     <a class="remove_site_key_js" href="#" data-repository=<?php echo $repository_id ?> data-confirmation="<?php esc_attr_e('Are you sure you want to remove this site key?', 'installer') ?>" data-nonce="<?php echo wp_create_nonce('remove_site_key_' . $repository_id) ?>"><?php printf(__("Remove current site key (%s)", 'installer'), $site_key) ?></a>
     </center>
     <br />
-    
+
     <?php include $this->plugin_path() . '/templates/downloads-list-compact.php'; ?>
     
     
     
 <?php endif; ?>
 
-<?php if(!empty($args['support_link'])): ?>
-<p><?php echo $args['support_link']  ?></p>
+<?php
+if( isset( $args[ 'name' ] ) ):
+    $support_link = $this->get_support_tag_by_name($args['name'], $args['repository']); ?>
+
+    <?php if($support_link): ?>
+<p><a href="<?php echo $support_link ?>" target="_blank"><?php printf(__('%s support on wpml.org', 'installer'), $args['name'] ) ?></a></p>
+
+<?php endif; ?>
+<?php
+// compatibility for installer 1.1
+elseif( isset( $args[ 'support_link' ] ) ): ?>
+    <p><?php echo $args[ 'support_link' ]; ?></p>
 <?php endif; ?>
 
 </div>

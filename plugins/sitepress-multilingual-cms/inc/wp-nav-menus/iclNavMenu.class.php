@@ -35,8 +35,11 @@ class iclNavMenu{
                 
         add_filter('theme_mod_nav_menu_locations', array($this, 'theme_mod_nav_menu_locations'));
         $theme_slug = get_option( 'stylesheet' );        
-        add_filter('pre_update_option_theme_mods_' . $theme_slug, array($this, 'pre_update_theme_mods_theme'));        
-        
+        add_filter('pre_update_option_theme_mods_' . $theme_slug, array($this, 'pre_update_theme_mods_theme'));
+
+        // add_filter('wp_page_menu_args', array($this, 'wp_nav_menu_args_filter'));
+        // add_filter('wp_page_menu', array($this, 'wp_nav_menu_items_filter'));
+
         add_filter('wp_nav_menu_args', array($this, 'wp_nav_menu_args_filter'));
         add_filter('wp_nav_menu_items', array($this, 'wp_nav_menu_items_filter'));
         
@@ -355,7 +358,10 @@ class iclNavMenu{
                 }
                 $trs[] = $tr_link ;
             }
-            $langsel .= '&nbsp;' . join (', ', $trs);
+            $langsel .= '&nbsp;';
+						if (isset($trs)) {
+							$langsel .= join (', ', $trs);
+						}
             $langsel .= '</div><br />';    
             $langsel .= '<div class="howto icl_nav_menu_text" style="float:right;">';    
             $langsel .= '<div><a href="'.admin_url('admin.php?page=' . ICL_PLUGIN_FOLDER . '/menu/menus-sync.php').'">' . __('Synchronize menus between languages.', 'sitepress') . '</a></div>';    
@@ -639,7 +645,6 @@ class iclNavMenu{
     }
 
 	function wp_nav_menu_args_filter( $args ) {
-		global $sitepress;
 
 		if ( ! $args[ 'menu' ] ) {
 			$locations = get_nav_menu_locations();
@@ -657,30 +662,34 @@ class iclNavMenu{
 			add_filter( 'theme_mod_nav_menu_locations', array( $this, 'theme_mod_nav_menu_locations' ) );
 		}
 
-		if ( $args[ 'menu_id' ] ) {
-			$args[ 'menu' ] = wp_get_nav_menu_object( icl_object_id( $args[ 'menu_id' ], 'nav_menu' ) );
+		// $args[ "menu" ] can be an object consequently to widget's call
+		if ( is_object($args[ 'menu' ]) && ( ! empty( $args[ 'menu' ]->term_id )) ) {
+				$args['menu'] = wp_get_nav_menu_object(icl_object_id($args['menu']->term_id, 'nav_menu'));
 		}
 
-		if ( $args[ 'menu' ] ) {
-			$debug_backtrace = $sitepress->get_backtrace( 5 ); //Ignore objects and limit to first 5 stack frames, since 4 is the highest index we use
-			if ( $debug_backtrace[ 4 ][ 'function' ] == 'widget' ) {
-				if ( is_integer( $args[ 'menu' ] ) ) {
-					$args[ 'menu' ] = wp_get_nav_menu_object( icl_object_id( $args[ 'menu' ], 'nav_menu' ) );
-				} elseif ( ! empty( $args[ 'menu' ]->term_id ) ) {
-					$args[ 'menu' ] = wp_get_nav_menu_object( icl_object_id( $args[ 'menu' ]->term_id, 'nav_menu' ) );
-				}
-			} elseif ( is_string( $args[ 'menu' ] ) ) {
-				$term = get_term_by( 'slug', $args[ 'menu' ], 'nav_menu' );
-				if ( $term ) {
-					$args[ 'menu' ] = wp_get_nav_menu_object( icl_object_id( $term->term_id, 'nav_menu' ) );
-				} else {
-					$term = get_term_by( 'name', $args[ 'menu' ], 'nav_menu' );
-					if ( $term ) {
-						$args[ 'menu' ] = wp_get_nav_menu_object( icl_object_id( $term->term_id, 'nav_menu' ) );
-					}
-				}
-			}
+		if ( ( ! is_object ( $args['menu'] )) && is_numeric ( $args['menu'] ) ) {
+				$args[ 'menu' ] = wp_get_nav_menu_object( icl_object_id( $args[ 'menu' ], 'nav_menu' ) );
 		}
+
+		if ( ( ! is_object ( $args['menu'] )) && is_string ( $args["menu"] ) ) {
+            $term = get_term_by( 'slug', $args[ 'menu' ], 'nav_menu' );
+            if ( false === $term) {
+                    $term = get_term_by( 'name', $args[ 'menu' ], 'nav_menu' );
+            }
+
+            if ( false !== $term ) {
+                    $args['menu'] = wp_get_nav_menu_object(icl_object_id($term->term_id, 'nav_menu'));
+            }
+		}
+
+		if ( ! is_object ( $args['menu'] ) ) {
+				$args['menu'] = false;
+		}
+
+        /*
+		if (is_object($args['menu']) && $args['fallback_cb']) {
+			$args['fallback_cb'] = false;
+		}*/
 
 		return $args;
 	}
@@ -712,10 +721,12 @@ class iclNavMenu{
             <script type="text/javascript">
             addLoadEvent(function(){
                 <?php foreach($menus_not_translated as $menu_id): ?>
-                if(jQuery('#locations-<?php echo $menu_id?>').length > 0){
-                    jQuery('#locations-<?php echo $menu_id?> option').first().html('<?php esc_js(_e('not translated in current language','sitepress')) ?>');
-                    jQuery('#locations-<?php echo $menu_id?>').css('font-style','italic');
-                    jQuery('#locations-<?php echo $menu_id?>').change(function(){if(jQuery(this).val()!=0) jQuery(this).css('font-style','normal');else jQuery(this).css('font-style','italic')});
+	            var menu_id = '<?php echo $menu_id?>';
+	            var location_menu_id = jQuery('#locations-' + menu_id);
+	            if(location_menu_id.length > 0){
+                    location_menu_id.find('option').first().html('<?php echo esc_js(__('not translated in current language','sitepress')) ?>');
+                    location_menu_id.css('font-style','italic');
+                    location_menu_id.change(function(){if(jQuery(this).val()!=0) jQuery(this).css('font-style','normal');else jQuery(this).css('font-style','italic')});
                 }
                 <?php endforeach; ?>
             });            

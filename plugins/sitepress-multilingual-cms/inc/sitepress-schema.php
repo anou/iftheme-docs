@@ -94,8 +94,8 @@ function icl_sitepress_activate() {
                 `source_language_code` VARCHAR( 7 ),
                 UNIQUE KEY `el_type_id` (`element_type`,`element_id`),
                 UNIQUE KEY `trid_lang` (`trid`,`language_code`),
-                KEY `trid` (`trid`)
-                
+                KEY `trid` (`trid`),
+                KEY `id_type_language` (`element_id`, `element_type`, `language_code`)
             ) {$charset_collate}";
 			if ( $wpdb->query( $sql ) === false ) {
 				throw new Exception( $wpdb->last_error );

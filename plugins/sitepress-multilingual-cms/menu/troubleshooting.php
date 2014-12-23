@@ -42,7 +42,7 @@ if ( isset( $_GET[ 'debug_action' ] ) && $_GET[ 'nonce' ] == wp_create_nonce( $_
 			update_option( 'icl_sitepress_settings', $sitepress_settings );
 
 			global $wpdb;
-			$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}icl_core_status" ); 
+			$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}icl_core_status" );
 			$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}icl_content_status" );
 			$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}icl_string_status" );
 			$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}icl_node" );
@@ -890,7 +890,10 @@ echo '</textarea>';
 		<input id="icl_fix_terms_count" type="button" class="button-secondary" value="<?php _e( 'Fix terms count', 'sitepress' ) ?>"/><br/>
 		<small style="margin-left:10px;"><?php _e( 'Correct terms count in case something went wrong with translated contents.', 'sitepress' ) ?></small>
 	</p>
-
+	<p>
+		<input id="icl_fix_post_types" type="button" class="button-secondary" value="<?php _e( 'Fix post type assignment for translations', 'sitepress' ) ?>"/><br/>
+		<small style="margin-left:10px;"><?php _e( 'Correct post type assignment for translations of custom post types in case something went wrong.', 'sitepress' ) ?></small>
+	</p>
 	<p>
 		<br/>
 		<?php _e( 'Translatable custom posts linking', 'sitepress' ); ?><br/>
@@ -1077,8 +1080,13 @@ echo '</textarea>';
 	<br clear="all"/>
 <?php } ?>
 
+<br clear="all"/>
+<?php
+//Todo: in WPML 3.2 we should use the new hooks to add elements to the troubleshooting page
+echo WPML_Troubleshooting_Terms_Menu::display_terms_with_suffix();
+?>
 
-<br/>
+<br clear="all"/>
 
 <div class="icl_cyan_box">
 

@@ -7,8 +7,27 @@ jQuery(document).ready(function(){
         jQuery('#edittag table[class="form-table"]:first tr:last td:last').html(jQuery('#icl_tax_menu').html());  
     }    
     jQuery('#icl_tax_menu').remove();
-       
-   jQuery('select[name="icl_tag_language"]').change(function(){
+
+    var addTagForm = jQuery('#addtag');
+
+    addTagForm.off('submit', 'preventSubmit');
+
+    var formBlocked = false;
+    addTagForm.on('blur', function(){
+        formBlocked = false;
+    });
+
+    jQuery(document).on('keydown', function(e){
+        if(formBlocked){
+            e.preventDefault();
+        }
+        if(e.keyCode == 13 && addTagForm.find('input:focus').length !== 0){
+            formBlocked = true;
+            addTagForm.ajaxComplete( function(){formBlocked = false;}  )
+        }
+    });
+
+    jQuery('select[name="icl_tag_language"]').change(function(){
         var icl_subsubsub_save = jQuery('#icl_subsubsub').html();
         var lang = jQuery(this).val();
         var ajx = location.href.replace(/#(.*)$/,'');
@@ -36,10 +55,43 @@ jQuery(document).ready(function(){
             tag_end  = resp.indexOf('</div>', tag_start);            
             tag_cloud = resp.substr(tag_start+22,tag_end-tag_start-22);
             jQuery('.tagcloud').html(tag_cloud);
-        });        
+        });
         
-   })     
-    
-        
+   });
+
+  /* This section reads the hidden div containg the JSON encoded array of categories for which no checkbox is to be displayed.
+   * This is done to ensure that they cannot be deleted
+   */
+  var defaultCategoryJSON, defaultCategoryJSONDiv, defaultCategoryIDs, key, id;
+
+  defaultCategoryJSONDiv = jQuery('#icl-default-category-ids');
+
+  if (defaultCategoryJSONDiv.length !== 0) {
+    defaultCategoryJSON = defaultCategoryJSONDiv.html();
+    defaultCategoryIDs = jQuery.parseJSON(defaultCategoryJSON);
+
+    for (key in defaultCategoryIDs) {
+      if (defaultCategoryIDs.hasOwnProperty(key)) {
+        id = defaultCategoryIDs[key];
+        removeDefaultCatCheckBox(id);
+      }
+    }
+  }
+
+
+
 });
 
+/**
+ * Removes the checkbox for a given category from the DOM.
+ * @param catID
+ */
+function removeDefaultCatCheckBox(catID) {
+  var defaultCatCheckBox;
+
+  defaultCatCheckBox = jQuery('#cb-select-' + catID);
+
+  if (defaultCatCheckBox.length !== 0) {
+    defaultCatCheckBox.remove();
+  }
+}

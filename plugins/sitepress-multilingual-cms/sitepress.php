@@ -5,20 +5,29 @@ Plugin URI: https://wpml.org/
 Description: WPML Multilingual CMS. <a href="https://wpml.org">Documentation</a>.
 Author: OnTheGoSystems
 Author URI: http://www.onthegosystems.com/
-Version: 3.1.7.2
+Version: 3.1.8.4
 */
 
 if(preg_match('#' . basename(__FILE__) . '#', $_SERVER['PHP_SELF'])) { die('You are not allowed to call this page directly.'); }
 
 if(defined('ICL_SITEPRESS_VERSION')) return;
-define('ICL_SITEPRESS_VERSION', '3.1.7.2');
-//define('ICL_SITEPRESS_DEV_VERSION', '3.1.7.2');
+define('ICL_SITEPRESS_VERSION', '3.1.8.4');
+//define('ICL_SITEPRESS_DEV_VERSION', '3.1.8.4');
 define('ICL_PLUGIN_PATH', dirname(__FILE__));
 define('ICL_PLUGIN_FOLDER', basename(ICL_PLUGIN_PATH));
 
 define( 'ICL_PLUGIN_URL', filter_include_url( rtrim( plugin_dir_url( __FILE__ ), DIRECTORY_SEPARATOR ) ) );
 
+require ICL_PLUGIN_PATH . '/inc/functions.php';
 require ICL_PLUGIN_PATH . '/inc/template-functions.php';
+
+function wpml_set_plugin_as_inactive() {
+    global $icl_plugin_inactive;
+    if ( ! defined( 'ICL_PLUGIN_INACTIVE' ) ) {
+        define( 'ICL_PLUGIN_INACTIVE', true );
+    }
+    $icl_plugin_inactive = true;
+}
 
 add_action( 'plugins_loaded', 'apply_include_filters' );
 
@@ -62,17 +71,22 @@ if ( function_exists('is_multisite') && is_multisite() ) {
     }
     include_once ICL_PLUGIN_PATH . '/inc/functions-network.php';
     if(get_option('_wpml_inactive', false) && isset($wpmu_sitewide_plugins[ICL_PLUGIN_FOLDER.'/sitepress.php'])){
-        define('ICL_PLUGIN_INACTIVE', true);
+        wpml_set_plugin_as_inactive();
         return;
     }
 }
 
 require ICL_PLUGIN_PATH . '/inc/constants.php';
 require ICL_PLUGIN_PATH . '/inc/icl-admin-notifier.php';
-
+require_once ICL_PLUGIN_PATH . '/inc/taxonomy-term-translation/wpml-translation-tree.class.php';
+require_once ICL_PLUGIN_PATH . '/inc/taxonomy-term-translation/wpml-term-translations.class.php';
+require_once ICL_PLUGIN_PATH . '/inc/wpml-post-edit-ajax.class.php';
+require_once(ICL_PLUGIN_PATH . '/inc/functions-troubleshooting.php');
+require_once ( ICL_PLUGIN_PATH . '/menu/wpml-troubleshooting-terms-menu.class.php' );
+require_once ICL_PLUGIN_PATH . '/menu/taxonomy-translation-display.class.php';
 require_once ICL_PLUGIN_PATH . '/inc/sitepress-schema.php';
+require_once ICL_PLUGIN_PATH . '/inc/wpml-root-page.class.php';
 require ICL_PLUGIN_PATH . '/sitepress.class.php';
-require ICL_PLUGIN_PATH . '/inc/functions.php';
 require ICL_PLUGIN_PATH . '/inc/hacks.php';
 require ICL_PLUGIN_PATH . '/inc/upgrade.php';
 require ICL_PLUGIN_PATH . '/inc/affiliate-info.php';
@@ -122,6 +136,7 @@ if(
     include_once ICL_PLUGIN_PATH . '/inc/installer/loader.php'; //produces global variable $wp_installer_instance
     WP_Installer_Setup($wp_installer_instance, 
         array(
+            'plugins_install_tab' => 1,
             'site_key_nags' => array(
                 array(
                     'repository_id' => 'wpml', 

@@ -1,3 +1,31 @@
+**2.0.14**
+* **Fix**
+	* Fixed a menu synchronisation issue with custom links string
+	
+**2.0.13**
+* **Fix**
+	* Fixed an issue that prevented _n and _nx gettext tags from being properly parsed and imported.
+
+**2.0.12**
+
+* **Fix**
+	* Fixed 'translate_string' filter which now takes arguments in the right order and returns the right value when WPML/ST are not active
+
+**2.0.11**
+
+* **Fix**
+	* Removed PHP Warnings during image uploading
+
+**2.0.10**
+
+* **Improvements**
+	* Speed improvements in functions responsible for downloading and scanning .mo files.
+	* Added support for _n() strings
+* **Fix**
+	* Fixed fatal error when bulk updating plugins
+	* Removed infinite loop in Appearance > Menu on secondary language when updating menus
+	* Fixed: when user was editing translated post, admin language changed to this language when he saved. 
+
 **2.0.9**
 
 * **Fix**

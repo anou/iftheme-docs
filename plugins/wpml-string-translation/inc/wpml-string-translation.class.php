@@ -502,7 +502,7 @@ class WPML_String_Translation
 
 			if ( is_dir( $file ) ) {
 				$dh = opendir( $file );
-				while ( false !== ( $f = readdir( $dh ) ) ) {
+				while ( $dh && false !== ( $f = readdir( $dh ) ) ) {
 					if ( 0 === strpos( $f, '.' ) )
 						continue;
 					$this->plugin_po_file_download( $file . '/' . $f, $recursion + 1 );

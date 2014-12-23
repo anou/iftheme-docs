@@ -86,18 +86,17 @@ class SitePressLanguageSwitcher {
             add_action('wp_head', array($this, 'custom_language_switcher_style'));
         }
 
-        if(!empty($sitepress_settings['display_ls_in_menu'])){
+        if(!empty($sitepress_settings['display_ls_in_menu']) && ( !function_exists( 'wpml_home_url_ls_hide_check' ) || !wpml_home_url_ls_hide_check() ) ){
             add_filter('wp_nav_menu_items', array($this, 'wp_nav_menu_items_filter'), 10, 2);
+            add_filter('wp_page_menu', array($this, 'wp_page_menu_filter'), 10, 2);
         }
 
     }
 
     function language_selector_widget_init(){
 	   	register_widget( 'ICL_Language_Switcher' );
-//        wp_register_sidebar_widget('icl_lang_sel_widget', __('Language Selector', 'sitepress'), 'language_selector_widget', array('classname'=>'icl_languages_selector'));
-//        wp_register_widget_control('icl_lang_sel_widget_control', __('Language Selector', 'sitepress'), array($this, 'set_widget') );
-        add_action('template_redirect','icl_lang_sel_nav_ob_start', 0);
-        add_action('wp_head','icl_lang_sel_nav_ob_end');
+			add_action('template_redirect','icl_lang_sel_nav_ob_start', 0);
+			add_action('wp_head','icl_lang_sel_nav_ob_end');
     }
 
     function set_widget(){
@@ -770,6 +769,21 @@ class SitePressLanguageSwitcher {
         }
     }
 
+    function wp_page_menu_filter($items, $args) {
+        $obj_args = new stdClass();
+        foreach ($args as $key => $value)
+        {
+            $obj_args->$key = $value;
+        }
+
+        $items = str_replace("</ul></div>", "", $items);
+
+        $items = apply_filters( 'wp_nav_menu_items', $items, $obj_args );
+
+        $items .= "</ul></div>";
+
+        return $items;
+    }
     function wp_nav_menu_items_filter($items, $args){
         global $sitepress_settings, $sitepress;
 
@@ -779,8 +793,9 @@ class SitePressLanguageSwitcher {
         if(isset($args->menu->term_id)) $args->menu = $args->menu->term_id;
 
 		$abs_menu_id = icl_object_id($args->menu, 'nav_menu', false, $default_language );
+	    $settings_menu_id = icl_object_id( $sitepress_settings[ 'menu_for_ls' ], 'nav_menu', false, $default_language );
 
-        if($abs_menu_id == $sitepress_settings['menu_for_ls']){
+	    if ( $abs_menu_id == $settings_menu_id  || false === $abs_menu_id ) {
 
             $languages = $sitepress->get_ls_languages();
 

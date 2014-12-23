@@ -60,6 +60,7 @@ class WPML_Translation_Management{
             add_action('wp_ajax_dismiss_icl_side_by_site', array($this, 'dismiss_icl_side_by_site'));
             add_action('wp_ajax_icl_tm_parent_filter', array($this, '_icl_tm_parent_filter'));
             add_action('wp_ajax_icl_tm_toggle_promo', array($this, '_icl_tm_toggle_promo'));
+            add_action('wp_ajax_icl_get_job_original_field_content', 'icl_get_job_original_field_content');
             
             add_action('admin_footer', array($this, '_icl_nonce_for_ajx'));
         }        

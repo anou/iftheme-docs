@@ -1,6 +1,25 @@
-**Next version**
+**1.9.8**
+
+* **Fix**
+	* Fixed a style issue with the "View Original" link of Translation Jobs table
+	
+**1.9.7**
+
+* **Improvements**
+	* Support for string translation packages 
+	* Removed PHP warning when in Translation Dashboard and only one language is defined. Replaced with an admin notice.
+* **Fix**
+	* Fixed issue with in proper notices in Translation Editor when user tries to translate document which was assigned to another user before
+	* Fixed issue with "Copy from" in Translation Editor 
+	* Fixed multiple issues with translation of hierarchical taxonomies
+
+**1.9.6**
+
+* **Improvements**
+	* Compatibilty with WPML Core
 
 **1.9.5**
+
 * **Improvements**
     * New way to define plugin url is now tolerant for different server settings
 	* Support for different formats of new lines in XLIFF files

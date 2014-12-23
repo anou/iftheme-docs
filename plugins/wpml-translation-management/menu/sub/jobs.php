@@ -20,7 +20,7 @@ $translation_jobs = $iclTranslationManagement->get_translation_jobs((array)$icl_
         <tr valign="top">
             <td>
                 <label>
-                    <strong><?php _e('Translation jobs for:', 'wpml-translation-management')?>&nbsp;
+                    <strong><?php _e('Translation jobs for:', 'wpml-translation-management')?></strong>&nbsp;
                     <?php $iclTranslationManagement->translators_dropdown(array(
                         'name'          => 'filter[translator_id]',
                         'default_name'  => __('All', 'wpml-translation-management'),

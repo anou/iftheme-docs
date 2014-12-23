@@ -281,6 +281,21 @@ global $language_switcher_defaults, $language_switcher_defaults_alt;
                 <h3><?php _e('Registration', 'sitepress'); ?></h3>
             </div>
             <div class="wpml-section-content">
+                
+                <?php if(is_multisite() && !empty($site_key)): ?>
+                
+                <p><?php _e('WPML is already registered netwrork-wide.', 'sitepress') ?></p>
+                <div style="text-align:right">
+                    <form id="installer_registration_form">
+                        <input type="hidden" name="action" value="installer_save_key" />
+                        <input type="hidden" name="button_action" value="installer_save_key" />
+                        <input <?php if(empty($site_key)): ?>style="display: none;"<?php endif; ?> class="button-primary" name="finish" value="<?php echo __('Finish', 'sitepress') ?>" type="submit" />
+                        <?php wp_nonce_field('registration_form_submit_nonce', '_icl_nonce'); ?>
+                    </form>
+                </div>
+                
+                <?php else: ?>        
+                
                 <p><?php _e('Enter the site key, from your wpml.org account, to receive automatic updates for WPML on this site.', 'sitepress'); ?></p>
                 <form id="installer_registration_form">
                     <input type="hidden" name="action" value="installer_save_key" />
@@ -307,8 +322,12 @@ global $language_switcher_defaults, $language_switcher_defaults_alt;
                     
                 </form>
                 
-                <p><?php printf(__("Don't have a key for this site? %sLog in to your WPML.org account and generate the site key%s.", 'sitepress'), '<a href="http://wpml.org/my-account/" target="_blank">', '</a>') ?></p>
+                <?php endif; ?>
+                
+                <?php if(empty($site_key)): ?>
+                <p><?php printf(__("Don't have a key for this site? %sGenerate a key for this site%s", 'sitepress'), '<a class="button-primary" href="https://wpml.org/my-account/sites/?add='.urlencode(get_site_url()).'" target="_blank">', '</a>') ?></p>
                 <p><?php printf(__("If you don't have a WPML.org account or a valid subscription, you can %spurchase%s one and get later upgrades, full support and 30 days money-back guarantee." , 'sitepress'), '<a href="http://wpml.org/purchase/" target="_blank">', '</a>') ?></p>
+                <?php endif; ?>
             </div>
         </div>
             
@@ -482,7 +501,7 @@ global $language_switcher_defaults, $language_switcher_defaults_alt;
                                             <tr>
                                                 <td><?php echo $lang['display_name'] ?></td>
                                                 <?php if($lang['code']== $default_language ): ?>
-                                                    <td id="icl_ln_home"><?php echo get_home_url() ?></td>
+                                                    <td id="icl_ln_home"><?php echo $sitepress->convert_url( get_home_url(), $sitepress->get_default_language() ) ?></td>
                                                     <td>&nbsp;</td>
                                                     <td>&nbsp;</td>
                                                 <?php else: ?>
@@ -643,7 +662,7 @@ global $language_switcher_defaults, $language_switcher_defaults_alt;
                                         <option value="">--<?php _e('select', 'sitepress')?>--</option>
                                         <?php endif; ?>
                                         <?php foreach($nav_menus as $nav_menu):?>
-                                            <option value="<?php echo $nav_menu->term_id ?>"<?php if(isset( $menu_for_ls ) && $nav_menu->term_id == $menu_for_ls ):?> selected="selected"<?php endif;?>><?php echo $nav_menu->name ?></option>
+                                            <option value="<?php echo $nav_menu->term_id ?>"<?php if(isset( $menu_for_ls ) && icl_object_id( $nav_menu->term_id, 'nav_menu', false, $default_language ) ==  icl_object_id( $menu_for_ls, 'nav_menu', false, $default_language ) ):?> selected="selected"<?php endif;?>><?php echo $nav_menu->name ?></option>
                                         <?php endforeach; ?>
                                     </select>
                                 </span>

@@ -4,6 +4,7 @@
 $active_languages = $sitepress->get_active_languages();
 $default_language = $sitepress->get_default_language();
 $default_language_details = $sitepress->get_language_details( $default_language );
+$secondary_languages = array();
 
 foreach ( $active_languages as $lang ) {
 	if ( $lang[ 'code' ] != $default_language_details[ 'code' ] ) {
@@ -212,7 +213,8 @@ if ( $icl_menus_sync->is_preview ) {
 								<td><?php echo $lang_details[ 'display_name' ]; ?></td>
 								<td><?php
 									printf( __( 'Untranslated string %s', 'sitepress' ), '<strong>' . $name . '</strong>' );
-									?>&nbsp;<?php printf(__('The selected strings can now be translated using the <a%s>string translation</a> screen', 'wpml-string-translation'), ' href="admin.php?page='.WPML_ST_FOLDER.'/menu/string-translation.php&context=admin_texts_theme_'.get_option('template').'"');?></td>
+									$context_menu_name = $icl_menus_sync->menus[ $menu_id ][ "name" ] . " menu";
+									?>&nbsp;<?php printf(__('The selected strings can now be translated using the <a%s>string translation</a> screen', 'wpml-string-translation'), ' href="admin.php?page='.WPML_ST_FOLDER.'/menu/string-translation.php&context='. $context_menu_name .'"');?></td>
 							</tr>
 						<?php
 						}

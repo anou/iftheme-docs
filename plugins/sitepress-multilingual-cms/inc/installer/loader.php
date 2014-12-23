@@ -3,7 +3,7 @@
 Plugin Name: Installer
 Plugin URI: http://wp-compatibility.com/installer-plugin/
 Description: Need help buying, installing and upgrading commercial themes and plugins? **Installer** handles all this for you, right from the WordPress admin. Installer lets you find themes and plugins from different sources, then, buy them from within the WordPress admin. Instead of manually uploading and unpacking, you'll see those themes and plugins available, just like any other plugin you're getting from WordPress.org.
-Version: 1.1
+Version: 1.3.1
 Author: OnTheGoSystems Inc.     
 Author URI: http://www.onthegosystems.com/
 */
@@ -19,14 +19,14 @@ $wp_installer_instance = dirname(__FILE__) . '/installer.php';
 // Global stack of instances
 $wp_installer_instances[$wp_installer_instance] = array(
     'bootfile'  => $wp_installer_instance,
-    'version'   => 1.0
+    'version'   => '1.3.1'
 );
 
 // Only one of these in the end
-remove_action('plugins_loaded', 'wpml_installer_instance_delegator', 1);
-add_action('plugins_loaded', 'wpml_installer_instance_delegator', 1);
+remove_action('after_setup_theme', 'wpml_installer_instance_delegator', 1);
+add_action('after_setup_theme', 'wpml_installer_instance_delegator', 1);
 
-// When all plugins load pick the highest version
+// When all plugins load pick the newest version
 if(!function_exists('wpml_installer_instance_delegator')){
     function wpml_installer_instance_delegator(){
         global $wp_installer_instances;
@@ -46,6 +46,9 @@ if(!function_exists('wpml_installer_instance_delegator')){
         include_once $delegate['bootfile'];
         
         // set configuration
+        if(strpos(realpath($delegate['bootfile']), realpath(TEMPLATEPATH)) === 0){
+            $delegate['args']['in_theme_folder'] = dirname(ltrim(str_replace(realpath(TEMPLATEPATH), '', realpath($delegate['bootfile'])), '\\/'));            
+        }        
         if(isset($delegate['args']) && is_array($delegate['args'])){
             foreach($delegate['args'] as $key => $value){                
                 WP_Installer()->set_config($key, $value);                

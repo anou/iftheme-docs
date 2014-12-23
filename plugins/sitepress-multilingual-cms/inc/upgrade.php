@@ -125,6 +125,8 @@ function icl_plugin_upgrade(){
 
 	icl_upgrade_version('3.1.5');
 
+    icl_upgrade_version('3.1.8');
+
 	//Forcing upgrade logic when ICL_SITEPRESS_DEV_VERSION is defined
 	//This allow to run the logic between different alpha/beta/RC versions
 	//since we are now storing only the formal version in the options

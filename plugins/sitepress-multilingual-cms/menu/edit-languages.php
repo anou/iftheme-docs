@@ -153,19 +153,19 @@ For each language, you need to enter the following information:
 
 	function table_row( $lang, $echo = true, $add = false ){
         if ($lang['id'] == 'add') {
-            $lang['english_name'] = isset($_POST['icl_edit_languages']['add']['english_name']) ? $_POST['icl_edit_languages']['add']['english_name'] : '';
+            $lang['english_name'] = isset($_POST['icl_edit_languages']['add']['english_name']) ? stripslashes_deep($_POST['icl_edit_languages']['add']['english_name']) : '';
             $lang['code'] = isset($_POST['icl_edit_languages']['add']['code']) ? $_POST['icl_edit_languages']['add']['code'] : '';
             $lang['default_locale'] = isset($_POST['icl_edit_languages']['add']['default_locale']) ? $_POST['icl_edit_languages']['add']['default_locale'] : '';
             $lang['flag'] = '';
             $lang['from_template'] = true;
             $lang['tag'] = isset($_POST['icl_edit_languages']['add']['tag']) ? $_POST['icl_edit_languages']['add']['tag'] : '';
-        }
+        }		
         ?>
 		
 		<tr style="<?php if ($add && !$this->add_validation_failed) echo 'display:none; '; if ($add) echo 'background-color:yellow; '; ?>"<?php if ($add) echo ' class="icl_edit_languages_show"'; ?>>
 					<td><input type="text" name="icl_edit_languages[<?php echo $lang['id']; ?>][english_name]" value="<?php echo $lang['english_name']; ?>"<?php if (!$add) { ?> readonly="readonly"<?php } ?> /></td>
 					<td><input type="text" name="icl_edit_languages[<?php echo $lang['id']; ?>][code]" value="<?php echo $lang['code']; ?>" style="width:30px;"<?php if (!$add) { ?> readonly="readonly"<?php } ?> /></td>
-					<td <?php if (!$this->add_validation_failed) echo 'style="display:none;" ';?>class="icl_edit_languages_show"><input type="text" name="icl_edit_languages[<?php echo $lang['id']; ?>][translations][add]" value="<?php echo isset($_POST['icl_edit_languages'][$lang['id']]['translations']['add']) ? $_POST['icl_edit_languages'][$lang['id']]['translations']['add'] : ''; ?>" /></td>
+					<td <?php if (!$this->add_validation_failed) echo 'style="display:none;" ';?>class="icl_edit_languages_show"><input type="text" name="icl_edit_languages[<?php echo $lang['id']; ?>][translations][add]" value="<?php echo isset($_POST['icl_edit_languages'][$lang['id']]['translations']['add']) ? stripslashes_deep($_POST['icl_edit_languages'][$lang['id']]['translations']['add']) : ''; ?>" /></td>
 					<?php foreach($this->active_languages as $translation){ 
 						if ($lang['id'] == 'add') {
 							$value = isset($_POST['icl_edit_languages']['add']['translations'][$translation['code']]) ? $_POST['icl_edit_languages']['add']['translations'][$translation['code']] : '';
@@ -173,7 +173,7 @@ For each language, you need to enter the following information:
 							$value = isset($lang['translation'][$translation['id']]) ? $lang['translation'][$translation['id']] : '';
 						}
 					?>
-					<td><input type="text" name="icl_edit_languages[<?php echo $lang['id']; ?>][translations][<?php echo $translation['code']; ?>]" value="<?php echo $value; ?>" /></td>
+					<td><input type="text" name="icl_edit_languages[<?php echo $lang['id']; ?>][translations][<?php echo $translation['code']; ?>]" value="<?php echo stripslashes_deep($value); ?>" /></td>
 					<?php } ?>
 					<td><?php if ($this->is_writable) { ?><input type="hidden" name="MAX_FILE_SIZE" value="100000" /><input name="icl_edit_languages[<?php echo $lang['id']; ?>][flag_file]" class="icl_edit_languages_flag_upload_field file" style="display:none; float:left;" type="file"  size="10" />&nbsp;<?php } ?><input type="text" name="icl_edit_languages[<?php echo $lang['id']; ?>][flag]" value="<?php echo $lang['flag']; ?>" class="icl_edit_languages_flag_enter_field" style="width:60px; float:left;" /><?php if ($this->is_writable) { ?><div style="float:left;"><label><input type="radio" name="icl_edit_languages[<?php echo $lang['id']; ?>][flag_upload]" value="true" class="radio icl_edit_languages_use_upload"<?php if ($lang['from_template']) { ?> checked="checked"<?php } ?> />&nbsp;<?php _e('Upload flag', 'sitepress'); ?></label><br /><label><input type="radio" name="icl_edit_languages[<?php echo $lang['id']; ?>][flag_upload]" value="false" class="radio icl_edit_languages_use_field"<?php if (!$lang['from_template']) { ?> checked="checked"<?php } ?> />&nbsp;<?php _e('Use flag from WPML', 'sitepress'); ?></label></div><?php } ?></td>
 					<td><input type="text" name="icl_edit_languages[<?php echo $lang['id']; ?>][default_locale]" value="<?php echo $lang['default_locale']; ?>" style="width:60px;" /></td>

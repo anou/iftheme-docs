@@ -55,20 +55,31 @@ class IclCommentsTranslation{
         if(isset($_POST['action']) && $_POST['action']=='editedcomment'){
             add_action('transition_comment_status', array($this, 'transition_comment_status_actions'), 1, 3);
         }
-                     
-                
-        if('comment.php' == $pagenow){
-            $row  = $wpdb->get_row("
+
+	    if ( 'comment.php' == $pagenow ) {
+
+		    $c = false;
+
+		    if ( isset( $_GET[ 'c' ] ) ) {
+			    $c = intval( $_GET[ 'c' ] );
+		    } elseif ( isset( $_POST[ 'c' ] ) ) {
+			    $c = intval( $_POST[ 'c' ] );
+		    }
+
+		    if ( $c !== false ) {
+			    $row = $wpdb->get_row( "
                 SELECT c.user_id, t.language_code 
                 FROM {$wpdb->comments} c JOIN {$wpdb->prefix}icl_translations t ON c.comment_ID = t.element_id AND element_type='comment'
-                WHERE c.comment_ID=".intval($_GET['c'])
-            );
-            $comment_author = $row->user_id;
-            $comment_lang   = $row->language_code;
-            if($current_user->data->ID == $comment_author && $comment_lang == $this->user_language){
-                add_action('admin_head', array($this, 'admin_head_actions'));
-            }            
-        }        
+                WHERE c.comment_ID=" . $c );
+		    }
+		    if ( $row && isset( $row->user_id ) && isset( $row->language_code ) ) {
+			    $comment_author = $row->user_id;
+			    $comment_lang   = $row->language_code;
+			    if ( $current_user->data->ID == $comment_author && $comment_lang == $this->user_language ) {
+				    add_action( 'admin_head', array( $this, 'admin_head_actions' ) );
+			    }
+		    }
+	    }
         add_action('edit_comment', array($this, 'edit_comment_actions'));
         
         add_action('comment_form', array($this, 'comment_form_options'));        
@@ -303,23 +314,29 @@ class IclCommentsTranslation{
         
         return $translation;
         */
-    } 
-    
-    
-    function delete_comment_actions($comment_id){
-        global $sitepress;
-        $trid = $sitepress->get_element_trid($comment_id, 'comment');
-        if($trid){
-            $translations = $sitepress->get_element_translations($trid, 'comment');
-            $sitepress->delete_element_translation($trid, 'comment');
-            foreach($translations as $t){
-                if(isset($t->element_id) && $t->element_id != $comment_id){
-                    wp_delete_comment($t->element_id);
-                }
-            }            
-        }
-    }    
-    
+    }
+
+	function delete_comment_actions( $comment_id ) {
+		global $sitepress;
+		$lang_details = $sitepress->get_element_language_details( $comment_id, 'comment' );
+		if ( $lang_details && isset( $lang_details->trid ) && isset( $lang_details->source_language_code ) ) {
+			$trid = $lang_details->trid;
+			if ( $lang_details->source_language_code ) {
+				$sitepress->delete_element_translation( $trid, 'comment', $lang_details->language_code );
+			} else {
+				$translations = $sitepress->get_element_translations( $lang_details->trid, 'comment' );
+				$sitepress->delete_element_translation( $trid, 'comment' );
+				foreach ( $translations as $t ) {
+					if ( isset( $t->element_id ) && $t->element_id != $comment_id ) {
+						remove_action( 'delete_comment', array( $this, 'delete_comment_actions' ) );
+						wp_delete_comment( $t->element_id );
+						add_action( 'delete_comment', array( $this, 'delete_comment_actions' ) );
+					}
+				}
+			}
+		}
+	}
+
     function wp_set_comment_status_actions($comment_id, $status){
         global $sitepress;        
         static $ids_processed = array(); // using this for avoiding the infinite loop
@@ -337,7 +354,7 @@ class IclCommentsTranslation{
     
     function edit_comment_actions($comment_id){
         // we'll use this hook ONLY for updating comments - not for new comments
-        if($_POST['icl_translate_reply']){
+        if(isset($_POST['icl_translate_reply'])){
             global $wpdb;
             $res = $wpdb->get_row("
                 SELECT MD5(c.comment_content)<> ms.md5 AND ms.md5 IS NOT NULL AS updated, ms.to_language

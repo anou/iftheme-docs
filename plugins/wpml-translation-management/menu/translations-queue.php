@@ -223,7 +223,7 @@
                 <td width="60"><?php echo $job->job_id; ?></td>
                 <td><?php echo apply_filters('the_title', $job->post_title ); ?></td>
                 <td><?php echo $job->lang_text ?></td>
-	            <td nowrap="nowrap">
+                <td>
 		            <?php
 		            if ( $job->original_doc_id ) {
 			            $translation_queue_page = admin_url( 'admin.php?page=' . WPML_TM_FOLDER . '/menu/translations-queue.php&job_id=' . $job->job_id );
@@ -243,7 +243,8 @@
 			            </a>
 			            <?php
 			            $tm_post_link = TranslationManagement::tm_post_link( $job->original_doc_id, __( 'View original', 'wpml-translation-management' ), true );
-			            echo $tm_post_link;
+				    echo "<br/>";
+				    echo $tm_post_link;
 		            }
 		            ?>
 	            </td>

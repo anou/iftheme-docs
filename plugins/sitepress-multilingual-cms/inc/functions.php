@@ -5,6 +5,32 @@
  * @package wpml-core
  */
 
+function wpml_site_uses_icl() {
+    //site_id
+    //access_key
+    //icl_account_email
+
+    $site_id           = false;
+    $access_key        = false;
+    $icl_account_email = false;
+
+    global $sitepress;
+    if ( isset( $sitepress ) ) {
+        $site_id           = $sitepress->get_setting( 'site_id' );
+        $access_key        = $sitepress->get_setting( 'access_key' );
+        $icl_account_email = $sitepress->get_setting( 'icl_account_email' );
+    } else {
+        $sitepress_settings = get_option( 'icl_sitepress_settings' );
+        if ( $sitepress_settings ) {
+            $site_id           = isset( $sitepress_settings[ 'site_id' ] ) ? $sitepress_settings[ 'site_id' ] : false;
+            $access_key        = isset( $sitepress_settings[ 'access_key' ] ) ? $sitepress_settings[ 'access_key' ] : false;
+            $icl_account_email = isset( $sitepress_settings[ 'icl_account_email' ] ) ? $sitepress_settings[ 'icl_account_email' ] : false;
+        }
+    }
+
+    return ( $site_id || $access_key || $icl_account_email );
+}
+
 /**
  * @param string $key
  * @param bool   $default
@@ -327,4 +353,73 @@ function wpml_like_escape($text) {
 
 	/** @noinspection PhpDeprecationInspection */
 	return like_escape($text);
+}
+
+/**
+ * @param $url
+ * Removes the subdirectory in which WordPress is installed from a url.
+ * If WordPress is not installed in a subdirectory, then then input is returned unaltered.
+ * @return string
+ */
+function wpml_strip_subdir_from_url( $url ) {
+    global $sitepress;
+
+    remove_filter( 'home_url', array( $sitepress, 'home_url' ), 1, 4 );
+
+    //Remove potentially existing subdir slug before checking the url
+    $subdir       = parse_url( home_url(), PHP_URL_PATH );
+    $subdir_slugs = explode( '/', $subdir );
+
+    add_filter( 'home_url', array( $sitepress, 'home_url' ), 1, 4 );
+
+    $url_path  = parse_url( $url, PHP_URL_PATH );
+    $url_slugs = explode( '/', $url_path );
+
+    foreach ( (array) $url_slugs as $key => $slug ) {
+        if ( ! trim( $slug ) ) {
+            unset( $url_slugs[ $key ] );
+        }
+    }
+
+    foreach ( (array) $subdir_slugs as $key => $slug ) {
+        if ( ! trim( $slug ) ) {
+            unset( $subdir_slugs[ $key ] );
+        }
+    }
+
+    if ( ! empty( $subdir_slugs ) && ! empty( $url_slugs ) ) {
+        foreach ( $subdir_slugs as $key => $slug ) {
+            if ( isset( $url_slugs[ $key ] ) && $slug == $url_slugs[ $key ] ) {
+                unset( $url_slugs[ $key ] );
+            }
+        }
+
+        $url_path_new = join( '/', $url_slugs );
+
+        $url = str_replace( $url_path, $url_path_new, $url );
+    }
+
+    return $url;
+}
+
+/**
+ * Changes array of items into string of items, separated by comma and sql-escaped 
+ * 
+ * @see https://coderwall.com/p/zepnaw 
+ * 
+ * @global wpdb $wpdb
+ * @param array $items items to be joined into string
+ * @param string $format %s or %d
+ * @return string Items separated by comma and sql-escaped 
+ */
+function wpml_prepare_in(array $items, $format = '%s') { 
+	global $wpdb;
+	
+	$how_many = count($items);
+	$placeholders = array_fill(0, $how_many, $format);
+	$prepared_format = implode(",", $placeholders);
+	$prepared_in = $wpdb->prepare($prepared_format, $items);
+	
+	return $prepared_in;
+	
 }

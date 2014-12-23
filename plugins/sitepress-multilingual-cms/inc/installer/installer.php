@@ -1,7 +1,8 @@
 <?php 
-define('WP_INSTALLER_VERSION', '1.0');
+define('WP_INSTALLER_VERSION', '1.3.1');
   
-include_once (dirname(__FILE__) . '/includes/installer.class.php');
+include_once dirname(__FILE__) . '/includes/installer.class.php';
+include_once dirname(__FILE__) . '/includes/deps-loader.class.php';
 
 function WP_Installer() {
     return WP_Installer::instance();

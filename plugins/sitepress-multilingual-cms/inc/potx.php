@@ -727,12 +727,12 @@ function _potx_find_t_calls_with_context($file, $save_callback, $function_name =
                 $context_offset = 4;
                 $text = $mid[1];
             }elseif($function_name == '_n'){
-                $domain_offset = 10;
+	            $domain_offset = _potx_find_end_of_function($ti, '(', ')') - 1 - $ti;
                 $context_offset = false;
                 $text_plural = $_potx_tokens[$ti+4][1];
             }elseif($function_name == '_nx'){
-                $domain_offset = 10;
-                $context_offset = 8;                   
+                $domain_offset = _potx_find_end_of_function($ti, '(', ')') - 1 - $ti;
+                $context_offset = $domain_offset -2;
                 $text_plural = $_potx_tokens[$ti+4][1];      
             }else{
                 $domain_offset = 4;
@@ -774,7 +774,7 @@ function _potx_find_t_calls_with_context($file, $save_callback, $function_name =
                                 return false;
                             }
                         }else{
-                            return false;    
+                            return false;
                         }
                     }
                 }else{
@@ -788,9 +788,10 @@ function _potx_find_t_calls_with_context($file, $save_callback, $function_name =
             
             
           }
-          if ($domain !== POTX_CONTEXT_ERROR) {
+          if ($domain !== POTX_CONTEXT_ERROR && is_callable($save_callback, false, $bla)) {
             // Only save if there was no error in context parsing.
-            $save_callback(_potx_format_quoted_string($mid[1]), $domain, @strval($context), $file, $line, $string_mode);
+	            $save_callback = $bla;
+                $save_callback(_potx_format_quoted_string($mid[1]), $domain, @strval($context), $file, $line, $string_mode);
             if(isset($text_plural)){
                 $save_callback(_potx_format_quoted_string($text_plural), $domain, $context, $file, $line, $string_mode);
             }
@@ -965,21 +966,21 @@ function _potx_find_perm_hook($file, $filebase, $save_callback) {
  * @param $here
  *   The token at the function name
  */
-function _potx_find_end_of_function($here) {
+function _potx_find_end_of_function($here, $open = '{', $close = '}') {
   global $_potx_tokens;
 
   // Seek to open brace.
-  while (is_array($_potx_tokens[$here]) || $_potx_tokens[$here] != '{') {
+  while (is_array($_potx_tokens[$here]) || $_potx_tokens[$here] != $open) {
     $here++;
   }
   $nesting = 1;
   while ($nesting > 0) {
     $here++;
     if (!is_array($_potx_tokens[$here])) {
-      if ($_potx_tokens[$here] == '}') {
+      if ($_potx_tokens[$here] == $close) {
         $nesting--;
       }
-      if ($_potx_tokens[$here] == '{') {
+      if ($_potx_tokens[$here] == $open) {
         $nesting++;
       }
     }

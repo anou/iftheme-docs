@@ -87,4 +87,24 @@ function icl_reset_wpml($blog_id = false){
     }
 }
 
-?>
+
+function icl_repair_broken_type_and_language_assignments() {
+
+	global $wpdb;
+	//get all post types and trids of original content ( source_language_code == NULL )
+
+	$query = "SELECT language_code, element_type, trid FROM {$wpdb->prefix}icl_translations WHERE source_language_code IS NULL";
+	$res = $wpdb->get_results( $query );
+
+	$rows_fixed = 0;
+
+	foreach ( $res as $element ) {
+		$update_query = $wpdb->prepare(
+			"UPDATE {$wpdb->prefix}icl_translations SET source_language_code=%s, element_type=%s WHERE trid=%d AND ( source_language_code = language_code OR element_type != %s )",
+			$element->language_code, $element->element_type, $element->trid, $element->element_type
+		);
+		$wpdb->get_results( $update_query );
+		$rows_fixed += $wpdb->rows_affected;
+	}
+	wp_send_json_success( $rows_fixed );
+}

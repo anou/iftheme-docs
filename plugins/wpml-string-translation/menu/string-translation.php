@@ -590,22 +590,29 @@ function _icl_string_translation_rtl_textarea($language) {
                                     <ul>
                                         <li>
                                         <label>
-                                            <input type="radio" name="icl_auto_reg_type" value="disable" <?php if($sitepress_settings['st']['icl_st_auto_reg'] == 'disable'):?>checked="checked"<?php endif?> />
+                                            <input type="radio" class="icl_auto_reg_type" name="icl_auto_reg_type" value="disable" <?php if($sitepress_settings['st']['icl_st_auto_reg'] == 'disable'):?>checked="checked"<?php endif?> />
                                             <?php echo __('Disable auto-register strings', 'sitepress') ?>
                                         </label>
                                         </li>
                                         <li>
                                             <label>
-                                                <input type="radio" name="icl_auto_reg_type" value="auto-admin" <?php if(!$sitepress_settings['st']['icl_st_auto_reg'] || $sitepress_settings['st']['icl_st_auto_reg'] == 'auto-admin'):?>checked="checked"<?php endif?> />
+                                                <input type="radio" class="icl_auto_reg_type" name="icl_auto_reg_type" value="auto-admin" <?php if(!$sitepress_settings['st']['icl_st_auto_reg'] || $sitepress_settings['st']['icl_st_auto_reg'] == 'auto-admin'):?>checked="checked"<?php endif?> />
                                                 <?php echo __('Auto-register strings only when logged in as an administrator', 'sitepress') ?>
                                             </label>
                                         </li>
                                         <li>
                                             <label>
-                                                <input type="radio" name="icl_auto_reg_type" value="auto-always" <?php if($sitepress_settings['st']['icl_st_auto_reg'] == 'auto-always'):?>checked="checked"<?php endif?> />
+                                                <input type="radio" class="icl_auto_reg_type" name="icl_auto_reg_type" value="auto-always" <?php if($sitepress_settings['st']['icl_st_auto_reg'] == 'auto-always'):?>checked="checked"<?php endif?> />
                                                 <?php echo __('Auto-register strings always', 'sitepress') ?>
                                             </label>
-                                            <p><a href="https://wpml.org/?p=9073"><?php _e('Performance considerations', 'wpml-string-translation') ?>&nbsp;&raquo;</a></p>
+
+	                                        <p id="auto_register_notes" style="display: none;">
+		                                        <?php
+		                                        $auto_register_notes = __( 'Auto-registration takes server resources. Read the %susage instructions%s to learn how to use it correctly while you are developing the site.', 'wpml-string-translation' );
+		                                        $auto_register_notes = sprintf( $auto_register_notes, '<a href="http://wpml.org/documentation/getting-started-guide/string-translation/#auto-register-fe" target="_blank">', '</a>' );
+		                                        echo __( $auto_register_notes, 'wpml-string-translation' )
+		                                        ?>
+	                                        </p>
                                         </li>
                                     </ul>
                                     <p>

@@ -388,58 +388,15 @@ jQuery(document).ready(function(){
 		icl_tdo_options.submit(iclSaveForm);
 	}
 
-    jQuery('.icl_tm_copy_link').click(function(){
-        var field = jQuery(this).attr('id').replace(/^icl_tm_copy_link_/,'');
+    jQuery('.icl_tm_copy_link').click(function () {
+        var type = jQuery(this).attr('id').replace(/^icl_tm_copy_link_/, '');
 
+        var job_id = jQuery('[name="job_id"]').val();
 
-        var original = '';
+        var copy_link_element = jQuery(this).parent();
 
+        icl_get_job_original_contents(job_id, type, copy_link_element);
 
-        if(0 == field.indexOf('field-')){
-			field = field.replace(/ /g, '__20__');
-        }
-
-        if(field=='body' || (0 == field.indexOf('field-') && jQuery('#icl_tm_original_'+field)[0].tagName != 'SPAN')){
-
-            original = jQuery('#icl_tm_original_'+field).val()
-
-            try{
-                tinyMCE.get(field); // activate
-
-            }catch(err){;} //backward compatibility
-
-            if ( typeof tinyMCE != 'undefined' && ( ed = tinyMCE.activeEditor ) && !ed.isHidden() ) {
-
-                if(tinyMCE.activeEditor.id != field){
-                    for(i in tinyMCE.editors){
-                        if(field == tinyMCE.editors[i].id){
-                            ed = tinyMCE.editors[i];
-                        }
-                    }
-                }
-
-                ed.focus();
-                if (tinymce.isIE)
-                    ed.selection.moveToBookmark(tinymce.EditorManager.activeEditor.windowManager.bookmark);
-                original = original.replace(/\n\n/g, '<br />');
-                ed.execCommand('mceInsertContent', false, original);
-            } else {
-                wpActiveEditor = field;
-                edInsertContent(edCanvas, original);
-            }
-        }else{
-			field = field.replace(/ /g, '__20__');
-            original = jQuery('#icl_tm_original_'+field).html();
-
-            if(jQuery('#'+field).length){
-                jQuery('#'+field).val(original);
-            }else if(jQuery('#'+field).length){
-                jQuery('#'+field).val(original);
-            }
-            /*jQuery('#icl_tm_editor *[name="'+field+'"]').val(original);    */
-
-        }
-        jQuery(this).parent().fadeOut();
         return false;
     });
 
@@ -866,4 +823,59 @@ function icl_abort_translation(input, job_id){
 
 
 
+}
+
+function icl_get_job_original_contents(job_id, field_type, calling_element) {
+
+    var ajax_spinner = jQuery('<span class="spinner" style="float:left;"> </span>');
+    calling_element.replaceWith(ajax_spinner);
+    ajax_spinner.show();
+
+    jQuery.ajax(
+      {
+          type:     "POST",
+          url:      ajaxurl,
+          dataType: 'json',
+          data:     {
+              tm_editor_job_id:    job_id,
+              tm_editor_job_field: field_type,
+              action:              'icl_get_job_original_field_content'
+          },
+          success:  function (response) {
+
+              var custom_editor = false;
+
+              try{
+                  custom_editor = tinyMCE.activeEditor;
+              }catch(err){;}
+
+              var found_editor = false;
+              if (custom_editor && custom_editor.id !== field_type) {
+                  //tinyMCE API change
+                  jQuery.each(
+                    custom_editor.editorManager.editors, function () {
+                        var item = this;
+                        if ("field-wpcf-" + field_type === item.id || field_type === item.id) {
+                            custom_editor = item;
+                            found_editor = true;
+                        }
+                    }
+                  );
+              } else {
+                  found_editor = true;
+              }
+
+              if (custom_editor && found_editor && !custom_editor.isHidden()) {
+                  custom_editor.insertContent(response.data);
+              } else {
+                  jQuery('#' + field_type).val(response.data);
+              }
+
+              ajax_spinner.fadeOut();
+          },
+          error:    function () {
+              ajax_spinner.replaceWith(calling_element);
+          }
+      }
+    );
 }

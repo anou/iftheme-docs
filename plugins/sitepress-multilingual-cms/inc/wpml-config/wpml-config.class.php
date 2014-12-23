@@ -18,6 +18,7 @@ class WPML_Config
 			'themes.php',
 			ICL_PLUGIN_FOLDER . '/menu/languages.php',
 			ICL_PLUGIN_FOLDER . '/menu/theme-localization.php',
+			ICL_PLUGIN_FOLDER . '/menu/translation-options.php',
 		);
 		if (defined('WPML_ST_FOLDER')) {
 			$white_list_pages[] = WPML_ST_FOLDER . '/menu/string-translation.php';
@@ -245,13 +246,9 @@ class WPML_Config
 					//admin-texts
 					if ( isset( $config[ 'wpml-config' ][ 'admin-texts' ][ 'key' ] ) ) {
 
-                        if(!isset($type)){
-						$type               = ( dirname( $file ) == get_template_directory() || dirname( $file ) == get_stylesheet_directory() ) ? 'theme' : 'plugin';
-                        }
+						$type = ( dirname( $file ) == get_template_directory() || dirname( $file ) == get_stylesheet_directory() ) ? 'theme' : 'plugin';
 
-						if(!isset($admin_text_context)){
 						$admin_text_context = basename( dirname( $file ) );
-                        }
 
 
 						if ( ! is_numeric( key( @current( $config[ 'wpml-config' ][ 'admin-texts' ] ) ) ) ) { //single

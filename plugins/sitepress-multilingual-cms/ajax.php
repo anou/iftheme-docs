@@ -22,10 +22,11 @@ $_icl_ajx_actions_no_nonce = array(
 		'set_xliff_newlines'       => 1,
 );
 
-if(!isset($_icl_ajx_actions_no_nonce[$_REQUEST['icl_ajx_action']]) && !wp_verify_nonce($_REQUEST['_icl_nonce'], $_REQUEST['icl_ajx_action'] . '_nonce')){
-	if (!( isset( $_GET[ 'icl_ajx_action' ] ) && $_GET[ 'nonce' ] == wp_create_nonce( $_GET[ 'icl_ajx_action' ] ) )) {
-    	die('Invalid nonce');
-	}
+if ( ! isset( $_icl_ajx_actions_no_nonce[ $_REQUEST[ 'icl_ajx_action' ] ] )
+     && ! wp_verify_nonce( $_REQUEST[ '_icl_nonce' ], $_REQUEST[ 'icl_ajx_action' ] . '_nonce' )
+     && ! ( isset( $_GET[ 'icl_ajx_action' ] ) && isset( $_GET[ 'nonce' ] ) && $_GET[ 'nonce' ] == wp_create_nonce( $_GET[ 'icl_ajx_action' ] ) )
+) {
+    die( 'Invalid nonce' );
 }
 
 $iclsettings = $this->get_settings();

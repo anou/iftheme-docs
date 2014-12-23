@@ -70,8 +70,8 @@ class WPML_Slug_Translation{
                             SELECT t.value 
                             FROM {$wpdb->prefix}icl_string_translations t
                                 JOIN {$wpdb->prefix}icl_strings s ON t.string_id = s.id
-                            WHERE t.language = %s AND s.name = %s AND s.value = %s
-                        ", $current_language, 'URL slug: ' . $slug, $slug));
+                            WHERE t.language = %s AND s.name = %s AND s.value = %s AND t.status = %d
+                        ", $current_language, 'URL slug: ' . $slug, $slug, ICL_STRING_TRANSLATION_COMPLETE));
                 
                 $using_tags = false;
                 
@@ -155,6 +155,7 @@ class WPML_Slug_Translation{
 												WHERE t.language = %s
 												AND s.name LIKE %s
 												AND s.language = %s
+                                                AND t.status = %d
 							";
 			}else if ( $sitepress_settings[ 'st' ][ 'strings_language' ] != $current_language ) {
 				$slugs_translations_sql = "
@@ -164,11 +165,12 @@ class WPML_Slug_Translation{
 										WHERE t.language = %s
 										AND s.name LIKE %s
 										AND s.language = %s
+                                        AND t.status = %d
 							";
 			}
 
 			if($slugs_translations_sql) {
-				$slugs_translations_prepared          = $wpdb->prepare( $slugs_translations_sql, array( $language, 'URL slug:%', $sitepress_settings[ 'st' ][ 'strings_language' ] ) );
+				$slugs_translations_prepared          = $wpdb->prepare( $slugs_translations_sql, array( $language, 'URL slug:%', $sitepress_settings[ 'st' ][ 'strings_language' ], ICL_STRING_TRANSLATION_COMPLETE ) );
 				$slugs_translations          = $wpdb->get_results( $slugs_translations_prepared, 'ARRAY_A' );
 				wp_cache_set($cache_key, $slugs_translations, $cache_group);
 			}
@@ -253,6 +255,7 @@ class WPML_Slug_Translation{
                                 AND s.language = '" . esc_sql($strings_language) . "' 
                                 AND s.name LIKE 'URL slug:%' 
                                 AND t.language = '" . esc_sql($ld->language_code) . "'
+                                AND t.status = " . ICL_STRING_TRANSLATION_COMPLETE . "
                 ");
                 
                 if(empty($slug_real)) return $post_link;

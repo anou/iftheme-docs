@@ -17,12 +17,12 @@
                             </tr>
                         </thead>                        
                         <tbody>
-                        <?php foreach($product['downloads'] as $download): ?>
+                        <?php foreach($package['downloads'] as $download): ?>
                             <tr>
                                 <td>
                                     <label>
                                     <?php 
-                                        $url =  $this->append_site_key_to_download_url($download['url'], $site_key); 
+                                        $url =  $this->append_site_key_to_download_url($download['url'], $site_key, $repository_id);
                                     ?>
                                     <input type="checkbox" name="downloads[]" value="<?php echo base64_encode(json_encode(array('url' => $url, 
                                         'basename' => $download['basename'], 'nonce' => wp_create_nonce('install_plugin_' . $url)))); ?>" <?php 
@@ -48,7 +48,7 @@
                                     <span class="installer-status-activating"><?php _e('activating', 'installer') ?></span>                                    
                                     <span class="installer-status-activated"><?php _e('activated', 'installer') ?></span>
                                 </td>
-                                <td class="for_spinner_js">&nbsp;</td>
+                                <td class="for_spinner_js"><span class="spinner"></span></td>
                             </tr>
                         <?php endforeach; ?>
                         </tbody>
@@ -58,7 +58,8 @@
                     <input type="submit" class="button-secondary" value="<?php esc_attr_e('Download', 'installer') ?>" disabled="disabled" />
                     &nbsp;
                     <label><input name="activate" type="checkbox" value="1" disabled="disabled" />&nbsp;<?php _e('Activate after download', 'installer') ?></label>
-                    
+
                     <div class="installer-status-success"><p><?php _e('Operation complete!', 'installer') ?></p></div>
+
                     <span class="installer-revalidate-message hidden"><?php _e("Download failed!\n\nClick OK to revalidate your subscription or CANCEL to try again.", 'installer') ?></span>
                     </form>         

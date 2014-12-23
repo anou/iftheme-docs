@@ -13,7 +13,9 @@
         jQuery('.otgs_wp_installer_table').on('change', '.otgsi_downloads_form :checkbox[name="downloads[]"]', otgs_wp_installer.update_downloads_form);
         
         jQuery('.installer-dismiss-nag').click(otgs_wp_installer.dismiss_nag);
-                
+        
+        jQuery('.otgs_wp_installer_table').on('click', '.installer_expand_button', otgs_wp_installer.toggle_subpackages);
+
     },
     
     
@@ -129,20 +131,29 @@
     
     download_downloads: function(){
         
-        var activate = jQuery(this).find(":checkbox:checked[name=activate]").val();
-        var downloads_form = jQuery(this);
-        
-        /*jQuery(this).find('input').attr('disabled', 'disabled');*/
-           
-        var fail = false;   
+        var activate = jQuery(this).find(":checkbox:checked[name=activate]").val(),
+            action_button = jQuery(this).find('input[type="submit"]');
+            downloads_form = jQuery(this),
+            idx = 0,
+            checkboxes = [];
                 
         jQuery(this).find(':checkbox:checked[name="downloads[]"]').each(function(){
-            
             if(jQuery(this).attr('disabled')) return;
-            
+            checkboxes[idx] = jQuery(this);
+            idx++;
             jQuery(this).attr('disabled', 'disabled');
+        });
+
+        idx = 0;
+
+        if( typeof checkboxes[idx] != 'undefined' ){
+            download_and_activate( checkboxes[idx] );
+            action_button.attr('disabled', 'disabled');
+        }
+
+        function download_and_activate( elem ){
             
-            var this_tr = jQuery(this).closest('tr');
+            var this_tr = elem.closest('tr');
             var is_update = this_tr.find('.installer-red-text').length;
             if(is_update){
                 var installing = this_tr.find('.installer-status-updating');
@@ -157,26 +168,30 @@
                 var activated = this_tr.find('.installer-status-activated');
             }
             
-            var spinner = jQuery('<span class="spinner"></span>');
-            spinner.show().appendTo(this_tr.find('.for_spinner_js'));
+
+            if( this_tr.find('.for_spinner_js .spinner').size() > 0 ){
+                var spinner = this_tr.find('.for_spinner_js .spinner');
+            }else{
+                var spinner = this_tr.find('.installer-status-downloading');
+            }
+            
+            spinner.show();
                         
             installing.show();
             
-            data = {action: 'installer_download_plugin', data: jQuery(this).val(), activate: activate}
+            data = {action: 'installer_download_plugin', data: elem.val(), activate: activate}
             
             jQuery.ajax({
                 url: ajaxurl,
                 type: 'POST',
                 dataType: 'json',
                 data: data,
-                async: false,
                 success: function(ret){
                     installing.hide();
                     
                     if(!ret.success){
                         installed.addClass('installer-status-error');
-                        installed.html(installed.data('fail'));                            
-                        fail = true;
+                        installed.html(installed.data('fail'));
                         
                         var revalidate_message = downloads_form.find('.installer-revalidate-message').html();
                         if(confirm(revalidate_message)){
@@ -186,10 +201,11 @@
                     }
                                         
                     installed.show();
+                    spinner.hide();
 
                     if(ret.success && activate){
                         activating.show();
-                        
+                        spinner.show();
                         this_tr.find('.installer-red-text').removeClass('installer-red-text').addClass('installer-green-text').html(ret.version);
                         
                         jQuery.ajax({
@@ -197,34 +213,36 @@
                             type: 'POST',
                             dataType: 'json',
                             data: {action: 'installer_activate_plugin', plugin_id: ret.plugin_id, nonce: ret.nonce},
-                            async: false,
                             success: function(ret){
                                 activating.hide();
-                                if(ret.error){
-                                    fail = true;
+                                if(! ret.error ){
+                                    activated.show();
+                                }
+                                spinner.hide();
+
+                                idx++;
+                                if( typeof checkboxes[idx] != 'undefined' ){
+                                    download_and_activate( checkboxes[idx] );
                                 }else{
-                                    activated.show();    
+                                    downloads_form.find('div.installer-status-success').show();
+                                    action_button.removeAttr('disabled');
                                 }
                             }
-                        })
+                        });
+                    }else{
+                        idx++;
+                        if( typeof checkboxes[idx] != 'undefined' ){
+                            download_and_activate( checkboxes[idx] );
+                        }else{
+                             downloads_form.find('div.installer-status-success').show();
+                            action_button.removeAttr('disabled');
+                        }
                     }
-                    
-                    spinner.remove();
-                    
                 }
                 
-            })
+            });
             
-            
-            
-        });
-        
-        if(!fail){
-            downloads_form.find('div.installer-status-success').show();    
-        }else{
-            downloads_form.find('div.installer-status-fail').show();
-        }
-        
+        };
         
         return false;
     },
@@ -246,9 +264,22 @@
         return false;
 
         
-    }
+    },
     
-    
+    toggle_subpackages: function(){
+        var list = jQuery(this).closest('td').find('.otgs_wp_installer_subtable');
+        
+        if(list.is(':visible')){
+            list.slideUp('fast');
+        }else{
+            list.slideDown('fast');
+        }
+
+
+        return false;
+
+    }    
+
     
 }
 

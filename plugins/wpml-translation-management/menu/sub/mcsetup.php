@@ -141,7 +141,7 @@ $cf_keys = array_unique(@array_merge($cf_keys, (array)$iclTranslationManagement-
                     <?php _e('Show translation instructions in the list of pages', 'wpml-translation-management') ?>
                 </label>
             </p>
-
+			<!-- @todo: Add the block term translation button in 3.2 -->
             <p>
                 <a href="https://wpml.org/?page_id=3416" target="_blank"><?php _e('Learn more about the different translation options') ?></a>
             </p>

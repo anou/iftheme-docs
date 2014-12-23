@@ -4,7 +4,6 @@ jQuery(document).ready(function($){
     if(jQuery('#category-adder').html()){
         jQuery('#category-adder').prepend('<p>'+icl_cat_adder_msg+'</p>');
     }
-    jQuery('select[name="icl_post_language"]').change(iclPostLanguageSwitch);
     //jQuery('#noupdate_but input[type="button"]').click(iclSetDocumentToDate);
     jQuery('select[name="icl_translation_of"]').change(function(){jQuery('#icl_translate_options').fadeOut();});
     jQuery('#icl_dismiss_help').click(iclDismissHelp);
@@ -47,6 +46,8 @@ jQuery(document).ready(function($){
                 var p1 = resp.indexOf('<span id="icl_subsubsub">');
                 var p2 = resp.indexOf('<\\/span>', p1);
                 jQuery('#icl_subsubsub').html(resp.substr(p1+25, p2-p1-25).replace(/\\/g, ''));
+                fixMissingPostTypesInLinks();
+
             });
         }
 
@@ -331,181 +332,6 @@ function iclSaveForm() {
 	return false;
 }
 
-function iclPostLanguageSwitch(){
-    var lang = jQuery(this).attr('value');
-    var ajx = location.href.replace(/#(.*)$/,'');
-    if(-1 == location.href.indexOf('?')){
-        url_glue='?';
-    }else{
-        url_glue='&';
-    }
-
-    document.cookie= "_icl_current_language=" + lang;
-
-    if(icl_this_lang != lang){
-        jQuery('#icl_translate_options').fadeOut();
-    }else{
-        jQuery('#icl_translate_options').fadeIn();
-    }
-
-    if(jQuery('#parent_id').length > 0){
-        jQuery('#parent_id').load(ajx+url_glue+'lang='+lang + ' #parent_id option',{lang_switch:jQuery('#post_ID').attr('value')}, function(resp){
-            tow1 = resp.indexOf('<div id="translation_of_wrap">');
-            tow2 = resp.indexOf('</div><!--//translation_of_wrap-->');
-            jQuery('#translation_of_wrap').html(resp.substr(tow1+31, tow2-tow1-31));
-            if(-1 == jQuery('#parent_id').html().indexOf('selected="selected"')){
-                jQuery('#parent_id').attr('value','');
-            }
-        });
-    }else if(jQuery('#categorydiv').length > 0){
-        jQuery('.categorydiv').hide();
-        var ltlhlpr = document.createElement('div');
-        ltlhlpr.setAttribute('style','display:none');
-        ltlhlpr.setAttribute('id','icl_ltlhlpr');
-        jQuery(this).after(ltlhlpr);
-        jQuery('#categorydiv').slideUp();
-
-        jQuery('#icl_ltlhlpr').load(ajx+url_glue+'icl_ajx=1&lang='+lang + ' #categorydiv',{}, function(resp){
-            tow1 = resp.indexOf('<div id="translation_of_wrap">');
-            tow2 = resp.indexOf('</div><!--//translation_of_wrap-->');
-            jQuery('#translation_of_wrap').html(resp.substr(tow1+31, tow2-tow1-31));
-            jQuery('#icl_ltlhlpr').html(jQuery('#icl_ltlhlpr').html().replace('categorydiv',''));
-            jQuery('#categorydiv').html(jQuery('#icl_ltlhlpr div').html());
-            jQuery('#categorydiv').slideDown();
-            jQuery('#icl_ltlhlpr').remove();
-            jQuery('#category-adder').prepend('<p>'+icl_cat_adder_msg+'</p>');
-
-            var tx = '';
-            jQuery('.categorydiv').each(function(){
-                var id = jQuery(this).attr('id');
-                var tx = id.replace(/^taxonomy-/,'');
-
-                if(id != 'taxonomy-category'){
-                    jQuery('#'+tx+'div').html(jQuery(resp).find('#'+tx+'div').html());
-                }
-
-
-                /* WP scrap */
-                jQuery(".categorydiv").each(function () {
-                    var this_id = jQuery(this).attr("id"),
-                        noSyncChecks = false,
-                        syncChecks, catAddAfter, taxonomyParts, taxonomy, settingName;
-                    taxonomyParts = this_id.split("-");
-                    taxonomyParts.shift();
-                    taxonomy = taxonomyParts.join("-");
-                    settingName = taxonomy + "_tab";
-                    if (taxonomy == "category") {
-                        settingName = "cats"
-                    }
-                    jQuery("a", "#" + taxonomy + "-tabs").click(function () {
-                        var t = jQuery(this).attr("href");
-                        jQuery(this).parent().addClass("tabs").siblings("li").removeClass("tabs");
-                        jQuery("#" + taxonomy + "-tabs").siblings(".tabs-panel").hide();
-                        jQuery(t).show();
-                        if ("#" + taxonomy + "-all" == t) {
-                            deleteUserSetting(settingName)
-                        } else {
-                            setUserSetting(settingName, "pop")
-                        }
-                        return false
-                    });
-                    if (getUserSetting(settingName)) {
-                        jQuery('a[href="#' + taxonomy + '-pop"]', "#" + taxonomy + "-tabs").click()
-                    }
-                    jQuery("#new" + taxonomy).one("focus", function () {
-                        jQuery(this).val("").removeClass("form-input-tip")
-                    });
-                    jQuery("#" + taxonomy + "-add-submit").click(function () {
-                        jQuery("#new" + taxonomy).focus()
-                    });
-                    syncChecks = function () {
-                        if (noSyncChecks) {
-                            return
-                        }
-                        noSyncChecks = true;
-                        var th = jQuery(this),
-                            c = th.is(":checked"),
-                            id = th.val().toString();
-                        jQuery("#in-" + taxonomy + "-" + id + ", #in-" + taxonomy + "-category-" + id).attr("checked", c);
-                        noSyncChecks = false
-                    };
-                    catAddBefore = function (s) {
-                        if (!jQuery("#new" + taxonomy).val()) {
-                            return false
-                        }
-                        s.data += "&" + jQuery(":checked", "#" + taxonomy + "checklist").serialize();
-                        return s
-                    };
-                    catAddAfter = function (r, s) {
-                        var sup, drop = jQuery("#new" + taxonomy + "_parent");
-                        if ("undefined" != s.parsed.responses[0] && (sup = s.parsed.responses[0].supplemental.newcat_parent)) {
-                            drop.before(sup);
-                            drop.remove()
-                        }
-                    };
-                    jQuery("#" + taxonomy + "checklist").wpList({
-                        alt: "",
-                        response: taxonomy + "-ajax-response",
-                        addBefore: catAddBefore,
-                        addAfter: catAddAfter
-                    });
-                    jQuery("#" + taxonomy + "-add-toggle").click(function () {
-                        jQuery("#" + taxonomy + "-adder").toggleClass("wp-hidden-children");
-                        jQuery('a[href="#' + taxonomy + '-all"]', "#" + taxonomy + "-tabs").click();
-                        return false
-                    });
-                    jQuery(document).delegate("#" + taxonomy + "checklist li.popular-category :checkbox, #" + taxonomy + "checklist-pop :checkbox", "click", function () {
-                        var t = jQuery(this),
-                            c = t.is(":checked"),
-                            id = t.val();
-                        if (id && t.parents("#taxonomy-" + taxonomy).length) {
-                            jQuery("#in-" + taxonomy + "-" + id + ", #in-popular-" + taxonomy + "-" + id).attr("checked", c)
-                        }
-                    })
-                });
-                /* WP scrap - end */
-
-            });
-            jQuery('.categorydiv').show();
-
-
-            /* tagcloud */
-
-            if (oldajaxurl == false) {
-                oldajaxurl = ajaxurl;
-            }
-            if(-1 == ajaxurl.indexOf('?')){
-                temp_url_glue='?';
-            } else {
-                temp_url_glue='&';
-            }
-
-            if (lang == icl_this_lang) {
-                ajaxurl = oldajaxurl;
-            } else if (-1 == ajaxurl.indexOf('lang')) {
-                ajaxurl = ajaxurl+temp_url_glue+'lang='+lang;
-            } else {
-                ajaxurl = oldajaxurl+temp_url_glue+'lang='+lang;
-            }
-
-            jQuery('div[id^=tagsdiv-]').each(function(){
-                jQuery(this).slideUp();
-                jQuery(this).find('.the-tagcloud').remove();
-                jQuery(this).find('.tagchecklist span').remove();
-                jQuery(this).find('.the-tags').val('');
-                tag_tax = jQuery(this).attr('id').substring(8);
-                tagBox.get('link-'+tag_tax);
-                jQuery(this).find('a.tagcloud-link').unbind().click(function(){
-                    jQuery(this).siblings('.the-tagcloud').toggle();
-                    return false;
-                });
-                jQuery(this).slideDown();
-            });
-
-            ajaxurl = oldajaxurl;
-        })
-    }
-}
 
 function iclSetDocumentToDate(){
     var thisbut = jQuery(this);
@@ -955,7 +781,26 @@ function icl_cf_translation_preferences_submit(cf, obj) {
 
     }
 
+};
+
+
+function fixMissingPostTypesInLinks() {
+    var languageLinks = jQuery('#icl_subsubsub').find('a');
+    var postsFilter = jQuery('#posts-filter');
+    if (languageLinks.length !== 0 && postsFilter.length !== 0) {
+
+        var postTypeField = postsFilter.find('[name="post_type"]');
+        if (postTypeField.length !== 0) {
+            var postType = postTypeField.val();
+            if (postType) {
+                jQuery.each(languageLinks, function () {
+                    var href = jQuery(this).attr('href');
+                    if (href.indexOf('post_type') === -1) {
+                        jQuery(this).attr('href', href + '&post_type=' + postType);
+                    }
+                })
+            }
+        }
+    }
 }
-
-
 

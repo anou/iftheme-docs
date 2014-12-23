@@ -269,7 +269,7 @@ if (isset($translations) && count($translations) == 1 && count(SitePress::get_or
         <?php else: ?>
             <p style="clear:both;"><b><?php _e('Translate yourself', 'sitepress'); ?></b></p>
         <?php endif; ?>
-        <table width="100%" class="icl_translations_table">
+	    <table width="100%" id="icl_untranslated_table" class="icl_translations_table">
         <tr>
             <th>&nbsp;</th>
             <th align="right"><?php _e('Translate', 'sitepress') ?></th>
@@ -492,7 +492,7 @@ if (isset($translations) && count($translations) == 1 && count(SitePress::get_or
                 <?php if($edit_link == '#'):
                     icl_pop_info($edit_anchor, ICL_PLUGIN_URL . '/res/img/' .$img, array('icon_size' => 16, 'but_style'=>array('icl_pop_info_but_noabs')));
                 else: ?>
-                <a href="<?php echo $edit_link ?>" title="<?php echo esc_attr($edit_anchor) ?>"><img border="0" src="<?php
+	            <a href="<?php echo $edit_link?>" title="<?php echo esc_attr($edit_anchor) ?>" class="add_translation_link"><img  border="0" src="<?php
                     echo ICL_PLUGIN_URL . '/res/img/' . $img ?>" alt="<?php echo esc_attr($edit_anchor) ?>" width="16" height="16" /></a>
                 <?php endif; ?>
 
@@ -539,7 +539,7 @@ if(!empty($translations))
 ?>
 <?php if($original_language && $tr_original_id != $post->ID && $show_dup_button): ?>
     <?php wp_nonce_field('set_duplication_nonce', '_icl_nonce_sd') ?>
-    <input id="icl_set_duplicate" type="button" class="button-secondary" value="<?php printf(__('Overwrite with %s content.', 'sitepress'), $original_language) ?>" style="float: left;" />
+    <input id="icl_set_duplicate" type="button" class="button-secondary" value="<?php printf(__('Overwrite with %s content.', 'sitepress'), $original_language) ?>" style="white-space:normal;height:auto;line-height:normal;" />
     <span style="display: none;"><?php echo esc_js(sprintf(__('The current content of this %s will be permanently lost. WPML will copy the %s content and replace the current content.', 'sitepress'), $post->post_type, $original_language)); ?></span>
     <?php icl_pop_info(__("This operation will synchronize this translation with the original language. When you edit the original, this translation will update immediately. It's meant when you want the content in this language to always be the same as the content in the original language.", 'sitepress'), 'question'); ?>
     <br clear="all" />

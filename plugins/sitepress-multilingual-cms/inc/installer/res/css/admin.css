@@ -38,6 +38,14 @@
     color:#888;
 }
 
+.otgs_wp_installer_subtable{
+    clear: both;
+    margin-left:-20px;
+}
+.otgs_wp_installer_subtable td p{
+    font-size: 92%;
+}
+
 .installer-status-error{
     color: #f00;
 }
@@ -97,9 +105,6 @@
 .installer-plugins-list-compact td.twelve{
     width:16px;
 }
-
-
-
 
 .otgs_wp_installer_table_compact .installer-status-downloading, 
 .otgs_wp_installer_table_compact .installer-status-downloaded, 

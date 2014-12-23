@@ -18,6 +18,11 @@ class ICL_Language_Switcher extends WP_Widget {
 	 * @param array $instance
 	 */
 	public function widget( $args, $instance ) {
+					
+		if ( function_exists( 'wpml_home_url_ls_hide_check' ) && wpml_home_url_ls_hide_check() ) {
+			return;
+		}
+
 		language_selector_widget( $args );
 	}
 

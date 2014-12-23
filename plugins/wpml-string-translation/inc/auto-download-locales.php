@@ -16,17 +16,10 @@ class WPML_ST_MO_Downloader{
         if(!defined('ICL_SITEPRESS_VERSION') || ICL_PLUGIN_INACTIVE) return;
         
         $wpversion = preg_replace('#-(.+)$#', '', $wp_version);
-         
-        $fh = fopen(WPML_ST_PATH . '/inc/lang-map.csv', 'r');
-        while(list($locale, $code) = fgetcsv($fh)){
-            $this->lang_map[$locale] = $code;            
-        }   
-        $this->lang_map_rev = array_flip($this->lang_map);
-         
-         
+
         $this->settings = get_option('icl_adl_settings');
         
-        if(empty($this->settings['wp_version']) || version_compare($wp_version, $this->settings['wp_version'], '>')){
+        if(empty($this->settings['wp_version']) || version_compare($wpversion, $this->settings['wp_version'], '>')){
             try{
                 $this->updates_check(array('trigger' => 'wp-update'));    
             }catch(Exception $e){
@@ -34,12 +27,30 @@ class WPML_ST_MO_Downloader{
             }
             
         }
+
+		if ( get_transient('WPML_ST_MO_Downloader_lang_map') === false ) {
+		   $this->set_lang_map_from_csv();
+		}
+		$this->lang_map = get_transient('WPML_ST_MO_Downloader_lang_map');
+		$this->lang_map_rev = array_flip($this->lang_map);
         
         add_action('wp_ajax_icl_adm_updates_check', array($this, 'show_updates'));
         add_action('wp_ajax_icl_adm_save_preferences', array($this, 'save_preferences'));
         
             
     }
+
+	function set_lang_map_from_csv() {
+		$fh = fopen(WPML_ST_PATH . '/inc/lang-map.csv', 'r');
+		while(list($locale, $code) = fgetcsv($fh)){
+				$this->lang_map[$locale] = $code;            
+		}   
+		
+		if (isset($this->lang_map) && is_array($this->lang_map)) {
+			set_transient('WPML_ST_MO_Downloader_lang_map', $this->lang_map);
+		}
+		
+	}
     
     function updates_check($args = array()){
         global $wp_version, $sitepress;

@@ -34,9 +34,9 @@
                       }
                   }
                 
-                  if($found_blog_id){
-                      $q = "SELECT * FROM {$wpdb->blogs} WHERE blog_id = '" . $found_blog_id ."'";    
-                  }  
+                  if ( isset( $found_blog_id ) && $found_blog_id ) {
+                      $q = "SELECT * FROM {$wpdb->blogs} WHERE blog_id = '" . $found_blog_id . "'";
+                  }   
               }
                           
           }

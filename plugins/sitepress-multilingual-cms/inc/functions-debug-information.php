@@ -140,7 +140,13 @@ class ICL_Debug_Information {
 		if (defined('JSON_UNESCAPED_UNICODE')) {
 			$json_options += JSON_UNESCAPED_UNICODE;
 		}
-		return json_encode($data, $json_options);
+
+		if ( version_compare( phpversion(), '5.3.0', '<' ) ) {
+			$json_data = json_encode( $data );
+		} else {
+			$json_data = json_encode( $data, $json_options );
+		}
+
+		return $json_data;
 	}
 }
-?>

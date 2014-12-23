@@ -1,6 +1,3 @@
-.icl_tt_form, .icl_tt_labels_form{
-    display: none;
-}
 .icl_tt_form td, .icl_tt_labels_form td{
     border:none;
 }
@@ -19,6 +16,7 @@
 
 .icl_tt_popup{
     position: absolute;
+    z-index: 1;
     background: #fff;
     background-color: rgba(255, 255, 255, 0.9);
     box-shadow: 10px 10px 5px #888888;
