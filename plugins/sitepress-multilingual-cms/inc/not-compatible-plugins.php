@@ -9,17 +9,7 @@ $icl_ncp_plugins = array_intersect($icl_ncp_plugins, $active_plugins);
 
 if(!empty($icl_ncp_plugins)){
     $icl_sitepress_disabled = true;
-    $icl_sitepress_idx = array_search(ICL_PLUGIN_FOLDER . '/sitepress.php', $active_plugins);
-    if(false !== $icl_sitepress_idx){
-        unset($active_plugins[$icl_sitepress_idx]);
-        update_option('active_plugins', $active_plugins);
-        unset($_GET['activate']);
-        $recently_activated = get_option('recently_activated');
-        if(!isset($recently_activated[ICL_PLUGIN_FOLDER . '/sitepress.php'])){
-            $recently_activated[ICL_PLUGIN_FOLDER . '/sitepress.php'] = time();
-            update_option('recently_activated', $recently_activated);
-        }
-    }
+    icl_suppress_activation();
     
     
     add_action('admin_notices', 'icl_incomp_plugins_warn');
@@ -39,15 +29,15 @@ if(!empty($icl_ncp_plugins)){
     $icl_sitepress_disabled = false;
 }
 
-
-if(isset($_GET['page']) && $_GET['page'] == ICL_PLUGIN_FOLDER . '/menu/troubleshooting.php' || isset($pagenow) && $pagenow=='index.php'){
+$filtered_page = filter_input( INPUT_GET, 'page', FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_NULL_ON_FAILURE);
+if( 0 === strcmp( $filtered_page, ICL_PLUGIN_FOLDER . '/menu/troubleshooting.php' ) || isset($pagenow) && $pagenow=='index.php'){
     $icl_ncp_plugins2 = array(
         'wp-no-category-base/no-category-base.php'
     );  
     $active_plugins = get_option('active_plugins');
     $icl_ncp_plugins2 = array_intersect($icl_ncp_plugins2, $active_plugins);
     if(!empty($icl_ncp_plugins2)){
-        if(isset($_GET['page']) && $_GET['page'] == ICL_PLUGIN_FOLDER . '/menu/troubleshooting.php'){
+	    if( 0 === strcmp( $filtered_page, ICL_PLUGIN_FOLDER . '/menu/troubleshooting.php' ) ){
             add_action('admin_notices', 'icl_incomp_plugins_warn2');        
             function icl_incomp_plugins_warn2(){
                 global $icl_ncp_plugins2;

@@ -131,26 +131,6 @@ $text = isset($text) ? $text : '';
 
                         $actions['edit']    = '<span class="edit"><a href="' . esc_url( network_admin_url( 'site-info.php?id=' . $blog['blog_id'] ) ) . '">' . __( 'Edit', 'sitepress' ) . '</a></span>';
                         $actions['backend']    = "<span class='backend'><a href='" . esc_url( get_admin_url( $blog['blog_id'] ) ) . "' class='edit'>" . __( 'Dashboard', 'sitepress' ) . '</a></span>';
-                        if ( $current_site->blog_id != $blog['blog_id'] ) {
-                            if ( get_blog_status( $blog['blog_id'], 'deleted' ) == '1' )
-                                $actions['activate']    = '<span class="activate"><a href="' . esc_url( wp_nonce_url( network_admin_url( 'edit.php?action=confirm&amp;action2=activateblog&amp;id=' . $blog['blog_id'] . '&amp;msg=' . urlencode( sprintf( __( 'You are about to activate the site %s', 'sitepress' ), $blogname ) ) ), 'confirm' ) ) . '">' . __( 'Activate', 'sitepress' ) . '</a></span>';
-                            else
-                                $actions['deactivate']    = '<span class="activate"><a href="' . esc_url( wp_nonce_url( network_admin_url( 'edit.php?action=confirm&amp;action2=deactivateblog&amp;id=' . $blog['blog_id'] . '&amp;msg=' . urlencode( sprintf( __( 'You are about to deactivate the site %s', 'sitepress' ), $blogname ) ) ), 'confirm') ) . '">' . __( 'Deactivate', 'sitepress' ) . '</a></span>';
-
-                            if ( get_blog_status( $blog['blog_id'], 'archived' ) == '1' )
-                                $actions['unarchive']    = '<span class="archive"><a href="' . esc_url( wp_nonce_url( network_admin_url( 'edit.php?action=confirm&amp;action2=unarchiveblog&amp;id=' .  $blog['blog_id'] . '&amp;msg=' . urlencode( sprintf( __( 'You are about to unarchive the site %s.', 'sitepress' ), $blogname ) ) ), 'confirm') ) . '">' . __( 'Unarchive', 'sitepress' ) . '</a></span>';
-                            else
-                                $actions['archive']    = '<span class="archive"><a href="' . esc_url( wp_nonce_url( network_admin_url( 'edit.php?action=confirm&amp;action2=archiveblog&amp;id=' . $blog['blog_id'] . '&amp;msg=' . urlencode( sprintf( __( 'You are about to archive the site %s.', 'sitepress' ), $blogname ) ) ), 'confirm') ) . '">' . __( 'Archive', 'sitepress' ) . '</a></span>';
-
-                            if ( get_blog_status( $blog['blog_id'], 'spam' ) == '1' )
-                                $actions['unspam']    = '<span class="spam"><a href="' . esc_url( wp_nonce_url( network_admin_url( 'edit.php?action=confirm&amp;action2=unspamblog&amp;id=' . $blog['blog_id'] . '&amp;msg=' . urlencode( sprintf( __( 'You are about to unspam the site %s.', 'sitepress' ), $blogname ) ) ), 'confirm') ) . '">' . __( 'Not Spam', 'sitepress' ) . '</a></span>';
-                            else
-                                $actions['spam']    = '<span class="spam"><a href="' . esc_url( wp_nonce_url( network_admin_url( 'edit.php?action=confirm&amp;action2=spamblog&amp;id=' . $blog['blog_id'] . '&amp;msg=' . urlencode( sprintf( __( 'You are about to mark the site %s as spam.', 'sitepress' ), $blogname ) ) ), 'confirm') ) . '">' . __( 'Spam', 'sitepress' ) . '</a></span>';
-
-                            if ( current_user_can( 'delete_site', $blog['blog_id'] ) )
-                                $actions['delete']    = '<span class="delete"><a href="' . esc_url( wp_nonce_url( network_admin_url( 'edit.php?action=confirm&amp;action2=deleteblog&amp;id=' . $blog['blog_id'] . '&amp;msg=' . urlencode( sprintf( __( 'You are about to delete the site %s.', 'sitepress' ), $blogname ) ) ), 'confirm') ) . '">' . __( 'Delete', 'sitepress' ) . '</a></span>';
-                        }
-
                         $actions['visit']    = "<span class='view'><a href='" . esc_url( get_home_url( $blog['blog_id'] ) ) . "' rel='permalink'>" . __( 'Visit', 'sitepress' ) . '</a></span>';
 
                         $actions = apply_filters( 'manage_sites_action_links', array_filter( $actions ), $blog['blog_id'], $blogname );
@@ -168,16 +148,18 @@ $text = isset($text) ? $text : '';
                     <?php _e('Active', 'sitepress'); ?>
                     <div class="row-actions">
                         <?php if($blog['blog_id'] != $current_blog->blog_id): ?>
-                        <a href="<?php echo esc_url( wp_nonce_url( network_admin_url( 'sites.php?action=confirm&amp;action2=deactivatewpml&amp;id=' . $blog['blog_id'] . '&amp;msg=' . urlencode( sprintf( __( 'You are about to deactivate WPML on the site %s.', 'sitepress' ), $blogname ) ) ), 'confirm') ) ?>"><?php _e('Deactivate', 'sitepress')?></a>
+                        <a href="<?php echo esc_url( wp_nonce_url( network_admin_url( 'sites.php?action=deactivatewpml&amp;id=' . $blog['blog_id'] ), 'deactivatewpml') ) ?>"><?php _e('Deactivate', 'sitepress')?></a>
                         <?php endif; ?>
                     </div>                    
                     <?php endif; ?>
                     <?php restore_current_blog();  ?>
                 </td>
-                <td><a href="<?php echo esc_url( wp_nonce_url( network_admin_url( 'sites.php?action=confirm&amp;action2=resetwpml&amp;id=' . $blog['blog_id'] . '&amp;msg=' . urlencode( 
-                    sprintf( __( 'You are about to reset WPML for this site: %s.', 'sitepress' ), $blogname ) . 
-                    " " . __("All translations you have sent to ICanLocalize will be lost if you reset WPML's data. They cannot be recovered later.", 'sitepress') 
-                    ) ), 'confirm') )  ?>"><?php _e('Reset', 'sitepress')?></a></td>
+                <td><a onclick="WPML_core.network.reset_wpml(this)" href="#"
+                    data-link="<?php echo esc_url( wp_nonce_url( network_admin_url( 'sites.php?action=resetwpml&amp;id=' . $blog['blog_id'] ), 'resetwpml' ) ); ?>"
+                    data-msg="<?php echo  
+                        sprintf( __( 'You are about to reset WPML for this site: %s.', 'sitepress' ), $blogname ) . 
+                        " " . __("All translation data will be lost if you reset WPML's data. They cannot be recovered later.", 'sitepress') 
+                        ?>"><?php _e('Reset', 'sitepress')?></a></td>
             </tr>
         <?php endforeach; ?>
         </tbody>
@@ -190,3 +172,14 @@ $text = isset($text) ? $text : '';
     <?php endif?>
     
 </div>
+
+<script type="text/javascript">
+    var WPML_core = WPML_core || {};
+    WPML_core.network = {};
+    WPML_core.network.reset_wpml = function (link) {
+        link = jQuery(link);
+        if ( confirm(link.data('msg') ) ) {
+            window.location = link.data('link');
+        }
+    }
+</script>

@@ -31,14 +31,23 @@
             this.undelegateEvents();
             this.remove();
         },
-        render: function () {
-
+        get_slug: function(){
             var self = this;
-            var trid = self.model.get("trid");
+
             var slug = self.model.get("slug");
             if (!slug) {
                 slug = "";
             }
+            slug = decodeURIComponent(slug);
+
+            return slug;
+        },
+        render: function () {
+
+            var self = this;
+            var trid = self.model.get("trid");
+            var slug = self.get_slug();
+
             var description = self.model.get("description");
             if (!description) {
                 description = "";

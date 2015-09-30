@@ -1,0 +1,29 @@
+/* line 2, ../scss/translation-dashboard.scss */
+.icl_dup_ovr_warn {
+  margin-top: 2em;
+  display: none;
+}
+
+/* line 7, ../scss/translation-dashboard.scss */
+#icl-tm-translation-dashboard .row-actions {
+  display: inline-block;
+  margin-left: 1em;
+}
+
+@media (max-width: 782px) {
+  /* line 12, ../scss/translation-dashboard.scss */
+  .icl_tm_wrap .column-title {
+    width: 45%;
+  }
+}
+
+/* line 17, ../scss/translation-dashboard.scss */
+.column-note {
+  width: 5%;
+}
+@media (max-width: 782px) {
+  /* line 17, ../scss/translation-dashboard.scss */
+  .column-note {
+    width: 15%;
+  }
+}

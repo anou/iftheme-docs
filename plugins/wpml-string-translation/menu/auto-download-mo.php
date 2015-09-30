@@ -12,9 +12,10 @@ if(isset($_POST['action']) && $_POST['action']=='icl_admo_add_translations' && w
         $new_translations = unserialize(base64_decode($_POST['add_new']));        
         foreach($new_translations as $tr){
             $translations_add[] = array(
-                'string'        => $tr['string'],
-                'translation'   => $tr['new'],
-                'name'          => $tr['name'] 
+                'string'          => $tr[ 'string' ],
+                'translation'     => $tr[ 'new' ],
+                'name'            => $tr[ 'name' ],
+                'gettext_context' => $tr[ 'gettext_context' ]
             );
         }        
         if(!empty($translations_add)){
@@ -26,9 +27,10 @@ if(isset($_POST['action']) && $_POST['action']=='icl_admo_add_translations' && w
         foreach($_POST['selected'] as $idx => $v){
             if(!empty($v)){
                 $translations_add[] = array(
-                    'string'        => base64_decode($_POST['string'][$idx]),
-                    'translation'   => base64_decode($_POST['translation'][$idx]),
-                    'name'          => base64_decode($_POST['name'][$idx]) 
+                    'string'          => base64_decode( $_POST[ 'string' ][ $idx ] ),
+                    'translation'     => base64_decode( $_POST[ 'translation' ][ $idx ] ),
+                    'name'            => base64_decode( $_POST[ 'name' ] [ $idx ] ),
+                    'gettext_context' => base64_decode( $_POST[ 'gettext_context' ][ $idx ] ) 
                 );                
                 $translations_updated++;
             }
@@ -75,7 +77,7 @@ if(isset($active_languages[$language])){
         <?php foreach($user_messages as $umessage): ?>
         <p><?php echo $umessage ?></p>
         <?php endforeach; ?>    
-        <a href="<?php echo admin_url('admin.php?page=' . ICL_PLUGIN_FOLDER . '/menu/theme-localization.php'); ?>" class="button-secondary"><?php _e('Check other languages') ?></a>
+        <a href="<?php echo admin_url('admin.php?page=' . ICL_PLUGIN_FOLDER . '/menu/theme-localization.php'); ?>" class="button-secondary"><?php _e('Check other languages', 'wpml-string-translation') ?></a>
         
     <?php elseif(!$version): ?>
         <div class="error">
@@ -134,6 +136,7 @@ if(isset($active_languages[$language])){
                     <?php echo esc_html($translation['string']) ?>
                     <input type="hidden" name="string[<?php echo $idx ?>]" value="<?php echo base64_encode($translation['string']); ?>" />
                     <input type="hidden" name="name[<?php echo $idx ?>]" value="<?php echo base64_encode($translation['name']); ?>" />
+                    <input type="hidden" name="gettext_context[<?php echo $idx ?>]" value="<?php echo base64_encode($translation['gettext_context']); ?>" />
                 </td>
                 <td colspan="2">
                     <?php echo wp_text_diff($translation['translation'], $translation['new']); ?>
@@ -201,7 +204,7 @@ if(isset($active_languages[$language])){
     <?php else: ?>
     
         <p><?php _e('There is nothing to be updated or to be added.', 'wpml-string-translation') ?></p>
-        <p><a href="<?php echo admin_url('admin.php?page=' . ICL_PLUGIN_FOLDER . '/menu/theme-localization.php'); ?>" class="button-secondary"><?php _e('Check other languages') ?></a></p>
+        <p><a href="<?php echo admin_url('admin.php?page=' . ICL_PLUGIN_FOLDER . '/menu/theme-localization.php'); ?>" class="button-secondary"><?php _e('Check other languages', 'wpml-string-translation') ?></a></p>
     
     <?php endif; ?>
     

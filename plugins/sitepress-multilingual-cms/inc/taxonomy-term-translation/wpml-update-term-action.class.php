@@ -1,9 +1,14 @@
 <?php
 
 /**
- *  This class holds the functionality for creating or editing a taxonomy term.
+ * Class WPML_Update_Term_Action
+ *
+ * This class holds the functionality for creating or editing a taxonomy term.
+ *
+ * @package    wpml-core
+ * @subpackage taxonomy-term-translation
  */
-class WPML_Update_Term_Action {
+class WPML_Update_Term_Action extends WPML_WPDB_And_SP_User {
 
 	/**
 	 * TRUE if this object represents valid data for the update or creation of a term, false otherwise.
@@ -58,8 +63,13 @@ class WPML_Update_Term_Action {
 	 */
 	private $old_slug;
 
-	public function __construct( $args ) {
-
+	/**
+	 * @param wpdb      $wpdb
+	 * @param SitePress $sitepress
+	 * @param array     $args
+	 */
+	public function __construct( &$wpdb, &$sitepress, $args ) {
+		parent::__construct($wpdb, $sitepress);
 		/**
 		 * Actual name of the term. Same as the name input argument to \wp_update_term or \wp_insert_term
 		 * @var string|bool
@@ -76,8 +86,7 @@ class WPML_Update_Term_Action {
 		 * Taxonomy_term_id of the parent element
 		 * @var int
 		 */
-		$parent = 0;
-
+		$parent          = 0;
 		$description     = false;
 		$term_group      = false;
 		$source_language = null;
@@ -85,7 +94,7 @@ class WPML_Update_Term_Action {
 		extract( $args, EXTR_OVERWRITE );
 
 		// We cannot create a term unless we at least know its name
-		if ( $term && $taxonomy ) {
+		if ( (string)$term !== "" && $taxonomy ) {
 			$this->wp_new_term_args[ 'name' ] = $term;
 			$this->taxonomy                   = $taxonomy;
 		} else {
@@ -93,33 +102,26 @@ class WPML_Update_Term_Action {
 
 			return;
 		}
-
 		if ( $parent ) {
 			$this->wp_new_term_args[ 'parent' ] = $parent;
 		}
 		if ( $description ) {
 			$this->wp_new_term_args[ 'description' ] = $description;
 		}
-
 		if ( $term_group ) {
 			$this->wp_new_term_args[ 'term_group' ] = $term_group;
 		}
-
 		$this->wp_new_term_args[ 'term_group' ] = $term_group;
-
 		$this->is_valid = $this->set_language_information( $trid, $original_tax_id, $lang_code, $source_language );
 		$this->set_action_type();
 
-		if ( ! $this->is_update || ( $this->is_update && $slug != '' && $slug != $this->old_slug ) ) {
-
+		if ( ! $this->is_update || ( $this->is_update && $slug != $this->old_slug ) ) {
 			if ( trim( $slug ) == '' ) {
 				$slug = sanitize_title( $term );
 			}
 			$slug = WPML_Terms_Translations::term_unique_slug( $slug, $taxonomy, $lang_code );
-
 			$this->wp_new_term_args[ 'slug' ] = $slug;
 		}
-
 	}
 
 	/**
@@ -131,8 +133,8 @@ class WPML_Update_Term_Action {
 	public function execute() {
 		global $sitepress;
 
-		remove_action( 'create_term', array( $sitepress, 'create_term' ), 1, 2 );
-		remove_action( 'edit_term', array( $sitepress, 'create_term' ), 1, 2 );
+		remove_action( 'create_term', array( $sitepress, 'create_term' ), 1 );
+		remove_action( 'edit_term', array( $sitepress, 'create_term' ), 1 );
 		add_action( 'create_term', array( $this, 'add_term_language_action' ), 1, 3 );
 		$new_term = false;
 
@@ -143,8 +145,8 @@ class WPML_Update_Term_Action {
 				$new_term = wp_insert_term( $this->wp_new_term_args[ 'name' ], $this->taxonomy, $this->wp_new_term_args );
 			}
 		}
-		add_action( 'create_term', array( $sitepress, 'create_term' ), 1, 2 );
-		add_action( 'edit_term', array( $sitepress, 'create_term' ), 1, 2 );
+		add_action( 'create_term', array( $sitepress, 'create_term' ), 1, 3 );
+		add_action( 'edit_term', array( $sitepress, 'create_term' ), 1, 3 );
 		remove_action( 'create_term', array( $this, 'add_term_language_action' ), 1, 3 );
 
 		if ( ! is_array( $new_term ) ) {
@@ -152,6 +154,24 @@ class WPML_Update_Term_Action {
 		}
 
 		return $new_term;
+	}
+
+	/**
+	 * This action is to be hooked to the WP create_term and edit_term hooks.
+	 * It sets the correct language information after a term is saved.
+	 *
+	 * @param int|string $term_id
+	 * @param int|string $term_taxonomy_id
+	 * @param string     $taxonomy
+	 */
+	public function add_term_language_action( $term_id, $term_taxonomy_id, $taxonomy ) {
+		if ( $this->is_valid && ! $this->is_update && $this->taxonomy == $taxonomy ) {
+			$this->sitepress->set_element_language_details( $term_taxonomy_id,
+			                                                'tax_' . $taxonomy,
+			                                                $this->trid,
+			                                                $this->lang_code,
+			                                                $this->source_lang_code );
+		}
 	}
 
 	/**
@@ -164,23 +184,18 @@ class WPML_Update_Term_Action {
 	 *              otherwise.
 	 */
 	private function set_language_information( $trid, $original_tax_id, $lang_code, $source_language ) {
-		global $sitepress;
-
-		if ( ! $lang_code || ! $sitepress->is_active_language( $lang_code ) ) {
+		if ( ! $lang_code || ! $this->sitepress->is_active_language( $lang_code ) ) {
 			return false;
 		} else {
 			$this->lang_code = $lang_code;
 		}
-
 		if ( ! $trid && $original_tax_id ) {
-			$trid = $sitepress->get_element_trid( $original_tax_id, 'tax_' . $this->taxonomy );
+			$trid = $this->sitepress->get_element_trid( $original_tax_id, 'tax_' . $this->taxonomy );
 		}
-
 		if ( $trid ) {
-			$this->trid = $trid;
-
-			$this->existing_translations = $sitepress->get_element_translations( $trid, 'tax_' . $this->taxonomy );
-
+			$this->trid                  = $trid;
+			$this->existing_translations = $this->sitepress->get_element_translations( $trid,
+			                                                                           'tax_' . $this->taxonomy );
 			// Only set valid source languages
 			if ( $source_language && isset( $translations[ $source_language ] ) ) {
 				$this->source_lang_code = $source_language;
@@ -194,7 +209,6 @@ class WPML_Update_Term_Action {
 					}
 				}
 			}
-
 		}
 
 		return true;
@@ -206,18 +220,16 @@ class WPML_Update_Term_Action {
 	 * Also the term_id of the existing term is saved in $this->term_id.
 	 */
 	private function set_action_type() {
-		global $wpdb, $sitepress;
-
 		if ( ! $this->trid ) {
 			$this->is_update = false;
 		} elseif ( isset( $this->existing_translations[ $this->lang_code ] ) ) {
 			$existing_db_entry = $this->existing_translations[ $this->lang_code ];
 			if ( isset( $existing_db_entry->element_id ) && $existing_db_entry->element_id ) {
 				// Term update actions need information about the term_id, not the term_taxonomy_id saved in the element_id column of icl_translations.
-				$term = $wpdb->get_row( $wpdb->prepare(
-						"SELECT t.term_id, t.slug FROM {$wpdb->terms} AS t
-															JOIN {$wpdb->term_taxonomy} AS tt ON t.term_id=tt.term_id
-															WHERE term_taxonomy_id=%d", $existing_db_entry->element_id
+				$term = $this->wpdb->get_row( $this->wpdb->prepare(
+						"SELECT t.term_id, t.slug FROM {$this->wpdb->terms} AS t
+						 JOIN {$this->wpdb->term_taxonomy} AS tt ON t.term_id=tt.term_id
+						 WHERE term_taxonomy_id=%d", $existing_db_entry->element_id
 					)
 				);
 				if ( $term->term_id && $term->slug ) {
@@ -228,26 +240,11 @@ class WPML_Update_Term_Action {
 					$this->is_update = false;
 				}
 			} else {
-				$sitepress->delete_element_translation( $this->trid, 'tax_' . $this->taxonomy, $this->lang_code );
+				$this->sitepress->delete_element_translation( $this->trid, 'tax_' . $this->taxonomy, $this->lang_code );
 				$this->is_update = false;
 			}
 		} else {
 			$this->is_update = false;
-		}
-	}
-
-	/**
-	 * This action is to be hooked to the WP create_term and edit_term hooks.
-	 * It sets the correct language information after a term is saved.
-	 * @param $term_id          int|string
-	 * @param $term_taxonomy_id int|string
-	 * @param $taxonomy         string
-	 */
-	public function add_term_language_action( $term_id, $term_taxonomy_id, $taxonomy ) {
-		global $sitepress;
-
-		if ( $this->is_valid && ! $this->is_update && $this->taxonomy == $taxonomy ) {
-			$sitepress->set_element_language_details( $term_taxonomy_id, 'tax_' . $taxonomy, $this->trid, $this->lang_code, $this->source_lang_code );
 		}
 	}
 }

@@ -10,6 +10,7 @@ TaxonomyTranslation.mainView.filterView = {};
 TaxonomyTranslation.data = {};
 TaxonomyTranslation.data.translatedTaxonomyLabels = {};
 TaxonomyTranslation.data.compiledTemplates = {};
+TaxonomyTranslation.data.syncData = {};
 
 
 (function () {
@@ -27,29 +28,51 @@ TaxonomyTranslation.data.compiledTemplates = {};
                 "</select>",
             "</label>",
             "<div style=\"display:none;\"><span class=\"spinner loading-taxonomy\" style=\"float:left;\"></span><%=labels.preparingTermsData%></div>",
-            "<div id=\"taxonomy-translation\">",
+            "<div style=\"margin-top: 10px;\" id=\"taxonomy-translation\">",
             "</div>"],
-        taxonomy: [
-                "<h3 id=\"term-table-header\"><%=headerTerms%></h3>",
+        tabs: [
+                "<span id=\"term-table-tab-controls\" style=\"white-space: nowrap\">",
+                    "<button class=\"nav-tab <%=(mode ==='translate' && taxonomy.hierarchical ? 'nav-tab-active' : '')%>\" id=\"term-table-header\"><%=headerTerms%></button>",
+                    "<% if(taxonomy.hierarchical) {%>",
+                            "<button class=\"nav-tab <%=(mode ==='sync' && taxonomy.hierarchical ? 'nav-tab-active' : '')%>\" id=\"term-table-sync-header\"><%=syncLabel%></button>",
+                    "<% } %>",
+                "</span>"
+            ],
+        taxonomyMainWrap: [
+            "<div class=\"icl_tm_wrap\">",
                 "<p id=\"term-table-summary\"><%=summaryTerms%></p>",
                 "<div id=\"wpml-taxonomy-translation-filters\"></div>",
                 "<div id=\"wpml-taxonomy-translation-terms-table\"></div>",
                 "<div id=\"wpml-taxonomy-translation-terms-nav\"></div>",
-                "<p id=\"term-label-summary\"><%=labelSummary%></p>",
-                "<div id=\"wpml-taxonomy-translation-labels-table\"></div>"
-            ],
+                "<% if(TaxonomyTranslation.data.translatedTaxonomyLabels) {%>",
+                    "<p id=\"term-label-summary\"><%=labelSummary%></p>",
+                    "<div id=\"wpml-taxonomy-translation-labels-table\"></div>",
+                "<% } %>",
+            "</div>"
+        ],
+        status_trans_select: [
+            "<label for=\"status-select\"><%=labels.Show%></label>",
+            "<select id=\"status-select\" name=\"status\">",
+                    "<option value=\"0\"><%=labels.all + ' ' + taxonomy.label%></option>",
+                    "<option value=\"1\"><%=labels.untranslated + ' ' + taxonomy.label%></option>",
+            "</select>"],
+        ref_sync_select: [
+            "<label for=\"language\"><%=labels.refLang%></label>",
+            "<select id=\"in-lang\" name=\"language\">",
+                "<%_.each(langs, function(lang, code){%>",
+                    "<option value=\"<%=code%>\"><%=lang.label%></option>",
+                "<%});%>",
+            "</select>"],
         filter: ["<div class=\"icl-tt-tools\">",
-                    "<label for=\"status-select\"><%=labels.Show%></label>  <select id=\"status-select\" name=\"status\">",
-                        "<option value=\"0\"><%=labels.all + ' ' + taxonomy.label%></option>",
-                        "<option value=\"1\"><%=labels.untranslated + ' ' + taxonomy.label%></option>",
-                    "</select>",
+                    '<% if( mode === "translate" ) {%>',
+                        '<%=TaxonomyTranslation.getTemplate("status_trans_select")({taxonomy:taxonomy})%>',
                     "<label for=\"in-lang\" id=\"in-lang-label\" class=\"hidden\"><%=labels.in%></label>",
                        "<select name=\"language\" id=\"in-lang\" class=\"hidden\">",
                         "<option value=\"all\"><%=labels.anyLang%></option>",
                         "<%_.each(langs, function(lang, code){%>",
                             "<option value=\"<%=code%>\"><%=lang.label%></option>",
                         "<%});%>",
-                    "</select>",
+                        "</select>",
                     "<input type=\"text\" name=\"search\" id=\"tax-search\" placeholder=\"<%=labels.searchPlaceHolder%>\" value=\"\">",
                     "<% if(taxonomy.hierarchical) {%>",
                         "<select name=\"child_of\" id=\"child_of\" class=\"postform\">",
@@ -59,7 +82,10 @@ TaxonomyTranslation.data.compiledTemplates = {};
                             "<% }); %>",
                         "</select>",
                     "<% } %>",
-                    "<input type=\"submit\" class=\"button-primary\" style=\"display:none;\" value=\"<%=labels.apply%>\" id=\"tax-apply\">",
+                    '<% } else { %>',
+                        '<%=TaxonomyTranslation.getTemplate("ref_sync_select")({taxonomy:taxonomy, langs:langs})%>',
+                    '<% } %>',
+                    "<input type=\"submit\" class=\"button-primary\" disabled=\"disabled\" value=\"<%=labels.apply%>\" id=\"tax-apply\">",
                     "<span class=\"spinner\"></span>",
                 "</div>"],
         nav: ["<div class=\"tablenav bottom\">",
@@ -105,6 +131,32 @@ TaxonomyTranslation.data.compiledTemplates = {};
             "</a>",
             "<div id=\"<%=trid + '-popup-' + lang%>\"></div>"
 
+        ],
+        termSynced:[
+            "<span class=\"icl_tt_term_name_sync\" ",
+            "id=\"<%=trid + '-' + lang%>\">",
+                "<% if(name){ %>",
+                    '<%=parent%></br>',
+                    "<%if(level>0){%>",
+                        "<%=Array(level+1).join('—') + \" \"%>",
+                    "<% } %>",
+                    "<%=name%>",
+                "<% } %>",
+            "</span>",
+            "<div id=\"<%=trid + '-popup-' + lang%>\"></div>"
+        ],
+        termNotSynced:[
+            "<span class=\"icl_tt_term_name_sync\"",
+                "id=\"<%=trid + '-' + lang%>\">",
+                "<% if(name){ %>",
+                    '<%=parent%></br>',
+                    "<%if(level>0){%>",
+                        "<%=Array(level+1).join('—') + \" \"%>",
+                    "<% } %>",
+                    "<%=name%>",
+                "<% } %>",
+            "</span>",
+            "<div id=\"<%=trid + '-popup-' + lang%>\"></div>"
         ],
         termPopUp: ["<div class=\"icl_tt_form\" id=\"icl_tt_form_<%=trid + '_' + lang%>\">",
                         "<table class=\"icl_tt_popup\">",
@@ -192,6 +244,8 @@ TaxonomyTranslation.data.compiledTemplates = {};
                             "</tr>",
                         "</thead>",
                     "</table>",
+                    '<span class="wpml-parent-added" style="background-color:#CCFF99;display:none;"><%=labels.willBeAdded%></span>',
+                    '<span class="wpml-parent-removed" style="background-color:#F55959;display:none;"><%=labels.willBeRemoved%></span>',
                 "</div>"]
 
     };

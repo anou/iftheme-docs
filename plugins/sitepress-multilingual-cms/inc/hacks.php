@@ -4,7 +4,6 @@
 add_action('init', 'icl_load_hacks');  
 
 function icl_load_hacks(){    
-    include ICL_PLUGIN_PATH . '/inc/hacks/language-domains-preview.php';    
     if(file_exists(ICL_PLUGIN_PATH . '/inc/hacks/misc-constants.php')){
         include ICL_PLUGIN_PATH . '/inc/hacks/misc-constants.php';           
     }    

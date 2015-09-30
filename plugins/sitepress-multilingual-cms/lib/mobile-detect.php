@@ -193,7 +193,6 @@ class WPML_Mobile_Detect {
         // http://en.wikipedia.org/wiki/NetFront
         'NetFront'      => 'NetFront/[VER]',
         'NokiaBrowser'  => 'NokiaBrowser/[VER]',
-        'NokiaBrowser'  => 'NokiaBrowser/[VER]',
         'Opera'         => 'Version/[VER]',
         'Opera Mini'    => 'Opera Mini/[VER]',
         'Opera Mobi'    => 'Version/[VER]',

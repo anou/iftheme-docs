@@ -15,7 +15,7 @@
         <li>
             <label>
                 <input type="radio" name="auto_download_mo" value="0" <?php if(empty($sitepress_settings['st']['auto_download_mo'])):?>checked="checked"<?php endif; ?> />
-                &nbsp;<?php _e('I will download translations for WordPress and save .mo files in wp-includes/languages', 'wpml-string-translation') ?>
+                &nbsp;<?php _e('I will download translations for WordPress and save .mo files in wp-content/languages', 'wpml-string-translation') ?>
             </label>
         </li>
     </ul>

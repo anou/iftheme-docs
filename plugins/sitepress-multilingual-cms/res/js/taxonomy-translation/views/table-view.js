@@ -15,27 +15,22 @@
 
         render: function () {
 
-            var tableType = this.type;
-
+            var self = this;
             if (!TaxonomyTranslation.classes.taxonomy.get("taxonomy")) {
                 return false;
             }
 
+            var tableType = self.type;
             var langs = TaxonomyTranslation.data.activeLanguages;
+            var count = tableType === "terms" ? TaxonomyTranslation.data.termRowsCollection.length : 1;
 
-            var count = 1;
-
-            if (tableType == "terms") {
-                count = TaxonomyTranslation.data.termRowsCollection.length;
-            }
-
-            this.$el.html(this.template({
+            this.$el.html(self.template({
                 langs: langs,
                 tableType: tableType,
                 count: count
             }));
 
-            return this;
+            return self;
         },
         clear: function () {
 

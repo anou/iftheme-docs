@@ -67,10 +67,6 @@ global $sitepress, $sitepress_settings;
                     <label><input type="checkbox" name="icl_sync_post_date" <?php if($sitepress_settings['sync_post_date']): ?>checked<?php endif; ?> value="1" />
                     <?php _e('Copy publishing date to translations', 'sitepress') ?></label>
                 </p>
-                <p>
-                    <label><input type="checkbox" name="icl_sync_taxonomy_parents" <?php if($sitepress_settings['sync_taxonomy_parents']): ?>checked<?php endif; ?> value="1" />
-                    <?php _e('Sync taxonomy (e.g. category) parents ', 'sitepress') ?></label>
-                </p>
             </div>
 
             <?php if( defined('WPML_TM_VERSION') ): ?>

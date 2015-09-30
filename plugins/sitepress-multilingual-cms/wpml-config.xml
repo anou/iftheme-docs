@@ -3,7 +3,21 @@
         <custom-field action="translate">title</custom-field>
         <custom-field action="translate">description</custom-field>
         <custom-field action="translate">keywords</custom-field>
-    </custom-fields>  
+        <custom-field action="ignore">_edit_last</custom-field>
+        <custom-field action="ignore">_edit_lock</custom-field>
+        <custom-field action="ignore">_wp_page_template</custom-field>
+        <custom-field action="ignore">_wp_attachment_metadata</custom-field>
+        <custom-field action="ignore">original_post_id</custom-field>
+        <custom-field action="ignore">_wpml_original_post_id</custom-field>
+        <custom-field action="ignore">_wp_old_slug</custom-field>
+        <custom-field action="ignore">_icl_translator_note</custom-field>
+        <custom-field action="ignore">_alp_processed</custom-field>
+        <custom-field action="ignore">_pingme</custom-field>
+        <custom-field action="ignore">_encloseme</custom-field>
+        <custom-field action="ignore">_icl_lang_duplicate_of</custom-field>
+        <custom-field action="ignore">_thumbnail_id</custom-field>
+        <custom-field action="ignore">_wp_attached_file</custom-field>
+    </custom-fields>
     <language-switcher-settings>
         <key name="icl_lang_sel_config">
             <key name="font-current-normal">#444444</key>

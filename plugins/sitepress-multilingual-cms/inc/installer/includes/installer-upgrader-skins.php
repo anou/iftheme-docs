@@ -14,6 +14,10 @@
           
       }
       
+      function error($error){
+          $this->installer_error = $error;
+      }
+      
       function add_strings(){
           
       }

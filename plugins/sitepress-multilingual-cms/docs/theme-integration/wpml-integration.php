@@ -60,9 +60,11 @@ function wpml_link_to_element($element_id, $element_type='post', $link_text='', 
             case 'post_tag':
                 $tag = get_term_by('id', $element_id, 'tag', ARRAY_A);
                 $ret = '<a href="'.get_tag_link($element_id).'">' . $tag->name . '</a>';
+                break;
             case 'category':
                 $ret = '<a href="'.get_tag_link($element_id).'">' . get_the_category_by_ID($element_id) . '</a>';
-            default: $ret = '';           
+                break;
+            default: $ret = '';
         }
         if($echoit){
             echo $ret;

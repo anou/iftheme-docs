@@ -45,8 +45,6 @@
             var iclttForm = popUpDomEl.find('.icl_tt_form');
             jQuery('.icl_tt_form').hide();
             iclttForm.show();
-
-
         }
     })
 }(TaxonomyTranslation));

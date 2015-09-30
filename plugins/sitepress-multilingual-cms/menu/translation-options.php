@@ -9,7 +9,11 @@
     <?php endif; ?>
 
     <br clear="all" />
-    <?php include dirname(__FILE__) . '/_custom_types_translation.php'; ?>
+    <?php 
+	include dirname(__FILE__) . '/_custom_types_translation.php';
+	
+	do_action('icl_tm_menu_mcsetup');
 
-    <?php do_action('icl_menu_footer'); ?>
+    do_action('icl_menu_footer'); 
+	?>
 </div>

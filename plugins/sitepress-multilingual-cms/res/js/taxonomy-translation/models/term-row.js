@@ -81,9 +81,9 @@
             var terms = self.get("terms");
             var res = false;
             _.each(TaxonomyTranslation.util.langCodes, function (lang) {
-                if (terms !== undefined && terms[lang] !== undefined && terms[lang].get("name") && terms[lang].get("name").indexOf(search) > -1) {
+                if (self.matchesInLang(search, lang) === true) {
                     res = true;
-                    return res;
+                    return true;
                 }
             });
             return res;
@@ -92,12 +92,30 @@
             var self = this;
             var terms = self.get("terms");
             var res = false;
-            if (terms !== undefined && terms[lang] !== undefined && terms[lang].get("name") && terms[lang].get("name").indexOf(search) > -1) {
+            if (
+                terms !== undefined
+                && terms[lang] !== undefined
+                && terms[lang].get("name")
+                && terms[lang].get("name").toLowerCase().indexOf(search.toLowerCase()) > -1
+            ) {
                 res = true;
             }
             return res;
+        },
+        unSyncFilter: function () {
+            var self = this;
+            var syncData = TaxonomyTranslation.data.syncData;
+            var terms = self.get("terms");
+            var res = false;
+            _.each(syncData, function (correction) {
+                _.each(TaxonomyTranslation.util.langCodes, function (lang) {
+                    if (terms[lang] !== undefined && correction.translated_id == terms[lang].get('term_taxonomy_id')) {
+                        res = true;
+                    }
+                });
+            });
+
+            return res;
         }
-
-
     })
 })(TaxonomyTranslation);

@@ -22,7 +22,6 @@ WPML_Translate_taxonomy.callbacks = jQuery.Callbacks();
 
                     var headerHTML = TaxonomyTranslation.getTemplate("main")({taxonomies: TaxonomyTranslation.data.taxonomies});
                     jQuery("#wpml_tt_taxonomy_translation_wrap").html(headerHTML);
-                    var spinner = jQuery('.loading-taxonomy');
 
                     // WCML compatibility
                     var taxonomySwitcher = jQuery("#icl_tt_tax_switch");
@@ -34,30 +33,59 @@ WPML_Translate_taxonomy.callbacks = jQuery.Callbacks();
                         jQuery('[id="term-table-header"]').hide();
                         jQuery('[id="term-table-summary"]').hide();
                         taxonomySwitcher.val(taxonomy);
-                        TaxonomyTranslation.classes.taxonomy = new TaxonomyTranslation.models.Taxonomy({taxonomy: taxonomy});
-                        TaxonomyTranslation.mainView = new TaxonomyTranslation.views.TaxonomyView({model: TaxonomyTranslation.classes.taxonomy});
-
+                        loadModelAndView(taxonomy);
+                    } else if ((taxonomy = taxonomyFromLocation()) !== false) {
+                        taxonomySwitcher.val(taxonomy);
+                        switchToTaxonomy(taxonomy)
                     } else {
                         taxonomySwitcher.one("change", function () {
-                            spinner.show();
-                            spinner.closest('div').show();
-                            TaxonomyTranslation.classes.taxonomy = new TaxonomyTranslation.models.Taxonomy({taxonomy: jQuery(this).val()});
-                            TaxonomyTranslation.mainView = new TaxonomyTranslation.views.TaxonomyView({model: TaxonomyTranslation.classes.taxonomy});
-                            jQuery(" #icl_tt_tax_switch").on("change", function () {
-                                spinner.show();
-                                jQuery('.icl_tt_main_bottom').hide();
-                                spinner.closest('div').show();
-                                jQuery('#taxonomy-translation').html('');
-                                TaxonomyTranslation.mainView.selectTaxonomy();
-                            });
-
-                        })
-
+                            switchToTaxonomy(jQuery(this).val());
+                        });
                     }
                 }
             }
         });
 
+        function switchToTaxonomy(taxonomy){
+            "use strict";
+            var spinner = jQuery('.loading-taxonomy');
 
+            spinner.show();
+            spinner.closest('div').show();
+            loadModelAndView(taxonomy);
+            jQuery("#icl_tt_tax_switch").on("change", function () {
+                spinner.show();
+                jQuery('.icl_tt_main_bottom').hide();
+                spinner.closest('div').show();
+                jQuery('#taxonomy-translation').html('');
+                TaxonomyTranslation.mainView.selectTaxonomy();
+            });
+        }
+
+        function isSyncTab(){
+            "use strict";
+
+            return  window.location.search.substring(1).indexOf('&sync=1') > -1;
+        }
+
+        function loadModelAndView(taxonomy){
+            "use strict";
+
+            TaxonomyTranslation.classes.taxonomy = new TaxonomyTranslation.models.Taxonomy({taxonomy: taxonomy});
+            TaxonomyTranslation.mainView = new TaxonomyTranslation.views.TaxonomyView({model: TaxonomyTranslation.classes.taxonomy}, {sync: isSyncTab()});
+        }
+
+        function taxonomyFromLocation() {
+            "use strict";
+            var queryString = window.location.search.substring(1);
+            var taxonomy = false;
+            Object.getOwnPropertyNames(TaxonomyTranslation.data.taxonomies).forEach(function (tax) {
+                if (queryString.indexOf('taxonomy=' + tax) > -1) {
+                    taxonomy = tax;
+                }
+            });
+
+            return taxonomy;
+        }
     })
 })(TaxonomyTranslation);

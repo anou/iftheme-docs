@@ -17,25 +17,33 @@
                             </tr>
                         </thead>                        
                         <tbody>
-                        <?php foreach($package['downloads'] as $download): ?>
+                        <?php
+                        foreach($package['downloads'] as $download): ?>
                             <tr>
                                 <td>
                                     <label>
                                     <?php 
                                         $url =  $this->append_site_key_to_download_url($download['url'], $site_key, $repository_id);
+
+                                        $download_data = array(
+                                            'url'           => $url, 
+                                            'slug'          => $download['slug'],
+                                            'nonce'         => wp_create_nonce('install_plugin_' . $url),
+                                            'repository_id' => $repository_id
+                                        );
                                     ?>
-                                    <input type="checkbox" name="downloads[]" value="<?php echo base64_encode(json_encode(array('url' => $url, 
-                                        'basename' => $download['basename'], 'nonce' => wp_create_nonce('install_plugin_' . $url)))); ?>" <?php 
-                                        if($this->plugin_is_installed($download['name'], $download['basename'], $download['version'])): ?>disabled="disabled"<?php endif; ?> />&nbsp;
+                                    <input type="checkbox" name="downloads[]" value="<?php echo base64_encode(json_encode($download_data)); ?>" <?php 
+                                        if($this->plugin_is_installed($download['name'], $download['slug'], $download['version']) && !$this->plugin_is_embedded_version($download['name'], $download['slug']) || !WP_Installer()->is_uploading_allowed()): ?>disabled="disabled"<?php endif; ?> />&nbsp;
                                         
                                     </label>                                
                                 </td>
-                                <td><?php echo $download['name'] ?></td>
+                                <td class="installer_plugin_name"><?php echo $download['name'] ?></td>
                                 <td><?php echo $download['version'] ?></td>
                                 <td><?php echo date_i18n('F j, Y', strtotime($download['date'])) ?></td>
-                                <td>
-                                    <?php if($v = $this->plugin_is_installed($download['name'], $download['basename'])): $class = version_compare($v, $download['version'], '>=') ? 'installer-green-text' : 'installer-red-text'; ?>
+                                <td class="installer_version_installed">
+                                    <?php if($v = $this->plugin_is_installed($download['name'], $download['slug'])): $class = version_compare($v, $download['version'], '>=') ? 'installer-green-text' : 'installer-red-text'; ?>
                                     <span class="<?php echo $class ?>"><?php echo $v; ?></span>
+                                    <?php if($this->plugin_is_embedded_version($download['name'], $download['slug'])): ?>&nbsp;<?php _e('(embedded)', 'installer'); ?><?php endif; ?>
                                     <?php endif; ?>
                                 </td>
                                 <td>
@@ -53,13 +61,24 @@
                         <?php endforeach; ?>
                         </tbody>
                     </table>
-                    
+
                     <br />
+
+                    <div class="installer-error-box">
+                    <?php if(!WP_Installer()->is_uploading_allowed()): ?>
+                        <p>
+                        <?php printf(__('Downloading is not possible because WordPress cannot write into the plugins folder. %sHow to fix%s.', 'installer'), '<a href="http://codex.wordpress.org/Changing_File_Permissions">', '</a>') ?>                    
+                        </p>
+                    <?php endif;?>                            
+                    </div>
+
                     <input type="submit" class="button-secondary" value="<?php esc_attr_e('Download', 'installer') ?>" disabled="disabled" />
                     &nbsp;
                     <label><input name="activate" type="checkbox" value="1" disabled="disabled" />&nbsp;<?php _e('Activate after download', 'installer') ?></label>
 
-                    <div class="installer-status-success"><p><?php _e('Operation complete!', 'installer') ?></p></div>
+                    <div class="installer-download-progress-status"></div>
 
-                    <span class="installer-revalidate-message hidden"><?php _e("Download failed!\n\nClick OK to revalidate your subscription or CANCEL to try again.", 'installer') ?></span>
+                    <div class="installer-status-success"><?php _e('Operation complete!', 'installer') ?></div>
+
+                    <span class="installer-revalidate-message hidden"><?php _e("Download failed!\n\nPlease refresh the page and try again.", 'installer') ?></span>
                     </form>         

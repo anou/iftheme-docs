@@ -24,7 +24,8 @@ jQuery(document).ready(
 						action: 'wpml_get_default_lang'
 					},
 					success:  function (response) {
-						var hidden_language_field = jQuery('<input id="icl_post_language" type="hidden" value="' + response.data + ' "/>');
+						var hidden_language_field = jQuery('<input id="icl_post_language" type="hidden"/>');
+						hidden_language_field.val(response.data);
 						jQuery(".wrap").append(hidden_language_field);
 						iclSetPostLang();
 						iclSwitchPostLanguage();
@@ -48,28 +49,31 @@ function iclGetSwitchLanguageConfirmation(){
     lang_switch_confirm_html += '<p>{switch_language_confirm}</p>';
     lang_switch_confirm_html += '</div>';
 
-    var post_name = jQuery('#title').val();
+	// make sure the title is html entities encoded.
+    var post_name = WPML_core.htmlentities(jQuery('#title').val());
 
     lang_switch_confirm_html = lang_switch_confirm_html.replace('{switch_language_title}',icl_post_edit_messages.switch_language_title);
     lang_switch_confirm_html = lang_switch_confirm_html.replace('{switch_language_message}',icl_post_edit_messages.switch_language_message);
     lang_switch_confirm_html = lang_switch_confirm_html.replace('{switch_language_confirm}',icl_post_edit_messages.switch_language_confirm);
     lang_switch_confirm_html = lang_switch_confirm_html.replace('{post_name}', '<i>' + post_name + '</i>');
 
-    jQuery(lang_switch_confirm_html).dialog(
-        {
-            modal:   true,
-            buttons: {
-                Ok:     function () {
-                    defer.resolve()
-                    jQuery(this).dialog("close");
+		jQuery(lang_switch_confirm_html).dialog(
+			{
+				modal  : true,
+				width  : 'auto',
+				buttons: {
+					Ok    : function () {
+						defer.resolve();
+						jQuery(this).dialog("close");
 
-                },
-                Cancel: function () {
-                    defer.reject();
-                    jQuery(this).dialog("close");
-                }
-            }
-        });
+					},
+					Cancel: function () {
+						defer.reject();
+						jQuery(this).dialog("close");
+					}
+				}
+			}
+		);
     return defer.promise();
 }
 
@@ -77,8 +81,6 @@ function iclPostLanguageAskConfirmation() {
 
 	var post_language_switcher = jQuery('#icl_post_language');
 	var previous_post_language = post_language_switcher.data('last_lang');
-	var new_post_language = post_language_switcher.val();
-	var post_id = jQuery('#post_ID').val();
 
 	jQuery('#edit-slug-buttons').find('> .cancel').click();
 
@@ -88,8 +90,6 @@ function iclPostLanguageAskConfirmation() {
     }).fail(function() {
         post_language_switcher.val(previous_post_language);
     });
-
-
 }
 
 function iclSwitchPostLanguage() {
@@ -108,6 +108,7 @@ function iclSwitchPostLanguage() {
 				data:     {
 					wpml_from:    previous_post_language,
 					action:       'wpml_switch_post_language',
+                    _icl_nonce: icl_post_edit_messages._nonce,
 					wpml_to:      new_post_language,
 					wpml_post_id: post_id
 				},

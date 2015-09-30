@@ -16,10 +16,10 @@ class ICanLocalizeQuery{
       public function error(){
           return $this->error;
       }
-      
-    
+
     function createAccount($data){
-		if (isset($_GET['page']) && $_GET['page'] == ICL_PLUGIN_FOLDER . '/menu/support.php') {
+		$page = filter_input(INPUT_GET, 'page', FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_NULL_ON_FAILURE);
+		if ($page == ICL_PLUGIN_FOLDER . '/menu/support.php') {
 			$add = '?ignore_languages=1';
 		}else{
             $add = '';
@@ -52,22 +52,6 @@ class ICanLocalizeQuery{
         }
     }
 
-    function transfer_account($data) {
-        $request = ICL_API_ENDPOINT . '/websites/'.$data['site_id'].'/transfer_account.xml';
-        $response = $this->_request($request, 'POST', $data);        
-        if(!$response){
-            return array(false, $this->error);
-        }else{
-            $error_code = $response['info']['status']['attr']['err_code'];
-	    if ($error_code == 0) {
-		  $access_key = $response['info']['website']['attr']['accesskey'];
-                  return array(true, $access_key);
-	    } else {
-		  return array(false, $response['info']['status']['value']);
-	    }
-        }
-    }
-    
     function get_website_details(){
         $request_url = ICL_API_ENDPOINT . '/websites/' . $this->site_id . '.xml?accesskey=' . $this->access_key;
         $res = $this->_request($request_url);
@@ -78,9 +62,8 @@ class ICanLocalizeQuery{
         }
     }
     
-    
     function _request($request, $method='GET', $formvars=null, $formfiles=null, $gzipped = false){
-        global $sitepress_settings, $sitepress;
+        global $sitepress_settings;
         $request = str_replace(" ", "%20", $request);
         $c = new IcanSnoopy();
         
@@ -115,7 +98,6 @@ class ICanLocalizeQuery{
         
         $c->_fp_timeout = 3;
         $c->read_timeout = 5;
-        $url_parts = parse_url($request);
         if($sitepress_settings['troubleshooting_options']['http_communication']){
             $request = str_replace('https://','http://',$request);
         }
@@ -145,132 +127,6 @@ class ICanLocalizeQuery{
                 
         return $results;
     }
-
-	function _request_gz( $request_url )
-	{
-		$gzipped = true; //function_exists( 'gzinflate' ) && is_callable( 'gzinflate' );
-
-		return $this->_request( $request_url, 'GET', null, null, $gzipped );
-	}
-
-	function build_cms_request_xml($data, $orig_lang) {
-        global $wp_taxonomies;
-        $taxonomies = array_diff(array_keys((array)$wp_taxonomies), array('post_tag','category'));
-        
-        $tab = "\t";
-        $nl = PHP_EOL;
-        
-        if(!empty($data['previous_cms_request_id'])){
-            $prev = ' previous_cms_request_id="' . $data['previous_cms_request_id'] . '"';
-        }else{
-            $prev = '';
-        }
-        
-        $xml  = "<?xml version=\"1.0\" encoding=\"utf-8\"?>".$nl;
-        $xml .= '<cms_request_details type="sitepress" command="translate_content" from_lang="'.$orig_lang.'"'.$prev.'>'.$nl;
-        $xml .= $tab.'<link url="'.$data['url'].'" />'.$nl;
-        $xml .= $tab.'<contents>'.$nl;
-        foreach($data['contents'] as $key=>$val){
-            if($key=='categories' || $key == 'tags' || in_array($key, $taxonomies)){
-                $quote="'";
-            }else{
-                $quote='"';
-            }
-            
-            $xml .= $tab.$tab.'<content type="' . esc_attr($key, ENT_QUOTES) . '" translate="'.$val['translate'].'" data='.$quote.$val['data'].$quote;
-            if(isset($val['format'])) $xml .= ' format="'.$val['format'].'"';
-            $xml .=  ' />'.$nl;    
-        }        
-        $xml .= $tab.'</contents>'.$nl;
-        $xml .= $tab.'<cms_target_languages>'.$nl;
-        foreach($data['target_languages'] as $lang){
-            $xml .= $tab.$tab.'<target_language lang="'.utf8_encode($lang).'" />'.$nl;    
-        }                
-        $xml .= $tab.'</cms_target_languages>'.$nl;
-        $xml .= '</cms_request_details>';                
-       
-        return $xml;
-    }
-      
-    function send_request($args){
-        $request_url = ICL_API_ENDPOINT . '/websites/'. $this->site_id . '/cms_requests.xml';
-        
-        // $cms_id
-        // $xml
-        // $title 
-        // $to_languages
-        // $orig_language
-        // $permlink
-        // $translator_id
-        // $note=""
-        $args_defaults = array(
-            'cms_id'        => false,
-            'xml'           => '',
-            'title'         => '',
-            'to_languages'   => array(),
-            'orig_language' => '',
-            'permlink'      => '',
-            'translator_id' => 0,
-            'note'          => ''
-        );
-        extract($args_defaults);
-        extract($args, EXTR_OVERWRITE);
-        
-        if(!empty($cms_id)){
-            $parameters['cms_id'] = $cms_id;              
-        }
-        $parameters['accesskey'] = $this->access_key;
-        $parameters['doc_count'] = 1;          
-        $parameters['translator_id'] = $translator_id;          
-        $i = 1;
-        foreach($to_languages as $l){
-          $parameters['to_language'.$i] = $l;
-          $i++;
-        }
-        $parameters['orig_language'] = $orig_language;          
-        $parameters['file1[description]'] = 'cms_request_details';          
-        $parameters['title'] = $title;          
-        if($permlink){
-            $parameters['permlink'] = $permlink;          
-        }
-        
-        $parameters['note'] = $note;
-        
-        // add a unique key so that so that the server can return an
-        // existing cms_request_id if we are sending the same info
-        $parameters['key'] = md5($xml);
-        
-        $file = "cms_request_details.xml.gz";
-        
-        // send the file upload as the file_name and file_content in an array.
-        // Snoopy has been changed to use this format.
-        $res = $this->_request($request_url, 'POST' , $parameters, array('file1[uploaded_data]'=>array(array($file, gzencode($xml)))));        
-        
-        if($res['info']['status']['attr']['err_code']=='0'){
-            return $res['info']['result']['attr']['id'];
-        }else{
-            return isset($res['info']['status']['attr']['err_code'])?-1*$res['info']['status']['attr']['err_code']:0;
-        }
-        
-        return $res;
-        
-        
-    }   
-    
-    function cms_requests(){
-        $request_url = ICL_API_ENDPOINT . '/websites/' . $this->site_id . '/cms_requests.xml?filter=pickup&accesskey=' . $this->access_key;        
-        $res = $this->_request($request_url);
-        if(empty($res['info']['pending_cms_requests']['cms_request'])){
-            $pending_requests = array();
-        }elseif(count($res['info']['pending_cms_requests']['cms_request'])==1){
-            $pending_requests[0] = $res['info']['pending_cms_requests']['cms_request']['attr']; 
-        }else{
-            foreach($res['info']['pending_cms_requests']['cms_request'] as $req){
-                $pending_requests[] = $req['attr'];
-            }
-        }
-        return $pending_requests;
-    }   
         
     function cms_requests_all(){
         $request_url = ICL_API_ENDPOINT . '/websites/' . $this->site_id . '/cms_requests.xml?show_languages=1&accesskey=' . $this->access_key;        
@@ -294,88 +150,6 @@ class ICanLocalizeQuery{
         }
         
         return $pending_requests;
-    }   
-    
-    function cms_request_details($request_id, $language){
-        $request_url = ICL_API_ENDPOINT . '/websites/' . $this->site_id . '/cms_requests/'.$request_id.'/cms_download.xml?accesskey=' . $this->access_key . '&language=' . $language;                
-        $res = $this->_request($request_url);
-        if(isset($res['info']['cms_download'])){
-            return $res['info']['cms_download'];
-        }else{
-            return array();
-        }
-    }
-    
-    function cms_do_download($request_id, $language){
-        global $wp_taxonomies;
-        $taxonomies = array_diff(array_keys((array)$wp_taxonomies), array('post_tag','category'));
-        
-        $request_url = ICL_API_ENDPOINT . '/websites/' . $this->site_id . '/cms_requests/'.$request_id.'/cms_download?accesskey=' . $this->access_key . '&language=' . $language;                        
-        $res = $this->_request_gz($request_url); 
-        
-        $content = $res['cms_request_details']['contents']['content'];
-                
-        $translation = array();
-        
-        if($content)        
-        foreach($content as $c){
-            
-            $c['attr']['type'] = htmlspecialchars_decode(htmlspecialchars_decode($c['attr']['type']), ENT_QUOTES);
-            
-            if($c['attr']['type']=='tags' || $c['attr']['type']=='categories' || in_array($c['attr']['type'], $taxonomies)){
-                $exp = explode(',',$c['translations']['translation']['attr']['data']);
-                $arr = array();
-                foreach($exp as $e){
-                    if($c['attr']['format'] == 'csv_base64'){
-                        $arr[] = base64_decode(html_entity_decode($e));
-                    } else {
-                        $arr[] = html_entity_decode($e);
-                    }
-                }
-                $c['translations']['translation']['attr']['data'] = $arr;
-            }
-            if(isset($c['translations'])){
-                $translation[$c['attr']['type']] = $c['translations']['translation']['attr']['data'];
-            }else{
-                $translation[$c['attr']['type']] = $c['attr']['data'];
-            }
-            if(@strval($c['attr']['format']) == 'base64'){
-                $translation[$c['attr']['type']] = base64_decode($translation[$c['attr']['type']]);
-            }
-            
-			// I've commented out this code. Any content that comes from ICL won't be html_entity_encoded.
-			// By Bruce
-			
-            //if($c['attr']['type'] == 'body'){
-            //    $translation['body'] = html_entity_decode($translation['body'], ENT_QUOTES, 'UTF-8');
-            //}
-            
-        }
-        
-        return $translation;
-    }
-    
-    function cms_update_request_status($request_id, $status, $language){
-        $request_url = ICL_API_ENDPOINT . '/websites/' . $this->site_id . '/cms_requests/'.$request_id.'/update_status.xml';                            
-        $parameters['accesskey'] = $this->access_key;
-        $parameters['status'] = $status;
-        if($language){
-            $parameters['language'] = $language;
-        }        
-        
-        $res = $this->_request($request_url, 'POST' , $parameters);
-        
-        return ($res['info']['status']['attr']['err_code']==0);
-    }
-    
-    function cms_request_translations($request_id){
-        $request_url = ICL_API_ENDPOINT . '/websites/' . $this->site_id . '/cms_requests/'.$request_id.'.xml?accesskey=' . $this->access_key;               
-        $res = $this->_request($request_url);
-        if(isset($res['info']['cms_request'])){
-            return $res['info']['cms_request'];
-        }else{
-            return array();
-        }        
     }
 
     function update_cms_id($args){
@@ -413,192 +187,6 @@ class ICanLocalizeQuery{
         }else{
             return isset($res['info']['status']['attr']['err_code'])?-1*$res['info']['status']['attr']['err_code']:0;
         }
-        
-        return $res;
-        
-    }
-    
-    function get_session_id($support_mode) {
-        global $sitepress;
-        $sitepress_settigs = $sitepress->get_settings();
-        $request_url = ICL_API_ENDPOINT . '/login/login.xml';    
-        $request_url .= '?accesskey=' . $this->access_key;
-        $request_url .= '&wid=' . $this->site_id;
-        $request_url .= '&usertype=Client';
-        $request_url .= '&compact=1';
-		if ($support_mode) {
-			$email_setting = 'support_icl_account_email';
-		} else {
-			$email_setting = 'icl_account_email';
-		}
-		if (!isset($sitepress_settigs[$email_setting])) {
-			$current_user = wp_get_current_user();
-			$email = $current_user->data->user_email;
-		} else {
-			$email = $sitepress_settigs[$email_setting];
-		}
-        $request_url .= '&email=' . $email;
-        
-        $res = $this->_request($request_url, 'GET');        
-        if($res['info']['status']['attr']['err_code']=='0'){
-            return $res['info']['session_num']['value'];
-        }else{
-            return null;
-        }
-      
-    }
-    
-    function get_reminders($refresh = false) {
-        global $wpdb, $sitepress;
-        
-        // see if we need to refresh the reminders from ICanLocalize
-        $icl_settings = $sitepress->get_settings();
-        $last_time = $icl_settings['last_icl_reminder_fetch'];
-        
-        if (!$refresh && ((time() - $last_time) > 60) && $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}icl_reminders w WHERE w.show=1") == 0) {
-            $refresh = true;
-        }
-        
-        if (((time() - $last_time) > 10 * 60) || $refresh) {
-    
-            $request_url = ICL_API_ENDPOINT . '/reminders.xml?accesskey='.$this->access_key.'&wid=' . $this->site_id;
-    
-            $res = $this->_request($request_url, 'GET');        
-            if($res['info']['status']['attr']['err_code']=='3'){
-                // not logged in get a new session_id
-                $session_id = $this->get_session_id(FALSE);
-        
-                $request_url = ICL_API_ENDPOINT . '/reminders.xml?accesskey='.$this->access_key.'&wid=' . $this->site_id;
-        
-                $res = $this->_request($request_url, 'GET');
-            }
-                
-            if($res['info']['status']['attr']['err_code']=='0'){
-                
-                $wpdb->query("TRUNCATE {$wpdb->prefix}icl_reminders"); 
-                
-                // First add any low funding warning.
-                $website_data = $this->get_website_details();
-                if (isset($website_data['unfunded_cms_requests'])) {
-                    $missing_funds = $website_data['unfunded_cms_requests']['attr']['missing_funds'];
-                    $number_waiting = sizeof($website_data['unfunded_cms_requests']['cms_request']);
-                    
-                    $r['message'] = sprintf(__('You don\'t have enough funds in your ICanLocalize account - [b]Funds required - $%s[/b]', 'sitepress'), $missing_funds);
-                    $r['id'] = -1;
-                    $r['can_delete'] = 1;
-                    $r['show'] = 1;
-                    $r['url'] = '/finance';
-                    $wpdb->insert($wpdb->prefix.'icl_reminders', $r);
-                }
-                // save the translator status
-                @$sitepress->get_icl_translator_status(@$icl_settings, $website_data);
-                $sitepress->save_settings($icl_settings);               
-                
-                // Now add the reminders.
-                if(!empty($res['info']['reminders']['reminder'])){
-                    $reminders_xml = $res['info']['reminders']['reminder'];
-                    if($reminders_xml) {
-                        
-                        if (sizeof($reminders_xml) == 1) {
-                            // fix problem when only on item found
-                            $reminders_xml = array($reminders_xml);
-                        }
-                        
-                        foreach($reminders_xml as $r){
-        
-                            $r['attr']['can_delete'] = $r['attr']['can_delete'] == 'true' ? 1 : 0;
-                            $r['attr']['show'] = 1;
-                            
-                            $wpdb->insert($wpdb->prefix.'icl_reminders', $r['attr']);
-                        }
-                    }
-                }
-                $last_time = time();
-                $sitepress->save_settings(array('last_icl_reminder_fetch' => $last_time));
-            }
-        }
-
-        // check if low funding is still valid
-        if ($wpdb->get_var("SELECT id FROM {$wpdb->prefix}icl_reminders WHERE id=-1") == -1) {
-        
-            $website_data = $this->get_website_details();
-            if (!isset($website_data['unfunded_cms_requests'])) {
-                $wpdb->query("DELETE FROM {$wpdb->prefix}icl_reminders WHERE id=-1");
-            }
-        }
-
-            
-        return $wpdb->get_results("SELECT * FROM {$wpdb->prefix}icl_reminders w WHERE w.show=1 ORDER BY id");
-        
-    }
-
-    function get_current_session($refresh = false, $support_mode = false) {
-        global $sitepress;
-    
-        // see if we need to refresh the reminders from ICanLocalize
-        $icl_settings = $sitepress->get_settings();
-        $setting = $support_mode ? 'icl_support_current_session' : 'icl_current_session';
-        $last_time = $support_mode ? 'last_icl_support_fetch' : 'last_icl_reminder_fetch';
-
-        if (empty($icl_settings[$setting]) || ($refresh && time() - $icl_settings[$last_time] > 30 * 60)) {
-            $session_id = $this->get_session_id($support_mode);
-            $new_time = time();
-            $sitepress->save_settings(array($setting => $session_id, $last_time => $new_time));
-            return $session_id;
-        } else {
-            return $icl_settings[$setting];
-        }
-        
-    }
-    
-function delete_message($message_id) {
-    global $wpdb;
-
-    if ((int)$message_id >= 0) {
-        $session_id = $this->get_current_session();
-
-        $request_url = ICL_API_ENDPOINT . '/reminders/' . $message_id . '.xml?wid='.$this->site_id.'&accesskey=' . $this->access_key;
-
-        $data = array('session' => $session_id, 'accesskey' => $this->access_key,
-                      '_method' => 'DELETE');
-
-        $res = $this->_request($request_url, 'POST', $data);
-        if($res['info']['status']['attr']['err_code']=='3'){
-            // not logged in get a new session_id
-            $session_id = $this->get_session_id(FALSE);
-
-            $res = $this->_request($request_url, 'POST', $data);
-        }
-
-        if($res['info']['result']['value']=='Reminder deleted' ||
-                $res['info']['result']['value']=='Reminder not found'){
-            // successfully deleted on the server.
-            $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->prefix}icl_reminders WHERE id=%d", $message_id));
-        }
-
-
-    } else {
-        // this is the low funding reminder.
-        $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->prefix}icl_reminders WHERE id=%d", $message_id));
-    }
-
-}
-    
-    function report_back_permalink($request_id, $language, $translation) {
-        global $wpdb;
-        $request_url = ICL_API_ENDPOINT . '/websites/' . $this->site_id . '/cms_requests/'. $request_id . '/update_permlink.xml';
-        
-        $parameters['accesskey'] = $this->access_key;
-        $parameters['language'] = $language;
-		$home_url = get_home_url();
-		if($wpdb->get_var("SELECT post_type FROM $wpdb->posts WHERE ID={$translation->element_id}")=='page'){
-            $parameters['permlink'] = $home_url . '?page_id=' . $translation->element_id;
-        }else{
-            $parameters['permlink'] = $home_url . '?p=' . $translation->element_id;
-        }
-        
-        $res = $this->_request($request_url, 'POST', $parameters);
-        
     }
     
     function get_help_links() {
@@ -607,12 +195,6 @@ function delete_message($message_id) {
         $res = $this->_request($request_url, 'GET');
         
         return $res;
-    }
-    
-    function test_affiliate_info($id, $key){
-        $request_url = ICL_API_ENDPOINT . '/websites/validate_affiliate.xml?affiliate_id='.$id.'&affiliate_key=' . $key;
-        $res = $this->_request($request_url, 'GET');
-        return $res['info']['result']['value'] == 'OK';
     }
 }
   
@@ -737,4 +319,3 @@ function icl_gzdecode($data, &$filename = '', &$error = '', $maxlength = null) {
     }
     return $data;
 }
-?>

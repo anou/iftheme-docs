@@ -57,6 +57,8 @@ class AbsoluteLinks{
 			return $text;
 		}
 
+		$filtered_icl_post_language = filter_input( INPUT_POST, 'icl_post_language', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+
 		$text = $source_text;
 
 		if ( !isset( $wp_rewrite ) ) {
@@ -74,7 +76,6 @@ class AbsoluteLinks{
 
 			$rewrite = $wp_rewrite->wp_rewrite_rules();
 
-			add_filter( 'option_rewrite_rules', array( $sitepress, 'rewrite_rules_filter' ) );
 			if(class_exists('WPML_Slug_Translation')) {
 				add_filter( 'option_rewrite_rules', array( 'WPML_Slug_Translation', 'rewrite_rules_filter' ), 1, 1 );
 			}
@@ -82,7 +83,7 @@ class AbsoluteLinks{
 
 		$rewrite = $this->all_rewrite_rules( $rewrite );
 
-		$home_url = $sitepress->language_url( empty( $_POST[ 'icl_post_language' ] ) ? false : $_POST[ 'icl_post_language' ] );
+		$home_url = $sitepress->language_url( empty( $filtered_icl_post_language ) ? false : $filtered_icl_post_language );
 
 		if ( $sitepress_settings[ 'language_negotiation_type' ] == 3 ) {
 			$home_url = preg_replace( "#\?lang=([a-z-]+)#i", '', $home_url );
@@ -105,7 +106,8 @@ class AbsoluteLinks{
 		}
 
 		if ( $int1 || $int2 ) {
-			$url_parts = parse_url( rtrim( get_home_url(), '/' ) . '/' );
+			$url_parts           = parse_url( $this->get_home_url_with_no_lang_directory() );
+			$url_parts[ 'path' ] = isset( $url_parts[ 'path' ] ) ? $url_parts[ 'path' ] : '';
 			foreach ( $alp_matches[ 4 ] as $k => $m ) {
 				if ( 0 === strpos( $m, 'wp-content' ) ) {
 					continue;
@@ -113,11 +115,11 @@ class AbsoluteLinks{
 
 				$lang = false;
 
-				if ( $sitepress_settings[ 'language_negotiation_type' ] == 1 && $sitepress_settings[ 'urls' ][ 'directory_for_default_language' ] != 1 ) {
+				if ( $sitepress_settings[ 'language_negotiation_type' ] == 1 ) {
 					$m_orig = $m;
 					$exp    = explode( '/', $m, 2 );
 					$lang   = $exp[ 0 ];
-					if ( $wpdb->get_var( "SELECT code FROM {$wpdb->prefix}icl_languages WHERE code='{$lang}'" ) ) {
+					if ( $this->does_lang_exist( $lang ) ) {
 						$m = $exp[ 1 ];
 					} else {
 						$m = $m_orig;
@@ -195,7 +197,7 @@ class AbsoluteLinks{
 				$post_name = $category_name = $tax_name = false;
 
 				if ( isset( $permalink_query_vars[ 'pagename' ] ) ) {
-					$icl_post_lang = isset( $_POST[ 'icl_post_language' ] ) ? $_POST[ 'icl_post_language' ] : $current_language;
+					$icl_post_lang = !is_null( $filtered_icl_post_language ) ? $filtered_icl_post_language : $current_language;
 					$sitepress->switch_lang( $icl_post_lang );
 					$page_by_path = get_page_by_path( $permalink_query_vars[ 'pagename' ] );
 					$sitepress->switch_lang( $current_language );
@@ -238,7 +240,7 @@ class AbsoluteLinks{
 
 				if ( $post_name && isset( $post_type ) ) {
 
-					$icl_post_lang = isset( $_POST[ 'icl_post_language' ] ) ? $_POST[ 'icl_post_language' ] : $current_language;
+					$icl_post_lang = !is_null( $filtered_icl_post_language ) ? $filtered_icl_post_language : $current_language;
 					$sitepress->switch_lang( $icl_post_lang );
 					$p = get_page_by_path( $post_name, OBJECT, $post_type );
 					$sitepress->switch_lang( $current_language );
@@ -281,7 +283,7 @@ class AbsoluteLinks{
 					} else {
 						$alp_broken_links[ $alp_matches[ 2 ][ $k ] ] = array();
 						$name                                        = wpml_like_escape( $post_name );
-						$p                                           = $wpdb->get_results( "SELECT ID, post_type FROM {$wpdb->posts} WHERE post_name LIKE '{$name}%' AND post_type IN('post','page')" );
+						$p                                           = $this->_get_ids_and_post_types( $name );
 						if ( $p ) {
 							foreach ( $p as $post_suggestion ) {
 								if ( $post_suggestion->post_type == 'page' ) {
@@ -376,6 +378,45 @@ class AbsoluteLinks{
 
 		return $text;
 	}
+	
+	private function get_home_url_with_no_lang_directory( ) {
+		global $sitepress, $sitepress_settings;
+		$sitepress_settings = $sitepress->get_settings();
+		
+		$home_url = rtrim( get_home_url(), '/' );
+		if ( $sitepress_settings[ 'language_negotiation_type' ] == 1 ) {
+			
+			// Strip lang directory from end if it's there.
+			
+			$exp  = explode( '/', $home_url);
+			$lang = end( $exp );
+			
+			if ( $this->does_lang_exist( $lang ) ) {
+				$home_url = substr( $home_url, 0, strlen($home_url) - strlen( $lang ) );
+			}
+		}
+		
+		return $home_url;
+	}
+	
+	private function does_lang_exist ( $lang ) {
+		global $wpdb;
+		
+		return $wpdb->get_var( "SELECT code FROM {$wpdb->prefix}icl_languages WHERE code='{$lang}'" );
+		
+	}
+	
+	function _get_ids_and_post_types( $name ) {
+		global $wpdb;
+		static $cache = array();
+		
+		$name = rawurlencode( $name );
+		if ( ! isset( $cache[ $name ] ) ) {
+			$cache[ $name ] = $wpdb->get_results( $wpdb->prepare ("SELECT ID, post_type FROM {$wpdb->posts} WHERE post_name LIKE %s AND post_type IN('post','page')", $name . '%' ) );
+		}
+		
+		return $cache[ $name ];
+	}
 
 	function all_rewrite_rules($rewrite) {
 			global $sitepress;
@@ -451,7 +492,7 @@ class AbsoluteLinks{
 
 		delete_post_meta( $post_id, '_alp_broken_links' );
 
-		$post             = $wpdb->get_row( "SELECT * FROM {$wpdb->posts} WHERE ID={$post_id}" );
+		$post             = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->posts} WHERE ID = %s", $post_id )  );
 		$alp_broken_links = array();
 
 		$this_post_language = $sitepress->get_language_for_element($post_id, 'post_' . $post->post_type);

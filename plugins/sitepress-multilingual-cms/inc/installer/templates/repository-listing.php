@@ -1,19 +1,12 @@
-<?php if(($match = $this->get_matching_cp($repository)) && $match['exp']): ?>
+<?php if((!$this->repository_has_subscription($repository_id) && $match = $this->get_matching_cp($repository)) && $match['exp']): ?>
 <p class="alignright installer_highlight"><strong><?php printf('Price offers available until %s', date_i18n(get_option( 'date_format' ), $match['exp'])) ?></strong></p>
 <?php endif; ?>
 
-<h3><?php echo $repository['data']['name'] ?></h3>
-
+<h3 id="repository-<?php echo $repository_id ?>"><?php echo $repository['data']['name'] ?></h3>
 <?php 
     $generic_product_name = $this->settings['repositories'][$repository_id]['data']['product-name'];
-
-
-
-
-
 ?>
-
-<table class="widefat otgs_wp_installer_table">
+<table class="widefat otgs_wp_installer_table" id="installer_repo_<?php echo $repository_id ?>">
 
     <tr>
         <td>&nbsp;</td>
@@ -36,7 +29,12 @@
                 <div class="alignleft" style="margin-top:6px;"><?php printf(__('1. Go to your %s%s account%s and add this site URL: %s', 'installer'), 
                     '<a href="' . $this->settings['repositories'][$repository_id]['data']['site_keys_management_url'] . '?add='.urlencode($this->get_installer_site_url()).'">',
                       $generic_product_name, '</a>', $this->get_installer_site_url()); ?></div>
+                      
+                <div class="installer-error-box hidden" style="margin-top:10px;"></div>
+                    
                 </form>
+                
+                
             </div>            
             
             <?php 
@@ -61,7 +59,7 @@
             
             <div class="alignright">
                 <a class="remove_site_key_js button-secondary" href="#" data-repository=<?php echo $repository_id ?> data-confirmation="<?php esc_attr_e('Are you sure you want to unregister?', 'installer') ?>" data-nonce="<?php echo wp_create_nonce('remove_site_key_' . $repository_id) ?>"><?php printf(__("Unregister %s from this site", 'installer'), $generic_product_name) ?></a>&nbsp;            
-                <a class="update_site_key_js button-secondary" href="#" data-repository=<?php echo $repository_id ?> data-nonce="<?php echo wp_create_nonce('update_site_key_' . $repository_id) ?>"><?php _e('Update this info', 'installer') ?></a>
+                <a class="update_site_key_js button-secondary" href="#" data-repository=<?php echo $repository_id ?> data-nonce="<?php echo wp_create_nonce('update_site_key_' . $repository_id) ?>"><?php _e('Check for updates', 'installer') ?></a>
             </div>
             
             <?php if(empty($expired)): ?>
@@ -84,16 +82,17 @@
     $subscription_type = isset($subscription_type) ? $subscription_type : null;
     $expired = isset($expired) ? $expired : null;
     $upgrade_options = isset($upgrade_options) ? $upgrade_options : null;
-    $packages = $this->_render_product_packages($repository['data']['packages'], $subscription_type, $expired, $upgrade_options);
+    $packages = $this->_render_product_packages($repository['data']['packages'], $subscription_type, $expired, $upgrade_options, $repository_id);
     if(empty($subscription_type) || $expired){
         $subpackages_expandable = true;
     }else{
         $subpackages_expandable = false;
     }
+
     ?>
 
     <?php foreach($packages as $package): ?>
-    <tr>
+    <tr id="repository-<?php echo $repository_id ?>_<?php echo $package['id'] ?>">
         <td><img width="140" height="140" src="<?php echo $package['image_url'] ?>" /></td>
         <td>
             <p><strong><?php echo $package['name'] ?></strong></p>
@@ -115,7 +114,7 @@
 
             <?php if(!empty($package['sub-packages'])): ?>
 
-                <?php $subpackages = $this->_render_product_packages($package['sub-packages'], $subscription_type, $expired, $upgrade_options); ?>
+                <?php $subpackages = $this->_render_product_packages($package['sub-packages'], $subscription_type, $expired, $upgrade_options, $repository_id); ?>
 
                 <?php if($subpackages): ?>
                 
@@ -125,7 +124,7 @@
 
                 <table class="otgs_wp_installer_subtable" style="<?php if($subpackages_expandable) echo 'display:none' ?>">
                 <?php foreach($subpackages as $package): ?>
-                    <tr>
+                    <tr id="repository-<?php echo $repository_id ?>_<?php echo $package['id'] ?>">
                         <td><img width="70" height="70" src="<?php echo $package['image_url'] ?>" /></td>
                         <td>
                             <p><strong><?php echo $package['name'] ?></strong></p>

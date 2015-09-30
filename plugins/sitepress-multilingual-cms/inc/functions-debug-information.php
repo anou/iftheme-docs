@@ -56,11 +56,12 @@ class ICL_Debug_Information {
 				'ServerSoftware' => $_SERVER[ 'SERVER_SOFTWARE' ]
 			),
 			'PHP'       => array(
-				'MemoryLimit'  => ini_get( 'memory_limit' ),
-				'UploadMax'    => ini_get( 'upload_max_filesize' ),
-				'PostMax'      => ini_get( 'post_max_size' ),
-				'TimeLimit'    => ini_get( 'max_execution_time' ),
-				'MaxInputVars' => ini_get( 'max_input_vars' ),
+				'MemoryLimit'     => ini_get( 'memory_limit' ),
+				'WP Memory Limit' => WP_MEMORY_LIMIT,
+				'UploadMax'       => ini_get( 'upload_max_filesize' ),
+				'PostMax'         => ini_get( 'post_max_size' ),
+				'TimeLimit'       => ini_get( 'max_execution_time' ),
+				'MaxInputVars'    => ini_get( 'max_input_vars' ),
 			),
 		);
 
@@ -142,9 +143,9 @@ class ICL_Debug_Information {
 		}
 
 		if ( version_compare( phpversion(), '5.3.0', '<' ) ) {
-			$json_data = json_encode( $data );
+			$json_data = wp_json_encode( $data );
 		} else {
-			$json_data = json_encode( $data, $json_options );
+			$json_data = wp_json_encode( $data, $json_options );
 		}
 
 		return $json_data;

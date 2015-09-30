@@ -75,7 +75,9 @@ function icl_upgrade_2_0_0_steps($step, $stepper){
             //loop existing translations
 			if ( isset( $types ) ) {
 				$res = $wpdb->get_results( $wpdb->prepare(
-								"SELECT * FROM {$wpdb->prefix}icl_translations WHERE element_type IN('".join("','", $types)."') AND source_language_code IS NULL LIMIT %d  OFFSET %d", array($limit, $offset)
+								"SELECT * FROM {$wpdb->prefix}icl_translations
+                                 WHERE element_type IN(" . wpml_prepare_in( $types ) . " )
+                                    AND source_language_code IS NULL LIMIT %d  OFFSET %d", array($limit, $offset)
 												)); 
 				foreach( $res as $row){
 					$processing = TRUE;
@@ -153,15 +155,14 @@ function icl_upgrade_2_0_0_steps($step, $stepper){
 								'links_fixed'           => intval(isset($links_fixed)?$links_fixed:0)
 							));
 
-							$job_id = $TranslationManagement->add_translation_job($newrid, $translator_id , $translation_package);
-							if($job_id && $status == 10){
-								$post = get_post($t->element_id);
-								$TranslationManagement->save_job_fields_from_post($job_id, $post);
-							}
-						}
-					}
-				}
-			}
+                            $job_id = $TranslationManagement->add_translation_job( $newrid, $translator_id, $translation_package );
+                            if ( $job_id && $status == 10 ) {
+                                do_action( 'wpml_save_job_fields_from_post', $job_id );
+                            }
+                        }
+                    }
+                }
+            }
             if ($processing) {
                 update_option('icl_temp_upgrade_data', array('step' => 2, 'offset' => intval($offset+100)));
                 $stepper->setNextStep(2);

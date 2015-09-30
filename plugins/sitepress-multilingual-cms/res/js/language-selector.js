@@ -1,7 +1,12 @@
     var wpml_language_selector_click = {
         ls_click_flag: false,
-        toggle: function(){
-            var sel = document.getElementById('lang_sel_click').children[0].children[0].children[1];            
+        toggle: function (icl_switcher) {
+            var sel;
+            if (icl_switcher != undefined) {
+                sel = icl_switcher.children[0].children[0].children[1];
+            } else {
+                sel = document.getElementById('lang_sel_click').children[0].children[0].children[1];
+            }
             
             if(sel.style.visibility == 'visible'){
                 sel.style.visibility = 'hidden';
@@ -20,4 +25,4 @@
             }
             wpml_language_selector_click.ls_click_flag = false;
         }
-    }
+    };

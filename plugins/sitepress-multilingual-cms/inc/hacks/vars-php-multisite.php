@@ -15,13 +15,13 @@
                     $pagenow = 'index.php';
                 } else {
                     preg_match('#(.*?)(/|$)#', $pagenow, $self_matches);
-                    $pagenow = mb_strtolower($self_matches[1]);
+                    $pagenow = strtolower($self_matches[1]);
                     if ( '.php' !== substr($pagenow, -4, 4) )
                         $pagenow .= '.php'; // for Options +Multiviews: /wp-admin/themes/index.php (themes.php is queried)
                 }
             } else {
                 if ( preg_match('#([^/]+\.php)([?/].*?)?$#i', $PHP_SELF, $self_matches) )
-                    $pagenow = mb_strtolower($self_matches[1]);
+                    $pagenow = strtolower($self_matches[1]);
                 else
                     $pagenow = 'index.php';
             }

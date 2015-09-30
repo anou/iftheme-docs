@@ -1,25 +1,17 @@
 <?php
+/**
+ * @package wpml-core
+ */
 
 class ICL_WP_Pointers{
-    
-    
-    
+
     public static function add($callback){
-        global $wp_version;
-        if(version_compare($wp_version, '3.3.0', '<')) return;
-        
         $dismissed = explode( ',', (string) get_user_meta( get_current_user_id(), 'dismissed_wp_pointers', true ) );
-        
-        if(is_array($callback)){
-            $funcname = $callback[1];
-        }else{
-            $funcname = $callback;
-        }
+        $funcname = is_array ( $callback ) ? $callback[ 1 ] : $callback;
         
         if(!in_array($funcname, $dismissed)){
             add_action( 'admin_print_footer_scripts', $callback );
-        }    
-        
+        }
     }
     
     private static function print_js( $pointer_id, $selector, $args ) {
@@ -30,7 +22,7 @@ class ICL_WP_Pointers{
         <script type="text/javascript">
         //<![CDATA[
         (function($){
-            var options = <?php echo json_encode( $args ); ?>, setup;
+            var options = <?php echo wp_json_encode( $args ); ?>, setup;
 
             if ( ! options )
                 return;
@@ -63,9 +55,7 @@ class ICL_WP_Pointers{
      
     /* The pointers */    
     public static function pointer_mo_auto_download_260() {
-        
-        
-        
+
         $content  = '<h3>' . __( 'New in WPML 2.6.0', 'sitepress') . '</h3>';
         $content .= '<p>' .  __( 'WPML can automatically download translations for WordPress.', 'sitepress') . '</p>';
 
@@ -74,8 +64,6 @@ class ICL_WP_Pointers{
             'position' => array( 'edge' => 'left', 'align' => 'right' ),
         ) );
     }
-    
-    
 }
   
 ?>

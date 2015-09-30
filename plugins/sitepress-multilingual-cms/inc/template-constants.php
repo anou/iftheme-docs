@@ -10,5 +10,3 @@ if(!defined('ICL_LANGUAGE_NAME')){
 if(!defined('ICL_LANGUAGE_NAME_EN')){
     define('ICL_LANGUAGE_NAME_EN', $language_details['english_name']);
 }
-
-?>

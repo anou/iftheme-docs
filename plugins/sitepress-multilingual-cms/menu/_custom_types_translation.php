@@ -19,7 +19,7 @@ $custom_posts = array();
 $icl_post_types = $sitepress->get_translatable_documents( true );
 
 foreach ( $icl_post_types as $k => $v ) {
-	if ( !in_array( $k, array( 'post', 'page' ) ) ) {
+	if ( !in_array( $k, array( 'post', 'page', 'attachment' ) ) ) {
 		$custom_posts[ $k ] = $v;
 	}
 }
@@ -87,7 +87,7 @@ if(!empty($custom_posts)){
                     <tbody>
                         <?php foreach($custom_posts as $k=>$custom_post): ?>
                             <?php
-                                $rdisabled = isset($iclTranslationManagement->settings['custom_types_readonly_config'][$k]) ? 'disabled="disabled"':'';
+                                $rdisabled = isset($iclTranslationManagement->settings['custom-types_readonly_config'][$k]) ? 'disabled="disabled"':'';
                             ?>
                             <tr>
                                 <td>
@@ -106,26 +106,17 @@ if(!empty($custom_posts)){
                                             $is_hidden = $_on ? '' : 'hidden';
                                             $_translate = !empty($sitepress_settings['posts_slug_translation']['types'][$k]);
                                             if ($_has_slug) {
-												if( $default_language != $sitepress_settings['st']['strings_language']){
-													$string_id_prepared = $wpdb->prepare( "
-                                                        SELECT s.id FROM {$wpdb->prefix}icl_strings s
-                                                            JOIN {$wpdb->prefix}icl_string_translations st
-                                                            ON st.string_id = s.id
-                                                            WHERE st.language=%s AND s.value=%s AND s.name LIKE %s
-                                                    ", array( $default_language, $custom_post->rewrite[ 'slug' ], 'URL slug: %' ) );
-                                                }
-                                                else {
-													$string_id_prepared = $wpdb->prepare( "SELECT id FROM {$wpdb->prefix}icl_strings WHERE name = %s AND value = %s ", array(
-																																										 'Url slug: ' . $custom_post->rewrite[ 'slug' ],
-																																										 $custom_post->rewrite[ 'slug' ]
-																																									 ) );
-                                                }
-												$string_id = $wpdb->get_var( $string_id_prepared );
-												if($_translate && !$string_id) {
+												$string_id = null;
+												$_slug_translations = false;
+												
+												if ( class_exists( 'WPML_Slug_Translation' ) ) {
+													list( $string_id, $_slug_translations ) = WPML_Slug_Translation::get_translations( trim( $custom_post->rewrite[ 'slug' ], '/' ) );
+												}
+												
+												if($sitepress_settings['posts_slug_translation']['on'] && $_translate && !$string_id) {
 													$message = sprintf( __( "%s slugs are set to be translated, but they are missing their translation", 'sitepress'), $custom_post->labels->name);
 													ICL_AdminNotifier::displayInstantMessage( $message, 'error', 'below-h2', false );
 												}
-                                                $_slug_translations = icl_get_string_translations_by_id($string_id);
                                             } else {
                                                 $_slug_translations = false;
                                             }
@@ -147,7 +138,7 @@ if(!empty($custom_posts)){
 													foreach ( $sitepress->get_active_languages() as $language ) {
 														if ( $language[ 'code' ] != $sitepress_settings[ 'st' ][ 'strings_language' ] ) {
 															$slug_translation_value  = !empty( $_slug_translations[ $language[ 'code' ] ][ 'value' ] ) ? $_slug_translations[ $language[ 'code' ] ][ 'value' ] : '';
-															$slug_translation_sample = $custom_posts[ $k ]->rewrite[ 'slug' ] . ' @' . $language[ 'code' ];
+															$slug_translation_sample = trim($custom_posts[ $k ]->rewrite[ 'slug' ],'/') . ' @' . $language[ 'code' ];
 															?>
 															<tr>
 																<td>
@@ -157,7 +148,7 @@ if(!empty($custom_posts)){
 																	<input id="translate_slugs[<?php echo $k ?>][langs][<?php echo $language[ 'code' ] ?>]" name="translate_slugs[<?php echo $k ?>][langs][<?php echo $language[ 'code' ] ?>]" type="text" value="<?php echo $slug_translation_value; ?>"
 																		   placeholder="<?php echo $slug_translation_sample; ?>"/>
 																	<?php
-																	if ( isset( $_slug_translations[ $language[ 'code' ] ] ) && $_slug_translations[ $language[ 'code' ] ][ 'status' ] != ICL_STRING_TRANSLATION_COMPLETE ) {
+																	if ( isset( $_slug_translations[ $language[ 'code' ] ] ) && $_slug_translations[ $language[ 'code' ] ][ 'status' ] != ICL_TM_COMPLETE ) {
 																		?>
 																		<em class="icl_st_slug_tr_warn"><?php _e( "Not marked as 'complete'. Press 'Save' to enable.", 'sitepress' ) ?></em>
 																	<?php
@@ -173,7 +164,7 @@ if(!empty($custom_posts)){
 																	<label for="translate_slugs[<?php echo $k ?>][langs][<?php echo $language[ 'code' ] ?>]"><?php echo $language[ 'display_name' ] ?> <em><?php _e( "(original)", 'sitepress' ) ?></em></label>
 																</td>
 																<td><input disabled="disabled" class="disabled" id="translate_slugs[<?php echo $k ?>][langs][<?php echo $language[ 'code' ] ?>]" name="translate_slugs[<?php echo $k ?>][langs][<?php echo $language[ 'code' ] ?>]" type="text"
-																								 value="<?php echo $custom_posts[ $k ]->rewrite[ 'slug' ]; ?>"/>
+																								 value="<?php echo trim($custom_posts[ $k ]->rewrite[ 'slug' ],'/'); ?>"/>
 																</td>
 															</tr>
 														<?php
@@ -215,7 +206,11 @@ if(!empty($custom_posts)){
 
                 <p class="buttons-wrap">
                     <span class="icl_ajx_response" id="icl_ajx_response_cp"></span>
-                    <input type="submit" class="button button-primary" value="<?php _e('Save', 'sitepress') ?>" />
+                    <input type="submit"
+						   id="js_custom_posts_sync_button"
+						   class="button button-primary"
+						   value="<?php _e('Save', 'sitepress') ?>"
+						   data-message="<?php echo esc_attr(__("You haven't entered translations for all slugs. Are you sure you want to save these settings?", 'sitepress' ) );?>" />
                 </p>
 
             </form>

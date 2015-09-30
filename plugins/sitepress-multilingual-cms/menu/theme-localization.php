@@ -13,8 +13,8 @@ $locales = $sitepress->get_locale_file_names();
     <div id="icon-wpml" class="icon32"><br /></div>
     <h2><?php _e('Theme and plugins localization', 'sitepress') ?></h2>    
 
-    <h3><?php _e('Select how to localize the theme','sitepress'); ?></h3>
-    <p><?php _e("If your theme's texts are wrapped in gettext calls, WPML can help you display it multilingual.",'sitepress'); ?></p>
+    <h3><?php _e('Select how to translate strings in the theme and plugins','sitepress'); ?></h3>
+    <p><?php _e("If your theme and plugins include .mo files with translations, these translations will always be used. This option allows you to provide new and alternative translations for texts in the theme and in plugins using WPML's String Translation.",'sitepress'); ?></p>
     <form name="icl_theme_localization_type" id="icl_theme_localization_type" method="post" action="">    
     <?php wp_nonce_field('icl_theme_localization_type_nonce', '_icl_nonce'); ?>
     <ul>
@@ -33,12 +33,12 @@ $locales = $sitepress->get_locale_file_names();
             }
         ?>
         <li><label><input <?php echo $st_disabled; ?>type="radio" name="icl_theme_localization_type" value="1" <?php 
-            if($sitepress_settings['theme_localization_type']==1):?>checked="checked"<?php endif; ?> />&nbsp;<?php _e('Translate by WPML.', 'sitepress') ?></label>
+            if($sitepress_settings['theme_localization_type']==1):?>checked="checked"<?php endif; ?> />&nbsp;<?php _e("Translate the theme and plugins using WPML's String Translation", 'sitepress') ?></label>
             <?php if(isset($icl_st_note)) echo '<br><small><i>' . $icl_st_note . '</i></small>'; ?>
             </li>
         <li><label>
             <input type="radio" name="icl_theme_localization_type" value="2" <?php 
-            if($sitepress_settings['theme_localization_type']==2):?>checked="checked"<?php endif; ?> />&nbsp;<?php _e('Translate using .mo files.', 'sitepress') ?></label>
+            if($sitepress_settings['theme_localization_type']==2):?>checked="checked"<?php endif; ?> />&nbsp;<?php _e("Don't use String Translation to translate the theme and plugins", 'sitepress') ?></label>
             <div id="icl_tt_type_extra" <?php if($sitepress_settings['theme_localization_type']!=2):?>style="display:none"<?php endif;?>>
                 <label><input type="checkbox" name="icl_theme_localization_load_td" value="1" <?php echo $ltd_checked ?>/>
                 &nbsp;<?php _e("Automatically load the theme's .mo file using 'load_theme_textdomain'.", 'sitepress') ?></label>
@@ -72,9 +72,9 @@ $locales = $sitepress->get_locale_file_names();
     <th scope="col"><?php echo __('Language', 'sitepress') ?></th>
     <th scope="col"><?php echo __('Code', 'sitepress') ?></th>
     <th scope="col"><?php echo __('Locale file name', 'sitepress') ?></th>        
-    <th scope="col"><?php printf(__('MO file in %s', 'sitepress'), LANGDIR) ?></th>        
+    <th scope="col"><?php printf(__('MO file in %s', 'sitepress'), WP_LANG_DIR ) ?></th>        
     <?php if($sitepress_settings['theme_localization_type']==2):?>
-    <th scope="col"><?php printf(__('MO file in %s', 'sitepress'), '/wp-content/themes/' . get_option('template')) ?></th>        
+    <th scope="col"><?php printf(__('MO file in %s', 'sitepress'), WP_CONTENT_DIR . '/themes/' . get_option('template') ) ?></th>        
     <?php endif; ?>
     <?php if ( isset( $WPML_ST_MO_Downloader ) && ! empty( $sitepress_settings[ 'st' ][ 'auto_download_mo' ] ) ): ?>
 	    <?php
@@ -94,7 +94,7 @@ $locales = $sitepress->get_locale_file_names();
         <input type="text" size="10" name="locale_file_name_<?php echo $lang['code']?>" value="<?php echo isset($locales[$lang['code']]) ? $locales[$lang['code']] : ''; ?>" />.mo
     </td> 
     <td>
-        <?php if(@is_readable(ABSPATH . (defined('WP_CONTENT_DIR')? basename( WP_CONTENT_DIR ).'/languages': LANGDIR) . '/' . $locales[$lang['code']] . '.mo')): ?>
+        <?php if(@is_readable( WP_LANG_DIR . '/' . $locales[$lang['code']] . '.mo')): ?>
         <span class="icl_valid_text"><?php echo __('File exists.', 'sitepress') ?></span>                
 		<?php elseif($lang['code'] != 'en' ): ?>
         <span class="icl_error_text"><?php echo __('File not found!', 'sitepress') ?></span>

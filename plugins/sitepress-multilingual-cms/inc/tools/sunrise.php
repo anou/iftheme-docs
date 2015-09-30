@@ -35,7 +35,7 @@
                   }
                 
                   if ( isset( $found_blog_id ) && $found_blog_id ) {
-                      $q = "SELECT * FROM {$wpdb->blogs} WHERE blog_id = '" . $found_blog_id . "'";
+                      $q = $wpdb->prepare("SELECT * FROM {$wpdb->blogs} WHERE blog_id = %d ", $found_blog_id );
                   }   
               }
                           

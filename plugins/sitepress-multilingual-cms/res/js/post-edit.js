@@ -8,6 +8,8 @@
 
 jQuery(document).ready(function ($) {
 
+	setupCopyButtons();
+
 	var postEdit = postEdit || {};
 
 	postEdit.$connect_translations_dialog = $('#connect_translations_dialog');
@@ -23,8 +25,6 @@ jQuery(document).ready(function ($) {
 		} else {
 			event.returnValue = false;
 		}
-
-//		alert(postEdit.$connect_translations_dialog.data('alert-text'));
 
 		postEdit.$connect_translations_dialog.find('#post_search').val('');
 		postEdit.$connect_translations_dialog.find('#assign_to_trid').val('');
@@ -78,7 +78,7 @@ jQuery(document).ready(function ($) {
 					.focus()
 					.data("ui-autocomplete")._renderItem = function (ul, item) {
 					return $("<li>")
-						.append("<a>" + item.label + "</a>")
+						.append(jQuery("<a></a>").text(item.label))
 						.appendTo(ul);
 
 				};
@@ -90,41 +90,39 @@ jQuery(document).ready(function ($) {
 
 		});
 
-		request.fail(function (xhr, ajaxOptions, thrownError) {
-			console.log(xhr.status + '\n' + thrownError);
-		});
-
 		request.always(function() {
 			postEdit.$ajax_loader.hide(); // Hide ajax loader always, no matter if ajax succeed or not.
 		});
 
 	};
 
-	postEdit.connect_element_translations_init = function() {
+	postEdit.connect_element_translations_init = function () {
 
-		postEdit.$connect_translations_dialog.dialog({
-			dialogClass: 'wpml-dialog wp-dialog',
-			modal: true,
-			autoOpen: false,
-			closeOnEscape: true,
-			buttons: [
-				{
-					text: postEdit.$connect_translations_dialog.data('cancel-label'),
-					'class': 'button button-secondary',
-					click: function() {
-						$(this).dialog("close");
+		postEdit.$connect_translations_dialog.dialog(
+			{
+				dialogClass  : 'wpml-dialog wp-dialog',
+				width        : 'auto',
+				modal        : true,
+				autoOpen     : false,
+				closeOnEscape: true,
+				buttons      : [
+					{
+						text   : postEdit.$connect_translations_dialog.data('cancel-label'),
+						'class': 'button button-secondary',
+						click  : function () {
+							$(this).dialog("close");
+						}
+					}, {
+						text   : postEdit.$connect_translations_dialog.data('ok-label'),
+						'class': 'button button-primary js-assign-button',
+						click  : function () {
+							$(this).dialog("close");
+							postEdit.connect_element_translations_do();
+						}
 					}
-				},
-				{
-					text: postEdit.$connect_translations_dialog.data('ok-label'),
-					'class': 'button button-primary js-assign-button',
-					click: function() {
-						$(this).dialog("close");
-						postEdit.connect_element_translations_do();
-					}
-				}
-			]
-		});
+				]
+			}
+		);
 
 	}(); // Auto executable function
 
@@ -161,7 +159,7 @@ jQuery(document).ready(function ($) {
 					}
 				});
 
-				var alert = $('<p>').append('<strong>' + postEdit.$connect_translations_dialog.data('alert-text') + '</strong>');
+				var alert = $('<p>').append(jQuery('<strong></strong>').html(postEdit.$connect_translations_dialog.data('alert-text')));
 				alert.appendTo($list);
 
 				var set_as_source_checkbox = $('<input type="checkbox" value="1" name="set_as_source" />');
@@ -172,98 +170,136 @@ jQuery(document).ready(function ($) {
 				var action = $('<label>').append(set_as_source_checkbox).append(postEdit.$connect_translations_dialog.data('set_as_source-text'));
 				action.appendTo($list);
 
-				postEdit.$connect_translations_dialog_confirm.dialog({
-					dialogClass: 'wpml-dialog wp-dialog',
-					resizable: false,
-					autoOpen: true,
-					modal: true,
-					buttons: [
-						{
-							text: postEdit.$connect_translations_dialog_confirm.data('cancel-label'),
-							'class': 'button button-secondary',
-							click: function() {
-								$(this).dialog("close");
-								postEdit.$connect_translations_dialog.dialog('open');
+				postEdit.$connect_translations_dialog_confirm.dialog(
+					{
+						dialogClass: 'wpml-dialog wp-dialog',
+						resizable  : false,
+						width      : 'auto',
+						autoOpen   : true,
+						modal      : true,
+						buttons    : [
+							{
+								text   : postEdit.$connect_translations_dialog_confirm.data('cancel-label'),
+								'class': 'button button-secondary',
+								click  : function () {
+									$(this).dialog("close");
+									postEdit.$connect_translations_dialog.dialog('open');
+								}
+							}, {
+								text   : postEdit.$connect_translations_dialog_confirm.data('assign-label'),
+								'class': 'button button-primary js-confirm-connect-this-post',
+								click  : function () {
+
+									var $confirmButton = $('.js-confirm-connect-this-post');
+									$confirmButton.prop('disabled', true).removeClass('button-primary').addClass('button-secondary');
+
+									$('<span class="spinner" />').appendTo($confirmButton);
+
+									var nonce = $('#_icl_nonce_connect_translations').val();
+
+									var data_object = {
+										icl_ajx_action: 'connect_translations',
+										post_id       : post_id,
+										post_type     : post_type,
+										new_trid      : trid,
+										_icl_nonce    : nonce,
+										set_as_source : (set_as_source_checkbox.is(':checked') ? 1 : 0)
+									};
+
+									var request = $.ajax(
+										{
+											type    : "POST",
+											url     : icl_ajx_url,
+											dataType: 'json',
+											data    : data_object
+										}
+									);
+
+									request.done(
+										function (result) {
+											if (result) {
+												postEdit.$connect_translations_dialog.dialog("close");
+												location.reload();
+											}
+										}
+									);
+								}
 							}
-						},
-						{
-							text: postEdit.$connect_translations_dialog_confirm.data('assign-label'),
-							'class': 'button button-primary js-confirm-connect-this-post',
-							click: function() {
-
-								console.log( $(this) );
-
-								var $confirmButton = $('.js-confirm-connect-this-post');
-								$confirmButton
-									.prop('disabled', true)
-									.removeClass('button-primary')
-									.addClass('button-secondary');
-
-								$('<span class="spinner" />').appendTo( $confirmButton );
-
-								var nonce = $('#_icl_nonce_connect_translations').val();
-
-								var data_object = {
-									icl_ajx_action: 'connect_translations',
-									post_id: post_id,
-									post_type: post_type,
-									new_trid: trid,
-									_icl_nonce: nonce,
-									set_as_source: (set_as_source_checkbox.is(':checked') ? 1 : 0)
-								};
-
-//								var data = 'icl_ajx_action=connect_translations&post_id=' + post_id + '&new_trid=' + trid + '&post_type=' + post_type + '&_icl_nonce=' + nonce;
-
-//								console.log( $(this) );
-//
-//								return;
-
-								var request = $.ajax({
-									type: "POST",
-									url: icl_ajx_url,
-									dataType: 'json',
-									data: data_object
-								});
-
-								request.done(function (result) {
-									if ( result ) {
-										postEdit.$connect_translations_dialog.dialog("close");
-										location.reload();
-									}
-								});
-
-								request.fail(function (xhr, ajaxOptions, thrownError) {
-									console.log(xhr.status + '\n' + thrownError);
-								});
-
-								request.always(function(){
-									//
-								});
-
-							}
-						}
-					]
-				});
+						]
+					}
+				);
 			}
-			else {
-				console.log('no posts found');
-				// TODO: Shouldn't we do something if posts.length === 0 ?
-			}
-
-		});
-
-		request.fail(function (xhr, ajaxOptions, thrownError) {
-			console.log(xhr.status + '\n' + thrownError);
-		});
-
-		request.always(function () {
-
-		});
-
+		}
+		);
 	};
 
 	$('#icl_document_connect_translations_dropdown')
 		.find('.js-set-post-as-source')
 		.on('click', postEdit.connect_element_translations_open );
 
+	/**
+	 * HOTFIX DIALOG BOX
+	 * Remove when WooCommerce does not include jquery-ui smoothness anymore
+	 **/
+	var jQueryUI = $( '#jquery-ui-style-css[href*="smoothness"]' ),
+		jQuerySmoothnessHref;
+
+	// if jquery ui smoothness css is loaded
+	if( jQueryUI.length ) {
+		// event listener for hide
+		$.each( ['hide'], function ( i, ev ) {
+			var el = $.fn[ev];
+			if( $( this.hidden ) ) {
+				$.fn[ev] = function () {
+					this.trigger( ev );
+					return el.apply( this, arguments );
+				};
+			}
+		});
+
+		// click on Connect with translations
+		$( 'body' ).on( 'click', '#icl_document_connect_translations_dropdown .js-set-post-as-source', function() {
+			var connectDialog = $( '[aria-describedby="connect_translations_dialog"]' );
+
+			jQuerySmoothnessHref = jQueryUI.attr( 'href' );
+			jQueryUI.attr( 'href', '' );
+
+			connectDialog.on( 'hide', function() {
+				if( $( '.ui-widget-overlay' ).length == 0 ) {
+					jQueryUI.attr( 'href', jQuerySmoothnessHref );
+					connectDialog.off( 'hide' );
+				}
+			} );
+		} );
+	}
+	/* HOTFIX END */
 });
+
+function setupCopyButtons() {
+	jQuery('#icl_translate_independent').click(function () {
+		jQuery(this).attr('disabled', 'disabled').after(icl_ajxloaderimg);
+		jQuery.ajax({
+			type: "POST", url: icl_ajx_url,
+			data: "icl_ajx_action=reset_duplication&post_id=" + jQuery('#post_ID').val() + '&_icl_nonce=' + jQuery('#_icl_nonce_rd').val(),
+			success: function (msg) {
+				location.reload()
+			}
+		});
+	});
+	jQuery('#icl_set_duplicate').click(function () {
+		if (confirm(jQuery(this).next().html())) {
+			jQuery(this).attr('disabled', 'disabled').after(icl_ajxloaderimg);
+			var icl_set_duplicate = jQuery('#icl_set_duplicate');
+			var wpml_original_post_id = icl_set_duplicate.data('wpml_original_post_id');
+			var post_lang = icl_set_duplicate.data('post_lang');
+			jQuery.ajax({
+				type: "POST", url: icl_ajx_url,
+				data: "icl_ajx_action=set_duplication&wpml_original_post_id=" + wpml_original_post_id + '&_icl_nonce=' + jQuery('#_icl_nonce_sd').val()  + '&post_lang=' + post_lang,
+				success: function (msg) {
+					location.replace(
+						location.href.replace('post-new.php', 'post.php').replace(/&trid=([0-9]+)/, '') + '&post=' + msg.data.id + '&action=edit');
+				}
+			});
+		}
+	});
+}

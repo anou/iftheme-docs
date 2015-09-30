@@ -1,4 +1,5 @@
 <?php
+require ICL_PLUGIN_PATH . '/menu/term-taxonomy-menus/wpml-translation-tree.class.php';
 
 	define( 'WPML_TT_TAXONOMIES_NOT_TRANSLATED', 1 );
 	define( 'WPML_TT_TAXONOMIES_ALL', 0 );
@@ -18,7 +19,7 @@
 			 * Sets whether a taxonomy selector or only a specific taxonomy is to be shown.
 			 * @var bool $tax_selector
 			 */
-			$this->tax_selector  = isset( $args[ 'taxonomy_selector' ] ) && ! $args[ 'taxonomy_selector' ] ? false : true;
+			$this->tax_selector  = isset( $args[ 'taxonomy_selector' ] ) ? $args[ 'taxonomy_selector' ] : true;
 			$this->taxonomy      = $taxonomy ? $taxonomy : false;
 			$this->show_tax_sync = isset( $args[ 'taxonomy_sync' ] ) ? $args[ 'taxonomy_sync' ] : false;
 
@@ -29,6 +30,7 @@
 
 		public function render() {
 
+			WPML_Taxonomy_Translation_Table_Display::enqueue_taxonomy_table_js();
 			$output = '<div class="wrap">';
 
 			if ( $this->taxonomy ) {
@@ -46,6 +48,7 @@
 				$output .= '<br/>';
 			}
 			$output .= '<div id="wpml_tt_taxonomy_translation_wrap">';
+            $output .= '<div class="loading-content"><span class="spinner" style="visibility: visible"></span></div>';
 			$output .= '</div>';
 
 			do_action( 'icl_menu_footer' );
@@ -57,19 +60,11 @@
 
 		/**
 		 * @param $taxonomy string The taxonomy currently displayed
-		 * @param $args     array Filter arguments
 		 *
 		 * @return array holding the terms to be displayed and the overall count of terms in the given taxonomy
 		 */
-		public static function get_terms_for_taxonomy_translation_screen( $taxonomy, $args ) {
+		public static function get_terms_for_taxonomy_translation_screen( $taxonomy ) {
 			global $wpdb;
-
-			$untranslated_only = false;
-			$langs             = false;
-			$search            = false;
-			$parent            = false;
-
-			extract( $args, EXTR_OVERWRITE );
 
 			/*
 			 * The returned array from this function is indexed as follows.
@@ -119,38 +114,19 @@
 			$join_statements [ ] = "{$as['t']} JOIN {$as['tt']} ON tt.term_id = t.term_id";
 			$join_statements [ ] = "{$as['i']} ON i.element_id = tt.term_taxonomy_id";
 
-			if ( $search ) {
-				$join_statements [ ] = "{$wpdb->terms} AS ts ON ts.term_id = tt.term_id";
-			}
 
 			$from_clause = join( ' JOIN ', $join_statements );
 
 			$select_clause = self::build_select_vars( $attributes_to_select );
 
-			$where_clause = self::build_where_clause( $attributes_to_select, $taxonomy, $search, $parent );
+			$where_clause = self::build_where_clause( $attributes_to_select, $taxonomy );
 
 			$full_statement = "SELECT {$select_clause} FROM {$from_clause} WHERE {$where_clause}";
 
-			if ( $search || $parent ) {
-				$where_clause_no_match = self::build_where_clause( $attributes_to_select, $taxonomy, false, false );
-				$full_statement2       = "SELECT {$select_clause} FROM {$from_clause} WHERE {$where_clause_no_match}";
-
-				$lang_constraint = "";
-				if ( $langs && ! $untranslated_only && ! $parent ) {
-					$lang_constraint = "AND i.language_code IN ({$langs}) ";
-				}
-
-				$full_statement = "SELECT table2.* FROM (" . $full_statement . " {$lang_constraint} ) AS table1 INNER JOIN (" . $full_statement2 . ") AS table2 ON table1.trid = table2.trid";
-			}
-
 			$all_terms = $wpdb->get_results( $full_statement );
-
 			if ( $all_terms ) {
-
 				$all_terms_indexed = self::index_terms_array( $all_terms );
-
 				$all_terms_grouped = self::order_terms_list( $all_terms_indexed, $taxonomy );
-
 				return $all_terms_grouped;
 
 			}
@@ -190,6 +166,8 @@
 				$trid_group[ $lang ] = $term_object;
 			}
 
+			unset( $trid_group[ 'elements' ] );
+
 			return $trid_group;
 		}
 
@@ -201,13 +179,11 @@
 		 * @return array
 		 */
 		private static function order_terms_list( $terms, $taxonomy ) {
+			global $wpdb, $sitepress;
 
-			$terms_tree = new WPML_Translation_Tree( $taxonomy, false, $terms );
-
+			$terms_tree    = new WPML_Translation_Tree( $wpdb, $sitepress, $taxonomy, false, $terms );
 			$ordered_terms = $terms_tree->get_alphabetically_ordered_list();
-
 			foreach ( $ordered_terms as $key => $trid_group ) {
-
 				$ordered_terms[ $key ] = self::set_language_information( $trid_group, $terms );
 			}
 
@@ -258,66 +234,16 @@
 			return $output;
 		}
 
-		private static function build_where_clause( $selects, $taxonomy, $search = false, $parent = false ) {
+		private static function build_where_clause( $selects, $taxonomy ) {
 			global $wpdb;
 
-			$where_clauses[ ] = $selects[ $wpdb->term_taxonomy ][ 'alias' ] . '.taxonomy = ' . "'" . $taxonomy . "'";
-			$where_clauses[ ] = $selects[ $wpdb->prefix . 'icl_translations' ][ 'alias' ] . '.element_type = ' . "'tax_" . $taxonomy . "'";
-
-			if ( $parent ) {
-				$where_clauses[ ] = $selects[ $wpdb->term_taxonomy ][ 'alias' ] . '.parent = ' . $parent;
-			}
-
-			if ( $search ) {
-				$where_clauses [ ] = "ts.name LIKE '%" . wpml_like_escape( $search ) . "%' ";
-			}
+			$where_clauses[ ] = $selects[ $wpdb->term_taxonomy ][ 'alias' ]
+                                . $wpdb->prepare(".taxonomy = %s ", $taxonomy);
+			$where_clauses[ ] = $selects[ $wpdb->prefix . 'icl_translations' ][ 'alias' ]
+                                . $wpdb->prepare(".element_type = %s ", 'tax_' . $taxonomy);
 
 			$where_clause = join( ' AND  ', $where_clauses );
 
 			return $where_clause;
 		}
-
-		/**
-		 * Ajax handler for saving label translations from the WPML Taxonomy Translations menu.
-		 */
-		public static function save_labels_translation() {
-
-			$general  = isset( $_POST[ 'plural' ] ) ? $_POST[ 'plural' ] : false;
-			$singular = isset( $_POST[ 'singular' ] ) ? $_POST[ 'singular' ] : false;
-			$taxonomy = isset( $_POST[ 'taxonomy' ] ) ? $_POST[ 'taxonomy' ] : false;
-			$language = isset( $_POST[ 'taxonomy_language_code' ] ) ? $_POST[ 'taxonomy_language_code' ] : false;
-
-			if ( $singular && $general && $taxonomy && $language ) {
-
-				$tax_label_data = WPML_Taxonomy_Translation_Table_Display::get_label_translations( $taxonomy );
-
-				if ( isset( $tax_label_data[ 'id_singular' ] )
-				     && $tax_label_data[ 'id_singular' ]
-				     && isset( $tax_label_data[ 'id_general' ] )
-				     && $tax_label_data[ 'id_general' ] ) {
-
-					$original_id_singular = $tax_label_data[ 'id_singular' ];
-					$original_id_plural   = $tax_label_data[ 'id_general' ];
-
-					icl_add_string_translation( $original_id_singular, $language, $singular, ICL_STRING_TRANSLATION_COMPLETE );
-					$singular_result = (string) icl_get_string_by_id( $original_id_singular, $language );
-
-					icl_add_string_translation( $original_id_plural, $language, $general, ICL_STRING_TRANSLATION_COMPLETE );
-					$plural_result = (string) icl_get_string_by_id( $original_id_plural, $language );
-
-					if ( $singular_result && $plural_result ) {
-						$result = array(
-							'singular' => $singular_result,
-							'general'  => $plural_result,
-							'lang'     => $language
-						);
-
-						wp_send_json_success( $result );
-					}
-				}
-			}
-
-			wp_send_json_error();
-		}
-
 	}

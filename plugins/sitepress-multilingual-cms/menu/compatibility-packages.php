@@ -8,13 +8,16 @@ $icl_enabled_packages = $WPML_Packages->get_enabled_packages();
     <p class="error fade" style="padding:10px;"><?php _e('WPML compatibility packages will soon be obsolete and removed. Please use other means to make your site multilingual-ready.', 'sitepress')?></p>
     
     <h3><?php echo __('Compatibility packages', 'sitepress') ?></h3>    
-    <?php foreach($WPML_Packages->get_packages() as $package_type => $packages): ?>
+    <?php
+		$post_icl_packages   = filter_input(INPUT_POST, 'icl_packages', FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_REQUIRE_ARRAY);
+
+		foreach($WPML_Packages->get_packages() as $package_type => $packages): ?>
     <h4><?php echo ucfirst($package_type) ?></h4>
     
     
     
     <form action="" method="post">
-        <?php if(isset($_POST['icl_packages'][$package_type])): ?>
+        <?php if(isset($post_icl_packages[$package_type])): ?>
         <div class="icl_form_success">
         <?php _e('Packages list updated', 'sitepress'); ?>
         </div>

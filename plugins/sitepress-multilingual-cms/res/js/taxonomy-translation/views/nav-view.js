@@ -3,8 +3,13 @@
 
         template: TaxonomyTranslation.getTemplate("nav"),
         model: TaxonomyTranslation.models.taxonomy,
-        events: {"change .current-page": "goToPage"},
-
+        events: {
+            "change .current-page": 'goToPage',
+            "click .next-page": 'nextPage',
+            "click .prev-page": 'prevPage',
+            "click .first-page": 'firstPage',
+            "click .last-page": 'lastPage'
+        },
         initialize: function (data, options) {
             this.page = 1;
             this.perPage = options.perPage;
@@ -23,46 +28,44 @@
 
             return self;
         },
-        render: function () {
-
+        nextPage: function(){
             var self = this;
-
+            self.$el.find('.current-page').val(self.page + 1).change();
+        },
+        prevPage: function(){
+            var self = this;
+            self.$el.find('.current-page').val(self.page - 1).change();
+        },
+        firstPage: function(){
+            var self = this;
+            self.$el.find('.current-page').val(1).change();
+        },
+        lastPage: function(){
+            var self = this;
+            self.$el.find('.current-page').val(self.pages).change();
+        },
+        setCounts: function(){
+            var self = this;
             var rows = TaxonomyTranslation.data.termRowsCollection.length;
-
-            if (TaxonomyTranslation.mainView.termRowsView.count > -1) {
-                rows = TaxonomyTranslation.mainView.termRowsView.count;
-            }
-
-            if (rows > self.perPage) {
-
-                self.pages = Math.ceil(rows / self.perPage);
-
+            var displayedCount = TaxonomyTranslation.mainView.termRowsView.getDisplayCount();
+            rows = displayedCount >= 0 ? displayedCount : rows;
+            rows = rows ? rows : 0;
+            self.rows = rows;
+            self.pages = Math.ceil(rows / self.perPage);
+        },
+        render: function () {
+            var self = this;
+            self.setCounts();
+            if (self.pages > 1) {
                 self.$el.html(self.template({
                     page: self.page,
                     pages: self.pages,
-                    items: rows
+                    items: self.rows
                 }));
-
-                var currentPageField = self.$el.find(".current-page");
-
-                self.$el.find(".prev-page").on("click", function () {
-                    currentPageField.val(self.page - 1).change();
-                });
-                self.$el.find(".next-page").on("click", function () {
-                    currentPageField.val(self.page + 1).change();
-                });
-                self.$el.find(".last-page").on("click", function () {
-                    currentPageField.val(self.pages).change();
-                });
-                self.$el.find(".first-page").on("click", function () {
-                    currentPageField.val(1).change();
-                });
-
                 self.$el.show();
             } else {
                 self.$el.hide();
             }
-
 
             return self;
         }

@@ -62,5 +62,7 @@
     <p style="margin-top: 20px;">
     <?php printf(__('For retrieving debug information if asked by support person, use the <a href="%s">debug information</a> page.', 'sitepress'), admin_url('admin.php?page=' . ICL_PLUGIN_FOLDER . '/menu/debug-information.php')); ?> 
     </p>
+	
+	<?php do_action( 'wpml_support_page_after' ); ?>
     
 </div>

@@ -14,8 +14,8 @@ class WPML_Browser_Redirect{
         global $sitepress, $sitepress_settings;
          
         // Enqueue javascripts
-        wp_enqueue_script('jquery.cookie', ICL_PLUGIN_URL . '/res/js/jquery.cookie.js', array('jquery'), ICL_SITEPRESS_VERSION);
-        wp_enqueue_script('wpml-browser-redirect', ICL_PLUGIN_URL . '/res/js/browser-redirect.js', array('jquery', 'jquery.cookie'), ICL_SITEPRESS_VERSION);
+        wp_register_script('jquery.cookie', ICL_PLUGIN_URL . '/res/js/jquery.cookie.js', array('jquery'), ICL_SITEPRESS_VERSION);
+        wp_register_script('wpml-browser-redirect', ICL_PLUGIN_URL . '/res/js/browser-redirect.js', array('jquery', 'jquery.cookie'), ICL_SITEPRESS_VERSION);
             
         $args['skip_missing'] = intval($sitepress_settings['automatic_redirect'] == 1);
         
@@ -52,7 +52,7 @@ class WPML_Browser_Redirect{
             'cookie'            => $cookie            
         );
         wp_localize_script('wpml-browser-redirect', 'wpml_browser_redirect_params', $params);        
-        
+        wp_enqueue_script('wpml-browser-redirect');
         
     }
     

@@ -3,11 +3,11 @@
     <repository>
         <id>wpml</id>
         <apiurl>http://api.wpml.org/</apiurl>
-        <products>https://wpmlorg.s3.amazonaws.com/wpml-products.json</products>
+        <products>http://d2salfytceyqoe.cloudfront.net/wpml32-products.json</products>
     </repository>
     <repository>
         <id>toolset</id>
         <apiurl>http://api.wp-types.com/</apiurl>
-        <products>https://wptypes.s3.amazonaws.com/toolset-products.json</products>
+        <products>http://d7j863fr5jhrr.cloudfront.net/toolset-products.json</products>
     </repository>
 </repositories>

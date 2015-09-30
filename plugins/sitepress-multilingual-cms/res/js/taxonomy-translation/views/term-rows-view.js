@@ -7,16 +7,13 @@
         start: 0,
         end: 10,
         count: -1,
-
         initialize: function (data, options) {
             var self = this;
             self.end = options.end;
             self.start = options.start;
         },
         getDisplayedRows: function () {
-
             var self = this;
-
             var displayedRows = self.collection;
 
             if (!displayedRows) {
@@ -24,11 +21,15 @@
                 return false;
             }
 
-            var parentFilter = false;
-            if (TaxonomyTranslation.mainView.filterView.parent) {
-                parentFilter = TaxonomyTranslation.mainView.filterView.parent;
+            if (TaxonomyTranslation.mainView.mode === 'sync') {
+                displayedRows = displayedRows.filter(function (row) {
+                    "use strict";
+                    return row.unSyncFilter();
+                });
             }
 
+            var parentFilter = TaxonomyTranslation.mainView.filterView.parent
+                ? TaxonomyTranslation.mainView.filterView.parent :false;
 
             if (parentFilter) {
                 displayedRows = displayedRows.filter(function (row) {
@@ -36,11 +37,8 @@
                 });
             }
 
-            var untranslatedFilter = false;
-
-            if (TaxonomyTranslation.mainView.filterView.untranslated) {
-                untranslatedFilter = TaxonomyTranslation.mainView.filterView.untranslated;
-            }
+            var untranslatedFilter = TaxonomyTranslation.mainView.filterView.untranslated
+                ? TaxonomyTranslation.mainView.filterView.untranslated : false;
 
             if (untranslatedFilter) {
                 displayedRows = displayedRows.filter(function (row) {
@@ -48,11 +46,8 @@
                 });
             }
 
-            var langFilter = false;
-
-            if (TaxonomyTranslation.mainView.filterView.lang && TaxonomyTranslation.mainView.filterView.lang != 'all') {
-                langFilter = TaxonomyTranslation.mainView.filterView.lang;
-            }
+            var langFilter = TaxonomyTranslation.mainView.filterView.lang && TaxonomyTranslation.mainView.filterView.lang !== 'all'
+                ? TaxonomyTranslation.mainView.filterView.lang :  false;
 
             if (langFilter && langFilter != 'all' && (untranslatedFilter || parentFilter)) {
                 displayedRows = displayedRows.filter(function (row) {
@@ -66,9 +61,9 @@
                 searchFilter = TaxonomyTranslation.mainView.filterView.search;
             }
 
-            if (searchFilter && searchFilter != '') {
+            if (searchFilter) {
                 displayedRows = displayedRows.filter(function (row) {
-                    if (langFilter && langFilter != 'all') {
+                    if (langFilter && langFilter !== 'all') {
                         return row.matchesInLang(searchFilter, langFilter);
                     } else {
                         return row.matches(searchFilter);
@@ -79,7 +74,9 @@
             self.count = displayedRows.length;
 
             return displayedRows;
-
+        },
+        getDisplayCount: function(){
+            return this.count;
         },
         render: function () {
 
@@ -91,7 +88,6 @@
 
             if (displayedRows) {
                 displayedRows = displayedRows.slice(self.start, self.end);
-
 
                 displayedRows.forEach(function (row) {
                     var newView = new TaxonomyTranslation.views.TermRowView({model: row});
