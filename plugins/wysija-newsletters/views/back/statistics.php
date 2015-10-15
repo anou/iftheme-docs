@@ -3,7 +3,7 @@ defined('WYSIJA') or die('Restricted access');
 
 class WYSIJA_view_back_statistics extends WYSIJA_view_back{
     public $icon = 'icon-stats';
-    function WYSIJA_view_back_statistics(){
+    function __construct(){
         $this->title = __('Stats dashboard');
         if (empty($this->viewObj))
             $this->viewObj = new stdClass ();
@@ -34,7 +34,7 @@ class WYSIJA_view_back_statistics extends WYSIJA_view_back{
                 <select class="custom_date" name="custom_date" id="custom-date">
                 <?php
                 foreach($data['custom_dates'] as $custom_date) {
-                    $selected = $data['default_duration']['value'] == $custom_date['value'] ? 'selected' : '';
+                    $selected = $data['default_duration']->last_days == $custom_date['value'] ? 'selected' : '';
                     ?>
                     <option value="<?php echo $custom_date['value']; ?>" <?php echo $selected; ?> from="<?php echo $custom_date['from']; ?>" to="<?php echo $custom_date['to']; ?>">
                             <?php echo $custom_date['label']; ?>
@@ -44,8 +44,8 @@ class WYSIJA_view_back_statistics extends WYSIJA_view_back{
                 <?php
                 }?>
                 </select>
-                <?php echo __('From', WYSIJA); ?>: <input type="text" class="datepicker" name="from" id="stats-filter-from" value="<?php echo $data['default_duration']['from']; ?>" size="8" />
-                <?php echo __('To', WYSIJA); ?>: <input type="text" class="datepicker" name="to" id="stats-filter-to" value="<?php echo $data['default_duration']['to']; ?>" size="8" />
+                <?php echo __('From', WYSIJA); ?>: <input type="text" class="datepicker" name="from" id="stats-filter-from" value="<?php echo esc_attr($data['default_duration']->from); ?>" size="8" />
+                <?php echo __('To', WYSIJA); ?>: <input type="text" class="datepicker" name="to" id="stats-filter-to" value="<?php echo esc_attr($data['default_duration']->to); ?>" size="8" />
                 <input type="submit" class="button-secondary" value="<?php echo __('Filter', WYSIJA); ?>" />
                 <!--(<input type="reset" class="reset"></input>)--><?php // this function does not work correctly. Need to implement: on reset => onchange (from/date) => notify object StatsFilter. ?>
             </form>

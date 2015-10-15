@@ -1,7 +1,9 @@
 <?php
 defined('WYSIJA') or die('Restricted access');
 class WYSIJA_help_autonews  extends WYSIJA_object {
-    function WYSIJA_help_autonews() {
+
+    function __construct(){
+        parent::__construct();
     }
 
     function events($key=false,$get=true,$value_set=array()){
@@ -95,18 +97,39 @@ class WYSIJA_help_autonews  extends WYSIJA_object {
                         $time_current_month=date('m',$now);
                         $time_current_year=date('y',$now);
 
-                        //trigger has to be next month
-                        if($time_current_day > $email['params']['autonl']['daynumber']) {
+                        // we increment the next date to next months in two cases
+                        // 1 - if we're setting the next date using the interface in step 1 or step 3 of the newsletter edition and the current day is greater to the selected day
+                        if(isset( $_POST['save-reactivate'] ) || isset( $_POST['submit-send'] ) ){
+                            //trigger has to be next month
+                            if($time_current_day > $email['params']['autonl']['daynumber']) {
 
-                            if((int)$time_current_month === 12) {
-                               //year +1
-                               $time_current_month=1;
-                               $time_current_year++;
-                            }else{
-                               //current year
-                                $time_current_month++;
+                                if((int)$time_current_month === 12) {
+                                   //year +1
+                                   $time_current_month=1;
+                                   $time_current_year++;
+                                }else{
+                                   //current year
+                                    $time_current_month++;
+                                }
+                            }
+                        // 2 - if we're setting the next date automatically and the date is already passed
+                        }else{
+                            if($helper_toolbox->localtime_to_servertime($schedule_at) < $now) {
+
+                                if((int)$time_current_month === 12) {
+                                   //year +1
+                                   $time_current_month=1;
+                                   $time_current_year++;
+                                }else{
+                                   //current year
+                                    $time_current_month++;
+                                }
                             }
                         }
+
+                        //3 - otherwise we stay in the same month
+
+
                         $schedule_at=strtotime($time_current_month.'/'.$email['params']['autonl']['daynumber'].'/'.$time_current_year.' '.$email['params']['autonl']['time']);
                         break;
                     case 'monthlyevery': // monthly every X Day of the week

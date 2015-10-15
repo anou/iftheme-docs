@@ -2,8 +2,8 @@
 defined('WYSIJA') or die('Restricted access');
 class WYSIJA_help_charts extends WYSIJA_object {
 
-    function WYSIJA_help_charts() {
-
+    function __construct(){
+        parent::__construct();
     }
 
     function pieChart($id, $options = array()) {

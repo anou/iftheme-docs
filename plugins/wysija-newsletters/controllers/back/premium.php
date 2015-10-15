@@ -15,8 +15,10 @@ class WYSIJA_control_back_premium extends WYSIJA_control_back {
     /**
      * Constructor
      */
-    function WYSIJA_control_back_premium() {
+    function __construct(){
+        parent::__construct();
     }
+
     function defaultDisplay() {
         $this->jsTrans['premium_activate'] = __('Already paid? Click here to activate', WYSIJA);
         $this->jsTrans['premium_activating'] = __('Checking license', WYSIJA);

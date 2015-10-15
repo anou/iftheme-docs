@@ -13,7 +13,7 @@
 			</td>
 		{/if}
 		{if #text}
-			<td class="wysija_content_container {#alignment}" align="left">
+			<td class="wysija_content_container {#alignment}" {if #is_rtl} align="right" dir="rtl" {/if} {if ! #is_rtl} align="left" {/if} >
 				{include file="templates/newsletter/email/block_image.html"}
 	        	{include file="templates/newsletter/email/block_text.html"}
         	</td>

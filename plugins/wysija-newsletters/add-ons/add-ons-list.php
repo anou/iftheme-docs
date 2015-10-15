@@ -1,4 +1,5 @@
 <?php
+defined('WYSIJA') or die('Restricted access');
 /**
  * List of all add-ons available for MailPoet
  */
@@ -56,7 +57,7 @@ function add_ons_list(){
 			'name' 				=> 'Gravity Forms: Subscribe Add-on',
 			'search' 			=> 'MailPoet Gravity Forms Add-on',
 			'thumbnail' 		=> 'gravity-forms.png',
-			'description' 		=> __( 'Add a new field to add to your forms so your visitors can subscriber to your MailPoet newsletters.', WYSIJA ),
+			'description' 		=> __( 'Add a new field to add to your forms so your visitors can subscribe to your MailPoet newsletters.', WYSIJA ),
 			'plugin_url' 		=> 'mailpoet-gravity-forms-addon/mailpoet-gravity-forms-addon.php',
 			'version' 			=> '1.0.0',
 			'official' 			=> true,
@@ -230,6 +231,21 @@ function add_ons_list(){
 			'premium_offer' 	=> '',
 		),
 
+            array(
+			'name' 				=> 'wBounce: Exit popup forms',
+			'search' 			=> 'wBounce',
+			'thumbnail' 		=> 'wbounce-forms.jpg',
+			'description' 		=> __( 'Exit popups are not only "in vogue", they are provably increasing conversions and therefore boost marketing, signups and sales. wBounce displays an inline popup before the user leaves your site.', WYSIJA ),
+			'review' 			=> __( 'Exit popup will appear when your cursor leaves the window.', WYSIJA ),
+			'plugin_url' 		=> 'wbounce/wbounce.php',
+			'author_url' 		=> 'http://clicky.me/wbounce',
+			'version' 			=> '1.4',
+			'official' 			=> true,
+			'on_wordpress.org' 	=> true,
+			'free' 				=> true,
+			'service' 			=> false,
+			'requires' 			=> '',
+		),
 		array(
 			'name' 				=> 'Optin Revolution: Popup form',
 			'search' 			=> 'Optin Revolution: popup form',
@@ -316,6 +332,25 @@ function add_ons_list(){
 			'service' 			=> false,
 			'requires' 			=> 'ninja-forms/ninja-forms.php',
 			'requires_name' 	=> 'Ninja Forms',
+			'premium_offer' 	=> '',
+		),
+
+		array(
+			'name' 				=> 'Multilingual Press',
+			'search' 			=> 'Multilingual Press',
+			'thumbnail' 		=> 'multilingual-press.jpg',
+			'description' 		=> __( 'We recommend this plugin as the good alternative to WPML for multilingual sites. It\'s lean, straightforward, and leaves your site\'s core largely untouched. Each language has its own site in your WordPress Multisite install. Works great with MailPoet.', WYSIJA ),
+			'review' 			=> '',
+			'plugin_url' 		=> 'multilingual-press/multilingual-press.php',
+			'author_url' 		=> 'http://clicky.me/multilingual-press',
+			'purchase_url' 		=> 'http://clicky.me/multilingual-press',
+			'version' 			=> '2.0.3',
+			'official' 			=> true,
+			'on_wordpress.org' 	=> true,
+			'free' 				=> true,
+			'service' 			=> false,
+			'requires' 			=> 'multilingual-press/multilingual-press.php',
+			'requires_name' 	=> 'Multilingual Press',
 			'premium_offer' 	=> '',
 		),
 	);

@@ -2,7 +2,7 @@
 
 /*make the difference between frontend and backend routing*/
 /*require what is needed for common purpose in backend such as backend menus*/
-
+defined( 'ABSPATH' ) or die( 'Not allowed' );
 if(defined('WP_ADMIN')) {
     define('WYSIJA_SIDE','back');
 }else define('WYSIJA_SIDE','front');
@@ -13,7 +13,6 @@ $current_folder=dirname(dirname(__FILE__));
 
 if(!defined('DS')) define('DS', DIRECTORY_SEPARATOR);
 define('WYSIJA', $plugin_name);
-define('WYSIJAFUTURE','wysija-future');
 if(!defined('WYSIJA_PLG_DIR')) define('WYSIJA_PLG_DIR', dirname($current_folder).DS);
 define('WYSIJA_DIR', $current_folder.DS);
 define('WYSIJA_DATA_DIR', WYSIJA_DIR.'data'.DS);

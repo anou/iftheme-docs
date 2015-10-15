@@ -1,4 +1,5 @@
 <?php
+defined('WYSIJA') or die('Restricted access');
 class WJ_Upgrade extends WYSIJA_object {
 	/**
 	* A static variable that holds a dinamic instance of the class
@@ -51,10 +52,10 @@ class WJ_Upgrade extends WYSIJA_object {
 		$current = get_site_transient( 'update_plugins' );
 
 		foreach ( self::$plugins as $plugin ){
-			if ( isset( $current->response[$plugin] ) ){
+			if ( isset( $current->response[ $plugin ] ) ){
 				$data = self::get_plugin_data( $plugin );
 
-				if ( version_compare( $current->response[$plugin]->new_version, $data->info->Version, '<=' ) ){
+				if ( version_compare( $current->response[ $plugin ]->new_version, $data->info->Version, '<=' ) ){
 					continue;
 				}
 
@@ -62,7 +63,7 @@ class WJ_Upgrade extends WYSIJA_object {
 					sprintf(
 						__( 'Hey! %1$s has an update (version %2$s), <a href="%3$s">click here to update</a>.', WYSIJA ),
 						'<strong>' . esc_attr( $data->info->Name ) . '</strong>',
-						$current->response[$plugin]->new_version,
+						$current->response[ $plugin ]->new_version,
 						wp_nonce_url( self_admin_url( 'update.php?action=upgrade-plugin&plugin=' ) . $plugin, 'upgrade-plugin_' . $plugin )
 					),
 					true,
@@ -70,6 +71,18 @@ class WJ_Upgrade extends WYSIJA_object {
 				);
 			}
 		}
+	}
+
+  //$titlelink=str_replace(array('[link]','[\link]'), array('<a href="">','</a>'),'');
+
+
+
+  public function update_plugin_complete_actions( $update_actions, $mixed = null, $plugin = null ){
+		$actions = array(
+			'refresh_page' => '<a href="#" onclick="window.parent.location.reload(true);return false;" title="' . esc_attr__( 'Refresh the page you current are!', WYSIJA ) . '" target="_parent">' . __( 'Return to MailPoet', WYSIJA ) . '</a>'
+		);
+
+		return $actions;
 	}
 
 	public function iframe_intercept( $current_screen ) {
@@ -116,16 +129,18 @@ class WJ_Upgrade extends WYSIJA_object {
 		iframe_header();
 
 		if ( $action === 'upgrade' ) {
+			add_filter( 'update_bulk_plugins_complete_actions', array( $this, 'update_plugin_complete_actions' ), 10, 2 );
 			$upgrader = new Plugin_Upgrader( new Bulk_Plugin_Upgrader_Skin( compact( 'nonce', 'url' ) ) );
 			$upgrader->bulk_upgrade( $plugins );
 		} elseif ( $action === 'install' ) {
 			// If the action is install, it will only happen if it's the Premium
+			add_filter( 'install_plugin_complete_actions', array( $this, 'update_plugin_complete_actions' ), 10, 3 );
 			$upgrader = new Plugin_Upgrader( new Plugin_Installer_Skin() );
 			$result   = $upgrader->install( self::get_url( self::$plugins[1], WYSIJA::is_beta(), 'zip' ) );
 		}
 
 		iframe_footer();
-		echo "</div>";
+		echo '</div>';
 
 		remove_filter( 'pre_site_transient_update_plugins', array( $this, 'pre_site_transient_update_plugins' ) );
 
@@ -174,8 +189,9 @@ class WJ_Upgrade extends WYSIJA_object {
 				'key' => self::get_slug( $package ),
 			);
 
-			if ( $beta === true )
+			if ( $beta === true ){
 				$params['beta'] = 'true';
+			}
 
 			$url = add_query_arg( $params, $url );
 
@@ -188,8 +204,9 @@ class WJ_Upgrade extends WYSIJA_object {
 	public static function get_version( $package = null, $beta = false ){
 		$request = wp_remote_get( self::get_url( $package, $beta, 'check' ) );
 
-		if ( is_wp_error( $request ) )
+		if ( is_wp_error( $request ) ){
 			return false;
+		}
 
 		$version = wp_remote_retrieve_body( $request );
 
@@ -215,8 +232,9 @@ class WJ_Upgrade extends WYSIJA_object {
 
 	public static function get_plugin_data( $package = null, $beta = false, $new_version = false ){
 		$data = (object) array();
-		if ( is_null( $package ) )
+		if ( is_null( $package ) ){
 			return $data;
+		}
 
 		$data->id      = 27505;
 		$data->slug    = self::get_slug( $package );
@@ -267,7 +285,7 @@ class WJ_Upgrade extends WYSIJA_object {
 				continue;
 			}
 
-			if ( ! WYSIJA::is_beta() && $plugin === 'wysija-newsletter' ) {
+			if ( ! WYSIJA::is_beta() && $plugin === 'wysija-newsletters/index.php' ) {
 				continue;
 			}
 
@@ -278,7 +296,7 @@ class WJ_Upgrade extends WYSIJA_object {
 				continue;
 			}
 
-			$update_data->response[$plugin] = self::get_plugin_data( $plugin, WYSIJA::is_beta(), $version );
+			$update_data->response[ $plugin ] = self::get_plugin_data( $plugin, WYSIJA::is_beta(), $version );
 		}
 
 		return $update_data;
@@ -300,7 +318,7 @@ class WJ_Upgrade extends WYSIJA_object {
 				continue;
 			}
 
-			$update_data->response[$plugin] = self::get_plugin_data( $plugin, $to, self::get_version( $plugin, $to ) );
+			$update_data->response[ $plugin ] = self::get_plugin_data( $plugin, $to, self::get_version( $plugin, $to ) );
 		}
 
 		return $update_data;
@@ -310,7 +328,7 @@ class WJ_Upgrade extends WYSIJA_object {
 		global $title, $parent_file, $submenu_file;
 
 		if ( strtoupper( $_SERVER['REQUEST_METHOD'] ) === 'POST' && in_array( $current_screen->id, array( 'update-core', 'plugins' ) ) ) {
-			if ( !isset( $_POST['checked'] ) ){
+			if ( ! isset( $_POST['checked'] ) ){
 				return;
 			}
 
@@ -319,33 +337,35 @@ class WJ_Upgrade extends WYSIJA_object {
 
 			$__intersection = array_intersect( $plugins, self::$plugins );
 
-			if ( empty( $__intersection ) )
+			if ( empty( $__intersection ) ){
 				return;
+			}
 
-			switch ( $_POST['action'] ){
+			$action = (isset($_POST['action']) ? $_POST['action'] : null);
+
+			switch($action) {
 				case 'delete-selected':
-					break;
+
+				break;
 
 				case 'deactivate-selected':
 					if ( in_array( self::$plugins[0], $plugins ) && ! in_array( self::$plugins[1], $plugins ) && is_plugin_active( self::$plugins[1] ) ){
 						$plugins[] = self::$plugins[1];
 					}
-					break;
+				break;
 
 				case 'update-selected':
 				case 'activate-selected':
 					if ( in_array( self::$plugins[1], $plugins ) && ! in_array( self::$plugins[0], $plugins ) ){
 						$plugins[] = self::$plugins[0];
 					}
-
-					break;
+				break;
 			}
 
 			$_POST['checked'] = $plugins;
 
 			return;
 		}
-
 
 		if ( $current_screen->id !== 'update' ){
 			return;
@@ -376,7 +396,7 @@ class WJ_Upgrade extends WYSIJA_object {
 		require_once(ABSPATH . 'wp-admin/admin-header.php');
 		echo
 			"<div class='wrap'>" .
-				"<h2>{$title}</h2>";
+				'<h2>' . esc_attr( $title ) . '</h2>';
 
 	}
 
@@ -384,7 +404,7 @@ class WJ_Upgrade extends WYSIJA_object {
 		if ( ! isset( $_GET['_wysija_bulk_screen'] ) ){
 			return;
 		}
-		echo "</div>";
+		echo '</div>';
 		include(ABSPATH . 'wp-admin/admin-footer.php');
 	}
 }

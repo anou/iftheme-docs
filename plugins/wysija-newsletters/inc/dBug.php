@@ -45,7 +45,7 @@
  * new dBug ( $strXml, "xml" );
  *
 \*********************************************************************************************************************/
-
+defined('WYSIJA') or die('Restricted access');
 class dBug {
 
 	var $xmlDepth=array();
@@ -61,7 +61,7 @@ class dBug {
 	var $arrHistory = array();
 
 	//constructor
-	function dBug($var,$forceType="",$bCollapsed=false) {
+	function __construct($var,$forceType="",$bCollapsed=false) {
 		//include js and css scripts
 		if(!defined('BDBUGINIT')) {
 			define("BDBUGINIT", TRUE);

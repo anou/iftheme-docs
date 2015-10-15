@@ -2,7 +2,7 @@
     /**
     * @version 2.7
     * @$Id: colorbox-ie.php 937945 2014-06-24 17:11:13Z dzappone $
-    * @$URL: http://plugins.svn.wordpress.org/lightbox-plus/tags/2.7/css/shadowed/colorbox-ie.php $
+    * @$URL: https://plugins.svn.wordpress.org/lightbox-plus/tags/2.7/css/shadowed/colorbox-ie.php $
     */
     /*
     The following fixes png-transparency for IE6.  

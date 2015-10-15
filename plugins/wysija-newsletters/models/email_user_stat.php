@@ -12,7 +12,7 @@ class WYSIJA_model_email_user_stat extends WYSIJA_model{
         'status' => array('req'=>true,'type'=>'integer')
     );
 
-    function WYSIJA_model_email_user_stat(){
-        $this->WYSIJA_model();
+    function __construct(){
+        parent::__construct();
     }
 }

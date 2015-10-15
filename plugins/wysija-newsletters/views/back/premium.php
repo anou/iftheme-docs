@@ -2,7 +2,7 @@
 defined('WYSIJA') or die('Restricted access');
 
 class WYSIJA_view_back_premium extends WYSIJA_view_back{
-    function WYSIJA_view_back_premium(){
+    function __construct(){
         $this->skip_header =true;
 
     }

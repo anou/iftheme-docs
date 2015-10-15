@@ -12,6 +12,16 @@ class WYSIJA_help_render_engine extends WYSIJA_object {
     private $_i18n = null;
     private $_lc_time = '';
     private $_inline = false;
+    private $_fonts = array(
+        'Arial' => "Arial, 'Helvetica Neue', Helvetica, sans-serif",
+        'Comic Sans MS' => "'Comic Sans MS', 'Marker Felt-Thin', Arial, sans-serif",
+        'Courier New' => "'Courier New', Courier, 'Lucida Sans Typewriter', 'Lucida Typewriter', monospace",
+        'Georgia' => "Georgia, Times, 'Times New Roman', serif",
+        'Tahoma' => "Tahoma, Verdana, Segoe, sans-serif",
+        'Times New Roman' => "'Times New Roman', Times, Baskerville, Georgia, serif",
+        'Trebuchet MS' => "'Trebuchet MS', 'Lucida Grande', 'Lucida Sans Unicode', 'Lucida Sans', Tahoma, sans-serif",
+        'Verdana' => "Verdana, Geneva, sans-serif"
+    );
 
     const _OPEN = '{';
     const _CLOSE = '}';
@@ -71,27 +81,72 @@ class WYSIJA_help_render_engine extends WYSIJA_object {
     public function setInline($bool)
     {
         $this->_inline = $bool;
+        $this->_inline = false;
     }
 
-    public function renderForJS($vars, $template) {
-        if (is_object ($vars)) {
-            $vars = get_object_vars($vars);
-        }
-        if ($string = $this->_loadTemplate ($template)) {
-            // set vars
-            $this->_vars = $vars;
+    public function renderCSS($vars) {
+        $result = array();
 
-            // inline mode (removes any tabs, carriage return, line breaks)
-            if($this->_inline) {
-                $string = preg_replace("#(\t|\r|\n)#UiS", '', trim($string));
-                $string = preg_replace("#> +<#UiS", '><', $string);
+        if (isset($vars['family'])) {
+            $font_family = '\''.$vars['family'].'\'';
+            // check if we have fallbacks for this font
+            if(array_key_exists($vars['family'], $this->_fonts)) {
+                $font_family = $this->_fonts[$vars['family']];
             }
-
-            $output = $this->_parseForJS($string);
-            return $output;
-        } else {
-            throw new Exception('wysija rendering engine needs a template');
+            $result[] = 'font-family: '.$font_family.';';
         }
+        if (isset($vars['size'])) $result[] = 'font-size: ' . self::_css_format_font_size_value($vars['size']) . ';';
+        if (isset($vars['color'])) $result[] = 'color: ' . self::_css_format_color($vars['color']) . ';color: ' . self::_css_format_color($vars['color']) . ' !important;';
+        if (isset($vars['background']) && $vars['background'] !== '') $result[] = 'background-color: ' . self::_css_format_color($vars['background']) . ';';
+        if (isset($vars['underline'])) {
+            if ($vars['underline'] == '1') $result[] = 'text-decoration: underline;';
+            elseif ($vars['underline'] == '-1') $result[] = 'text-decoration: none;';
+        }
+        if (isset($vars['text-decoration'])) $result[] = 'text-decoration: ' . $vars['text-decoration'] . ';';
+        if (isset($vars['outline'])) $result[] = 'outline: ' . $vars['outline'] . ';';
+        if (isset($vars['height'])) $result[] = 'height: ' . $vars['height'] . ';';
+        if (isset($vars['border']) && is_array($vars['border'])) {
+            $result[] = 'border: ' . $vars['border']['size'] . ' ' . $vars['border']['style'] . ' ' . $vars['border']['color'] . ';';
+        } else {
+            $result[] = 'border: 0;';
+        }
+        if (isset($vars['border-collapse'])) $result[] = 'border-collapse: ' . $vars['border-collapse'] . ';';
+        if (isset($vars['mso-table-space'])) $result[] = 'mso-table-lspace: ' . $vars['mso-table-space'] . '; mso-table-rspace: ' . $vars['mso-table-space'] . ';';
+        if (isset($vars['text-align'])) $result[] = 'text-align: ' . $vars['text-align'] . ';';
+        if (isset($vars['font-weight'])) $result[] = 'font-weight: ' . $vars['font-weight'] . ';';
+        if (isset($vars['font-style'])) $result[] = 'font-style: ' . $vars['font-style'] . ';';
+        if (isset($vars['letter-spacing'])) $result[] = 'letter-spacing: ' . $vars['letter-spacing'] . ';';
+        if (isset($vars['line-height'])) {
+            if ($vars['line-height'] == '0') {
+                $result[] = 'line-height: 0;';
+            } else {
+                $result[] = 'mso-line-height-rule: exactly;-mso-line-height-rule: exactly;line-height: ' . self::_css_format_line_height($vars['line-height']) . ';';
+            }
+        }
+        if (isset($vars['list-style-position'])) $result[] = 'list-style-position: ' . $vars['list-style-position'] . ';';
+        if (isset($vars['list-style-type'])) $result[] = 'list-style-type: ' . $vars['list-style-type'] . ';';
+        if (isset($vars['list-style'])) $result[] = 'list-style: ' . $vars['list-style'] . ';';
+        if (isset($vars['display'])) $result[] = 'display: ' . $vars['display'] . ';';
+        if (isset($vars['margin'])) $result[] = 'margin: ' . $vars['margin'] . ';';
+        if (isset($vars['padding'])) $result[] = 'padding: ' . $vars['padding'] . ';';
+        if (isset($vars['margin-top']) && $vars['margin-top'] != '') $result[] = 'margin-top: ' . $vars['margin-top'] . ';';
+        if (isset($vars['margin-right']) && $vars['margin-right'] != '') $result[] = 'margin-right: ' . $vars['margin-right'] . ';';
+        if (isset($vars['margin-bottom']) && $vars['margin-bottom'] != '') $result[] = 'margin-bottom: ' . $vars['margin-bottom'] . ';';
+        if (isset($vars['margin-left']) && $vars['margin-left'] != '') $result[] = 'margin-left: ' . $vars['margin-left'] . ';';
+        if (isset($vars['padding-top']) && $vars['padding-top'] != '') $result[] = 'padding-top: ' . $vars['padding-top'] . ';';
+        if (isset($vars['padding-right']) && $vars['padding-right'] != '') $result[] = 'padding-right: ' . $vars['padding-right'] . ';';
+        if (isset($vars['padding-bottom']) && $vars['padding-bottom'] != '') $result[] = 'padding-bottom: ' . $vars['padding-bottom'] . ';';
+        if (isset($vars['padding-left']) && $vars['padding-left'] != '') $result[] = 'padding-left: ' . $vars['padding-left'] . ';';
+        if (isset($vars['clear'])) $result[] = 'clear: ' . $vars['clear'] . ';';
+        if (isset($vars['float'])) $result[] = 'float: ' . $vars['float'] . ';';
+        if (isset($vars['vertical-align'])) $result[] = 'vertical-align: ' . $vars['vertical-align'] . ';';
+        if (isset($vars['word-wrap'])) $result[] = 'word-wrap: break-word;';
+        if (isset($vars['interpolation'])) $result[] = '-ms-interpolation-mode: ' . $vars['interpolation'] . ';';
+        if (isset($vars['min-width'])) $result[] = 'min-width: ' . $vars['min-width'] . ';';
+        if (isset($vars['max-width'])) $result[] = 'max-width: ' . $vars['max-width'] . ';';
+        if (isset($vars['outlook_fix_tr'])) $result[] = 'font-size: 1px; mso-line-height-alt: 0; mso-margin-top-alt: 1px;';
+
+        return implode('', $result);
     }
 
     public function render($vars, $template)
@@ -106,6 +161,7 @@ class WYSIJA_help_render_engine extends WYSIJA_object {
             $this->_vars = $vars;
 
             if($this->_inline) {
+                // inline mode (removes any tabs, carriage return, line breaks)
                 $string = preg_replace("#(\t|\r|\n)#UiS", '', trim($string));
                 $string = preg_replace("#> +<#UiS", '><', $string);
             }
@@ -738,8 +794,20 @@ class WYSIJA_help_render_engine extends WYSIJA_object {
                     // ignore non utf8 chars
                     //$value = iconv('UTF-8', 'UTF-8//IGNORE', $value);
 
-                    // convert empty paragraphs to line break
+                    // convert empty titles into line breaks
+                    $value = str_replace('<h1></h1>', '<br />', $value);
+                    $value = str_replace('<h2></h2>', '<br />', $value);
+                    $value = str_replace('<h3></h3>', '<br />', $value);
+                    // convert empty paragraphs to line breaks
                     $value = str_replace('<p></p>', '<br />', $value);
+                break;
+
+                case 'sanitize':
+                    // prevent XSS
+                    $value = preg_replace( '#< *script(?:(?!< */ *script *>).)*< */ *script *>#isU', '', $value );
+                    if(strlen($value) > 0) {
+                        $value = preg_replace("#<([^><]+?)([^a-z_\-]on\w*|xmlns)(\s*=\s*[^><]*)([><]*)#i", "<\\1\\4", $value);
+                    }
                 break;
 
                 case 'ratio':
@@ -752,22 +820,11 @@ class WYSIJA_help_render_engine extends WYSIJA_object {
                     $value = $ratio;
                 break;
                 case 'format_line_height':
-                    // if value in px, don't modify
-                    if($value !== '0' && strpos($value, 'px') === FALSE && strpos($value, '%') === FALSE) {
-                        // if number value, convert to percent
-                        $percentage = ((float)$value * 100);
-                        $value = $percentage.'%';
-                    }
+                    $value = $this->_css_format_line_height($value);
                 break;
 
                 case 'format_font_size_value':
-                    if(strpos($value, 'em') !== FALSE) {
-                        // if number value, convert to percent
-                        $percentage = ((float)$value * 100);
-                        $value = $percentage.'%';
-                    } else if(strpos($value, '%') === FALSE) {
-                        $value = $value.'px';
-                    }
+                    $value = $this->_css_format_font_size_value($value);
                 break;
 
                 case 'inc':
@@ -869,9 +926,7 @@ class WYSIJA_help_render_engine extends WYSIJA_object {
                 break;
 
                 case 'color':
-                    if($value !== 'transparent' && $value !== '') {
-                        $value = '#'.$value;
-                    }
+                    $value = $this->_css_format_color($value);
                 break;
 
                 case 'size':
@@ -1225,5 +1280,33 @@ class WYSIJA_help_render_engine extends WYSIJA_object {
     {
         setlocale (LC_TIME, "$this->_lc_time.utf8");
         return new DateTime ($value);
+    }
+
+    protected static function _css_format_font_size_value($value) {
+        if(strpos($value, 'em') !== FALSE) {
+            // if number value, convert to percent
+            $percentage = ((float)$value * 100);
+            $value = $percentage.'%';
+        } else if(strpos($value, '%') === FALSE) {
+            $value = $value.'px';
+        }
+        return $value;
+    }
+
+    protected static function _css_format_color($value) {
+        if($value !== 'transparent' && $value !== '') {
+            $value = '#'.$value;
+        }
+        return $value;
+    }
+
+    protected static function _css_format_line_height($value) {
+        // if value in px, don't modify
+        if($value !== '0' && strpos($value, 'px') === FALSE && strpos($value, '%') === FALSE) {
+            // if number value, convert to percent
+            $percentage = ((float)$value * 100);
+            $value = $percentage.'%';
+        }
+        return $value;
     }
 }

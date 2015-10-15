@@ -4,9 +4,9 @@
     * @subpackage lightbox.admin.php
     * @internal 2013.01.16
     * @author Dan Zappone / 23Systems
-    * @version 2.7
+    * @version 2.7.2
     * @$Id: lightbox.admin.php 937945 2014-06-24 17:11:13Z dzappone $
-    * @$URL: http://plugins.svn.wordpress.org/lightbox-plus/tags/2.7/admin/lightbox.admin.php $
+    * @$URL: https://plugins.svn.wordpress.org/lightbox-plus/tags/2.7/admin/lightbox.admin.php $
     */
     if ( !empty( $this->lightboxOptions )) { $lightboxPlusOptions = $this->getAdminOptions( $this->lightboxOptionsName ); }
     global $g_lbp_global_style_url;
@@ -23,35 +23,53 @@
     $lightboxPlusOptions = $this->setMissingOptions($lightboxPlusOptions);
 ?>
 <!-- About Lightbox Plus Colorbox for WordPress -->
-<div id="poststuff" class="lbp">
-    <div class="postbox<?php if ( $lightboxPlusOptions['hide_about'] ) echo ' close-me';?>">
-        <h3 class="handle"><?php _e( 'About Lightbox Plus Colorbox for WordPress','lightboxplus' ); ?></h3>
-        <div class="inside toggle">
-            <div class="donate">
-                <form action="https://www.paypal.com/cgi-bin/webscr" method="post">
-                    <input type="hidden" name="cmd" value="_s-xclick">
-                    <input type="hidden" name="hosted_button_id" value="BKVLWU2KWRNAG">
-                    <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!"><img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
-                </form>
-                <h4>&mdash; or try a 23Systems affiliate program &mdash;</h4>
-                <a href="http://6e772-ccdd75pi48yf3kdqfke0.hop.clickbank.net/?tid=DIGWP" target="_top"  name="Digging into WordPress - Really Learn It"><img src="<?php echo $g_lightbox_plus_url.'admin/images/aflt-100x26-digwp.jpg'?>" alt="Digging into WordPress - Really Learn It" border="0" /></a>
-                <a href="https://www.e-junkie.com/ecom/gb.php?cl=54585&c=ib&aff=107849" target="ejejcsingle" name=""><img src="<?php echo $g_lightbox_plus_url.'admin/images/aflt-100x26-grvfrm.jpg'?>" alt="Gravity Forms - WordPress Form Management" border="0" /></a><br />
-                <a target="_blank" href="http://www.shareasale.com/r.cfm?b=241697&u=734275&m=28169&urllink=&afftrack="><img src="<?php echo $g_lightbox_plus_url.'admin/images/aflt-100x26-genesis.jpg'?>" alt="Professional Designed WordPress Themes" border="0" /></a>
-                <a href="https://www.e-junkie.com/ecom/gb.php?ii=195647&c=ib&aff=107849&cl=12635" target="ejejcsingle" name="How to be a Rockstar WordPress Designer"><img src="<?php echo $g_lightbox_plus_url.'admin/images/aflt-100x26-rckstr.jpg'?>" alt="How to be a Rockstar WordPress Designer" border="0" /></a>
-            </div>
-            <h4><?php _e( 'Thank you for downloading and installing Lightbox Plus Colorbox for WordPress','lightboxplus' ); ?></h4>
-            <p style="text-align: justify;">
-                <?php _e( 'Lightbox Plus Colorbox implements Colorbox as a lightbox image overlay tool for WordPress.  Colorbox was created by <a href="http://www.jacklmoore.com/colorbox">Jack Moore</a> and is licensed under the MIT License. Lightbox Plus Colorbox allows you to easily integrate and customize a powerful and light-weight lightbox plugin for jQuery into your WordPress site.  You can easily create additional styles by adding a new folder to the css directory under <code>wp-content/plugins/lighbox-plus/css/</code> by duplicating and modifying any of the existing themes or using them as examples to create your own.  Lightbox Plus Colorbox uses the built in WordPress jQuery library. Lightbox Plus Colorbox also uses the <a href="http://simplehtmldom.sourceforge.net/" title="PHP Simple HTML DOM Parser">PHP Simple HTML DOM Parser</a> helper class to navigate page content for inserting the Lightbox attibutes into elements. See the <a href="http://www.23systems.net/plugins/lightbox-plus/">changelog</a> for important details on this upgrade.','lightboxplus' ); ?>
-            </p>
-            <p style="text-align: justify;">
-                <?php _e( 'I spend as much of my spare time as possible working on <strong>Lightbox Plus Colorbox</strong> and any donation is appreciated. Donations play a crucial role in supporting Free and Open Source Software projects. So why are donations important? As a developer the more donations I receive the more time I can invest in working on <strong>Lightbox Plus Colorbox</strong>. Donations help cover the cost of hardware for development and to pay hosting bills. This is critical to the development of free software. I know a lot of other developers do the same and I try to donate to them whenever I can. As a developer I greatly appreciate any donation you can make to help support further development of quality plugins and themes for WordPress.','lightboxplus' ); ?>
-            </p>
-            <h4><?php _e( 'You have my sincere thanks and appreciation for using <em>Lightbox Plus Colorbox</em>.','lightboxplus' ); ?></h4>
-            <div class="clear"></div>
-        </div>
-    </div>
-</div>
+<div class="infotable">
+	<div class="inforow">
+		<div class="lbp infosidebar-left">
+			<div class="postbox">
+				<div class="recommend">
+				<h5>Checkout our Friends!</h5>
+				<a href="http://linktrack.info/.13jgu" title="SumoMe" class="reclink"><img src="<?php echo $g_lightbox_plus_url.'admin/images/aflt-265x70-sumome.png';?>" alt="SumoMe"></a>
+				<h5>Tools to Grow Your Website’s Traffic</h5>
+				</div>
+			</div>
+		</div>
 
+		<div id="poststuff" class="lbp infocontent">
+			<div class="postbox<?php if ( $lightboxPlusOptions['hide_about'] ) echo ' close-me';?>">
+				<h3 class="handle"><?php _e( 'About Lightbox Plus Colorbox for WordPress','lightboxplus' ); ?></h3>
+				<div class="inside toggle">
+					<div class="thanks">
+						<h4><?php _e( 'Thank you for downloading and installing Lightbox Plus Colorbox for WordPress','lightboxplus' ); ?></h4>
+						<p style="text-align: justify;">
+						<?php _e( 'Lightbox Plus Colorbox implements Colorbox as a lightbox image overlay tool for WordPress.  Colorbox was created by <a href="http://www.jacklmoore.com/colorbox">Jack Moore</a> and is licensed under the MIT License. Lightbox Plus Colorbox allows you to easily integrate and customize a powerful and light-weight lightbox plugin for jQuery into your WordPress site.  You can easily create additional styles by adding a new folder to the css directory under <code>wp-content/plugins/lighbox-plus/css/</code> by duplicating and modifying any of the existing themes or using them as examples to create your own.  Lightbox Plus Colorbox uses the built in WordPress jQuery library. Lightbox Plus Colorbox also uses the <a href="http://simplehtmldom.sourceforge.net/" title="PHP Simple HTML DOM Parser">PHP Simple HTML DOM Parser</a> helper class to navigate page content for inserting the Lightbox attibutes into elements. See the <a href="http://www.23systems.net/plugins/lightbox-plus/">changelog</a> for important details on this upgrade.','lightboxplus' ); ?>
+						</p>
+						<p style="text-align: justify;">
+						<?php _e( 'I spend as much of my spare time as possible working on <strong>Lightbox Plus Colorbox</strong> and any donation is appreciated. Donations play a crucial role in supporting Free and Open Source Software projects. So why are donations important? As a developer the more donations I receive the more time I can invest in working on <strong>Lightbox Plus Colorbox</strong>. Donations help cover the cost of hardware for development and to pay hosting bills. This is critical to the development of free software. I know a lot of other developers do the same and I try to donate to them whenever I can. As a developer I greatly appreciate any donation you can make to help support further development of quality plugins and themes for WordPress.','lightboxplus' ); ?>
+						</p>
+						<h4><?php _e( 'You have my sincere thanks and appreciation for using <em>Lightbox Plus Colorbox</em>.','lightboxplus' ); ?></h4>
+					</div>
+				</div>
+			</div>
+		</div>
+
+<!--		<div class="lbp infosidebar-right">-->
+<!--			<div class="postbox">-->
+<!--				<div class="donate">-->
+<!--					<h5>Help with Development</h5>-->
+<!--					<form action="https://www.paypal.com/cgi-bin/webscr" method="post">-->
+<!--					<input type="hidden" name="cmd" value="_s-xclick">-->
+<!--					<input type="hidden" name="hosted_button_id" value="BKVLWU2KWRNAG">-->
+<!--					<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!"><img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">-->
+<!--					</form>-->
+<!--					<h5>Contribute to Lightbox Plus development costs</h5>-->
+<!--				</div>-->
+<!--			</div>-->
+<!--		</div>-->
+		<div class="clear"></div>
+	</div>
+</div>
+<div class="clear"></div>
 <!-- Settings/Options -->
 <form name="lightboxplus_settings" method="post" action="<?php echo $location?>&amp;updated=settings">
     <input type="hidden" name="action" value="action" />
@@ -360,6 +378,11 @@
         </div>
     </div>
 
+	<div id="poststuff" class="lbp">
+		<div class="postbox tryout">
+				<h5>Tools to Grow Your Website’s Traffic?&nbsp;&nbsp;Try out our friends, <a href="http://linktrack.info/.13jgz" title="SumoMe">SumoMe WordPress Plugin</a>!</h5>
+		</div>
+	</div>
     <!-- Primary Lightbox Settings -->
     <div id="poststuff" class="lbp">
         <div class="postbox">

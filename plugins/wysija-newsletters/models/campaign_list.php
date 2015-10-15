@@ -10,10 +10,8 @@ class WYSIJA_model_campaign_list extends WYSIJA_model{
         'filter' => array("req"=>true),
     );
 
-
-
-    function WYSIJA_model_campaign_list(){
-        $this->WYSIJA_model();
+    function __construct(){
+        parent::__construct();
     }
 
     function getReceivers($mailid,$total = true,$onlypublished = true){

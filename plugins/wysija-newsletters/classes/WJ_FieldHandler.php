@@ -1,5 +1,5 @@
 <?php
-
+defined('WYSIJA') or die('Restricted access');
 /*
  Class WJ_FieldHandler
  It handles the custom fields in a controller.

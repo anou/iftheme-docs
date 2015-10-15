@@ -2,9 +2,9 @@
 defined('WYSIJA') or die('Restricted access');
 class WYSIJA_control_back_config extends WYSIJA_control{
 
-    function WYSIJA_control_back_config(){
+    function __construct(){
         if(!WYSIJA::current_user_can('wysija_config'))  die("Action is forbidden.");
-        parent::WYSIJA_control();
+        parent::__construct();
     }
 
     function _displayErrors(){
@@ -23,6 +23,7 @@ class WYSIJA_control_back_config extends WYSIJA_control{
     }
 
     function send_test_mail(){
+        $this->requireSecurity();
         $this->_displayErrors();
         /*switch the send method*/
         $configVal=$this->_convertPostedInarray();
@@ -40,6 +41,7 @@ class WYSIJA_control_back_config extends WYSIJA_control{
     }
 
     function send_test_mail_ms(){
+        $this->requireSecurity();
         $this->_displayErrors();
         /*switch the send method*/
         $configVal=$this->_convertPostedInarray();
@@ -97,6 +99,7 @@ class WYSIJA_control_back_config extends WYSIJA_control{
      * @return type
      */
     function bounce_process(){
+        $this->requireSecurity();
         // bounce handling
         $helper_bounce = WYSIJA::get('bounce','helper');
 
@@ -112,6 +115,7 @@ class WYSIJA_control_back_config extends WYSIJA_control{
     }
 
     function linkignore(){
+        $this->requireSecurity();
         $this->_displayErrors();
 
         $modelConf=WYSIJA::get('config','model');
@@ -129,6 +133,7 @@ class WYSIJA_control_back_config extends WYSIJA_control{
 
     // Ajax called function to enable analytics sharing from welcome page.
     function share_analytics() {
+        $this->requireSecurity();
         $this->_displayErrors();
 
         $model_config = WYSIJA::get('config','model');
@@ -140,35 +145,28 @@ class WYSIJA_control_back_config extends WYSIJA_control{
     }
 
     function validate(){
-        $helpLic=WYSIJA::get('licence','helper');
-        $res=$helpLic->check();
+        $this->requireSecurity();
+        $helper_licence = WYSIJA::get('licence','helper');
+        $result = $helper_licence->check();
 
-        if(!isset($res['result']))  $res['result']=false;
-        return $res;
+        if(!isset($result['result'])){
+            $result['result']=false;
+        }
+
+        return $result;
     }
-
-    function devalidate(){
-
-        $modelCOnfig=WYSIJA::get('config','model');
-        $res=$modelCOnfig->save(array('premium_key'=>false));
-
-        if(!isset($res['result']))  $res['result']=false;
-        return $res;
-    }
-
-
 
     function _convertPostedInarray(){
         $_POST   = stripslashes_deep($_POST);
-        $dataTemp=$_POST['data'];
+        $data_temp = $_POST['data'];
         $_POST['data']=array();
-        foreach($dataTemp as $val) $_POST['data'][$val['name']]=$val['value'];
-        $dataTemp=null;
+        foreach($data_temp as $val) $_POST['data'][$val['name']]=$val['value'];
+        $data_temp = null;
         foreach($_POST['data'] as $k =>$v){
-            $newkey=str_replace(array('wysija[config][',']'),'',$k);
-            $configVal[$newkey]=$v;
+            $new_key = str_replace(array('wysija[config][',']'),'',$k);
+            $config_val[$new_key] = $v;
         }
-        return $configVal;
+        return $config_val;
     }
 
     // WYSIJA Form Editor
@@ -180,6 +178,7 @@ class WYSIJA_control_back_config extends WYSIJA_control{
     }
 
     function wysija_form_manage_field() {
+        $this->requireSecurity();
         $response = array('result' => true, 'error' => null);
 
         // get data
@@ -276,6 +275,7 @@ class WYSIJA_control_back_config extends WYSIJA_control{
 
     // remove a custom field
     function form_field_delete() {
+        $this->requireSecurity();
         $data = $this->_wysija_form_get_data();
 
         // check for field_id parameter
@@ -325,6 +325,7 @@ class WYSIJA_control_back_config extends WYSIJA_control{
     }
 
     function form_name_save() {
+        $this->requireSecurity();
         // get name from post and stripslashes it
         $form_name = trim(stripslashes($_POST['name']));
         // get form_id from post
@@ -339,6 +340,7 @@ class WYSIJA_control_back_config extends WYSIJA_control{
     }
 
     function form_save() {
+        $this->requireSecurity();
         // get form id
         $form_id = null;
         if(isset($_POST['form_id']) && (int)$_POST['form_id'] > 0) {
@@ -374,7 +376,7 @@ class WYSIJA_control_back_config extends WYSIJA_control{
                     foreach($block['params'] as $key => $value) {
                         $value = base64_decode($value);
                         if(is_serialized($value) === true) {
-                            $value = unserialize($value);
+                            $value = (array) unserialize($value);
                         }
                         $params[$key] = $value;
                     }
@@ -456,5 +458,13 @@ class WYSIJA_control_back_config extends WYSIJA_control{
         }
 
         return array('result' => $result, 'save_message' => base64_encode($save_message), 'exports' => base64_encode($helper_form_engine->render_editor_export($form_id)));
+    }
+
+    function wysija_dismiss_update_notice() {
+        WYSIJA::update_option('wysija_dismiss_update_notice', true);
+    }
+
+    function wysija_dismiss_license_notice() {
+        WYSIJA::update_option('wysija_dismiss_license_notice', true);
     }
 }

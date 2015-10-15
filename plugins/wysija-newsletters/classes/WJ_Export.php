@@ -1,5 +1,5 @@
 <?php
-
+defined('WYSIJA') or die('Restricted access');
 /**
  * Class Export.
  *
@@ -18,6 +18,10 @@ class WJ_Export extends WYSIJA_object {
 	private $_fields_separator = ';';
 	private $_lines_separator  = "\n";
 	private $_base_encode      = 'UTF-8';
+	/**
+	 * Default encoding of exported files
+	 * @var string
+	 */
 	private $_output_encode    = 'UTF-8//TRANSLIT//IGNORE';
 
 	//needed for tung's batch actions
@@ -43,34 +47,15 @@ class WJ_Export extends WYSIJA_object {
 		if ( ! empty($_POST['wysija']['export']['filter']['confirmed'] ) ) {
 			$this->_filter_confirmed = $_POST['wysija']['export']['filter']['confirmed'];
 		}
+
+		$this->set_output_encode();
 	}
 
 	/**
-	 * export the subscribers
-	 * @return type
+	 * Set output encoding based on platform
 	 */
-	public function export_subscribers() {
-
-		//generate temp file
-		$helper_file = WYSIJA::get( 'file', 'helper' );
-		$this->_prepare_headers();
-		$result_file = $helper_file->temp( $this->_file_header, 'export', '.csv' );
-
-		//open the created file in append mode
-		$this->_file_handle = fopen( $result_file['path'], 'a' );
-
-		//get a list of user_ids to export
-		if ( ! empty( $this->_user_ids ) && empty( $this->batch_select ) ) {
-
-			$this->_user_ids_rows = count( $this->_user_ids );
-			$this->_push_data_to_export_file();
-		} else {
-
-			$this->_get_chunks_user_ids();
-		}
-
-		fclose( $this->_file_handle );
-		return $result_file['path'];
+	protected function set_output_encode() {
+		$this->_output_encode = WYSIJA::is_windows() ? 'Windows-1252' : 'UTF-8//TRANSLIT//IGNORE';
 	}
 
 	/**
@@ -86,7 +71,7 @@ class WJ_Export extends WYSIJA_object {
 	 * @return type
 	 */
 	private function _get_posted_user_ids() {
-		return unserialize( base64_decode( $_POST['wysija']['export']['user_ids'] ) );
+            return (array) json_decode( base64_decode( $_POST['wysija']['export']['user_ids'] ), true );
 	}
 
 	/**
@@ -164,12 +149,13 @@ class WJ_Export extends WYSIJA_object {
 	 * split the user_ids array into chunks, load the fields of all the concerned
 	 * users and push the data to the file
 	 */
-	function _push_data_to_export_file() {
+	private function _push_data_to_export_file() {
 		$user_ids_chunks = array(); // chunk rows into separated batchs, limit by $this->_export_batch
 		$user_ids_chunks = array_chunk( $this->_user_ids, 200 );
 		$this->_user_ids = null; // free memory
 
 		$model_user = WYSIJA::get( 'user', 'model' );
+                $model_user->refresh_columns();
 		foreach ( $user_ids_chunks as $user_id_chunk ) {
 			// get the full data for that specific chunk of ids
 			$data = $model_user->get( $this->_fields, array( 'user_id' => $user_id_chunk ) );
@@ -211,6 +197,34 @@ class WJ_Export extends WYSIJA_object {
 		$row_string         = implode( $this->_fields_separator, $name_fields ) . $this->_lines_separator;
 		$encoded_string     = iconv( $this->_base_encode, $this->_output_encode, $row_string );
 		$this->_file_header = $encoded_string;
+	}
+
+	/**
+	 * export the subscribers
+	 * @return type
+	 */
+	public function export_subscribers() {
+
+		//generate temp file
+		$helper_file = WYSIJA::get( 'file', 'helper' );
+		$this->_prepare_headers();
+		$result_file = $helper_file->temp( $this->_file_header, 'export', '.csv' );
+
+		//open the created file in append mode
+		$this->_file_handle = fopen( $result_file['path'], 'a' );
+
+		//get a list of user_ids to export
+		if ( ! empty( $this->_user_ids ) && empty( $this->batch_select ) ) {
+
+			$this->_user_ids_rows = count( $this->_user_ids );
+			$this->_push_data_to_export_file();
+		} else {
+
+			$this->_get_chunks_user_ids();
+		}
+
+		fclose( $this->_file_handle );
+		return $result_file;
 	}
 
 }

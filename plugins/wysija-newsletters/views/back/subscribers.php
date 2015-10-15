@@ -7,18 +7,19 @@ class WYSIJA_view_back_subscribers extends WYSIJA_view_back
     var $icon = "icon-users";
     var $column_action_list = "email";
 
-    function WYSIJA_view_back_subscribers()
+    function __construct()
     {
 	$this->title = __("Lists and Subscribers", WYSIJA);
-	$this->WYSIJA_view_back();
+	parent::__construct();
 
 	$this->search = array("title" => __("Search subscribers", WYSIJA));
 	$this->column_actions = array('editlist' => __('Edit', WYSIJA), 'duplicatelist' => __('Duplicate', WYSIJA), 'deletelist' => __('Delete', WYSIJA));
     }
 
+
     function main($data)
     {
-	echo '<form method="post" action="'.$data['target_action_form'].'" id="posts-filter">';
+        echo '<form method="post" action="#currentform" id="posts-filter">';
 	$this->filtersLink($data);
 	$this->filterDDP($data);
 	$this->listing($data);
@@ -123,7 +124,7 @@ class WYSIJA_view_back_subscribers extends WYSIJA_view_back
 			//if(!(isset($_REQUEST['filter-list']) && $_REQUEST['filter-list']== $listK) && $list['is_enabled']){ // Commented by TNT
 			if ($list['is_enabled'])
 			{
-			    ?><option value="actionvar_movetolist-listid_<?php echo $listK ?>"><?php
+			    ?><option value="actionvar_movetolist-listid_<?php echo $listK ?>" data-nonce="<?php echo $this->secure(array('action' => "actionvar_movetolist-listid_" . $listK), true)?>"><?php
 				echo str_repeat('&nbsp;', 5).$list['name'];
 				if (isset($list['users']))
 				    echo ' ('.$list['users'].')';
@@ -138,7 +139,7 @@ class WYSIJA_view_back_subscribers extends WYSIJA_view_back
 			//if(!(isset($_REQUEST['filter-list']) && $_REQUEST['filter-list']== $listK) && $list['is_enabled']){ // Commented by TNT
 			if ($list['is_enabled'])
 			{
-			    ?><option value="actionvar_copytolist-listid_<?php echo $listK ?>"><?php
+			    ?><option value="actionvar_copytolist-listid_<?php echo $listK ?>" data-nonce="<?php echo $this->secure(array('action' => "actionvar_copytolist-listid_" . $listK), true)?>"><?php
 				echo str_repeat('&nbsp;', 5).$list['name'];
 				if (isset($list['users']))
 				    echo ' ('.$list['users'].')';
@@ -153,7 +154,7 @@ class WYSIJA_view_back_subscribers extends WYSIJA_view_back
 			//if(!(isset($_REQUEST['filter-list']) && $_REQUEST['filter-list']== $listK) && $list['is_enabled']){ // Commented by TNT
 			if ($list['is_enabled'])
 			{
-			    ?><option value="actionvar_removefromlist-listid_<?php echo $listK ?>"><?php
+			    ?><option value="actionvar_removefromlist-listid_<?php echo $listK ?>" data-nonce="<?php echo $this->secure(array('action' => "actionvar_removefromlist-listid_" . $listK), true)?>"><?php
 			    echo str_repeat('&nbsp;', 5).$list['name'];
 			    if (isset($list['users']))
 				echo ' ('.$list['users'].')';
@@ -161,15 +162,17 @@ class WYSIJA_view_back_subscribers extends WYSIJA_view_back
 			}
 		    }
 		    ?>
-		    <option value="actionvar_removefromalllists"><?php _e('Remove from all lists', WYSIJA); ?></option>
-		    <option value="exportlist"><?php _e('Export', WYSIJA); ?></option>
-		    <option value="deleteusers"><?php _e('Delete subscribers', WYSIJA); ?></option>
+		    <option value="actionvar_removefromalllists" data-nonce="<?php echo $this->secure(array('action' => "actionvar_removefromalllists" ), true)?>"><?php _e('Remove from all lists', WYSIJA); ?></option>
+		    <option value="exportlist" data-nonce="<?php echo $this->secure(array('action' => "exportlist" ), true)?>"><?php _e('Export', WYSIJA); ?></option>
+		    <option value="deleteusers" data-nonce="<?php echo $this->secure(array('action' => "deleteusers" ), true)?>"><?php _e('Delete subscribers', WYSIJA); ?></option>
 		    <?php
 		    $config_model = WYSIJA::get('config', 'model');
-		    if ($config_model->getValue('confirm_dbleoptin'))
+			$confirm_dbleoptin = $config_model->getValue('confirm_dbleoptin');
+		    if ($confirm_dbleoptin)
 		    {
 			?>
-	    	    <option value="actionvar_confirmusers"><?php _e('Confirm unconfirmed subscribers', WYSIJA); ?></option>
+	    	    <option value="actionvar_confirmusers" data-nonce="<?php echo $this->secure(array('action' => "actionvar_confirmusers" ), true)?>"><?php _e('Confirm unconfirmed subscribers', WYSIJA); ?></option>
+				<option value="actionvar_resendconfirmationemail" data-nonce="<?php echo $this->secure(array('action' => "actionvar_resendconfirmationemail" ), true)?>"><?php _e('Resend confirmation email', WYSIJA); ?></option>
 		    <?php } ?>
 		</select>
 		<input type="submit" class="bulksubmit button-secondary action" name="doaction" value="<?php echo esc_attr(__('Apply', WYSIJA)); ?>">
@@ -271,8 +274,8 @@ class WYSIJA_view_back_subscribers extends WYSIJA_view_back
 		    $header .='<th class="manage-column column-list-names" id="list-list" scope="col">'.__('Lists', WYSIJA).'</th>';
 		    $header .='<th class="manage-column column-status'.$status_sorting.'" id="status" scope="col" style="width:80px;"><a href="#" class="orderlink" ><span>'.__('Status', WYSIJA).'</span><span class="sorting-indicator"></span></a></th>';
 		    $header .= '<th class="manage-column column-date'.$created_at_sorting.'" id="created_at" scope="col"><a href="#" class="orderlink" ><span>'.__('Subscribed on', WYSIJA).'</span><span class="sorting-indicator"></span></a></th>';
-		    // $header .= '<th class="manage-column column-date' . $last_opened_sorting . '" id="last_opened" scope="col"><a href="#" class="orderlink" ><span>' . __('Last open', WYSIJA) . '</span><span class="sorting-indicator"></span></a></th>';
-		    // $header .= '<th class="manage-column column-date' . $last_clicked_sorting . '" id="last_clicked" scope="col"><a href="#" class="orderlink" ><span>' . __('Last click', WYSIJA) . '</span><span class="sorting-indicator"></span></a></th>';
+		    $header .= '<th class="manage-column column-date' . $last_opened_sorting . '" id="last_opened" scope="col"><a href="#" class="orderlink" ><span>' . __('Last open', WYSIJA) . '</span><span class="sorting-indicator"></span></a></th>';
+		    $header .= '<th class="manage-column column-date' . $last_clicked_sorting . '" id="last_clicked" scope="col"><a href="#" class="orderlink" ><span>' . __('Last click', WYSIJA) . '</span><span class="sorting-indicator"></span></a></th>';
 
 		    $header .= '</tr>';
 		    echo $header;
@@ -299,43 +302,47 @@ class WYSIJA_view_back_subscribers extends WYSIJA_view_back
 	    		</div>
 	    	    </td>
 	    	</tr>
-	<?php } ?>
+	<?php
+		}
+		$class = 'list:'.$this->model->table_name.' '.$this->model->table_name.'-list';
+		$id = 'wysija-'.$this->model->table_name;
+	?>
 
-		<tbody class="list:<?php echo $this->model->table_name.' '.$this->model->table_name.'-list" id="wysija-'.$this->model->table_name.'"' ?>>
-
+		<tbody class="<?php echo $class; ?>" id="<?php echo $id; ?>">
 		<?php
-		$listingRows = '';
-		$alt = true;
+			$listingRows = '';
+			$alt = true;
 
-		$statuses = array('-1' => __('Unsubscribed', WYSIJA), '0' => __('Unconfirmed', WYSIJA), '1' => __('Subscribed', WYSIJA));
+			$statuses = array('-1' => __('Unsubscribed', WYSIJA), '0' => __('Unconfirmed', WYSIJA), '1' => __('Subscribed', WYSIJA));
 
-		$config = WYSIJA::get('config', 'model');
-		if (!$config->getValue('confirm_dbleoptin'))
-		    $statuses['0'] = $statuses['1'];
+			$config = WYSIJA::get('config', 'model');
+			if(!$config->getValue('confirm_dbleoptin')) {
+		    	$statuses['0'] = $statuses['1'];
+			}
 
-		$links_helper = WYSIJA::get('links', 'helper');
-		foreach ($data['subscribers'] as $row)
-		{
-		    $classRow = '';
-		    if ($alt)
-			$classRow = ' class="alternate" ';
+			$links_helper = WYSIJA::get('links', 'helper');
+			foreach ($data['subscribers'] as $row) {
+		    	$classRow = '';
+		    	if($alt) {
+		    		$classRow = 'alternate';
+		    	}
+
 		    ?>
-	    	       <tr <?php echo $classRow ?> >
-
-	    	       <th scope="col" class="check-column" >
-	        <input type="checkbox" name="wysija[user][user_id][]" id="user_id_<?php echo $row['user_id'] ?>" value="<?php echo esc_attr($row['user_id']) ?>" class="checkboxselec" />
-	        </th>
-	        <td class="username column-username">
-		<?php
-		echo get_avatar($row['email'], 32);
-		echo '<strong>'.$row['email'].'</strong>';
-		echo '<p style="margin:0;">'.$row['firstname'].' '.$row['lastname'].'</p>';
-		?>
-	    	<div class="row-actions">
-	    	    <span class="edit">
-	    		<a href="<?php echo $links_helper->detailed_subscriber($row['user_id']); ?>" class="submitedit"><?php _e('View stats or edit', WYSIJA) ?></a>
-	    	    </span>
-	    	</div>
+			<tr class="<?php echo $classRow; ?>">
+				<th scope="col" class="check-column" >
+	        		<input type="checkbox" name="wysija[user][user_id][]" id="user_id_<?php echo $row['user_id'] ?>" value="<?php echo esc_attr($row['user_id']) ?>" class="checkboxselec" />
+	        	</th>
+	        	<td class="username column-username">
+				<?php
+					echo get_avatar($row['email'], 32);
+					echo '<strong>'.$row['email'].'</strong>';
+					echo '<p style="margin:0;">'.esc_html($row['firstname'].' '.$row['lastname']).'</p>';
+				?>
+		    	<div class="row-actions">
+		    	    <span class="edit">
+			    		<a href="<?php echo $links_helper->detailed_subscriber($row['user_id']); ?>" class="submitedit"><?php _e('View stats or edit', WYSIJA) ?></a>
+		    	    </span>
+		    	</div>
 	        </td>
 	        <td><?php
 	    if (isset($row['lists']))
@@ -350,8 +357,8 @@ class WYSIJA_view_back_subscribers extends WYSIJA_view_back
 	    ?></td>
 	        <td><?php echo $statuses[$row['status']]; ?></td>
 	        <td><?php echo $this->fieldListHTML_created_at($row['created_at']) ?></td>
-	        <!--td><?php // echo $this->fieldListHTML_created_at($row['last_opened']) ?></td-->
-	        <!--td><?php // echo $this->fieldListHTML_created_at($row['last_clicked']) ?></td-->
+	        <td><?php echo $this->fieldListHTML_created_at($row['last_opened']) ?></td>
+	        <td><?php echo $this->fieldListHTML_created_at($row['last_clicked']) ?></td>
 	        </tr><?php
 			$alt = !$alt;
 		    }
@@ -452,8 +459,9 @@ class WYSIJA_view_back_subscribers extends WYSIJA_view_back
 		</tbody>
 	    </table>
 	    <p class="submit">
-		<input type="hidden" name="wysija[export][user_ids]" id="user_ids" value="<?php if (isset($data['subscribers'])) echo base64_encode(serialize($data['subscribers'])) ?>" />
+		<input type="hidden" name="wysija[export][user_ids]" id="user_ids" value="<?php if (isset($data['subscribers'])) echo base64_encode(json_encode($data['subscribers'])) ?>" />
 		<input type="hidden" value="export_get" name="action" />
+                <?php $this->secure(array('action' => "export_get")); ?>
 		<input type="submit" value="<?php echo esc_attr(__('Export', WYSIJA)) ?>" class="button-primary wysija">
 	    </p>
 	</form>
@@ -604,14 +612,14 @@ class WYSIJA_view_back_subscribers extends WYSIJA_view_back
 			    ?>
 			</td>
 		    </tr>
-	<?php
-	/*
-	  Custom Fields.
-	 */
-	echo WJ_FieldRender::render_all(
-		$data['user']['details']['user_id']
-	);
-	?>
+			<?php
+			/*
+			  Custom Fields.
+			 */
+			echo WJ_FieldRender::render_all(
+				$data['user']['details']['user_id']
+			);
+			?>
 		    <tr class='submit_row'>
 			<td colspan='2'>
 	<?php $this->secure(array('action' => "save", 'id' => $data['user']['details']['user_id'])); ?>
@@ -740,7 +748,7 @@ class WYSIJA_view_back_subscribers extends WYSIJA_view_back
 	    	    <a href="admin.php?page=wysija_subscribers&id=<?php echo $columns['list_id'] ?>&action=editlist" class="submitedit"><?php _e('Edit', WYSIJA) ?></a> |
 	    	</span>
 	    	<span class="duplicate">
-	    	    <a href="admin.php?page=wysija_subscribers&id=<?php echo $columns['list_id'] ?>&action=duplicatelist" class="submitduplicate"><?php _e('Duplicate', WYSIJA) ?></a>
+	    	    <a href="admin.php?page=wysija_subscribers&id=<?php echo $columns['list_id'] ?>&action=duplicatelist&_wpnonce=<?php echo $this->secure(array("action" => "duplicatelist", "id" => $columns['list_id']), true); ?>" class="submitduplicate"><?php _e('Duplicate', WYSIJA) ?></a>
 	    	</span>
 	    <?php if ($columns['namekey'] != "users"): ?>
 			|
@@ -936,7 +944,7 @@ class WYSIJA_view_back_subscribers extends WYSIJA_view_back
 
 		<p class="submit">
 		    <input type="hidden" value="importmatch" name="action" />
-
+                    <?php $this->secure(array('action' => "importmatch")); ?>
 		    <input type="submit" value="<?php echo esc_attr(__('Next step', WYSIJA)) ?>" class="button-primary wysija">
 
 		</p>
@@ -989,15 +997,13 @@ class WYSIJA_view_back_subscribers extends WYSIJA_view_back
 			    {
 				$selected = '';
 
-
-
 				$columns_array = $columns;
 				// we make a key out of the column name
 				$column_name_key = str_replace(array(' ', '-', '_'), '', strtolower($column_name));
 
 				// we try to automatically match columns with previous matches recorded in the past
 				$import_fields = get_option('wysija_import_fields');
-				if (isset($import_fields[$column_name_key]))
+				if (isset($import_fields[$column_name_key]) && substr($import_fields[$column_name_key], 0, 10) != 'new_field|')
 				{
 				    $selected = $import_fields[$column_name_key];
 				}
@@ -1011,7 +1017,9 @@ class WYSIJA_view_back_subscribers extends WYSIJA_view_back
 				    {
 					// we need to put that extra value right after the ignore column value
 					if (count($columns_array) === 1) {
-					    $columns_array['new_field|input|'.$column_name] = sprintf(__('Import as "%1$s"', WYSIJA), $column_name);
+					    $column_name = preg_replace('|[^a-z0-9#_.-]|i','',$column_name);
+
+                                            $columns_array['new_field|input|'.$column_name] = sprintf(__('Import as "%1$s"', WYSIJA), $column_name);
 					    $columns_array['new_field|date|'.$column_name] = sprintf(__('Import "%1$s" as date field', WYSIJA), $column_name);
 					    $this->new_column_can_be_imported[$column_key] = true;
 					}
@@ -1084,7 +1092,7 @@ class WYSIJA_view_back_subscribers extends WYSIJA_view_back
 		foreach ($columns as $key_col => $val)
 		{
 		    if ($i == 0 && !isset($data['firstrowisdata']))
-			echo '<td><strong>'.$val.'</strong></td>';
+			echo '<td><strong>'.esc_html($val).'</strong></td>';
 		    else
 		    {
 			if (!empty($this->new_column_can_be_imported[$key_col]))
@@ -1098,7 +1106,7 @@ class WYSIJA_view_back_subscribers extends WYSIJA_view_back
 			    {
 				$val_converted = '<span class="converted-field-error row-'.$key_col.'" title="'.__('Do not match as a \'date field\' if most of the rows for that column return the same error.', WYSIJA).'">'.__('Error matching date.', WYSIJA).'</span>';
 			    }
-			    $val = ' <span class="imported-field">'.$val.'</span>'.$val_converted;
+			    $val = ' <span class="imported-field">'.esc_html($val).'</span>'.$val_converted;
 			}
 			echo '<td>'.$val.'</td>';
 		    }

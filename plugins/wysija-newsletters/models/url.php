@@ -9,11 +9,9 @@ class WYSIJA_model_url extends WYSIJA_model{
         'name'=>array(),
         'url'=>array("req"=>true,"type"=>"url")
     );
-    
-    
-    
-    function WYSIJA_model_url(){
-        $this->WYSIJA_model();
+
+    function __construct(){
+        parent::__construct();
     }
     
 

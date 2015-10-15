@@ -6,7 +6,7 @@ class WYSIJA_help_rules extends WYSIJA_help{
 	var $pkey = 'ruleid';
 	var $errors = array();
         var $defaultrules=array();
-        function WYSIJA_help_rules(){
+        function __construct(){
             $forwardEmail="";
             $forwardEmail=count(str_split($forwardEmail)).':"'.$forwardEmail.'"';
             /*

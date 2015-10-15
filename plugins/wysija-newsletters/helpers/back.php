@@ -7,8 +7,8 @@ defined('WYSIJA') or die('Restricted access');
  */
 class WYSIJA_help_back extends WYSIJA_help{
 
-    function WYSIJA_help_back(){
-        parent::WYSIJA_help();
+    function __construct(){
+        parent::__construct();
         //check that the application has been installed properly
         $config=WYSIJA::get('config','model');
 
@@ -78,6 +78,127 @@ class WYSIJA_help_back extends WYSIJA_help{
         }
     }
 
+    private function _set_ajax_nonces(){
+            if( isset( $_GET['page'] ) && substr( $_GET['page'] ,0 ,7 ) == 'wysija_' ){
+
+                        $ajax_nonces = array(
+                            'campaigns' => array(
+                                'switch_theme' => WYSIJA_view::secure(array(
+                                    'controller' => 'wysija_campaigns',
+                                    'action' => 'switch_theme'
+                                    ), true),
+                                'save_editor' => WYSIJA_view::secure(array(
+                                    'controller' => 'wysija_campaigns',
+                                    'action' => 'save_editor'
+                                    ), true),
+                                'save_styles' => WYSIJA_view::secure(array(
+                                    'controller' => 'wysija_campaigns',
+                                    'action' => 'save_styles'
+                                    ), true),
+                                'deleteimg' => WYSIJA_view::secure(array(
+                                    'controller' => 'wysija_campaigns',
+                                    'action' => 'deleteimg'
+                                    ), true),
+                                'deleteTheme' => WYSIJA_view::secure(array(
+                                    'controller' => 'wysija_campaigns',
+                                    'action' => 'deleteTheme'
+                                    ), true),
+                                'save_IQS' => WYSIJA_view::secure(array(
+                                    'controller' => 'wysija_campaigns',
+                                    'action' => 'save_IQS'
+                                    ), true),
+                                'send_preview' => WYSIJA_view::secure(array(
+                                    'controller' => 'wysija_campaigns',
+                                    'action' => 'send_preview'
+                                    ), true),
+                                'send_spamtest' => WYSIJA_view::secure(array(
+                                    'controller' => 'wysija_campaigns',
+                                    'action' => 'send_spamtest'
+                                    ), true),
+                                'insert_articles' => WYSIJA_view::secure(array(
+                                    'controller' => 'wysija_campaigns',
+                                    'action' => 'insert_articles'
+                                    ), true),
+                                'set_divider' => WYSIJA_view::secure(array(
+                                    'controller' => 'wysija_campaigns',
+                                    'action' => 'set_divider'
+                                    ), true),
+                                'generate_social_bookmarks' => WYSIJA_view::secure(array(
+                                    'controller' => 'wysija_campaigns',
+                                    'action' => 'generate_social_bookmarks'
+                                    ), true),
+                                'install_theme' => WYSIJA_view::secure(array(
+                                    'controller' => 'wysija_campaigns',
+                                    'action' => 'install_theme'
+                                    ), true),
+                                'setDefaultTheme' => WYSIJA_view::secure(array(
+                                    'controller' => 'wysija_campaigns',
+                                    'action' => 'setDefaultTheme'
+                                    ), true),
+                                'deleteTheme' => WYSIJA_view::secure(array(
+                                    'controller' => 'wysija_campaigns',
+                                    'action' => 'deleteTheme'
+                                    ), true),
+                                'save_poll' => WYSIJA_view::secure(array(
+                                    'controller' => 'wysija_campaigns',
+                                    'action' => 'save_poll'
+                                    ), true),
+                                'sub_delete_image' => WYSIJA_view::secure(array(
+                                    'controller' => 'wysija_campaigns',
+                                    'action' => 'sub_delete_image',
+                                    ), true),
+
+                            ),
+                            'config' => array(
+                                'send_test_mail' => WYSIJA_view::secure(array(
+                                    'controller' => 'wysija_config',
+                                    'action' => 'send_test_mail'
+                                    ), true),
+                                'send_test_mail_ms' => WYSIJA_view::secure(array(
+                                    'controller' => 'wysija_config',
+                                    'action' => 'send_test_mail_ms'
+                                    ), true),
+                                'bounce_process' => WYSIJA_view::secure(array(
+                                    'controller' => 'wysija_config',
+                                    'action' => 'bounce_process'
+                                    ), true),
+                                'share_analytics' => WYSIJA_view::secure(array(
+                                    'controller' => 'wysija_config',
+                                    'action' => 'share_analytics'
+                                    ), true),
+                                'wysija_form_manage_field' => WYSIJA_view::secure(array(
+                                    'controller' => 'wysija_config',
+                                    'action' => 'wysija_form_manage_field'
+                                    ), true),
+                                'form_field_delete' => WYSIJA_view::secure(array(
+                                    'controller' => 'wysija_config',
+                                    'action' => 'form_field_delete'
+                                    ), true),
+                                'form_name_save' => WYSIJA_view::secure(array(
+                                    'controller' => 'wysija_config',
+                                    'action' => 'form_name_save'
+                                    ), true),
+                                'form_save' => WYSIJA_view::secure(array(
+                                    'controller' => 'wysija_config',
+                                    'action' => 'form_save'
+                                    ), true),
+                                'validate' => WYSIJA_view::secure(array(
+                                    'controller' => 'wysija_config',
+                                    'action' => 'validate'
+                                    ), true),
+                                'linkignore' => WYSIJA_view::secure(array(
+                                    'controller' => 'wysija_config',
+                                    'action' => 'linkignore'
+                                    ), true),
+                            )
+                        );
+
+            }else{
+                $ajax_nonces = array();
+            }
+
+            wp_localize_script('wysija-admin', 'wysijanonces', $ajax_nonces);
+    }
 
     /**
      * On any of the administration pages related to MailPoet, if the user
@@ -219,11 +340,6 @@ class WYSIJA_help_back extends WYSIJA_help{
         $finds = array('[link]','[/link]');
         $replace = array('<a target="_blank" href="http://support.mailpoet.com" title="support.mailpoet.com">','</a>');
         $truelinkhelp = '<p>'.str_replace($finds,$replace,$linkcontent).'</p>';
-
-        $extra = '<a href="admin.php?page=wysija_config&scroll_to=beta_mode_setting#tab-advanced" title="'.__('Switch to beta',WYSIJA).'">'.__('Switch to beta',WYSIJA).'</a>';
-
-        $truelinkhelp .= '<p>'.str_replace($finds,$replace,$extra).'</p>';
-
         $truelinkhelp .= '<p>'.__('MailPoet Version: ',WYSIJA).'<strong>'.WYSIJA::get_version().'</strong></p>';
 
         $this->menus=array(
@@ -409,15 +525,17 @@ class WYSIJA_help_back extends WYSIJA_help{
             if ( is_rtl() ) {
                 wp_enqueue_style('wysija-admin-rtl', WYSIJA_URL.'css/rtl.css',array(),WYSIJA::get_version());
             }
-
+            $this->_set_ajax_nonces();
         }
             $jstrans['newsletters']=__('Newsletters',WYSIJA);
             $jstrans['urlpremium']='admin.php?page=wysija_config#tab-premium';
+            $jstrans['premium_activating'] = __('Checking license', WYSIJA);
             if(isset($_REQUEST['page']) && $_REQUEST['page']=='wysija_config'){
                 $jstrans['urlpremium']='#tab-premium';
             }
             wp_localize_script('wysija-admin', 'wysijatrans', $jstrans);
     }
+
 
     /**
      * code only executed in the page or post in admin
@@ -447,7 +565,6 @@ class WYSIJA_help_back extends WYSIJA_help{
        }
 
        $plugin_array['wysija_register'] = WYSIJA_URL.'mce/wysija_register/editor_plugin'.$suffix.'.js';
-       //$plugin_array['wysija_subscribers'] = WYSIJA_URL.'mce/wysija_subscribers/editor_plugin.js';
 
        return $plugin_array;
     }
@@ -455,10 +572,7 @@ class WYSIJA_help_back extends WYSIJA_help{
     function addRichButton1($buttons) {
        $newButtons=array();
        foreach($buttons as $value) $newButtons[]=$value;
-       //array_push($newButtons, "|", "styleselect");
        array_push($newButtons, '|', 'wysija_register');
-       //array_push($newButtons, "|", "wysija_links");
-       //array_push($newButtons, '|', 'wysija_subscribers');
        return $newButtons;
     }
 
@@ -483,21 +597,6 @@ class WYSIJA_help_back extends WYSIJA_help{
         if (strpos($screen->base, 'wysija')===false)
             return $text;
 
-        $title = esc_attr((WYSIJA::is_beta()?__('Revert to stable',WYSIJA):__('Switch to beta',WYSIJA)));
-        $warn_message = esc_attr((WYSIJA::is_beta()?__('Confirm going back to the stable version?',WYSIJA):__('Great! But the beta version might be buggy, and we expect you to report any bugs. Confirm to installing the Beta version?',WYSIJA)));
-
-        $args = array(
-            'page' => 'wysija_config',
-            'action' => 'packager-switch',
-            '_wpnonce' => wp_create_nonce('packager-switch'),
-        );
-        if (WYSIJA::is_beta())
-            $args["stable"] = 1;
-
-        $switch_link = esc_attr(add_query_arg($args, admin_url('admin.php')));
-
-        $switch_text = esc_attr((WYSIJA::is_beta()?__('Revert to Stable', WYSIJA):__('Switch to Beta', WYSIJA)));
-
         $version_link = esc_url(add_query_arg(
             array(
                 'page' => 'wysija_campaigns',
@@ -506,24 +605,12 @@ class WYSIJA_help_back extends WYSIJA_help{
             admin_url('admin.php')
         ));
 
-        $premium = false;
-        if (is_plugin_active('wysija-newsletters-premium/index.php')){
-            $premium = WYSIJA::get_version('wysija-newsletters-premium/index.php');
-        }
-
-        return
-            ((is_multisite() && WYSIJA::current_user_can('manage_network')) || (!is_multisite() && WYSIJA::current_user_can('switch_themes'))?
-                "<span class='wrap'>" .
-                    "<a id='switch_to_package' href='{$switch_link}' title='{$title}' data-warn='{$warn_message}' class='add-new-h2'>{$switch_text}</a>" .
-                    (WYSIJA::is_beta()?"<a target='_blank' class='add-new-h2' href='http://support.mailpoet.com/feedback/?utm_source=wpadmin&utm_campaign=contact_beta'>" . __( 'Report Bugs', WYSIJA ) . "</a>":"") .
-                "</span>"
-            :"") .
-            "</p>" .
+        $version_string = "</p>" .
             "<p class='alignright'>" .
-                __("MailPoet Version", WYSIJA) . ": <a href='{$version_link}'>" . esc_attr(WYSIJA::get_version()) . "</a>" .
-                ($premium?
-                    " | " .
-                    __("Premium", WYSIJA) . ": " . esc_attr($premium) . "</a>"
-                :"");
+                __("MailPoet Version", WYSIJA) . ": <a href='{$version_link}'>" . esc_attr(WYSIJA::get_version()) . "</a>";
+
+        $version_string = apply_filters('mailpoet_back_footer', $version_string);
+        return $version_string;
+
     }
 }

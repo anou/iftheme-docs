@@ -2,7 +2,8 @@
 defined('WYSIJA') or die('Restricted access');
 class WYSIJA_help_bookmarks extends WYSIJA_object {
 
-    function WYSIJA_help_bookmarks() {
+    function __construct(){
+        parent::__construct();
     }
 
     /**

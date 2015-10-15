@@ -5,8 +5,8 @@ class WYSIJA_control_back_subscribers extends WYSIJA_control_front{
     var $model='user';
     var $view='';
 
-    function WYSIJA_control_back_subscribers(){
-        parent::WYSIJA_control_front();
+    function __construct(){
+        parent::__construct();
         $data=array();
         foreach($_REQUEST['data'] as $vals){
             $data[$vals['name']]=$vals['value'];
@@ -36,14 +36,7 @@ class WYSIJA_control_back_subscribers extends WYSIJA_control_front{
 
         $helperUser=WYSIJA::get('user','helper');
         if(!$helperUser->checkData($data))return false;
-        $user_id = $helperUser->addSubscriber($data);
-
-        if((int)$user_id > 0) {
-             // Handle custom fields
-            if(isset($data['user_field'])) {
-                WJ_FieldHandler::handle_all($data['user_field'], $user_id);
-            }
-        }
+        $helperUser->addSubscriber($data);
 
         return true;
     }

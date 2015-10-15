@@ -3,7 +3,7 @@ defined( 'WYSIJA' ) or die( 'Restricted access' );
 
 class WYSIJA_help_update extends WYSIJA_object {
 
-	function WYSIJA_help_update(){
+	function __construct(){
 		$this->modelWysija = new WYSIJA_model();
 
 		//IMPORTANT when making db updated or running update processes, add the version and in the big switch below in the runUpdate() method
@@ -14,7 +14,7 @@ class WYSIJA_help_update extends WYSIJA_object {
 			'2.3.3','2.3.4',
 			'2.4', '2.4.1', '2.4.3','2.4.4',
 			'2.5','2.5.2','2.5.5','2.5.9.6', '2.5.9.7',
-			'2.6', '2.6.0.8',
+			'2.6', '2.6.0.8', '2.6.15'
 		);
 	}
 
@@ -127,8 +127,8 @@ class WYSIJA_help_update extends WYSIJA_object {
 							}
 						}
 					}
-					$wptoolboxs = WYSIJA::get('toolbox', 'helper');
-					$model_config->save(array('dkim_domain'=>$wptoolboxs->_make_domain_name()));
+					$helper_toolbox = WYSIJA::get('toolbox', 'helper');
+					$model_config->save(array('dkim_domain'=>$helper_toolbox->_make_domain_name()));
 				}
 
 				if(!$this->modelWysija->query("SHOW COLUMNS FROM `[wysija]list` LIKE 'is_public';")){
@@ -229,7 +229,7 @@ class WYSIJA_help_update extends WYSIJA_object {
 					'`styles` longtext COLLATE utf8_bin,'.
 					'`subscribed` int(10) unsigned NOT NULL DEFAULT "0",'.
 					'PRIMARY KEY (`form_id`)'.
-				') ENGINE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/';
+				') /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/';
 
 				$errors = $this->runUpdateQueries($queries);
 
@@ -443,7 +443,7 @@ class WYSIJA_help_update extends WYSIJA_object {
 					'`required` tinyint(1) DEFAULT "0" NOT NULL,'.
 					'`settings` text DEFAULT NULL,'.
 					'PRIMARY KEY (`id`)'.
-					') ENGINE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/';
+					') /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/';
 
 				$errors = $this->runUpdateQueries( $queries );
 
@@ -479,6 +479,24 @@ class WYSIJA_help_update extends WYSIJA_object {
 
 				return true;
 			break;
+
+                        case '2.6.15':
+                            global $wpdb;
+                            $sql = "SHOW INDEX FROM [wysija]user_list WHERE Key_name = 'user_id'";
+                            $result_index = $wpdb->get_results(str_replace('[wysija]',$this->modelWysija->getPrefix(),$sql));
+
+                            $queries = array();
+                            //create an INDEX only if it doesn't exist already
+                            if( empty( $result_index ) ){
+                                $queries[] = 'ALTER TABLE [wysija]user_list ADD INDEX `user_id` ( `user_id` ) ';
+                                $errors = $this->run_update_queries( $queries );
+
+                                if( !empty($errors) ){
+                                    $this->error( implode( $errors, "\n" ) );
+                                }
+                            }
+                            return true;
+                         break;
 
 			default:
 				return false;

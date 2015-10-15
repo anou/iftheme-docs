@@ -1,10 +1,9 @@
 === underConstruction ===
 Contributors: Jeremy Massel
-Donate link: http://masseltech.com/donate/
 Tags: construction, under construction, private, preview, security, coming soon
 Requires at least: 2.7
-Tested up to: 3.8
-Stable tag: 1.12
+Tested up to: 4.3
+Stable tag: 1.14
 
 Creates a 'Coming Soon' page that will show for all users who are not logged in
 
@@ -42,6 +41,12 @@ I've had a few people ask me this. If you like it, please go to WordPress.org an
 Sorry, I get a lot of questions. But visit the homepage for this plugin and leave me a comment. They go right to my inbox, and well I might not be able to for a few days, I promise I'll get back to you.
 
 == Changelog ==
+
+= 1.14 =
+* Remove banner from dashboard
+
+= 1.13 =
+* Minor options page update
 
 = 1.12 =
 * Minor UI update to work nicely with WP 2.8

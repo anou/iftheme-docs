@@ -19,13 +19,13 @@ class WYSIJA_object{
 	 * Static variable holding core MailPoet's version
 	 * @var array
 	 */
-	static $version = '2.6.8';
+	static $version = '2.6.19';
 
-	function WYSIJA_object(){
+	function __construct(){}
 
-	}
+  	function WYSIJA_object(){} // TODO: remove in next version
 
-	/**
+  /**
 	 * Order an array by param name string compare
 	 *
 	 * @param  array $a  Array with the param to compare
@@ -46,7 +46,17 @@ class WYSIJA_object{
 	 * @return string Version of the package
 	 */
 	public static function get_version( $path = null ) {
-		return apply_filters( 'mailpoet/get_version', self::$version, apply_filters( 'mailpoet/package', 'core', $path ) );
+		$version = self::$version;
+		// Backwards compatibility for Premium Versions
+		if ( ! has_filter( 'mailpoet/get_version', '_filter_mailpoet_premium_version' ) && in_array( $path, array( 'premium', 'wysija-newsletters-premium', 'wysija-newsletters-premium/index.php' ) ) ){
+			if ( ! function_exists( 'get_plugin_data' ) ){
+				include_once ABSPATH . 'wp-admin/includes/plugin.php';
+			}
+			$plugin_data = get_plugin_data( dirname( dirname( plugin_dir_path( __FILE__ ) ) ) . '/wysija-newsletters-premium/index.php' );
+			$version = trim( $plugin_data['Version'] );
+		}
+
+		return apply_filters( 'mailpoet/get_version', $version, apply_filters( 'mailpoet/package', 'core', $path ) );
 	}
 
 	/**
@@ -191,7 +201,7 @@ class WYSIJA_object{
 		global $wysija_msg;
 
 		if(isset($wysija_msg['private']['error'])){
-			$wysija_msg['error'][]=str_replace(array('[link]','[/link]'),array('<a class="showerrors" href="javascript:;">','</a>'),__('An error occured. [link]Show more details.[/link]',WYSIJA));
+			$wysija_msg['error'][]=str_replace(array('[link]','[/link]'),array('<a class="showerrors" href="javascript:;">','</a>'),__('An error occurred. [link]Show more details.[/link]',WYSIJA));
 		}
 
 		if(isset($wysija_msg['private']['updated'])){
@@ -205,6 +215,30 @@ class WYSIJA_object{
 		}
 		return $wysija_msg;
 	}
+
+	/**
+	 * If the current server is Windows-based
+	 * @return boolean
+	 */
+	public static function is_windows() {
+		$is_windows = false;
+		$windows = array(
+			'windows nt',
+			'windows',
+			'winnt',
+			'win32',
+			'win'
+		);
+		$operating_system = strtolower( php_uname( 's' ) );
+		foreach ( $windows as $windows_name ) {
+			if (strpos($operating_system, $windows_name) !== false) {
+				$is_windows = true;
+				break;
+			}
+		}
+		return $is_windows;
+	}
+
 }
 
 
@@ -213,7 +247,7 @@ class WYSIJA_help extends WYSIJA_object{
 
 	static $admin_body_class_runner = false;
 
-	function WYSIJA_help(){
+	function __construct(){
 		add_action( 'widgets_init', array( $this, 'widgets_init' ), 1 );
 
 		// Only load this when ajax is not used
@@ -225,6 +259,18 @@ class WYSIJA_help extends WYSIJA_object{
 		add_filter( 'admin_body_class', array( $this, 'admin_body_class' ) );
 	}
 
+	function WYSIJA_help() { // TODO: remove in next version
+	  add_action( 'widgets_init', array( $this, 'widgets_init' ), 1 );
+
+	  // Only load this when ajax is not used
+	  if ( !( defined( 'DOING_AJAX' ) && DOING_AJAX ) ) {
+		add_action( 'init', array( $this, 'register_scripts' ), 1 );
+	  }
+
+	  add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
+	  add_filter( 'admin_body_class', array( $this, 'admin_body_class' ) );
+	}
+  
 	function widgets_init() {
 		//load the widget file
 		require_once(WYSIJA_WIDGETS.'wysija_nl.php');
@@ -337,8 +383,8 @@ class WYSIJA_help extends WYSIJA_object{
 			$plugin_requesting_ajax = 'wysija-newsletters';
 
                         // we override the plugin resquesting ajax if specified in the request
-			if( isset( $_REQUEST['wysijaplugin'] ) ){
-                            $plugin_requesting_ajax = $_REQUEST['wysijaplugin'];
+			if( !empty( $_REQUEST['wysijaplugin'] )  ){
+                            $plugin_requesting_ajax = preg_replace('#[^a-z0-9\-_]#i','',$_REQUEST['wysijaplugin']);
                         }
 
                         // fetching the right controller
@@ -385,8 +431,8 @@ class WYSIJA_help extends WYSIJA_object{
 
 class WYSIJA extends WYSIJA_object{
 
-	function WYSIJA(){
-
+	function __construct(){
+	  parent::__construct();
 	}
 
 	/**
@@ -620,9 +666,11 @@ class WYSIJA extends WYSIJA_object{
 		}
 
 		if(!file_exists($class_path)) {
-			WYSIJA::setInfo('error','file has not been recognised '.$class_path);
-			WYSIJA::setInfo('error',$class_name);
-			WYSIJA::setInfo('error',$type);
+                        if(is_admin() && WYSIJA::current_user_can('switch_themes')){
+                            WYSIJA::setInfo('error','file has not been recognised '.$class_path);
+                            WYSIJA::setInfo('error',$class_name);
+                            WYSIJA::setInfo('error',$type);
+                        }
 			return;
 		}
 
@@ -1362,6 +1410,7 @@ class WYSIJA extends WYSIJA_object{
 		$processesToRun = array();
 		foreach($cron_schedules as $schedule => $scheduled_times){
 			if(strpos($schedule, '(bounce handling not activated)')!==false) continue;
+                        if( !isset($processes[$schedule]) ) continue;
 			$process_frequency = $processes[$schedule];
 			if( ( !$scheduled_times['running'] || (int)$scheduled_times['running'] + $process_frequency < $time_now ) && $scheduled_times['next_schedule'] < $time_now){
 				$processesToRun[] = $schedule;
@@ -1564,15 +1613,24 @@ if($modelConf->getValue('installed_time')){
 	add_filter('load_textdomain_mofile',  array( 'WYSIJA', 'load_textdomain_mofile' ), 10, 2);
 }
 
-// not yet used but the purpose is to override any notification sent through wp_mail
-if($modelConf->getValue('wp_notifications')){
-	$hWPnotif=WYSIJA::get('wp_notifications','helper');
-}
-
 register_deactivation_hook(WYSIJA_FILE, array( 'WYSIJA', 'deactivate' ));
 register_activation_hook(WYSIJA_FILE, array( 'WYSIJA', 'activate' ));
 add_action( 'init', array('WYSIJA','create_post_type') );
 
+// check for PHP version and display a warning notice if it's <5.3
+if ( version_compare( PHP_VERSION , '5.3' , '<' ) &&
+  !get_option("wysija_dismiss_update_notice") &&
+  empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+  strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) != 'xmlhttprequest') {
+
+  $a = new WYSIJA_object();
+  $a->notice(__("Your version of PHP is outdated. If you don't upgrade soon, new versions of MailPoet won't work.")
+			 . "<br />"
+			 . str_replace( array('[link]', '[/link]'), array('<a href="https://support.mailpoet.com/knowledgebase/how-to-prepare-my-site-for-mailpoet-3-0/" target="_blank" >', '</a>'), __("[link]Read how to update your version of PHP.[/link]")
+             . "<br /><br />"
+             . str_replace( array('[link]', '[/link]'), array('<a href="javascript:;" class="wysija_dismiss_update_notice">', '</a>'), __("[link]Dismiss[/link] this notice."))
+             ), true, true);
+}
 
 // launch application
 $helper = WYSIJA::get(WYSIJA_SIDE,'helper');

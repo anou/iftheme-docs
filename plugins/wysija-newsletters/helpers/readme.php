@@ -2,8 +2,9 @@
 defined('WYSIJA') or die('Restricted access');
 class WYSIJA_help_readme extends WYSIJA_object{
     var $changelog=array();
-    function WYSIJA_help_readme(){
 
+    function __construct(){
+        parent::__construct();
     }
 
     function scan($file=false){
@@ -14,7 +15,7 @@ class WYSIJA_help_readme extends WYSIJA_object{
 
         // get the changelog content from the readme
         $exploded = explode('== Changelog ==', $content);
-        $exploded_versions = explode("\n=", $this->text_links_to_html_links($exploded[1]) );
+        $exploded_versions = explode("\n=", $this->markdown_to_html_links($exploded[1]) );
         foreach($exploded_versions as $key=> $version){
             if(!trim($version)) unset($exploded_versions[$key]);
         }
@@ -41,31 +42,9 @@ class WYSIJA_help_readme extends WYSIJA_object{
      * @param string $content
      * @return string
      */
-    function text_links_to_html_links($content){
-        return preg_replace_callback('#(?<!href\=[\'"])(https?|ftp|file)://[-A-Za-z0-9+&@\#/%()?=~_|$!:,.;]*[-A-Za-z0-9+&@\#/%()=~_|$]#', array($this,'regexp_url_replace'), $content);
+    function markdown_to_html_links($content){
+        $pattern = "/\[(.*?)\]\((.*?)\)/i";
+        $replace = "<a href=\"$2\" target=\"_blank\" >$1</a>";
+        return preg_replace($pattern, $replace, $content);
     }
-
-    /**
-     * function replacing preg text link to  a html link
-     * @param string $array_result
-     * @return string
-     */
-    function regexp_url_replace($array_result){
-
-        $utm_source = (defined('WP_ADMIN') ? 'wpadmin' : 'wpfront');
-        $utm_campaign = (!empty($_REQUEST['page']) ? $_REQUEST['page'] : '');
-        $utm_campaign .= '_'.(!empty($_REQUEST['action']) ? $_REQUEST['action'] : 'undefined');
-        $ga_string = 'utm_source='.$utm_source.'&utm_campaign='.$utm_campaign;
-
-        $parse = parse_url($array_result[0]);
-
-        $parse['scheme'] .= '://';
-
-        if(isset($parse['query'])) $parse['query'] .= $ga_string;
-        else $parse['query'] = $ga_string;
-        $parse['query'] = '?'. $parse['query'];
-
-        return sprintf('<a href="%1$s" target="_blank">%2$s</a>', implode('',$parse), $array_result[0]);
-    }
-
 }

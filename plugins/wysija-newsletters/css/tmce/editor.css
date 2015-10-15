@@ -96,7 +96,7 @@
 	-moz-transition: none;
 	-webkit-transition: none;
 	transition: none;
-	background: url("../js/tinymce/skins/wordpress/images/icons.gif") no-repeat 20px 20px;
+	/*background: url("../js/tinymce/skins/wordpress/images/icons.gif") no-repeat 20px 20px;*/
 }
 
 .wp_themeSkin span.mce_code:after {
@@ -311,7 +311,7 @@
 	right: 3px;
 	width: 7px;
 	height: 7px;
-	background: url("../js/tinymce/skins/wordpress/images/icons.gif") -820px 0;
+	/*background: url("../js/tinymce/skins/wordpress/images/icons.gif") -820px 0;*/
 }
 
 /* Layout */
@@ -352,7 +352,7 @@
 .wp_themeSkin .mceStatusbar a.mceResize {
 	display: block;
 	float: right;
-	background: url("../js/tinymce/skins/wordpress/images/icons.gif") -800px 0;
+	/*background: url("../js/tinymce/skins/wordpress/images/icons.gif") -800px 0;*/
 	width: 20px;
 	height: 20px;
 	cursor: se-resize;
@@ -661,7 +661,7 @@ a .mceIcon, .mceAction {
 
 .wp_themeSkin .mceMenu a {
 	position: relative;
-	padding: 3px 0 4px 0;
+	padding: 2px 0;
 	text-decoration: none !important;
 }
 

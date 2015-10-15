@@ -4,9 +4,9 @@
     * @subpackage lightbox.secondary.php
     * @internal 2013.01.16
     * @author Dan Zappone / 23Systems
-    * @version 2.7
+    * @version 2.7.2
     * @$Id: lightbox.secondary.php 937945 2014-06-24 17:11:13Z dzappone $
-    * @$URL: http://plugins.svn.wordpress.org/lightbox-plus/tags/2.7/admin/lightbox.secondary.php $
+    * @$URL: https://plugins.svn.wordpress.org/lightbox-plus/tags/2.7/admin/lightbox.secondary.php $
     */
 ?>
 <!-- Secondary Lightbox Settings -->
@@ -539,7 +539,7 @@
                                     <p class="codebox"><code>&lt;a class="lbpModal" href="<?php echo $g_lightbox_plus_url;?>/readme.txt">Locally Hosted Content (Iframe/Direct Link To Text File)&lt;/a></code></p>
                                 </div>
 
-                                <h4><?php _e( 'Using Secondary Lightbox for Other Content', 'lightboxplus' )?> ?></h4>
+                                <h4><?php _e( 'Using Secondary Lightbox for Other Content', 'lightboxplus' )?></h4>
                                 <?php _e( 'Finally, a secondary lightbox can be used to load interactive flash files such as games, quizzes or other content.  In order to display interactive flash, you must at a minimum have the following items set: Inner Width, Inner Height, and Use Iframe must be checked.', 'lightboxplus' )?>
                                 <div class="ui-state-highlight ui-corner-all" style="margin-top: 20px; padding: 0 .7em;">
                                     <h5><span class="ui-icon ui-icon-info" style="float: left; margin-right: .3em;"></span><?php _e( 'Interactive Flash Example', 'lightboxplus' )?></h5>

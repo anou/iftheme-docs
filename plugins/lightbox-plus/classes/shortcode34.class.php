@@ -4,7 +4,7 @@
     * @subpackage shortcode.class.php
     * @internal 2013.01.16
     * @author Dan Zappone / 23Systems
-    * @version 2.7
+    * @version 2.7.2
     * @$Id: shortcode.class.php 654094 2013-01-17 05:54:08Z dzappone $
     * @$URL: http://plugins.svn.wordpress.org/lightbox-plus/trunk/classes/shortcode.class.php $
     */

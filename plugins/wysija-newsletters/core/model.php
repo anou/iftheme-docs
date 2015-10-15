@@ -30,7 +30,7 @@ class WYSIJA_model extends WYSIJA_object{
 	var $time_start = 0;
 	var $query_duration = 0;
 
-	function WYSIJA_model($extensions=''){
+	function __construct($extensions=''){
 		if(defined('WYSIJA_DBG') && WYSIJA_DBG>0) $this->dbg=true;
 		global $wpdb;
 		$this->wpprefix=$wpdb->prefix;
@@ -110,11 +110,27 @@ class WYSIJA_model extends WYSIJA_object{
 	function getRows($columns=false,$page=0,$limit=false){
 
 		/*set the columns*/
-		if($columns){
-			if(is_array($columns)){
-				$columns=implode(', ',$columns);
-			}
-		}else $columns='*';
+		if($columns !== false){
+                        if(is_array($columns)){
+
+                            foreach($columns as $column){
+
+                                if(!isset($this->columns[$column])){
+                                    $this->error(sprintf('Column does not exist.'));
+                                    return false;
+                                }
+                            }
+                            $columns=implode(', ',$columns);
+			}else{
+                                if(!isset($this->columns[$columns])){
+                                    $this->error(sprintf('Column does not exist.'));
+                                    return false;
+                                }
+                        }
+		}else{
+                    $columns='*';
+
+                }
 
 
 		$query='SELECT '.$columns.' FROM `'.$this->getSelectTableName()."`";
@@ -268,6 +284,7 @@ class WYSIJA_model extends WYSIJA_object{
 						$i=1;
 						$likeCond='';
 						foreach($values as $qfield => $qval){
+						  	$qval = html_entity_decode($qval, ENT_QUOTES);
 							$likeCond.=$qfield." LIKE '%".esc_sql(addcslashes($qval, '%_' ))."%'";
 							if($i<$total){
 								$likeCond.=' OR ';
@@ -278,9 +295,10 @@ class WYSIJA_model extends WYSIJA_object{
 					}
 					continue;
 				}
+
 				foreach($values as $condK => $condVal){
 
-					//secure from injections
+				  //secure from injections
 					$this->_secureFieldVal($condK, $condVal);
 
 					switch($type){
@@ -723,13 +741,13 @@ class WYSIJA_model extends WYSIJA_object{
 	function validateFields(){
 		$error=false;
 		foreach($this->values as $key =>$val){
-			if(isset($this->columns[$key]['req']) && !$val && $this->columns[$key]['type']!='boolean'){
+			if(isset($this->columns[$key]['req']) && !$val && !in_array( $this->columns[$key]['type'], array( 'boolean', 'integer' )) ){
 				$this->error(sprintf(__('Field "%1$s" is required in table "%2$s".',WYSIJA), $key,$this->table_name),true);
 				$error=true;
 			}
 			/* let's correct the type of the values based on the one defined in the model*/
 			switch($this->columns[$key]['type']){
-				case "email":
+				case 'email':
 					$userHelper = WYSIJA::get('user','helper');
 					if(!$userHelper->validEmail($val)){
 						$this->error(sprintf(__('Field "%1$s" needs to be a valid Email.',WYSIJA), $key),true);
@@ -932,7 +950,7 @@ class WYSIJA_model extends WYSIJA_object{
 
 			if( $this->sql_error &&
                                 ( empty( $this->last_error ) || $this->last_error != $this->sql_error )) {
-				$this->last_error = $wysija_queries_errors[] = $this->sql_error;
+				$this->last_error = $wysija_queries_errors[] = array('query' => $wpdb->last_query, 'error' => $this->sql_error);
                                 $this->sql_error = false;
 				WYSIJA::log('queries_errors' , $this->sql_error , 'query_errors');
 			}

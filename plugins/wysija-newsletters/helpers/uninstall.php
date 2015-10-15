@@ -26,8 +26,9 @@ class WYSIJA_help_uninstall extends WYSIJA_object{
         'mpoet_frequency_set'
     );
 
-    function WYSIJA_help_uninstall(){
-        //require_once(ABSPATH . 'wp-admin'.DS.'includes'.DS.'upgrade.php');
+    function __construct(){
+      //require_once(ABSPATH . 'wp-admin'.DS.'includes'.DS.'upgrade.php');
+      parent::__construct();
     }
 
     function reinstall(){

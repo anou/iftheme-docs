@@ -1,5 +1,5 @@
 <?php
-
+defined('WYSIJA') or die('Restricted access');
 /*
 An user field is a custom field identified by ID,
 linked to a particular user, identified by ID.

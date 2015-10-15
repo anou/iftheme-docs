@@ -12,10 +12,8 @@ class WYSIJA_model_campaign extends WYSIJA_model{
     var $escapeFields=array('name','description');
     var $escapingOn=true;
 
-
-
-    function WYSIJA_model_campaign(){
-        $this->WYSIJA_model();
+    function __construct(){
+        parent::__construct();
     }
 
     function getDetails($email_id=false){

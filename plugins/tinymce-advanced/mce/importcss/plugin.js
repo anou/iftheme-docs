@@ -1,8 +1,8 @@
 /**
  * plugin.js
  *
- * Copyright, Moxiecode Systems AB
  * Released under LGPL License.
+ * Copyright (c) 1999-2015 Ephox Corp. All rights reserved
  *
  * License: http://www.tinymce.com/license
  * Contributing: http://www.tinymce.com/contributing
@@ -14,7 +14,7 @@ tinymce.PluginManager.add('importcss', function(editor) {
 	var self = this, each = tinymce.each;
 
 	function compileFilter(filter) {
-		if (typeof(filter) == "string") {
+		if (typeof filter == "string") {
 			return function(value) {
 				return value.indexOf(filter) !== -1;
 			};
@@ -44,7 +44,7 @@ tinymce.PluginManager.add('importcss', function(editor) {
 			try {
 				rules = styleSheet.cssRules || styleSheet.rules;
 			} catch (e) {
-				// Firefox fails on rules to remote domain for example: 
+				// Firefox fails on rules to remote domain for example:
 				// @import url(//fonts.googleapis.com/css?family=Pathway+Gothic+One);
 			}
 
@@ -73,7 +73,9 @@ tinymce.PluginManager.add('importcss', function(editor) {
 			each(doc.styleSheets, function(styleSheet) {
 				append(styleSheet);
 			});
-		} catch (e) {}
+		} catch (e) {
+			// Ignore
+		}
 
 		return selectors;
 	}

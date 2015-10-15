@@ -2,29 +2,8 @@
 defined('WYSIJA') or die('Restricted access');
 class WYSIJA_help_toolbox extends WYSIJA_object{
 
-    function WYSIJA_help_toolbox(){
-
-    }
-
-
-    /**
-     * make a temporary file
-     * @param type $content
-     * @param type $key
-     * @param type $format
-     * @return type
-     */
-    function temp($content,$key='temp',$format='.tmp'){
-        $helperF=WYSIJA::get('file','helper');
-        $tempDir=$helperF->makeDir();
-
-
-        $filename=$key.'-'.time().$format;
-        $handle=fopen($tempDir.$filename, 'w');
-        fwrite($handle, $content);
-        fclose($handle);
-
-        return array('path'=>$tempDir.$filename,'name'=>$filename, 'url'=>$this->url($filename,'temp'));
+    function __construct(){
+        parent::__construct();
     }
 
     /**
@@ -42,50 +21,6 @@ class WYSIJA_help_toolbox extends WYSIJA_object{
             $url=$upload_dir['baseurl'].'/'.$filename;
         }
         return $url;
-    }
-
-    /**
-     * send file to be downloaded
-     * @param type $path
-     */
-    function send($path){
-        /* submit the file to the admin */
-        if(file_exists($path)){
-            header('Content-type: application/csv');
-            header('Content-Disposition: attachment; filename="export_wysija.csv"');
-            readfile($path);
-            exit();
-        }else $this->error(__('Yikes! We couldn\'t export. Make sure that your folder permissions for /wp-content/uploads/wysija/temp is set to 755.',WYSIJA),true);
-
-    }
-
-    /**
-     * clear upload folders from things we don't need anymore
-     */
-    function clear(){
-        $foldersToclear=array('import','temp');
-        $filenameRemoval=array('import-','export-');
-        $deleted=array();
-        $helperF=WYSIJA::get('file','helper');
-        foreach($foldersToclear as $folder){
-            $path=$helperF->getUploadDir($folder);
-            /* get a list of files from this folder and clear them */
-
-            $files = scandir($path);
-            foreach($files as $filename){
-                if(!in_array($filename, array('.','..','.DS_Store','Thumbs.db'))){
-                    if(preg_match('/('.implode($filenameRemoval,'|').')[0-9]*\.csv/',$filename,$match)){
-                       $deleted[]=$path.$filename;
-                    }
-                }
-            }
-        }
-        foreach($deleted as $filename){
-            if(file_exists($filename)){
-                unlink($filename);
-            }
-        }
-
     }
 
     function closetags($html) {
@@ -136,7 +71,7 @@ class WYSIJA_help_toolbox extends WYSIJA_object{
         $domain_name=explode('/',$domain_name);
         return $domain_name[0];
     }
-    
+
     /**
      * get base url of the current site or base url of a specific url WITHOUT http, https, www
      * @param string $url
@@ -146,16 +81,16 @@ class WYSIJA_help_toolbox extends WYSIJA_object{
         $url = !empty($url) ? $url : site_url();
         return str_replace(array('https://','http://','www.'),'',strtolower($url));
     }
-    
+
     /**
      * Detect if this is an internal link, otherwise, it will be an external one
      * @param string $url
-     * @return boolean 
-     */    
+     * @return boolean
+     */
     function is_internal_link($url) {
         $str_pos = strpos($this->get_base_uri($url), $this->get_base_uri());
         // an internal link must CONTAIN base_uri of the current site and must START with that base_uri
-        return ($str_pos !== false && $str_pos === 0);        
+        return ($str_pos !== false && $str_pos === 0);
     }
 
     /**

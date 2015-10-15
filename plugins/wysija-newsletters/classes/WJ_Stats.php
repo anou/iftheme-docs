@@ -1,5 +1,5 @@
 <?php
-
+defined('WYSIJA') or die('Restricted access');
 /**
  * Class Stats.
  *
@@ -77,8 +77,13 @@ class WJ_Stats extends WYSIJA_object {
 
         $model_email_user_stat = WYSIJA::get('email_user_stat', 'model');
         $model_email_user_stat->reset();
+
+        // update status to 1 and set opened_at time
+        // only if the status = 0
         $model_email_user_stat->update(
-                array('status' => 1, 'opened_at' => time()), array('email_id' => $this->email_id, 'user_id' => $this->user_id, 'status' => 0));
+            array('status' => 1, 'opened_at' => time()),
+            array('email_id' => $this->email_id, 'user_id' => $this->user_id, 'status' => 0)
+        );
 
         $this->_update_user(array('last_opened' => time()));
 
@@ -221,7 +226,7 @@ class WJ_Stats extends WYSIJA_object {
 
             switch ($this->clicked_url) {
                 case '[unsubscribe_link]':
-                    //we need to make sure that this link belongs to that user
+                    // we need to make sure that this link belongs to that user
                     if ($receiver) {
                         $link = $this->subscriberClass->getUnsubLink($receiver, true);
                         // unsubscribe status
@@ -241,7 +246,7 @@ class WJ_Stats extends WYSIJA_object {
                     break;
             }
 
-            //if the subscriber still exists in the DB we will have a link
+            //if the subscriber already exists in the DB we will have a link
             if ($link) {
                 $this->decoded_url = $link;
             } else {
@@ -252,8 +257,10 @@ class WJ_Stats extends WYSIJA_object {
             }
         } else {
             // this is the standard non-system url case
-            if (strpos($this->decoded_url, 'http://') === false && strpos($this->decoded_url, 'https://') === false)
+            if (strpos($this->decoded_url, 'http://') === false && strpos($this->decoded_url, 'https://') === false) {
                 $this->decoded_url = 'http://' . $this->decoded_url;
+            }
+
             // check that there is no broken unsubscribe link such as http://[unsubscribe_link]
             if (strpos($this->decoded_url, '[unsubscribe_link]') !== false) {
                 $this->subscriberClass = WYSIJA::get('user', 'model');
@@ -268,15 +275,25 @@ class WJ_Stats extends WYSIJA_object {
             }
         }
 
+        $data_update = array();
+
+        // check if we already have a record
         $model_email_user_stat = WYSIJA::get('email_user_stat', 'model');
         $exists = $model_email_user_stat->getOne(false, array('equal' => array('email_id' => $this->email_id, 'user_id' => $this->user_id), 'less' => array('status' => $status_email_user_stat)));
-        $data_update = array('status' => $status_email_user_stat);
-        if ($exists && isset($exists['opened_at']) && !(int) $exists['opened_at']) {
+
+        // fix "opened_at" value in case the "opened" status was not properly recorded (blocked images)
+        if(is_array($exists) && array_key_exists('opened_at', $exists) && (int)$exists['opened_at'] === 0) {
+            // set opened at in case it was not recorded
             $data_update['opened_at'] = time();
         }
 
         $model_email_user_stat->reset();
         $model_email_user_stat->colCheck = false;
+
+        // set new status
+        $data_update['status'] = $status_email_user_stat;
+
+        // update email user stat
         $model_email_user_stat->update($data_update, array('equal' => array('email_id' => $this->email_id, 'user_id' => $this->user_id), 'less' => array('status' => $status_email_user_stat)));
     }
 

@@ -4,9 +4,9 @@
     * @subpackage shortcode.class.php
     * @internal 2013.01.16
     * @author Dan Zappone / 23Systems
-    * @version 2.7
+    * @version 2.7.2
     * @$Id: shortcode.class.php 937945 2014-06-24 17:11:13Z dzappone $
-    * @$URL: http://plugins.svn.wordpress.org/lightbox-plus/tags/2.7/classes/shortcode.class.php $
+    * @$URL: https://plugins.svn.wordpress.org/lightbox-plus/tags/2.7/classes/shortcode.class.php $
     */
     if (!class_exists('lbp_shortcode')) {
         class lbp_shortcode extends lbp_utilities {

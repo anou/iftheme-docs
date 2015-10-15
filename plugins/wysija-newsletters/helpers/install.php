@@ -2,7 +2,7 @@
 defined('WYSIJA') or die('Restricted access');
 class WYSIJA_help_install extends WYSIJA_object{
 
-    function WYSIJA_help_install(){
+    function __construct(){
         if(file_exists(ABSPATH . 'wp-admin'.DS.'includes'.DS.'upgrade.php'))    require_once(ABSPATH . 'wp-admin'.DS.'includes'.DS.'upgrade.php');
     }
 
@@ -160,8 +160,8 @@ class WYSIJA_help_install extends WYSIJA_object{
 
             $values['wysija_db_version'] = WYSIJA::get_version();
 
-            $wptoolboxs = WYSIJA::get('toolbox', 'helper');
-            $values['dkim_domain'] = $wptoolboxs->_make_domain_name();
+            $helper_toolbox = WYSIJA::get('toolbox', 'helper');
+            $values['dkim_domain'] = $helper_toolbox->_make_domain_name();
 
             if( get_option('wysija_reinstall',0) ) $values['wysija_whats_new'] = WYSIJA::get_version();
             $model_config->save($values);
@@ -480,7 +480,7 @@ class WYSIJA_help_install extends WYSIJA_object{
         // execute the queries one by one
         global $wpdb;
         $has_errors = false;
-        
+
         foreach($queries as $qry){
             $last_error = $wpdb->last_error;
             $wpdb->query($qry);

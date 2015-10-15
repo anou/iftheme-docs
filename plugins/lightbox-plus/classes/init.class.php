@@ -4,9 +4,9 @@
     * @subpackage init.class.php
     * @internal 2013.01.16
     * @author Dan Zappone / 23Systems
-    * @version 2.7
+    * @version 2.7.2
     * @$Id: init.class.php 937945 2014-06-24 17:11:13Z dzappone $
-    * @$URL: http://plugins.svn.wordpress.org/lightbox-plus/tags/2.7/classes/init.class.php $
+    * @$URL: https://plugins.svn.wordpress.org/lightbox-plus/tags/2.7/classes/init.class.php $
     */
     if (!class_exists('lbp_init')) {
         class lbp_init extends lbp_actions {
@@ -19,18 +19,13 @@
                 $lightboxPlusOptions = get_option('lightboxplus_options');
 
                 /**
-                * Remove following line after a few versions or 2.6 is the prevelent version
-                */
-                $lightboxPlusOptions = $this->setMissingOptions($lightboxPlusOptions);
-
-                /**
                 * Call Initialize Primary Lightbox
                 * Call Initialize Secondary Lightbox if enabled
                 * Call Initialize Inline Lightboxes if enabled
                 *
                 * @var wp_lightboxplus
                 */
-                if (!isset($lightboxPlusOptions) || isset($_POST['reinit_lightboxplus'])) {
+                if (!isset($lightboxPlusOptionsSet) || isset($_POST['reinit_lightboxplus'])) {
                     $lightboxPlusPrimaryOptions = $this->lightboxPlusPrimaryInit();
                     $lightboxPlusSecondaryOptions = $this->lightboxPlusSecondaryInit();
                     $lightboxPlusInlineOptions = $this->lightboxPlusInlineInit();

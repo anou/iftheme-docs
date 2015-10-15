@@ -31,7 +31,7 @@
                 </div>
             {/if}
             {if #text}
-                <div class="wysija_text editable">{#text.value|base64_decode}</div>
+                <div class="wysija_text wysija_editable">{#text.value|base64_decode}</div>
             {/if}
         </div>
         {if ! #IS_LAST && $params.divider.src}
@@ -43,7 +43,7 @@
 {/if}
 
 {if ! #posts}
-    <div class="nopost editable">
+    <div class="nopost wysija_editable">
         <p class="align-center">{$params.nopost_message|base64_decode}</p>
     </div>
 {/if}

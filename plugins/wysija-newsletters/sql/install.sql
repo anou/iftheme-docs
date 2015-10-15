@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS `user_list` (
   `sub_date` INT unsigned DEFAULT 0,
   `unsub_date` INT unsigned DEFAULT 0,
   PRIMARY KEY (`list_id`,`user_id`)
-) ENGINE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
+) /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
 
 -- QUERY ---
 
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS `user` (
   `domain` VARCHAR(255) NULL DEFAULT '',
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `EMAIL_UNIQUE` (`email`)
-) ENGINE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
+) /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
 
 
 -- QUERY ---
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS `list` (
   `created_at` INT unsigned NULL,
   `ordering` INT unsigned NOT NULL DEFAULT 0,
   PRIMARY KEY (`list_id`)
-) ENGINE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
+) /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
 
 -- QUERY ---
 
@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS `campaign` (
   `name` VARCHAR(250) NULL,
   `description` TEXT NULL,
   PRIMARY KEY (`campaign_id`)
-) ENGINE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
+) /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
 
 -- QUERY ---
 
@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS `campaign_list` (
   `campaign_id` INT unsigned NOT NULL,
   `filter` TEXT NULL,
   PRIMARY KEY (`list_id`,`campaign_id`)
-) ENGINE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
+) /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
 
 -- QUERY ---
 
@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS `email` (
   `wj_data` LONGTEXT NULL,
   `wj_styles` LONGTEXT NULL,
   PRIMARY KEY (`email_id`)
-) ENGINE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
+) /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
 
 -- QUERY ---
 
@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS `user_field` (
   `is_required` TINYINT unsigned NOT NULL DEFAULT 0,
   `error_message` VARCHAR(250) NOT NULL DEFAULT '',
   PRIMARY KEY (`field_id`)
-) ENGINE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
+) /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
 
 -- QUERY ---
 
@@ -115,7 +115,7 @@ CREATE TABLE IF NOT EXISTS `queue` (
   `number_try` TINYINT unsigned NOT NULL DEFAULT 0,
   PRIMARY KEY (`user_id`,`email_id`),
   KEY `SENT_AT_INDEX` (`send_at`)
-) ENGINE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
+) /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
 
 
 -- QUERY ---
@@ -130,7 +130,7 @@ CREATE TABLE IF NOT EXISTS `user_history` (
   `executed_by` INT unsigned NULL,
   `source` TEXT NULL,
   PRIMARY KEY (`history_id`)
-) ENGINE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
+) /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
 
 -- QUERY ---
 
@@ -141,7 +141,7 @@ CREATE TABLE IF NOT EXISTS `email_user_stat` (
   `opened_at` INT unsigned NULL,
   `status` TINYINT NOT NULL DEFAULT 0,
   PRIMARY KEY (`user_id`,`email_id`)
-) ENGINE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
+) /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
 
 -- QUERY ---
 
@@ -150,7 +150,7 @@ CREATE TABLE IF NOT EXISTS `url` (
   `name` VARCHAR(250) NULL,
   `url` TEXT NULL,
   PRIMARY KEY (`url_id`)
-) ENGINE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
+) /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
 
 -- QUERY ---
 
@@ -161,7 +161,7 @@ CREATE TABLE IF NOT EXISTS `email_user_url` (
   `clicked_at` INT unsigned NULL,
   `number_clicked` INT unsigned NOT NULL DEFAULT 0  ,
   PRIMARY KEY (`user_id`,`email_id`,`url_id`)
-) ENGINE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
+) /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
 
 -- QUERY ---
 
@@ -171,7 +171,7 @@ CREATE TABLE IF NOT EXISTS `url_mail` (
   `unique_clicked` INT unsigned NOT NULL DEFAULT 0,
   `total_clicked` INT unsigned NOT NULL DEFAULT 0,
   PRIMARY KEY (`email_id`,`url_id`)
-) ENGINE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
+) /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
 
 -- QUERY ---
 
@@ -182,7 +182,7 @@ CREATE TABLE IF NOT EXISTS `form` (
   `styles` longtext COLLATE utf8_bin,
   `subscribed` int(10) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`form_id`)
-) ENGINE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
+) /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
 
 -- QUERY ---
 
@@ -193,4 +193,4 @@ CREATE TABLE IF NOT EXISTS `custom_field` (
   `required` tinyint(1) DEFAULT "0" NOT NULL,
   `settings` text DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
+) /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;

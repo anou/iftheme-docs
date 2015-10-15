@@ -14,7 +14,8 @@ class WYSIJA_help_shortcodes extends WYSIJA_object {
     // Replacement values for shortcodes found.
     private $replace;
 
-    function WYSIJA_help_shortcodes() {
+    function __construct(){
+        parent::__construct();
     }
 
     /**
@@ -211,17 +212,7 @@ class WYSIJA_help_shortcodes extends WYSIJA_object {
         }
 
         if ($tag_value === 'browser') {
-            $emailH = WYSIJA::get('email','helper');
-            $configM = WYSIJA::get('config','model');
-            $data_email = array();
-            $data_email['email_id'] = $this->email->email_id;
-            $view_browser_url = $emailH->getVIB($data_email);
-            $view_browser_message = $configM->viewInBrowserLink(true);
-            $replacement .= $view_browser_message['pretext'];
-            $replacement .= '<a href="' . $view_browser_url . '">';
-            $replacement .= $view_browser_message['label'];
-            $replacement .= '</a>';
-            $replacement .= $view_browser_message['posttext'];
+            $replacement = '';
         }
 
         return $replacement;

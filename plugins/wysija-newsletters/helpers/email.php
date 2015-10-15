@@ -2,10 +2,9 @@
 defined('WYSIJA') or die('Restricted access');
 class WYSIJA_help_email extends WYSIJA_object{
 
-    function WYSIJA_help_email(){
-
+    function __construct(){
+        parent::__construct();
     }
-
 
     /**
      * used to strip the unsubscribe links and the view in browser links from an email html
@@ -16,9 +15,11 @@ class WYSIJA_help_email extends WYSIJA_object{
 
         //delete the view in browser span
         $content = preg_replace('#<td id="wysija_viewbrowser_content"[^>]*>(.*)</td>#Uis','',$content);
+        $content = preg_replace('#<p *class="wysija_viewbrowser_container"[^>]*>(.*)</p>#Uis','',$content);
 
         //delete the unsubscribe td
         $content = preg_replace('#<td id="wysija_unsubscribe_content"[^>]*>(.*)</td>#Uis','',$content);
+        $content = preg_replace('#<p *class="wysija_unsubscribe_container"[^>]*>(.*)</p>#Uis','',$content);
 
         return $content;
 
@@ -85,11 +86,15 @@ class WYSIJA_help_email extends WYSIJA_object{
         }
 
         $mailer=WYSIJA::get('mailer','helper');
-        $mailer->WYSIJA_help_mailer('',$values,$testMultisite);
+        $mailer->__construct('',$values,$testMultisite);
 
         $current_user=WYSIJA::wp_get_userdata();
         $mailer->testemail=true;
         $mailer->wp_user=&$current_user->data;
+		// If users enter a custom email, let's send to that address
+		if (isset($values['test_mails']) && trim($values['test_mails']) != '') {
+			$current_user->data->user_email = $values['test_mails'];
+		}
 
         $res=$mailer->sendSimple($current_user->data->user_email,str_replace('[send_method]',$send_method,__('[send_method] works with MailPoet',WYSIJA)),$content_email);
 

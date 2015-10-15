@@ -11,11 +11,9 @@ class WYSIJA_model_email_user_url extends WYSIJA_model{
         'clicked_at' => array("type"=>"integer"),
         'number_clicked' => array("type"=>"integer")
     );
-    
-    
-    
-    function WYSIJA_model_email_user_url(){
-        $this->WYSIJA_model();
+
+    function __construct(){
+        parent::__construct();
     }
     
 

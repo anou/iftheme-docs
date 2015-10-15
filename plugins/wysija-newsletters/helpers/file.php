@@ -2,8 +2,8 @@
 defined('WYSIJA') or die('Restricted access');
 class WYSIJA_help_file extends WYSIJA_object{
 
-    function WYSIJA_help_file(){
-
+    function __construct(){
+        parent::__construct();
     }
 
     /**
@@ -116,13 +116,14 @@ class WYSIJA_help_file extends WYSIJA_object{
 
         if(!$tempDir)   return false;
 
+        $time_created = substr( md5(rand()), 0, 20);
+        $file_name = $key.'-'.$time_created.$format;
 
-        $filename=$key.'-'.time().$format;
-        $handle=fopen($tempDir.$filename, 'w');
+        $handle=fopen($tempDir.$file_name, 'w');
         fwrite($handle, $content);
         fclose($handle);
 
-        return array('path'=>$tempDir.$filename,'name'=>$filename, 'url'=>$this->url($filename,'temp'));
+        return array('path'=>$tempDir.$file_name,'name'=>$file_name, 'url'=>$this->url($file_name,'temp'));
     }
 
     /**
@@ -143,38 +144,22 @@ class WYSIJA_help_file extends WYSIJA_object{
         return str_replace(DS,'/',$url);
     }
 
-    /**
-     * send file to be downloaded
-     * @param type $path
-     */
-    function send($path){
-        /* submit the file to the admin */
-        if(file_exists($path)){
-            header('Content-type: application/csv');
-            header('Content-Disposition: attachment; filename="export_wysija.csv"');
-            readfile($path);
-            exit();
-        }else $this->error(__('Yikes! We couldn\'t export. Make sure that your folder permissions for /wp-content/uploads/wysija/temp is set to 755.',WYSIJA),true);
-
-    }
-
     /*
      *
      */
     function clear(){
-        $foldersToclear=array("import","temp");
-        $filenameRemoval=array("import-","export-");
+        $folders_to_clear = array("import","temp");
+        $filename_removal = array("import-","export-", 'export_userids-');
         $deleted=array();
-        foreach($foldersToclear as $folder){
+        foreach($folders_to_clear as $folder){
             $path=$this->getUploadDir($folder);
             /* get a list of files from this folder and clear them */
             if(!$path) continue;
             $files = scandir($path);
             foreach($files as $filename){
                 if(!in_array($filename, array('.','..',".DS_Store","Thumbs.db"))){
-                    if(preg_match('/('.implode($filenameRemoval,'|').')[0-9]*\.csv/',$filename,$match)){
+                    if(preg_match('/('.implode($filename_removal,'|').')[a-f0-9]*\.(csv|txt)/',$filename,$match)){
                        $deleted[]=$path.$filename;
-
                     }
                 }
             }
@@ -234,38 +219,5 @@ class WYSIJA_help_file extends WYSIJA_object{
           copy(str_replace('/',DS,$src), str_replace('/',DS,$dst));
       }
     }
-
-    /*
-     * taken from php.net
-     */
-    function chmodr($path, $filemode=0644, $dirmode=0755) {
-        if (is_dir($path) ) {
-            if (!chmod($path, $dirmode)) {
-                $dirmode_str=decoct($dirmode);
-                print "Failed applying filemode '$dirmode_str' on directory '$path'\n";
-                print "  `-> the directory '$path' will be skipped from recursive chmod\n";
-                return;
-            }
-            $dh = opendir($path);
-            while (($file = readdir($dh)) !== false) {
-                if($file != '.' && $file != '..') {  // skip self and parent pointing directories
-                    $fullpath = $path.DS.$file;
-                    $this->chmodr($fullpath, $filemode,$dirmode);
-                }
-            }
-            closedir($dh);
-        } else {
-            if (is_link($path)) {
-                print "link '$path' is skipped\n";
-                return;
-            }
-            if (!chmod($path, $filemode)) {
-                $filemode_str=decoct($filemode);
-                print "Failed applying filemode '$filemode_str' on file '$path'\n";
-                return;
-            }
-        }
-    }
-
 }
 

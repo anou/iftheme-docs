@@ -3,7 +3,7 @@
 * The following rules are the styles that are consistant between all Colorbox themes
 * @version 2.7
 * @$Id: colorbox.css 937945 2014-06-24 17:11:13Z dzappone $
-* @$URL: http://plugins.svn.wordpress.org/lightbox-plus/tags/2.7/css/green/colorbox.css $
+* @$URL: https://plugins.svn.wordpress.org/lightbox-plus/tags/2.7/css/green/colorbox.css $
 */
 #colorbox, #cboxOverlay, #cboxWrapper{position:absolute; top:0; left:0; z-index:9999; overflow:hidden;}
 #cboxOverlay{position:fixed; width:100%; height:100%;}

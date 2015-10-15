@@ -2,8 +2,10 @@
 defined('WYSIJA') or die('Restricted access');
 class WYSIJA_help_validation extends WYSIJA_object {
 
-    function WYSIJA_help_validation() {}
-    
+    function __construct(){
+        parent::__construct();
+    }
+
     /**
      * Validate if a string is an URL
      * @param string $url

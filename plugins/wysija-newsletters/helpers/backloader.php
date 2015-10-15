@@ -8,11 +8,10 @@ class WYSIJA_help_backloader extends WYSIJA_help{
 
 	var $jsVariables = '';
 
-	function WYSIJA_help_backloader(){
-
-		parent::WYSIJA_help();
-
+	function __construct() {
+		parent::__construct();
 	}
+
 	/**
 	 *
 	 * @param type $controller
@@ -118,7 +117,6 @@ class WYSIJA_help_backloader extends WYSIJA_help{
 				'admin-listing',
 				'admin-statistics-filter',
 				'admin-statistics',
-				'admin-subscribers-edit-manual',
 				'admin-subscribers-export',
 				'admin-subscribers-import',
 				'admin-subscribers-importmatch',
@@ -239,6 +237,16 @@ class WYSIJA_help_backloader extends WYSIJA_help{
 
 						break;
 
+					case 'mailpoet-field-select2-terms':
+						wp_enqueue_script( 'mailpoet-field-select2-terms', WYSIJA_URL . 'js/fields/select2-terms.js', array( 'jquery', 'underscore', 'mailpoet-select2' ), WYSIJA::get_version() );
+
+						break;
+
+					case 'mailpoet-field-select2-simple':
+						wp_enqueue_script( 'mailpoet-field-select2-simple', WYSIJA_URL . 'js/fields/select2-simple.js', array( 'jquery', 'underscore', 'mailpoet-select2' ), WYSIJA::get_version() );
+
+						break;
+
 					case 'wysija-form-editor':
 						wp_enqueue_script( 'wysija-prototype', WYSIJA_URL . 'js/prototype/prototype.js', array(), WYSIJA::get_version() );
 						wp_enqueue_script( 'wysija-proto-scriptaculous', WYSIJA_URL . 'js/prototype/scriptaculous.js', array( 'wysija-prototype' ), WYSIJA::get_version() );
@@ -310,6 +318,11 @@ class WYSIJA_help_backloader extends WYSIJA_help{
 					case 'wysija-tooltip':
 						wp_enqueue_script( 'mailpoet.tooltip', WYSIJA_URL . 'js/vendor/bootstrap.tooltip.js', array( 'jquery' ), WYSIJA::get_version(), true );
 						wp_enqueue_style( 'mailpoet.tooltip', WYSIJA_URL . 'css/vendor/bootstrap.tooltip.css', array(), WYSIJA::get_version(), 'screen' );
+						break;
+
+					case 'wysija-import-match':
+						wp_enqueue_script('jquery-matchColumn', WYSIJA_URL.'js/jquery/jquery.matchColumn.js', array('jquery'), WYSIJA::get_version());
+						wp_enqueue_script('jquery-userStatusMapping', WYSIJA_URL.'js/jquery/jquery.userStatusMapping.js', array('jquery'), WYSIJA::get_version());
 						break;
 
 					default:

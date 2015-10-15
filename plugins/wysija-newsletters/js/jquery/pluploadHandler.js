@@ -24,6 +24,7 @@ function fileQueued(fileObj) {
 
 function uploadStart() {
 	jQuery('#overlay').show();
+    jQuery('.wysija-msg.ajax').html('').hide();
 }
 
 function uploadProgress(up, file) {
@@ -252,7 +253,13 @@ function itemAjaxError(id, message) {
 
 }
 
-function uploadComplete() { }
+function uploadComplete(files) {
+    jQuery('.wysija-msg.ajax').html('<div class="notice-msg updated"><ul><li>' + pluploadL10n.files_successfully_uploaded.replace('%d', jQuery.trim(files.length)) + '</li></ul></div>').show();
+    if (jQuery('#overlay')) {
+        // Ensure that overlay is hidden when upload has completed
+        jQuery('#overlay').hide();
+    }
+}
 
 function switchUploader(s) {
 	if ( s ) {
@@ -474,7 +481,7 @@ jQuery(document).ready(function($){
 		});
 
 		uploader.bind('UploadComplete', function(up, files) {
-			uploadComplete();
+			uploadComplete(files);
 		});
 	}
 

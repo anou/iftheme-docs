@@ -3,14 +3,14 @@
 Plugin Name: Breadcrumb NavXT
 Plugin URI: http://mtekk.us/code/breadcrumb-navxt/
 Description: Adds a breadcrumb navigation showing the visitor&#39;s path to their current location. For details on how to use this plugin visit <a href="http://mtekk.us/code/breadcrumb-navxt/">Breadcrumb NavXT</a>. 
-Version: 5.1.0
+Version: 5.2.2
 Author: John Havlik
 Author URI: http://mtekk.us/
 License: GPL2
-TextDomain: breadcrumb-navxt
-DomainPath: /languages/
+Text Domain: breadcrumb-navxt
+Domain Path: /languages
 */
-/*  Copyright 2007-2014  John Havlik  (email : john.havlik@mtekk.us)
+/*  Copyright 2007-2015  John Havlik  (email : john.havlik@mtekk.us)
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -26,13 +26,13 @@ DomainPath: /languages/
     along with this program; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
-//Do a PHP version check, require 5.2 or newer
-if(version_compare(phpversion(), '5.2.0', '<'))
+//Do a PHP version check, require 5.3 or newer
+if(version_compare(phpversion(), '5.3.0', '<'))
 {
 	//Only purpose of this function is to echo out the PHP version error
 	function bcn_phpold()
 	{
-		printf('<div class="error"><p>' . __('Your PHP version is too old, please upgrade to a newer version. Your version is %1$s, Breadcrumb NavXT requires %2$s', 'breadcrumb-navxt') . '</p></div>', phpversion(), '5.2.0');
+		printf('<div class="error"><p>' . __('Your PHP version is too old, please upgrade to a newer version. Your version is %1$s, Breadcrumb NavXT requires %2$s', 'breadcrumb-navxt') . '</p></div>', phpversion(), '5.3.0');
 	}
 	//If we are in the admin, let's print a warning then return
 	if(is_admin())
@@ -60,7 +60,7 @@ $breadcrumb_navxt = NULL;
 //TODO change to extends mtekk_plugKit
 class breadcrumb_navxt
 {
-	const version = '5.1.0';
+	const version = '5.2.2';
 	protected $name = 'Breadcrumb NavXT';
 	protected $identifier = 'breadcrumb-navxt';
 	protected $unique_prefix = 'bcn';
@@ -82,7 +82,7 @@ class breadcrumb_navxt
 		//We set the plugin basename here
 		$this->plugin_basename = plugin_basename(__FILE__);
 		//We need to add in the defaults for CPTs and custom taxonomies after all other plugins are loaded
-		add_action('wp_loaded', array($this, 'wp_loaded'));
+		add_action('wp_loaded', array($this, 'wp_loaded'), 15);
 		add_action('init', array($this, 'init'));
 		//Register the WordPress 2.8 Widget
 		add_action('widgets_init', create_function('', 'return register_widget("'. $this->unique_prefix . '_widget");'));

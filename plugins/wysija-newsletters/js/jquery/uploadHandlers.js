@@ -12,7 +12,17 @@ function WYSIJAprepareMediaItem(fileObj, serverData) {
 	}
 	// New style: server data is just the attachment ID, fetch the thumbnail and form html from the server
 	else {
-		item.load('async-upload.php', {attachment_id:serverData, fetch:f}, function(result){WYSIJAsetParams(result,fileObj);WYSIJAprepareMediaItemInit(fileObj);updateMediaForm();});
+		item.load('async-upload.php',
+            {
+                attachment_id:serverData,
+                fetch:f
+            },
+            function(result){
+                WYSIJAsetParams(result,fileObj);
+                WYSIJAprepareMediaItemInit(fileObj);
+                updateMediaForm();
+            }
+        );
 	}
 }
 

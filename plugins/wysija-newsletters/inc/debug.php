@@ -1,5 +1,5 @@
 <?php
-
+defined('WYSIJA') or die('Restricted access');
 global $wysija_queries;
 $wysija_queries=array();
 

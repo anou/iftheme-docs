@@ -1,4 +1,4 @@
-<div class="wysija_form_block" wysija_type="{#type}" wysija_field="{#field}" wysija_name="{#name}">
+<div class="wysija_form_block" wysija_type="{#type}" wysija_field="{#field}" wysija_name="{#name|stripslashes|html_value}">
     {if #type != 'divider'}
     <div class="wysija_settings" style="display:none;">
         <a class="settings" href="javascript:;"><span class="dashicons dashicons-admin-generic"></span>{$i18n.edit_settings}</a>

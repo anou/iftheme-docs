@@ -6,8 +6,8 @@ class WYSIJA_control_front_confirm extends WYSIJA_control_front{
     var $model='user';
     var $view='confirm';
 
-    function WYSIJA_control_front_confirm(){
-        parent::WYSIJA_control_front();
+    function __construct(){
+        parent::__construct();
     }
 
     function _testKeyuser(){
@@ -60,14 +60,18 @@ class WYSIJA_control_front_confirm extends WYSIJA_control_front{
         $this->optional_subtitle = $model_config->getValue('unsubscribed_subtitle');
         if(!isset($model_config->values['unsubscribed_subtitle'])) $this->optional_subtitle = __("Great, you'll never hear from us again!",WYSIJA);
 
+        $wysija_key = '';
+        if(isset( $_GET['wysija-key'] )){
+            $wysija_key = $_GET['wysija-key'];
+        }
         $undo_paramsurl = array(
-             'wysija-page'=>1,
-             'controller'=>'confirm',
-             'action'=>'undounsubscribe',
-             'wysija-key'=>$_REQUEST['wysija-key']
+             'wysija-page' => 1,
+             'controller' => 'confirm',
+             'action' => 'undounsubscribe',
+             'wysija-key' => $wysija_key
              );
 
-        if(!isset($_REQUEST['demo'])){
+        if(! isset($_GET['demo']) ){
             if($this->_testKeyuser()){
                 $statusint=(int)$this->userData['details']['status'];
                 if( ($model_config->getValue('confirm_dbleoptin') && $statusint>0) || (!$model_config->getValue('confirm_dbleoptin') && $statusint>=0)){
@@ -135,41 +139,23 @@ class WYSIJA_control_front_confirm extends WYSIJA_control_front{
 
             $this->subtitle=$this->viewObj->subscriptions($data);
 
-
             return true;
         }
-
-
     }
-
-
 
     function resend(){
-        $this->title='The link you clicked has expired';
-
-        $this->subtitle=$this->viewObj->resend();
+        $this->title = $this->subtitle = 'The link you clicked has expired';
     }
-
-
-    function resendconfirm(){
-        //make sure the user has the right to access this action
-        if($this->requireSecurity()){
-            //resend email
-            $helper_mailer=WYSIJA::get('mailer','helper');
-            $helper_mailer->sendOne((int)$_REQUEST['email_id'],(int)$_REQUEST['user_id']);
-            $this->title='Please check your inbox!';
-
-            $this->subtitle='<h3>A new email with working links has been sent to you.<h3/>';
-        }
-    }
-
 
     function save(){
 
         //get the user_id out of the params passed */
         if($this->_testKeyuser()){
             //update the general details */
-            $userid=$_REQUEST['wysija']['user']['user_id'];
+            if(! is_array($_REQUEST['wysija']) || !is_array($_REQUEST['wysija']['user'])){
+                return false;
+            }
+            $userid = $this->userData['details']['user_id'];
             unset($_REQUEST['wysija']['user']['user_id']);
             $model_config=WYSIJA::get('config','model');
             // we need to call the translation otherwise it will not be loaded and translated
@@ -212,7 +198,7 @@ class WYSIJA_control_front_confirm extends WYSIJA_control_front{
             $modelUL->backSave=true;
             /* list of core list */
             $modelLIST=WYSIJA::get('list','model');
-	    
+
 	    // Using "like" condition in order to force sql query to OR (instead of AND). It'll be incorrct if status contains other values than 0/1.
             $results=$modelLIST->get(array('list_id'),array('like' => array('is_enabled'=>0, 'is_public' => 0)));
             $static_listids=array();
@@ -229,7 +215,7 @@ class WYSIJA_control_front_confirm extends WYSIJA_control_front{
             $config=WYSIJA::get('config','model');
             $dbloptin=$config->getValue('confirm_dbleoptin');
             //1 - insert new user_list
-            if(isset($_POST['wysija']['user_list']['list_id']) && $_POST['wysija']['user_list']['list_id']){
+            if(!empty($_POST['wysija']['user_list']['list_id']) && is_array($_POST['wysija']['user_list']['list_id'])){
                 $modelUL->reset();
                 $modelUL->update(array('sub_date'=>time()),array('user_id'=>$id));
                 foreach($_POST['wysija']['user_list']['list_id'] as $list_id){
@@ -271,7 +257,7 @@ class WYSIJA_control_front_confirm extends WYSIJA_control_front{
                     // list through the edit your subscription form they don't receive a confirmation email they already confirmed.
                     // so they receive also the autorespo,nders correspondign to that list immediately.
                     $helper_user = WYSIJA::get('user','helper');
-                    $_REQUEST['wysiconf'] = base64_encode(serialize($new_list_ids));
+                    $_REQUEST['wysiconf'] = base64_encode(json_encode($new_list_ids));
                     $helper_user->confirm_user();
                 }
             }

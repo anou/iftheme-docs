@@ -450,15 +450,18 @@ class acymailingPHPMailer extends WYSIJA_OBJECT{
 				$result = $this->elasticEmail->sendMail($this);
 				if (!$result) $this->SetError($this->elasticEmail->error);
 				break;
-                        case 'sendgrid' :
+			case 'sendgrid' :
 				$result = $this->sendGrid->sendMail($this);
 				if (!$result) $this->SetError($this->sendGrid->error);
 				break;
-                        case 'wpmail' :
-                                $to = array_filter($this->to[0]);
-                                add_filter('phpmailer_init',array($this,'wpmail_init'),90);
-                                $result = wp_mail($to[0], $this->Subject, $this->Body, $header);
-
+			case 'mailpoet' :
+				$result = $this->mailpoet->send_mail($this);
+				if ( $result !== true ) $this->error($this->mailpoet->error);
+				break;
+			case 'wpmail' :
+				$to = array_filter($this->to[0]);
+				add_filter('phpmailer_init',array($this,'wpmail_init'),90);
+				$result = wp_mail($to[0], $this->Subject, $this->Body, $header);
 				break;
 			default:
 				$result = $this->MailSend($header, $body);
@@ -1556,27 +1559,42 @@ class acymailingPHPMailer extends WYSIJA_OBJECT{
 	 * @return string
 	 */
 	function EncodeQ ($str, $position = 'text') {
-		/* There should not be any EOL in the string */
-		$encoded = preg_replace("[\r\n]", '', $str);
-
-		switch (strtolower($position)) {
-			case 'phrase':
-				$encoded = preg_replace("/([^A-Za-z0-9!*+\/ -])/e", "'='.sprintf('%02X', ord('\\1'))", $encoded);
-				break;
-			case 'comment':
-				$encoded = preg_replace("/([\(\)\"])/e", "'='.sprintf('%02X', ord('\\1'))", $encoded);
-			case 'text':
-			default:
-				/* Replace every high ascii, control =, ? and _ characters */
-				$encoded = preg_replace('/([\000-\011\013\014\016-\037\075\077\137\177-\377])/e',
-							"'='.sprintf('%02X', ord('\\1'))", $encoded);
-				break;
-		}
-
-		/* Replace every spaces to _ (more readable than =20) */
-		$encoded = str_replace(' ', '_', $encoded);
-
-		return $encoded;
+		//There should not be any EOL in the string
+                $pattern = '';
+                $encoded = str_replace(array("\r", "\n"), '', $str);
+                switch (strtolower($position)) {
+                    case 'phrase':
+                        //RFC 2047 section 5.3
+                        $pattern = '^A-Za-z0-9!*+\/ -';
+                        break;
+                    /** @noinspection PhpMissingBreakStatementInspection */
+                    case 'comment':
+                        //RFC 2047 section 5.2
+                        $pattern = '\(\)"';
+                        //intentional fall-through
+                        //for this reason we build the $pattern without including delimiters and []
+                    case 'text':
+                    default:
+                        //RFC 2047 section 5.1
+                        //Replace every high ascii, control, =, ? and _ characters
+                        $pattern = '\000-\011\013\014\016-\037\075\077\137\177-\377' . $pattern;
+                        break;
+                }
+                $matches = array();
+                if (preg_match_all("/[{$pattern}]/", $encoded, $matches)) {
+                    //If the string contains an '=', make sure it's the first thing we replace
+                    //so as to avoid double-encoding
+                    $s = array_search('=', $matches[0]);
+                    if ($s !== false) {
+                        unset($matches[0][$s]);
+                        array_unshift($matches[0], '=');
+                    }
+                    foreach (array_unique($matches[0]) as $char) {
+                        $encoded = str_replace($char, '=' . sprintf('%02X', ord($char)), $encoded);
+                    }
+                }
+                //Replace every spaces to _ (more readable than =20)
+                return str_replace(' ', '_', $encoded);
 	}
 
 	/**

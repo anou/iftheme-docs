@@ -1,11 +1,11 @@
 <?php
 /*
  Plugin Name: Under Construction
- Plugin URI: http://www.masseltech.com/
+ Plugin URI: https://wordpress.org/plugins/underconstruction/
  Description: Makes it so your site can only be accessed by users who log in. Useful for developing a site on a live server, without the world being able to see it
- Version: 1.12
- Author: Jeremy Massel
- Author URI: http://www.masseltech.com/
+ Version: 1.14
+ Author: Noah Kagan
+ Author URI: http://SumoMe.com/
  */
 
 /*
@@ -299,6 +299,27 @@ class underConstruction
 	}
 
 
+	function global_notice() {
+		if (!is_plugin_active('sumome/sumome.php') && in_array(substr(basename($_SERVER['REQUEST_URI']), 0, 11), array('plugins.php', 'index.php')) && get_option('underconstruction_global_notification') == 1) {
+			?>
+				<style type="text/css">
+					#underconstruction_global_notification a.button:active {vertical-align:baseline;}
+				</style>
+				<div class="updated" id="underconstruction_global_notification" style="border:3px solid #317A96;position:relative;background:##3c9cc2;background-color:#3c9cc2;color:#ffffff;height:70px;">
+					<a class="notice-dismiss" href="<?php echo admin_url('options-general.php?page=underConstructionMainOptions&underconstruction_global_notification=0'); ?>" style="right:165px;top:0;"></a>
+					<a href="<?php echo admin_url('options-general.php?page=underConstructionMainOptions&wp_google_fonts_global_notification=0'); ?>" style="position:absolute;top:9px;right:15px;color:#ffffff;">Dismiss and go to settings</a>
+					<p style="font-size:16px;line-height:50px;">
+						<?php _e('Looking for more sharing tools?'); ?> &nbsp;<a style="background-color: #6267BE;border-color: #3C3F76;" href="<?php echo admin_url('plugin-install.php?tab=plugin-information&plugin=sumome&TB_iframe=true&width=743&height=500'); ?>" class="thickbox button button-primary">Get SumoMe WordPress Plugin</a>
+					</p>
+		        </div>
+			<?php
+		}
+	}
+
+	function plugin_deactivate() {
+		delete_option('underconstruction_global_notification');
+	}
+
 }
 
 $underConstructionPlugin = new underConstruction();
@@ -356,4 +377,6 @@ add_filter('plugin_action_links', 'underConstructionPluginLinks', 10, 2);
 
 add_action('wp_ajax_uc_get_ip_address', 'uc_get_ip_address');
 
-?>
+add_option('underconstruction_global_notification', 1);
+//add_action( 'admin_notices', array($underConstructionPlugin, 'global_notice') );
+register_deactivation_hook( __FILE__, array($underConstructionPlugin, 'plugin_deactivate') );

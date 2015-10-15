@@ -1,6 +1,6 @@
 <?php
 /*  
-	Copyright 2009-2014  John Havlik  (email : john.havlik@mtekk.us)
+	Copyright 2009-2015  John Havlik  (email : john.havlik@mtekk.us)
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 require_once(dirname(__FILE__) . '/includes/block_direct_access.php');
 class bcn_widget extends WP_Widget
 {
+	const version = '5.2.2';
 	protected $defaults = array('title' => '', 'pretext' => '', 'type' => 'microdata', 'linked' => true, 'reverse' => false, 'front' => false);
 	//Default constructor
 	function __construct()
@@ -35,8 +36,8 @@ class bcn_widget extends WP_Widget
 	{
 		//Make sure we grab defaults in the case of out of date instance settings being sent
 		$instance =  wp_parse_args((array) $instance, $this->defaults);
-		$instance['title'] = apply_filters('widget_title', $instance['title']);
-		$instance['pretext'] = apply_filters('widget_text', $instance['pretext']);
+		$instance['title'] = apply_filters('widget_title', $instance['title'], $instance, $this->id_base);
+		$instance['pretext'] = apply_filters('widget_text', $instance['pretext'], $instance);
 		//A bit of a hack but we need the DB settings to know if we should exit early
 		$opt = get_option('bcn_options');
 		//If we are on the front page and don't display on the front, return early

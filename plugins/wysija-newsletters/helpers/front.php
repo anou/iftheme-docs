@@ -5,25 +5,8 @@ defined('WYSIJA') or die('Restricted access');
  */
 class WYSIJA_help_front extends WYSIJA_help{
 
-    function WYSIJA_help_front(){
-        parent::WYSIJA_help();
-
-
-        /*if(defined('WYSIJA_DBG_ALL')){
-            $config=WYSIJA::get('config','model');
-            define('WYSIJA_DBG',(int)$config->getValue('debug_new'));
-
-            if(WYSIJA_DBG>0) include_once(WYSIJA_INC.'debug.php');
-
-            if(!function_exists('dbg')) {
-                function dbg($mixed,$exit=true){}
-            }
-         }*/
-        /* the controller is frontend if there is any wysija data requested */
-
-        /*$config=WYSIJA::get("config","model");
-        if($config->getValue("debug_on")) include_once(WYSIJA_INC."debug.php");*/
-        //include_once(WYSIJA_INC."debug.php");
+    function __construct(){
+        parent::__construct();
 
         // wysija form shortcode
         add_shortcode('wysija_form', array($this,'scan_form_shortcode'));
@@ -238,7 +221,7 @@ class WYSIJA_help_front extends WYSIJA_help{
 
         // only force our edit subscription screen at the bottom of the content of the page
         // if it's the right action and there is no wysija_page shortcode in teh page
-        if(!empty($_REQUEST['action']) && $_REQUEST['action'] == 'subscriptions' && strpos($content, '[wysija_page]') == false){
+        if(!empty($_REQUEST['action']) && $_REQUEST['action'] == 'subscriptions' && strpos($content, '[wysija_page]') === false){
             // we append the subscription form at the bottom of the page if we can't detect it
             return $content.'<div class="mpoet_profile_edit">'.$wysija_content.'</div>';
         }else{
@@ -285,7 +268,14 @@ class WYSIJA_help_front extends WYSIJA_help{
     function scan_subscribers_count_shortcode($attributes) {
         $user = WYSIJA::get('user','model');
         $list_ids = !empty($attributes['list_id']) ? explode(',', $attributes['list_id']) : array();
-        $confirmed_subscribers = !empty($attributes['confirmed_subscribers']) ? (bool)$attributes['confirmed_subscribers'] : true;
+
+        // if double optin is on we count only the confirmed subscribers, otherwise we count both confirmed and unconfirmed
+        $confirmed_subscribers = false;
+        $model_config = WYSIJA::get('config', 'model');
+        if ($model_config->getValue('confirm_dbleoptin')){
+            $confirmed_subscribers = true;
+        }
+        
         return $user->countSubscribers($list_ids, $confirmed_subscribers);
     }
 

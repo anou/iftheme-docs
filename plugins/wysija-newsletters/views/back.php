@@ -13,7 +13,7 @@ class WYSIJA_view_back extends WYSIJA_view{
     var $listingHeader = '';
     var $hiddenFields = '';
 
-    function WYSIJA_view_back(){
+    function __construct(){
         /* the default actions to be linked in a listing */
         if(!$this->column_actions)  $this->column_actions=array('view'=>__('View',WYSIJA),'edit'=>__('Edit',WYSIJA),'delete'=>__('Delete',WYSIJA));
 
@@ -26,7 +26,7 @@ class WYSIJA_view_back extends WYSIJA_view{
      */
     function main($data){
 
-        echo '<form method="post" action="admin.php?page='.$_REQUEST['page'].'" id="posts-filter">';
+        echo '<form method="post" action="admin.php?page='.  esc_attr($_REQUEST['page']).'" id="posts-filter">';
         $this->filtersLink();
         $this->searchBox();
 
@@ -39,7 +39,7 @@ class WYSIJA_view_back extends WYSIJA_view{
         $menu="";
         if(!empty($this->arrayMenus)){
            foreach($this->arrayMenus as $action =>$actiontrans){
-                $menu.= '<a href="admin.php?page='.$_REQUEST['page'].'&action='.$action.'" class="button-secondary2">'.$actiontrans.'</a>';
+                $menu.= '<a href="admin.php?page='.  esc_attr($_REQUEST['page']).'&action='.$action.'" class="button-secondary2">'.$actiontrans.'</a>';
             }
         }
 
@@ -59,12 +59,12 @@ class WYSIJA_view_back extends WYSIJA_view{
         $full_title = __($this->title,WYSIJA);
         $action = $sub_title = '';
 
-        if(isset($_REQUEST['action'])) $action=$_REQUEST['action'];
-        if($action && $action!='main' && isset($this->subtitle)) $sub_title='['.ucfirst(__($action,WYSIJA)).']';
-
+        if( isset($_REQUEST['action']) ){
+            $action = $_REQUEST['action'];
+        }
 
         if(isset($this->titlelink)){
-            $my_title = '<a href="admin.php?page='.$_REQUEST['page'].'">'.$full_title.'</a> ';
+            $my_title = '<a href="admin.php?page='.  esc_attr($_REQUEST['page']).'">'.$full_title.'</a> ';
         }else{
             $my_title = $full_title . ' ';
         }
@@ -459,7 +459,7 @@ class WYSIJA_view_back extends WYSIJA_view{
                     }else{
                         if(isset($col_params['isparams'])){
                             $params=$data[$model][$col_params['isparams']];
-                            //if(!is_array($data[$model][$colparams['isparams']]))    $params=unserialize(base64_decode($data[$model][$colparams['isparams']]));
+
                             $value='';
                             if(isset($params[$form_key]))    $value=$params[$form_key];
                             $params_column=$col_params['isparams'];
@@ -484,7 +484,7 @@ class WYSIJA_view_back extends WYSIJA_view{
                 if(isset($col_params['link'])) $col_params['desc']=str_replace(array('[link]','[/link]'),array($col_params['link'],'</a>'),$col_params['desc']);
                 $desc='<p class="description">'.$col_params['desc'].'</p>';
             }
-            //if(isset($colparams['desc'])) $desc='<p class="description">'.$colparams['desc'].'</p>';
+
             $colspan=' colspan="2" ';
             if(!isset($col_params['1col'])){
                 $form_html.='<th scope="row">';

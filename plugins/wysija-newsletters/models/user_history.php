@@ -17,8 +17,8 @@ class WYSIJA_model_user_history extends WYSIJA_model{
 
 
 
-    function WYSIJA_model_user_history(){
-        $this->WYSIJA_model();
+    function __construct(){
+        parent::__construct();
     }
 
     /**
@@ -29,7 +29,7 @@ class WYSIJA_model_user_history extends WYSIJA_model{
      * @param type $mailid
      * @return type
      */
-    function insert($subid,$action,$data = array(),$mailid = 0){
+    function insert($subid,$action=false,$data = array(),$mailid = 0){
             $current_user=WYSIJA::wp_get_userdata();
             /*dbg($current_user,0);
             $current_user=wp_get_current_user();*/

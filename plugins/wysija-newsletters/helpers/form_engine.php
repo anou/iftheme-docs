@@ -25,9 +25,10 @@ class WYSIJA_help_form_engine extends WYSIJA_object {
     private $_unique_fields = array('firstname', 'lastname', 'list');
 
     // constructor
-    function __construct() {
-
+    function __construct(){
+        parent::__construct();
     }
+
 
     // i18n methods
     public function get_translations() {
@@ -650,12 +651,12 @@ class WYSIJA_help_form_engine extends WYSIJA_object {
 
             $posted_form = (isset($_POST['form_id']) && (int)$_POST['form_id'] > 0) ? (int)$_POST['form_id'] : 0;
 
-            if($data['form_id'] === $posted_form) {
+/*            if($data['form_id'] === $posted_form) {
                 $view = WYSIJA::get('widget_nl','view','front');
                 if(count($view->getMsgs()) > 0) {
                     $output .= $view->messages();
                 }
-            }
+            }*/
 
             try {
                 $output .= $helper_render_engine->render($data, 'templates/form/web/template.html');

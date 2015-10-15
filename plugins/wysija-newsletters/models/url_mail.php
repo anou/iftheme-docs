@@ -11,8 +11,8 @@ class WYSIJA_model_url_mail extends WYSIJA_model{
         'total_clicked'=>array('type'=>'integer')
     );
 
-    function WYSIJA_model_url_mail(){
-        $this->WYSIJA_model();
+    function __construct(){
+        parent::__construct();
     }
 
 }

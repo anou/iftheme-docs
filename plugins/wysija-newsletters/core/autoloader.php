@@ -1,11 +1,11 @@
 <?php
-
+defined('WYSIJA') or die('Restricted access');
 /**
  * Classes Autoloader.
  * It loads automatically the right class on class instantation.
  * Since we still can't use namespaces, we use 'WJ_' as a prefix for our classes.
  * @param  Class $class Class name
- * @return 
+ * @return
  */
 function wysija_classes_autoloader($class) {
     // Check if the class name has our prefix.

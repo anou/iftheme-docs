@@ -16,16 +16,16 @@ class WYSIJA_help_user extends WYSIJA_object {
         $time = time();
         $cols = false;
         // get the enabled lists
-        $modelL = WYSIJA::get('list', 'model');
-        $listsdata = $modelL->get(array('list_id'), array('is_enabled' => '1'));
-        $listidsenabled = array();
+        $model_list = WYSIJA::get('list', 'model');
+        $listsdata = $model_list->get(array('list_id'), array('is_enabled' => '1'));
+        $enabled_list_ids = array();
         foreach ($listsdata as $listdt) {
-            $listidsenabled[] = $listdt['list_id'];
+            $enabled_list_ids[] = $listdt['list_id'];
         }
 
         // get list_id from user
-        $modelUserList = WYSIJA::get('user_list', 'model');
-        $listidsfromuser = $modelUserList->get(array('list_id'), array('user_id' => $user_id, 'list_id' => $listidsenabled));
+        $model_user_list = WYSIJA::get('user_list', 'model');
+        $listidsfromuser = $model_user_list->get(array('list_id'), array('user_id' => $user_id, 'list_id' => $enabled_list_ids));
 
         $listidsenableduser = array();
         foreach ($listidsfromuser as $listdt) {
@@ -34,14 +34,20 @@ class WYSIJA_help_user extends WYSIJA_object {
 
         if ($status) {
             $status = 1;
-            // get latest time when users unsubcribe from a list
-            $max_unsub_date = $modelUserList->get(array('MAX(`unsub_date`) as `max_unsub_date`'), array('user_id' => $user_id));
-            $max_unsub_date = $max_unsub_date[0]['max_unsub_date'];
-            // when somebody undo - unsubscribe, let's reset the unsub_date of all of the latest lists which users belong to
-            $modelUserList->update(array('unsub_date' => 0, 'sub_date' => time()), array('user_id' => $user_id, 'unsub_date' => $max_unsub_date));
+
+            // if undo unsubscribe then we re-subscribe all the previously unsubscribed lists based on the unsub_date value
+            if( !empty( $_REQUEST['action'] ) && $_REQUEST['action'] == 'undounsubscribe' ){
+                // get latest time when users unsubcribe from a list
+                $model_user_list->columns['MAX(`unsub_date`) as `max_unsub_date`']=array("type"=>"integer");
+                $max_unsub_date = $model_user_list->get(array('MAX(`unsub_date`) as `max_unsub_date`'), array('user_id' => $user_id));
+                $max_unsub_date = $max_unsub_date[0]['max_unsub_date'];
+                // when somebody undo - unsubscribe, let's reset the unsub_date of all of the latest lists which users belong to
+                $model_user_list->update(array('unsub_date' => 0, 'sub_date' => time()), array('user_id' => $user_id, 'unsub_date' => $max_unsub_date));
+            }
+
 
             // the data  we update on the user row
-            $user_updated_data = array('status' => $status, 'confirmed_ip' => $this->getIP(), 'confirmed_at' => time());
+            $user_updated_data = array( 'status' => $status , 'confirmed_ip' => $this->getIP() , 'confirmed_at' => time() );
         } else {
             // when we unsubscribe somebody automatically(through the bounce) we set the status to -2 instead of -1 to make the difference
             $status = -1;
@@ -49,7 +55,7 @@ class WYSIJA_help_user extends WYSIJA_object {
             $modelU->delete(array('user_id' => $user_id));
 
             // when somebody unsubscribe, let's set the unsub_date and reset the sub_date of all the lists which users belong to
-            $modelUserList->update(array('unsub_date' => time(), 'sub_date' => 0), array('user_id' => $user_id, 'unsub_date' => 0));
+            $model_user_list->update(array('unsub_date' => time(), 'sub_date' => 0), array('user_id' => $user_id, 'unsub_date' => 0));
 
             // the data  we update on the user row
             $user_updated_data = array('status' => $status);
@@ -62,9 +68,9 @@ class WYSIJA_help_user extends WYSIJA_object {
         if ($status) {
             // update the sub_date col in the user_list table
             if (!$auto) {
-                $modelUserList = WYSIJA::get('user_list', 'model');
+                $model_user_list = WYSIJA::get('user_list', 'model');
                 $cols = array('sub_date' => $time, 'unsub_date' => 0);
-                $modelUserList->update($cols, array('user_id' => $user_id, 'list_id' => $listids));
+                $model_user_list->update($cols, array('user_id' => $user_id, 'list_id' => $listids));
             }
 
             // process the auto newsletter once the status changed
@@ -89,39 +95,48 @@ class WYSIJA_help_user extends WYSIJA_object {
             }
             unset($data['user']['abs']);
         }
+        $user_keys = array('email','firstname','lastname');
+        foreach($data['user'] as $keyi => $val){
+            if(!in_array($keyi, $user_keys)){
+                unset($data['user'][$keyi]);
+            }
+        }
+
+
         return true;
     }
 
     /**
      * function to insert subscribers into wysija
      * data parameter is a multidimensional array
-     * @param type  $data=array(
+     * @param array  $data=array(
      *       'user'=>array('email'=>$myuserEMAIL,'firstname'=>$myuserFIRSTNAME),
      *       'user_lists'=>array('list_ids'=>array($listid1,$listid2))
      *       );
+     * @param boolean $subscribing_from_backend
      * @return type
      */
-    function addSubscriber($data, $backend = false) {
+    function addSubscriber( $data , $subscribing_from_backend = false) {
 
         $has_error = false;
-        //0 action before any processing call third party services
-        if (!$backend) {
-            $validEmail = apply_filters('wysija_beforeAddSubscriber', true, $data['user']['email']);
-            if (!$validEmail) {
-                $this->error(__('The email is not valid!', WYSIJA), true);
+        // 0 - action before any processing call third party services WangGuard for instance
+        if ( !$subscribing_from_backend ) {
+            $valid_email = apply_filters('wysija_beforeAddSubscriber', true, $data['user']['email']);
+            if ( !$valid_email ) {
+                $this->error( __( 'The email is not valid!' , WYSIJA ), true );
                 $has_error = true;
             }
         }
 
-        //1-check if email is valid
-        if (!$this->validEmail($data['user']['email'])) {
-            $this->error(__('The email is not valid!', WYSIJA), true);
+        // 1-check if email is valid
+        if ( !$this->validEmail( $data['user']['email'] ) ) {
+            $this->error( __( 'The email is not valid!' , WYSIJA ), true );
             $has_error = true;
         }
 
         // check if lists are specified?
-        if (empty($data['user_list']['list_ids'])) {
-            $this->error(__('You need to select at least one list.', WYSIJA), true);
+        if ( empty( $data['user_list']['list_ids'] ) ) {
+            $this->error( __( 'You need to select at least one list.' , WYSIJA ) , true);
             $has_error = true;
         }
 
@@ -130,103 +145,145 @@ class WYSIJA_help_user extends WYSIJA_object {
             return false;
         }
 
-        //2-check if email doesn't exists already
+        // 2-check if email doesn't exists already
         $model_user = WYSIJA::get('user', 'model');
-        $user_get = $model_user->getOne(false, array('email' => trim($data['user']['email'])));
+        $subscriber_exists_already = $model_user->getOne(false, array('email' => trim($data['user']['email'])));
 
-        $config = WYSIJA::get('config', 'model');
-        $dbloptin = $config->getValue('confirm_dbleoptin');
+        $model_config = WYSIJA::get('config', 'model');
+        $confirm_dbloptin = $model_config->getValue('confirm_dbleoptin');
 
-        //message success escaping, striping, setting
+        // message success escaping, striping, setting
         $message_success = '';
-        if (isset($data['message_success'])) {
-            $message_success = strip_tags($data['message_success'], '<p><em><span><b><strong><i><h1><h2><h3><a><ul><ol><li><br>');
-        } else if (isset($data['success_message'])) {
-            $message_success = strip_tags(nl2br(base64_decode($data['success_message'])), '<p><em><span><b><strong><i><h1><h2><h3><a><ul><ol><li><br>');
-        } else if (isset($data['form_id'])) {
+        if ( isset( $data['message_success'] ) ) {
+            $message_success = strip_tags( $data['message_success'] , '<p><em><span><b><strong><i><h1><h2><h3><a><ul><ol><li><br>');
+        } else if ( isset( $data['success_message'] ) ) {
+            $message_success = strip_tags( nl2br(base64_decode( $data['success_message'] ) ) , '<p><em><span><b><strong><i><h1><h2><h3><a><ul><ol><li><br>');
+        } else if ( isset( $data['form_id'] ) ) {
             // we have a form_id parameter so let's fetch the form success message
             $model_forms = WYSIJA::get('forms', 'model');
-            $form = $model_forms->getOne(array('data'), array('form_id' => (int) $data['form_id']));
-            $form_data = unserialize(base64_decode($form['data']));
+            $form = $model_forms->getOne( array( 'data' ) , array( 'form_id' => (int) $data['form_id'] ) );
+            $form_data = unserialize( base64_decode( $form['data'] ) );
 
             // if the on_success action is 'message', display message
-            if ($form_data['settings']['on_success'] === 'message') {
-                $message_success = nl2br($form_data['settings']['success_message']);
+            if ( $form_data['settings']['on_success'] === 'message') {
+                $message_success = nl2br( $form_data['settings']['success_message'] );
             }
         }
 
-        if ($user_get) {
-            //show a message for that case scenario in the admin panel
-            if ($backend) {
-                $this->error(str_replace(array('[link]', '[/link]'), array('<a href="admin.php?page=wysija_subscribers&action=edit&id=' . $user_get['user_id'] . '" >', "</a>"), __('Subscriber already exists. [link]Click to edit[/link].', WYSIJA)), true);
+        if ( $subscriber_exists_already ) {
+            // show a message for that case scenario in the admin panel
+            if ( $subscribing_from_backend ) {
+                $this->error(str_replace(array('[link]', '[/link]'), array('<a href="admin.php?page=wysija_subscribers&action=edit&id=' . $subscriber_exists_already['user_id'] . '" >', "</a>"), __('Subscriber already exists. [link]Click to edit[/link].', WYSIJA)), true);
                 return false;
             }
-            //if the status of the user is either unsubscribed or not confirmed we resend him the activation email
-            if ((int) $user_get['status'] < 1) {
-                $model_user->reset();
-                $model_user->update(array('status' => 0), array('user_id' => $user_get['user_id']));
-                $subscribe_to_list = 0;
-                if (!$dbloptin)
-                    $subscribe_to_list = time();
-                $this->addToLists($data['user_list']['list_ids'], $user_get['user_id'], $subscribe_to_list);
-                if ($dbloptin) {
-                    $emailsent = $this->sendConfirmationEmail((object) $user_get, true, $data['user_list']['list_ids']);
-                } else {
-                    $lists = $this->getUserLists($user_get['user_id'], $data['user_list']['list_ids']);
-                    $this->sendAutoNl($user_get['user_id'], $lists);
 
-                    if ($config->getValue('emails_notified') && $config->getValue('emails_notified_when_sub')) {
-                        //
-                        $this->uid = $user_get['user_id'];
-                        if (!$backend)
-                            $this->_notify($data['user']['email'], true, $data['user_list']['list_ids']);
+
+            $model_user_list = WYSIJA::get( 'user_list' , 'model' );
+            $subscribed_but_require_confirmation = false;
+            if( $subscriber_exists_already['status'] == 1 ){
+                $unsubscribed_lists = $model_user_list->get( array( 'list_id' ) , array( 'greater' => array( 'unsub_date' => 0 ), 'equal' => array( 'user_id' => $subscriber_exists_already['user_id'] ) ) );
+                $already_unsubscribed_list_ids_formatted = array();
+
+                foreach ($unsubscribed_lists as $user_list_detail) {
+                    $already_unsubscribed_list_ids_formatted[] = $user_list_detail['list_id'];
+                }
+
+                foreach ($data['user_list']['list_ids'] as $list_id) {
+                    if ( in_array( $list_id, $already_unsubscribed_list_ids_formatted ) ) {
+                        $subscribed_but_require_confirmation = true;
+                    }
+                }
+            }
+
+
+            // if the status of the user is either unsubscribed or not confirmed
+            // or he is unsubscribed from one of the list he is trying to subscribe again
+            // we resend him the activation email
+            if ( (int) $subscriber_exists_already['status'] < 1 || $subscribed_but_require_confirmation ) {
+                $model_user->reset();
+                $model_user->update( array( 'status' => 0 ), array( 'user_id' => $subscriber_exists_already['user_id'] ) );
+
+                $subscribe_to_list = 0;
+                if ( !$confirm_dbloptin ){
+                    $subscribe_to_list = time();
+                }
+
+                $this->addToLists( $data['user_list']['list_ids'], $subscriber_exists_already['user_id'], $subscribe_to_list);
+
+                // this is the double optin case, where we simply send the signup confirmation
+                if ( $confirm_dbloptin ) {
+                    $this->sendConfirmationEmail( (object) $subscriber_exists_already, true, $data['user_list']['list_ids']);
+                } else {
+                    // this is the single optin case, where we fire the autoresponders directly
+                    $lists = $this->getUserLists( $subscriber_exists_already['user_id'], $data['user_list']['list_ids'] );
+                    $this->sendAutoNl( $subscriber_exists_already['user_id'], $lists );
+
+                    if ( $model_config->getValue( 'emails_notified' ) && $model_config->getValue( 'emails_notified_when_sub' ) ) {
+                        // notify the administrators of a new subscribption
+                        $this->uid = $subscriber_exists_already['user_id'];
+                        if ( !$subscribing_from_backend )
+                            $this->_notify( $data['user']['email'], true, $data['user_list']['list_ids'] );
                     }
                 }
 
 
-                if (!empty($message_success))
-                    $this->notice($message_success);
+                if ( !empty( $message_success ) ){
+                    $this->notice( $message_success );
+                }
 
                 return true;
             }
 
             $model_user_list = WYSIJA::get('user_list', 'model');
-            $userListsSub = $model_user_list->get(array('list_id'), array('greater' => array('sub_date' => 0), 'equal' => array('user_id' => $user_get['user_id'])));
-            $arrayListids = array();
+            $already_subscribed_list_ids = $model_user_list->get(array('list_id'), array('greater' => array('sub_date' => 0), 'equal' => array( 'user_id' => $subscriber_exists_already['user_id'] ) ) );
+            $already_subscribed_list_ids_formatted = array();
 
-            foreach ($userListsSub as $userlistdetail) {
-                $arrayListids[] = $userlistdetail['list_id'];
+            foreach ($already_subscribed_list_ids as $user_list_detail) {
+                $already_subscribed_list_ids_formatted[] = $user_list_detail['list_id'];
             }
 
-            //a confirmation needs to be resend for those lists
-            $sendConfForIds = array();
-            foreach ($data['user_list']['list_ids'] as $listid) {
-                if (!in_array($listid, $arrayListids)) {
-                    $sendConfForIds[] = $listid;
+            // a confirmation needs to be resend for those lists
+            $list_ids_require_confirmation = array();
+            foreach ( $data['user_list']['list_ids'] as $list_id ) {
+                // only the list for which the subscribe request is made and is not already subscribed too willr equire confirmation
+                if ( !in_array($list_id, $already_subscribed_list_ids_formatted ) ) {
+                    $list_ids_require_confirmation[] = $list_id;
                 }
             }
 
-            if (!empty($sendConfForIds)) {
+            // this process require either a confirmation email to be sent or
+            // the autoresponders to be triggerred
+            if ( !empty( $list_ids_require_confirmation ) ) {
                 $subscribe_to_list = $subscriber_status = 0;
-                if (isset($data['user']['status']))
+
+                if ( isset( $data['user']['status'] ) ){
                     $subscriber_status = $data['user']['status'];
-                if (($dbloptin && $subscriber_status) || !$dbloptin)
+                }
+
+                // if double optin is activated and the subscriber status is 1 (subscribed)
+                // or this is single optin, then we directly subscribe the user to the list
+                if ( ( $confirm_dbloptin && $subscriber_status ) || !$confirm_dbloptin ){
                     $subscribe_to_list = time();
-                //we can add the subscribers to the lists passed
-                $this->addToLists($data['user_list']['list_ids'], $user_get['user_id'], $subscribe_to_list);
+                }
 
-                if ($dbloptin) {
+                // we can add the subscribers to the lists passed
+                $this->addToLists( $data['user_list']['list_ids'] , $subscriber_exists_already['user_id'] , $subscribe_to_list );
+
+                // send a confirmation message when double optin is on
+                if ( $confirm_dbloptin ) {
                     //if we have lists that are going to be added we send a confirmation email for double optin
-                    $emailsent = $this->sendConfirmationEmail((object) $user_get, true, $sendConfForIds);
+                    $this->sendConfirmationEmail( (object) $subscriber_exists_already, true, $list_ids_require_confirmation );
+                }else{
+                    // send auto nl to single optin which have lists added
+                    if ( !empty( $list_ids_require_confirmation ) ) {
+                        $lists = $this->getUserLists( $subscriber_exists_already['user_id'] , $data['user_list']['list_ids'] );
+                        $this->sendAutoNl( $subscriber_exists_already['user_id'] , $lists );
+                    }
                 }
-                if (!empty($message_success))
-                    $this->notice($message_success);
+                if ( !empty( $message_success ) ){
+                    $this->notice( $message_success );
+                }
 
-                //send auto nl to single optin which have lists added
-                if (!$dbloptin && (!empty($sendConfForIds))) {
-                    $lists = $this->getUserLists($user_get['user_id'], $data['user_list']['list_ids']);
-                    $this->sendAutoNl($user_get['user_id'], $lists);
-                }
             } else {
                 //no lists need to be added so we can simply return the message
                 $this->notice(__("Oops! You're already subscribed.", WYSIJA));
@@ -236,24 +293,24 @@ class WYSIJA_help_user extends WYSIJA_object {
             return true;
         }
 
-        //3-insert the subscriber with the right status based on optin status
+        // 3-insert the subscriber with the right status based on optin status
 
-        $dataInsert = $data['user'];
-        $dataInsert['ip'] = $this->getIP();
+        $subscriber_data = $data['user'];
+        $subscriber_data['ip'] = $this->getIP();
 
         $model_user->reset();
-        $user_id = $model_user->insert($dataInsert);
+        $user_id = $model_user->insert($subscriber_data);
 
 
-        if ($user_id) {
+        if ( (int)$user_id > 0 ) {
             // if a form id is specified, let's increment its "subscribed count"
             if (isset($data['form_id']) && (int) $data['form_id'] > 0) {
                 // check if the form exists
                 $model_forms = WYSIJA::get('forms', 'model');
-                $form = $model_forms->getOne(array('form_id', 'subscribed'), array('form_id' => (int) $data['form_id']));
-                if (isset($form['form_id']) && (int) $form['form_id'] === (int) $data['form_id']) {
+                $form = $model_forms->getOne( array('form_id', 'subscribed') , array('form_id' => (int) $data['form_id']) );
+                if ( isset( $form['form_id'] ) && (int) $form['form_id'] === (int) $data['form_id'] ) {
                     // the form exists so let's increment the "subscribed" count
-                    $model_forms->update(array(
+                    $model_forms->update( array(
                         'subscribed' => $form['subscribed'] + 1
                             ), array(
                         'form_id' => (int) $form['form_id']
@@ -261,11 +318,18 @@ class WYSIJA_help_user extends WYSIJA_object {
                 }
             }
 
+            // set user profile data
+            if( !empty( $data['user_field'] ) ){
+                WJ_FieldHandler::handle_all( $data['user_field'], $user_id );
+            }
+
             // display success message
-            if (!empty($message_success))
-                $this->notice($message_success);
+            if ( !empty( $message_success ) ){
+                $this->notice( $message_success );
+            }
+
         }else {
-            if ($backend) {
+            if ($subscribing_from_backend) {
                 $this->notice(__('Subscriber has not been saved.', WYSIJA));
             } else {
                 $this->notice(__('Oops! We could not add you!', WYSIJA));
@@ -274,39 +338,47 @@ class WYSIJA_help_user extends WYSIJA_object {
         }
 
         $subscribe_to_list = $subscriber_status = 0;
-        if (isset($data['user']['status']))
+        if ( isset( $data['user']['status'] ) ){
             $subscriber_status = $data['user']['status'];
-        if (($dbloptin && $subscriber_status) || !$dbloptin)
-            $subscribe_to_list = time();
-        //4-we add the user to the lists
-        $this->addToLists($data['user_list']['list_ids'], $user_id, $subscribe_to_list);
+        }
 
-        //5-send a confirmation email or add the user to the lists depending on the status
-        $sendAutonl = false;
-        if ($subscriber_status > -1) {
-            if ($dbloptin) {
-                if ($subscriber_status == 0) {
+        if ( ( $confirm_dbloptin && $subscriber_status ) || !$confirm_dbloptin ){
+            $subscribe_to_list = time();
+        }
+
+        //4-we add the user to the lists
+        $this->addToLists( $data['user_list']['list_ids'], $user_id, $subscribe_to_list );
+
+        // 5-send a confirmation email or add the user to the lists depending on the status
+        $can_send_autoresponders = false;
+        if ( $subscriber_status > -1 ) {
+            if ( $confirm_dbloptin ) {
+                if ( $subscriber_status == 0 ) {
                     $model_user->reset();
                     $model_user->getFormat = OBJECT;
-                    $receiver = $model_user->getOne(false, array('email' => trim($data['user']['email'])));
-                    $this->sendConfirmationEmail($receiver, true, $data['user_list']['list_ids']);
+                    $receiver = $model_user->getOne( false , array('email' => trim($data['user']['email']) ) );
+                    $this->sendConfirmationEmail( $receiver, true, $data['user_list']['list_ids'] );
                 } else {
                     //the subscriber status is set to subscribed so we send the auto nl straight away
-                    $sendAutonl = true;
+                    $can_send_autoresponders = true;
                 }
             } else {
-                //we send a notification to the admin if settings are set
-                $sendAutonl = true;
-                if ($config->getValue('emails_notified') && $config->getValue('emails_notified_when_sub')) {
-                    //
+                // single optin - we send a notification to the admin if settings are set
+                $can_send_autoresponders = true;
+
+                if ($model_config->getValue( 'emails_notified' ) && $model_config->getValue( 'emails_notified_when_sub' ) ) {
                     $this->uid = $user_id;
-                    if (!$backend)
-                        $this->_notify($data['user']['email'], true, $data['user_list']['list_ids']);
+                    if (!$subscribing_from_backend){
+                        $this->_notify( $data['user']['email'] , true, $data['user_list']['list_ids'] );
+                    }
+
                 }
             }
-            if ($sendAutonl) {
-                $lists = $this->getUserLists($user_id, $data['user_list']['list_ids']);
-                $this->sendAutoNl($user_id, $lists, 'subs-2-nl', $backend);
+
+            // let's send the autoresponders
+            if ( $can_send_autoresponders ) {
+                $lists = $this->getUserLists( $user_id, $data['user_list']['list_ids'] );
+                $this->sendAutoNl( $user_id, $lists, 'subs-2-nl', $subscribing_from_backend );
             }
         }
 
@@ -524,15 +596,21 @@ class WYSIJA_help_user extends WYSIJA_object {
             $emailConfirmationData = $mEmail->getOne(false, array('email_id' => $config->getValue('confirm_email_id')));
         }
 
+		$result_send = false;
         foreach ($users as $userObj) {
-            $resultsend = $mailer->sendOne($emailConfirmationData, $userObj, true);
+            $result_send = $mailer->sendOne($emailConfirmationData, $userObj, true);
         }
 
-        if (!$sendone)
-            $this->notice(sprintf(__('%1$d emails have been sent to unconfirmed subscribers.', WYSIJA), count($users)));
+        if (!$sendone) {
+			if (count($users) <= 0) {
+				$this->notice(__('No email sent.',WYSIJA));
+			} else {
+                                $this->notice( _n( 'One email has been sent.', '%d emails have been sent to unconfirmed subscribers.', count($users), WYSIJA ) );
+            }
+			return true;
+		}
         else
-            return $resultsend;
-        return true;
+            return $result_send;
     }
 
     /**
@@ -741,10 +819,10 @@ class WYSIJA_help_user extends WYSIJA_object {
     function confirmUsers($userids = array(), $is_batch_select = false) {
         if (empty($userids))
             return true;
+
         $model_user = WYSIJA::get('user', 'model');
         if ($is_batch_select) {
-            $count = $model_user->query('get_row', $userids['count_query']);
-            $row_count = $count['row_count'];
+            $row_count = $userids['count'];
             $list_userids = $userids['query'];
         } else {
             $list_userids = implode(',', $userids);
@@ -792,10 +870,10 @@ class WYSIJA_help_user extends WYSIJA_object {
 
         if ($subscribed) {
             $title = sprintf(__('New subscriber to %1$s', WYSIJA), implode(',', $list_names));
-            $body = sprintf(__('Howdy,' . "\n\n" . 'The subscriber %1$s has just subscribed to your list "%2$s".' . "\n\n" . 'Cheers,' . "\n\n" . 'The MailPoet Plugin', WYSIJA), "<strong>" . $email . "</strong>", "<strong>" . implode(',', $list_names) . "</strong>");
+            $body = sprintf(__("Howdy,\n\n The subscriber %1\$s has just subscribed to your list '%2\$s' \n\n Cheers,\n\n The MailPoet Plugin", WYSIJA), "<strong>" . $email . "</strong>", "<strong>" . implode(',', $list_names) . "</strong>");
         } else {
             $title = sprintf(__('One less subscriber to %1$s', WYSIJA), implode(',', $list_names));
-            $body = sprintf(__('Howdy,' . "\n\n" . 'The subscriber : %1$s has just unsubscribed to your list "%2$s".' . "\n\n" . 'Cheers,' . "\n\n" . 'The MailPoet Plugin', WYSIJA), "<strong>" . $email . "</strong>", "<strong>" . implode(',', $list_names) . "</strong>");
+            $body = sprintf(__("Howdy,\n\n The subscriber %1\$s has just unsubscribed to your list '%2\$s' \n\n Cheers,\n\n The MailPoet Plugin", WYSIJA), "<strong>" . $email . "</strong>", "<strong>" . implode(',', $list_names) . "</strong>");
         }
 
         $model_config = WYSIJA::get('config', 'model');
@@ -1059,65 +1137,78 @@ class WYSIJA_help_user extends WYSIJA_object {
         $model_config->add_translated_default();
 
         $list_ids = array();
-        if (isset($_REQUEST['wysiconf']))
-            $list_ids = unserialize(base64_decode($_REQUEST['wysiconf']));
+        if ( isset( $_REQUEST['wysiconf'] ) ){
+            $list_ids = json_decode( base64_decode( $_REQUEST['wysiconf'] ), true );
+        }
+
+        if(empty( $list_ids ) || !is_array( $list_ids )){
+            $this->title = __('Your confirmation link expired, please subscribe again.', WYSIJA);
+            return;
+        }
 
         // START part linked to the view
-        $this->title = $model_config->getValue('subscribed_title');
-        if (!empty($list_ids)) {
+        $this->title = $model_config->getValue( 'subscribed_title' );
+        if ( !empty( $list_ids ) && is_array( $list_ids ) ) {
             $model_list = WYSIJA::get('list', 'model');
             $lists_names_res = $model_list->get(array('name'), array('list_id' => $list_ids));
             $names = array();
-            foreach ($lists_names_res as $nameob)
+            foreach ($lists_names_res as $nameob){
                 $names[] = $nameob['name'];
+            }
 
-            if (!isset($model_config->values['subscribed_title']))
+
+            if (!isset($model_config->values['subscribed_title'])){
                 $this->title = __('You\'ve subscribed to: %1$s', WYSIJA);
+            }
+
             $this->title = sprintf($this->title, implode(', ', $names));
         }
 
         $this->subtitle = $model_config->getValue('subscribed_subtitle');
-        if (!isset($model_config->values['subscribed_subtitle']))
+        if ( !isset( $model_config->values['subscribed_subtitle'] ) ){
             $this->subtitle = __("Yup, we've added you to our list. You'll hear from us shortly.", WYSIJA);
+        }
         // END part linked to the view
 
-        $user_data = $this->checkUserKey($user_id);
+        $user_data = $this->checkUserKey( $user_id );
 
-        if ($user_data) {
+        if ( $user_data ) {
             //user is not confirmed yet
             $model_config = WYSIJA::get('config', 'model');
-            if ((int) $user_data['details']['status'] < 1) {
+
+            if ( (int) $user_data['details']['status'] < 1) {
                 // let's confirm the subscriber
-                $this->subscribe($user_data['details']['user_id'], true, false, $list_ids);
+                $this->subscribe( $user_data['details']['user_id'], true, false, $list_ids );
                 $this->uid = $user_data['details']['user_id'];
 
                 // send a notification to the email specified in the settings if required to
-                if ($model_config->getValue('emails_notified') && $model_config->getValue('emails_notified_when_sub')) {
-                    $this->_notify($user_data['details']['email']);
+                if ( $model_config->getValue( 'emails_notified' ) && $model_config->getValue( 'emails_notified_when_sub' ) ) {
+                    $this->_notify( $user_data['details']['email'] );
                 }
                 return true;
             } else {
-                if (isset($_REQUEST['wysiconf'])) {
+                if ( isset( $_REQUEST['wysiconf'] ) ) {
                     $needs_subscription = false;
-                    foreach ($user_data['lists'] as $list) {
-                        if (in_array($list['list_id'], $list_ids) && (int) $list['sub_date'] < 1) {
+                    foreach ( $user_data['lists'] as $list ) {
+                        if ( in_array( $list['list_id'], $list_ids ) && (int) $list['sub_date'] < 1) {
                             $needs_subscription = true;
                         }
                     }
 
-                    if ($needs_subscription) {
-                        $this->subscribe($user_data['details']['user_id'], true, false, $list_ids);
-                        $this->title = sprintf($model_config->getValue('subscribed_title'), implode(', ', $names));
-                        $this->subtitle = $model_config->getValue('subscribed_subtitle');
+                    if ( $needs_subscription ) {
+
+                        $this->subscribe( $user_data['details']['user_id'] , true, false, $list_ids );
+                        $this->title = sprintf( $model_config->getValue('subscribed_title') , implode( ', ', $names ) );
+                        $this->subtitle = $model_config->getValue( 'subscribed_subtitle' );
                         // send a notification to the email specified in the settings if required to
-                        if ($model_config->getValue('emails_notified') && $model_config->getValue('emails_notified_when_sub')) {
-                            $this->_notify($user_data['details']['email'], true, $list_ids);
+                        if ( $model_config->getValue( 'emails_notified' ) && $model_config->getValue( 'emails_notified_when_sub' ) ) {
+                            $this->_notify( $user_data['details']['email'] , true , $list_ids );
                         }
                     } else {
-                        $this->title = sprintf(__('You are already subscribed to : %1$s', WYSIJA), implode(', ', $names));
+                        $this->title = sprintf( __('You are already subscribed to : %1$s' , WYSIJA ) , implode( ', ', $names ) );
                     }
                 } else {
-                    $this->title = __('You are already subscribed.', WYSIJA);
+                    $this->title = __( 'You are already subscribed.' , WYSIJA );
                 }
                 return true;
             }

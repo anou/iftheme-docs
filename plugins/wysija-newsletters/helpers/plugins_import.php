@@ -3,8 +3,8 @@
 defined('WYSIJA') or die('Restricted access');
 class WYSIJA_help_plugins_import extends WYSIJA_object{
 
-    function WYSIJA_help_plugins_import(){
-
+    function __construct(){
+        parent::__construct();
     }
 
     //all the basic information concerning each plugin to make the match works

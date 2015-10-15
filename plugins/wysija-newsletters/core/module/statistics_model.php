@@ -13,21 +13,22 @@ class WYSIJA_module_statistics_model extends WYSIJA_model {
      * Time to live of stats's table (structure)
      */
     const STATS_TABLE_LIFE_TIME = 86400; // 24h * 60mins * 60s
-    
-    const STATS_PREFIX = 'stats_cache_'; // prefix of stat tables
+
+    const STATS_PREFIX = 'sc_'; // prefix of stat tables
 
     public function __construct() {
-        parent::WYSIJA_model();
+        parent::__construct();
         $this->clean_up_out_of_date_tables();
     }
 
     /**
-     * 
+     *
      * @param array $params array of input params
      */
 
     public function get_hash(Array $params) {
-        return md5(get_class($this) . json_encode($params));
+		$hash = md5(get_class($this) . json_encode($params));
+        return substr($hash, 0, 8);// Only get 8 first characters to not make table name too long (less than 64)
     }
 
     /**
@@ -48,25 +49,25 @@ class WYSIJA_module_statistics_model extends WYSIJA_model {
         $date_of_creation = $config->getValue(self::STATS_DATE_OF_CREATION);
         return (time() - $date_of_creation >= self::STATS_DATA_LIFE_TIME);
     }
-    
+
     /**
      * Get the list of tables which are out of date, based on create_time
      * @return type
      */
     protected function get_out_of_date_tables() {
         $query = '
-            SELECT  
+            SELECT
                 TABLE_NAME as table_name
             FROM
                 INFORMATION_SCHEMA.TABLES
             WHERE
                 TABLE_SCHEMA IN (SELECT DATABASE())
-                AND TABLE_NAME LIKE "[wysija]'.self::STATS_PREFIX.'%"
-                AND TIMESTAMPDIFF(SECOND,CREATE_TIME, NOW()) >= '.self::STATS_TABLE_LIFE_TIME.';            
+                AND (TABLE_NAME LIKE "[wysija]'.self::STATS_PREFIX.'%" OR TABLE_NAME LIKE "[wysija]stats_cache_%")
+                AND TIMESTAMPDIFF(SECOND,CREATE_TIME, NOW()) >= '.self::STATS_TABLE_LIFE_TIME.';
             ';
         return $this->get_results($query);
     }
-    
+
     /**
      * Auto cleanup out-of-date tables
      */

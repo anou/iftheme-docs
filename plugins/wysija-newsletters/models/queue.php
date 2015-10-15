@@ -12,10 +12,8 @@ class WYSIJA_model_queue extends WYSIJA_model{
         'number_try' => array('type'=>'integer')
     );
 
-
-
-    function WYSIJA_model_queue(){
-        $this->WYSIJA_model();
+    function __construct(){
+        parent::__construct();
     }
 
     /**
@@ -91,7 +89,6 @@ class WYSIJA_model_queue extends WYSIJA_model{
             JOIN [wysija]user as B on A.user_id=B.user_id
             WHERE B.status>'.$status_min.'
                 AND A.list_id IN ('.implode(',',$lists_to_send_to).')
-                AND A.sub_date>'.$status_min.'
                 AND A.unsub_date=0';
 
         // if some emails have already been sent on that newsletter, make sure we don't re enqueue the same emails again

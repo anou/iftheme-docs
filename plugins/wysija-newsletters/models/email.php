@@ -41,8 +41,8 @@ class WYSIJA_model_email extends WYSIJA_model{
 
     var $retro_active_autoresponders=true;
 
-    function WYSIJA_model_email(){
-        $this->WYSIJA_model();
+    function __construct(){
+        parent::__construct();
     }
 
     /**

@@ -3,11 +3,11 @@ defined('WYSIJA') or die('Restricted access');
 require_once(dirname(__FILE__).DS.'file.php');
 class WYSIJA_help_image extends WYSIJA_help_file{
 
-    function WYSIJA_help_image(){
+  function __construct(){
+    parent::__construct();
+  }
 
-    }
-
-    /**
+  /**
      * get a list of images from a directory
      * @param type $template
      * @return type

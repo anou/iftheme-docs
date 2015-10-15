@@ -2,9 +2,10 @@
 defined('WYSIJA') or die('Restricted access');
 class WYSIJA_help_jsonp extends WYSIJA_object {
 
-    function WYSIJA_help_jsonp() {
-
+    function __construct(){
+        parent::__construct();
     }
+
     /**
      * Is valid callback
      *

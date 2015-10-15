@@ -19,14 +19,12 @@ class WYSIJA_model_list extends WYSIJA_model{
     var $escapeFields=array('name','description');
     var $escapingOn=true;
 
-
-
-    function WYSIJA_model_list(){
+    function __construct(){
         $this->columns['name']['label']=__('Name',WYSIJA);
         $this->columns['description']['label']=__('Description',WYSIJA);
         $this->columns['is_enabled']['label']=__('Enabled',WYSIJA);
         $this->columns['ordering']['label']=__('Ordering',WYSIJA);
-        $this->WYSIJA_model();
+        parent::__construct();
     }
 
     function beforeInsert() {

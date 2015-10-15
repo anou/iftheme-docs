@@ -1,23 +1,24 @@
 <?php
-
+defined('WYSIJA') or die('Restricted access');
 /*
 A custom field.
 It represents a custom field that
 can be added to a form.
 Example:
-$custom_field = new WJ_Field();
-$custom_field->set(array(
-	'name' => 'Fruits',
-	'type' => 'select',
-	'required' => false,
-	'settings' => array(
-		'label' => 'Select a fruit:',
-		'values' => array(
-			'Apple', 'Orange', 'Banana'
-		),
-		'default_value' => 'Orange'
+$custom_field = new WJ_Field(
+	array(
+		'name' => 'Fruits',
+		'type' => 'select',
+		'required' => false,
+		'settings' => array(
+			'label' => 'Select a fruit:',
+			'values' => array(
+				'Apple', 'Orange', 'Banana'
+			),
+			'default_value' => 'Orange'
+		)
 	)
-));
+);
 $custom_field->save();
 */
 
@@ -38,13 +39,37 @@ class WJ_Field {
 	// Settings.
 	public $settings = array();
 
+	static $_table = 'custom_field';
+	static $_user_table = 'user';
+
+	static $defaults = array(
+		'date' => array(
+			'date_type' => 'year_month_day',
+			'is_default_today' => 0,
+			'date_order' => 'mm/dd/yyyy',
+		),
+		'radio' => array(
+			'values' => array(),
+		),
+		'checkbox' => array(
+			'values' => array(),
+		),
+		'select' => array(
+			'values' => array(),
+		)
+	);
+
 	/*
 	Just set the correct tables on creation.
 	$custom_field = new WJ_Field();
 	*/
-	function __construct() {
-		$this->table      = WJ_Settings::db_prefix( 'custom_field' );
-		$this->user_table = WJ_Settings::db_prefix( 'user' );
+	function __construct( $args = null ) {
+		$this->table      = WJ_Settings::db_prefix( self::$_table );
+		$this->user_table = WJ_Settings::db_prefix( self::$_user_table );
+
+		if ( ! is_null( $args ) ){
+			$this->set( $args );
+		}
 	}
 
 	/*
@@ -62,14 +87,10 @@ class WJ_Field {
 	# => WJCustomField Object
 	*/
 	public static function get( $id ) {
-		$object = new self();
 		global $wpdb;
-		$result = $wpdb->get_row( $wpdb->prepare( "SELECT * from {$object->table} WHERE id = %d", $id ), ARRAY_A );
+		$result = $wpdb->get_row( $wpdb->prepare( 'SELECT * from ' . WJ_Settings::db_prefix( self::$_table ) . ' WHERE id = %d', $id ), ARRAY_A );
 		if ( $result != null ) {
-			$result['settings'] = unserialize( $result['settings'] );
-			$result['required'] = WJ_Utils::to_bool( $result['required'] );
-			$object->set( $result );
-			return $object;
+			return new self( $result );
 		} else {
 			return null;
 		}
@@ -81,26 +102,21 @@ class WJ_Field {
 	# => Array of WJ_Field
 	*/
 	public static function get_all( $options = array() ) {
-		$object = new self();
 		global $wpdb;
 
 		// default order by
 		$order_by = 'id ASC';
-		if ( isset($options['order_by'] ) ){
+		if ( isset( $options['order_by'] ) ){
 			$order_by = $options['order_by'];
 		}
 
 		// fetch rows from db
-		$results = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$object->table} ORDER BY %s", $order_by ), ARRAY_A );
+		$results = $wpdb->get_results( $wpdb->prepare( 'SELECT * from ' . WJ_Settings::db_prefix( self::$_table ) . ' ORDER BY %s', $order_by ), ARRAY_A );
 
-		if ( $results != null ) {
+		if ( ! is_null( $results ) ) {
 			$collection = array();
 			foreach ( $results as $result ) {
-				$result['settings'] = unserialize( $result['settings'] );
-				$result['required'] = WJ_Utils::to_bool( $result['required'] );
-				$field = new self();
-				$field->set( $result );
-				$collection[] = $field;
+				$collection[] = new self( $result );
 			}
 			return $collection;
 		} else {
@@ -119,7 +135,7 @@ class WJ_Field {
 		$fields_list = array();
 		if ( isset( $fields ) ) {
 			foreach ( $fields as $field ) {
-				$fields_list[$field->id] = $field->name;
+				$fields_list[ $field->id ] = $field->name;
 			}
 		}
 		return $fields_list;
@@ -139,8 +155,16 @@ class WJ_Field {
 		}
 		$this->name     = $args['name'];
 		$this->type     = $args['type'];
-		$this->required = $args['required'];
-		$this->settings = $args['settings'];
+		$this->required = WJ_Utils::to_bool( $args['required'] );
+		$this->settings = maybe_unserialize( $args['settings'] );
+
+		if ( ! is_array( $this->settings ) ){
+			$this->settings = array();
+		}
+
+		if ( isset( self::$defaults[ $this->type ] ) && is_array( self::$defaults[ $this->type ] ) ) {
+			$this->settings = wp_parse_args( (array) $this->settings, (array) self::$defaults[ $this->type ] );
+		}
 	}
 
 	/*
@@ -214,7 +238,7 @@ class WJ_Field {
 				'name' => $this->name,
 				'type' => $this->type,
 				'required' => $required,
-				'settings' => serialize( $this->settings ),
+				'settings' => maybe_serialize( $this->settings ),
 			),
 			array( 'id' => $this->id ),
 			array( '%s', '%s', '%d' ),
@@ -260,7 +284,7 @@ class WJ_Field {
 				$column_type = 'VARCHAR(255)';
 				break;
 			case 'date':
-				$column_type = 'INT(10) UNSIGNED';
+				$column_type = 'INT(20)';
 			break;
 			default:
 				$column_type = 'VARCHAR(255)';

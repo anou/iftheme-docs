@@ -2,8 +2,9 @@
 defined('WYSIJA') or die('Restricted access');
 class WYSIJA_help_conflicts extends WYSIJA_object{
     var $cleanHooks=array();
-    function WYSIJA_help_conflicts(){
 
+    function __construct(){
+        parent::__construct();
     }
 
     /**

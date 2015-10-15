@@ -4,8 +4,8 @@ class WYSIJA_help_cron extends WYSIJA_object{
 
     var $report=false;
 
-    function WYSIJA_help_cron(){
-
+    function __construct(){
+        parent::__construct();
     }
 
     /**
@@ -33,10 +33,15 @@ class WYSIJA_help_cron extends WYSIJA_object{
             $this->report = $_SERVER['argv'][3];
         }
 
-        if($process){
+        if( !empty($process) ){
             //include the needed parts of wp plus wysija
             if(isset($_REQUEST[WYSIJA_CRON]) || ( isset($_SERVER['argv'][1]) && $_SERVER['argv'][1]==WYSIJA_CRON )) echo '';
-            else exit;
+            else{
+                wp_die("<h2>" . 'Invalid token' . "</h2>", "MailPoet CRON error", array(
+                        'response' => 404,
+                        'back_link' => false
+                ));
+            }
             $cron_schedules = get_option('wysija_schedules');
 
             $processes = array();
@@ -44,11 +49,18 @@ class WYSIJA_help_cron extends WYSIJA_object{
                 $processes = explode(',', $process);
             }else $processes[] = $process;
 
+            $allProcesses = array('queue','bounce','daily','weekly','monthly');
             foreach($processes as $scheduleprocess){
                 if($scheduleprocess!='all'){
-                    $this->check_scheduled_task($cron_schedules,$scheduleprocess);
+                    if( in_array( $scheduleprocess, $allProcesses ) ){
+                       $this->check_scheduled_task($cron_schedules,$scheduleprocess);
+                    }else{
+                        wp_die("<h2>" . 'Invalid process' . "</h2>", "MailPoet CRON error", array(
+                                'response' => 404,
+                                'back_link' => false
+                        ));
+                    }
                 }else{
-                    $allProcesses = array('queue','bounce','daily','weekly','monthly');
                     foreach($allProcesses as $processNK){
                         $this->check_scheduled_task($cron_schedules,$processNK);
                     }
@@ -57,6 +69,11 @@ class WYSIJA_help_cron extends WYSIJA_object{
                     exit;
                 }
             }
+        }else{
+            wp_die("<h2>" . 'Missing process' . "</h2>", "MailPoet CRON error", array(
+                        'response' => 404,
+                        'back_link' => false
+                ));
         }
         if(!isset($_REQUEST['silent'])) echo '"MailPoet\'s cron is ready. Simply setup a CRON job on your server (cpanel or other) to trigger this page.' ;
         if($process)    exit;

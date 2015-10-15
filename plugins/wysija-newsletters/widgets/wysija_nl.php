@@ -2,13 +2,14 @@
 /**
  * widget class for user registration
  */
+defined('WYSIJA') or die('Restricted access');
 class WYSIJA_NL_Widget extends WP_Widget {
 	var $classid = '';
 
 	var $iFrame = false;
 
 
-	function WYSIJA_NL_Widget( $core_only = false ) {
+	function __construct( $core_only = false ) {
 		static $script_registered;
 
 		if ( WYSIJA_SIDE == 'front' ){
@@ -46,7 +47,7 @@ class WYSIJA_NL_Widget extends WP_Widget {
 		add_action( 'init', array( $this, 'add_translated_default' ) );
 
 		$this->classid = strtolower( str_replace( __CLASS__ . '_', '', get_class( $this ) ) );
-		$this->WP_Widget( $namekey, $title, $params,$sizeWindow );
+		parent::__construct($namekey, $title, $params,$sizeWindow );
 
 	}
 
@@ -129,7 +130,7 @@ class WYSIJA_NL_Widget extends WP_Widget {
 
 		// keep all of the fields passed from the new instance
 		foreach ( $new_instance as $key => $value ){
-			$instance[$key] = $value;
+			$instance[ $key ] = $value;
 		}
 
 		return $instance;
@@ -168,21 +169,22 @@ class WYSIJA_NL_Widget extends WP_Widget {
 			$extrascriptLabel = '';
 			$value_field = '';
 
-			if ( ( isset( $field_params['hidden'] ) && $field_params['hidden'] ) || ( isset( $this->core_only ) && $this->core_only && ! isset( $field_params['core'] ) ) )
+			if ( ( isset( $field_params['hidden'] ) && $field_params['hidden'] ) || ( isset( $this->core_only ) && $this->core_only && ! isset( $field_params['core'] ) ) ){
 				continue;
+			}
 
-			if ( isset( $instance[$field] ) ) {
+			if ( isset( $instance[ $field ] ) ) {
 
-				if ( $field === 'success' && $instance[$field] == $this->successmsgsub . ' ' . $this->successmsgconf ){
+				if ( $field === 'success' && $instance[ $field ] == $this->successmsgsub . ' ' . $this->successmsgconf ){
 					$config = WYSIJA::get( 'config','model' );
 
 					if ( ! $config->getValue( 'confirm_dbleoptin' ) ){
 						$value_field = $this->successmsgsub;
 					} else {
-						$value_field = $instance[$field];
+						$value_field = $instance[ $field ];
 					}
 				} else {
-					$value_field = $instance[$field];
+					$value_field = $instance[ $field ];
 				}
 			} elseif ( isset( $field_params['default'] ) ) {
 				$value_field = $field_params['default'];
@@ -206,7 +208,8 @@ class WYSIJA_NL_Widget extends WP_Widget {
 					$field_html .= '</select>';
 					break;
 				case 'edit_link':
-					$field_html = '<a href="admin.php?page=wysija_config&action=form_add" target="_blank" title="'.$field_params['label'].'">'.$field_params['label'].'</a>';
+
+                                        $field_html = '<a href="admin.php?page=wysija_config&action=form_add&_wpnonce='.wp_create_nonce('wysija_config-action_form_add').'" target="_blank" title="'.$field_params['label'].'">'.$field_params['label'].'</a>';
 					break;
 				default:
 					$field_html = $helper_forms->input(
@@ -257,16 +260,21 @@ class WYSIJA_NL_Widget extends WP_Widget {
 
 			// new form editor
 			$title = '';
-			if ( ! isset( $this->core_only ) )
+			if ( ! isset( $this->core_only ) ){
 				$title = apply_filters( 'widget_title', $instance['title'], $instance, $this->id_base );
-			if ( ! isset( $before_widget ) )
+			}
+			if ( ! isset( $before_widget ) ){
 				$before_widget = '';
-			if ( ! isset( $after_widget ) )
+			}
+			if ( ! isset( $after_widget ) ){
 				$after_widget = '';
-			if ( ! isset( $before_title ) )
+			}
+			if ( ! isset( $before_title ) ){
 				$before_title = '';
-			if ( ! isset( $after_title ) )
+			}
+			if ( ! isset( $after_title ) ){
 				$after_title = '';
+			}
 
 			if ( ! isset( $this->core_only ) ) {
 				$title = $before_title.$title.$after_title;
@@ -295,9 +303,9 @@ class WYSIJA_NL_Widget extends WP_Widget {
 				if ( isset( $this->core_only ) && $this->core_only && ! isset( $field_params['core'] ) ){
 					continue;
 				}
-				if ( $field == 'success' && $instance[$field] == $this->successmsgsub . ' ' . $this->successmsgconf ){
+				if ( $field == 'success' && $instance[ $field ] == $this->successmsgsub . ' ' . $this->successmsgconf ){
 					if ( ! $model_config->getValue( 'confirm_dbleoptin' ) ){
-						$instance[$field] = $this->successmsgsub;
+						$instance[ $field ] = $this->successmsgsub;
 					}
 				}
 			}

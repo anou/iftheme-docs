@@ -147,13 +147,34 @@ if(isset($_POST['required_role'])){
 }
 
 $current_theme_has_uc_page = file_exists(get_template_directory() . '/under-construction.php');
+
+add_thickbox();
+
+if ($_GET['underconstruction_global_notification'] == 0) {
+	update_option('underconstruction_global_notification', 0);
+}
 ?>
 <noscript>
 	<div class='updated' id='javascriptWarn'>
 		<p><?php _e('JavaScript appears to be disabled in your browser. For this plugin to work correctly, please enable JavaScript or switch to a more modern browser.', 'underconstruction');?></p>
 	</div>
 </noscript>
+<style type="text/css">
+	#underconstruction_global_notification a.button:active {vertical-align:baseline;}
+</style> 
 <div class="wrap">
+    <?php
+	if (!is_plugin_active( 'sumome/sumome.php' )) 
+	{
+		?>
+    	<div id="underconstruction_global_notification" style="border:3px solid #31964D;position:relative;background:#6AB07B;color:#ffffff;height:70px;margin:5px 0 15px;padding:1px 12px;">
+			<p style="font-size:16px;line-height:40px;">
+			<?php _e('Tools to grow your Email List, Social Sharing and Analytics.'); ?> &nbsp;<a style="background-color: #6267BE;border-color: #3C3F76;" href="<?php echo admin_url('plugin-install.php?tab=plugin-information&plugin=sumome&TB_iframe=true&width=743&height=500'); ?>" class="thickbox button button-primary">Get SumoMe WordPress Plugin</a>
+			</p>
+    	</div> 
+		<?php
+	}
+	?>
 	<div id="icon-options-general" class="icon32">
 		<br />
 	</div>

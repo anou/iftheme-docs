@@ -1,10 +1,9 @@
 <?php
 defined('WYSIJA') or die('Restricted access');
 class WYSIJA_help_http extends WYSIJA_object{
-
-
-    function WYSIJA_help_http(){
-
+    
+    function __construct(){
+        parent::__construct();
     }
 
     /**

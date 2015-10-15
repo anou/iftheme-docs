@@ -19,7 +19,6 @@
 
                     ed.addCommand('wysijaRegister', function() {
                        ed.windowManager.open({
-                           /*file : url + '/wysija_register.php',*/
                             file : ajaxurl+"?action=wysija_ajax&wysilog=1&controller=tmce&task=registerAdd",
                             width : 240,
                             height : 185 ,
@@ -27,19 +26,6 @@
                         }, {
                             plugin_url : url
                         });
-                    });
-
-                    ed.addCommand('wysijaRegisterEdit', function() {
-                            ed.plugins.wysija_register._hideButtons();
-                            ed.windowManager.open({
-                               /*file : url + '/wysija_register.php?'+t.editValue,*/
-                               file : ajaxurl+"?action=wysija_ajax&wysilog=1&controller=tmce&task=registerEdit&widget-data64="+t.editValue+'&post_id='+t.post_id,
-                                width : 240 ,
-                                height : 185,
-                                inline : 1
-                            }, {
-                                plugin_url : url
-                            });
                     });
 
                     ed.addButton('wysija_register', {
@@ -137,34 +123,6 @@
 				style : 'display:none;'
 			});
 
-			editButton = DOM.add('wp_wysijaregister', 'img', {
-				src : t.url+'/wysija_register.png',
-				id : 'wp_edit_wysinl_btn',
-				width : '24',
-				height : '24'
-			});
-
-			tinymce.dom.Event.add(editButton, 'mousedown', function(e) {
-				var ed = tinyMCE.activeEditor;
-				ed.execCommand("wysijaRegisterEdit");
-			});
-
-			dellButton = DOM.add('wp_wysijaregister', 'img', {
-				src : t.url+'/delete.png',
-				id : 'wp_del_wysinl_btn',
-				width : '24',
-				height : '24'
-			});
-
-			tinymce.dom.Event.add(dellButton, 'mousedown', function(e) {
-				var ed = tinyMCE.activeEditor, el = ed.selection.getNode(), p;
-				if ( el.nodeName == 'DIV'  && el.className=="wysija-register" ) {
-					ed.dom.remove(el);
-                                        ed.plugins.wysija_register._hideButtons();
-					ed.execCommand('mceRepaint');
-					return false;
-				}
-			});
 		}
 
 	});

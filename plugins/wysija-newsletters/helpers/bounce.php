@@ -21,7 +21,7 @@ class WYSIJA_help_bounce extends WYSIJA_help {
     var $messages = array();
     var $record_ms_bounce = false; // only used in multisite scenario
 
-    function WYSIJA_help_bounce() {
+    function __construct() {
         $this->config = WYSIJA::get('config', 'model');
         $this->mailer = WYSIJA::get('mailer', 'helper');
         $this->rulesClass = WYSIJA::get('rules', 'helper');
@@ -571,6 +571,20 @@ class WYSIJA_help_bounce extends WYSIJA_help {
             }
         }
 
+
+        //Make sure we have enough messages to really execute this
+        if (!empty($one_rule['action_user_min']) && $one_rule['action_user_min'] > 1) {
+            //Let's load the number of bounces the user has and then exit or not...
+            $modelEUS = WYSIJA::get('email_user_stat', 'model');
+            $res = $modelEUS->query('get_row', 'SELECT COUNT(email_id) as count FROM [wysija]' . $modelEUS->table_name . ' WHERE status = -1 AND user_id = ' . $this->_message->user_id);
+            $nb = intval($res['count']) + 1;
+
+            if ($nb < $one_rule['action_user_min']) {
+                $message .= ', ' . sprintf(__('We received %1$s messages from the user %2$s', WYSIJA), $nb, $this->_message->subemail) . ', ' . sprintf(__('Actions will be executed after %1$s messages', WYSIJA), $one_rule['action_user_min']);
+                return $message;
+            }
+        }
+
         //IN WYSIJA THERE ARE 3 POSSIBILITIES
         //1-Delete user
         //2-Unsubscribe user
@@ -602,18 +616,7 @@ class WYSIJA_help_bounce extends WYSIJA_help {
 
 
 
-        //Make sure we have enough messages to really execute this
-        if (!empty($one_rule['action_user_min']) && $one_rule['action_user_min'] > 1) {
-            //Let's load the number of bounces the user has and then exit or not...
-            $modelEUS = WYSIJA::get('email_user_stat', 'model');
-            $res = $modelEUS->query('get_row', 'SELECT COUNT(email_id) as count FROM [wysija]' . $modelEUS->table_name . ' WHERE status = -1 AND user_id = ' . $this->_message->user_id);
-            $nb = intval($res['count']) + 1;
 
-            if ($nb < $one_rule['action_user_min']) {
-                $message .= ', ' . sprintf(__('We received %1$s messages from the user %2$s', WYSIJA), $nb, $this->_message->subemail) . ', ' . sprintf(__('Actions will be executed after %1$s messages', WYSIJA), $one_rule['action_user_min']);
-                return $message;
-            }
-        }
 
         return $message;
     }

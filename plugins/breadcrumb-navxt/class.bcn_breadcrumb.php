@@ -1,6 +1,6 @@
 <?php
 /*  
-	Copyright 2007-2014  John Havlik  (email : john.havlik@mtekk.us)
+	Copyright 2007-2015  John Havlik  (email : john.havlik@mtekk.us)
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ require_once(dirname(__FILE__) . '/includes/block_direct_access.php');
 class bcn_breadcrumb
 {
 	//Our member variables
+	const version = '5.2.2';
 	//The main text that will be shown
 	protected $title;
 	//The breadcrumb's template, used durring assembly
@@ -28,7 +29,7 @@ class bcn_breadcrumb
 	//The breadcrumb's no anchor template, used durring assembly when there won't be an anchor
 	protected $template_no_anchor = '%title%';
 	//Boolean, is this element linked
-	protected $linked;
+	protected $linked = false;
 	//The link the breadcrumb leads to, null if $linked == false
 	protected $url;
 	//The corresponding resource ID
@@ -45,7 +46,7 @@ class bcn_breadcrumb
 	 * @param string $type (optional) The breadcrumb type
 	 * @param string $url (optional) The url the breadcrumb links to
 	 */
-	public function __construct($title = '', $template = '', $type = '', $url = NULL, $id = NULL)
+	public function __construct($title = '', $template = '', array $type = array(), $url = NULL, $id = NULL)
 	{
 		//Filter allowed_html array to allow others to add acceptable tags
 		$this->allowed_html = apply_filters('bcn_allowed_html', wp_kses_allowed_html('post'));
@@ -55,10 +56,10 @@ class bcn_breadcrumb
 		$this->set_id($id);
 		//Set the title
 		$this->set_title($title);
-		//Assign the breadcrumb template
-		if($template == NULL)
+		//Assign the breadcrumb template, need strict comparison as we only want to enter if we had a blank URL, not NULL URL
+		if($template == NULL || $url === '')
 		{
-			if($url == NULL)
+			if($url == NULL || $url === '')
 			{
 				$template = __('<span typeof="v:Breadcrumb"><span property="v:title">%htitle%</span></span>', 'breadcrumb-navxt');
 			}
@@ -67,6 +68,7 @@ class bcn_breadcrumb
 				$template = __('<span typeof="v:Breadcrumb"><a rel="v:url" property="v:title" title="Go to %title%." href="%link%" class="%type%">%htitle%</a></span>', 'breadcrumb-navxt');
 			}
 		}
+		//Loose comparison, evaluates to true if URL is '' or NULL
 		if($url == NULL)
 		{
 				$this->template_no_anchor = wp_kses(apply_filters('bcn_breadcrumb_template_no_anchor', $template, $this->type, $this->id), $this->allowed_html);
@@ -108,7 +110,7 @@ class bcn_breadcrumb
 	{
 		$this->url = esc_url(apply_filters('bcn_breadcrumb_url', $url, $this->type, $this->id));
 		//Set linked to true if we set a non-null $url
-		if($url)
+		if($url && $url != '')
 		{
 			$this->linked = true;
 		}
@@ -151,12 +153,14 @@ class bcn_breadcrumb
 		$this->type[] = $type;
 	}
 	/**
-	 * This function will intelligently trim the title to the value passed in through $max_length.
+	 * This function will intelligently trim the title to the value passed in through $max_length. This function is deprecated, do not call.
 	 * 
 	 * @param int $max_length of the title.
+	 * @deprecated since 5.2.0
 	 */
 	public function title_trim($max_length)
 	{
+		_deprecated_function(__FUNCTION__, '5.2.0');
 		//To preserve HTML entities, must decode before splitting
 		$this->title = html_entity_decode($this->title, ENT_COMPAT, 'UTF-8');
 		$title_length = mb_strlen($this->title);

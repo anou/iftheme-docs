@@ -7,8 +7,9 @@ add_action( 'wp_ajax_mailpoet.search_terms', 'WYSIJA_help_campaigns::ajax_search
  */
 defined('WYSIJA') or die('Restricted access');
 class WYSIJA_help_campaigns extends WYSIJA_object{
-	function WYSIJA_help_campaigns(){
 
+	function __construct(){
+	  parent::__construct();
 	}
 
 	function saveParameters($email_id, $key, $value)

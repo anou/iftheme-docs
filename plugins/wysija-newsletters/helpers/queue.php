@@ -22,7 +22,7 @@ class WYSIJA_help_queue extends WYSIJA_object{
         /**
          *
          */
-	function WYSIJA_help_queue(){
+	function __construct(){
             $this->config = WYSIJA::get('config','model');
             $this->subClass = WYSIJA::get('user','model');//acymailing_get('class.sub');
             $this->listsubClass = WYSIJA::get('user_list','model');//acymailing_get('class.listsub');
@@ -64,7 +64,7 @@ class WYSIJA_help_queue extends WYSIJA_object{
          * @return boolean
          */
 	function process($email_id=false,$user_id=false){
-                if($email_id)    $this->email_id=$email_id;
+                if($email_id)    $this->email_id=(int)$email_id;
                 $model_queue = WYSIJA::get('queue','model');
 		$queue_elements = $model_queue->getReady($this->send_limit,$this->email_id,$user_id);
 
@@ -119,7 +119,7 @@ class WYSIJA_help_queue extends WYSIJA_object{
 			$html_response.= '</div>';
 			$html_response.= "<div id='divinfo' style='display:none; position:fixed; bottom:3px;left:3px;background-color : white; border : 1px solid grey; padding : 3px;'> </div>";
 
-                        $url = 'admin.php?page=wysija_campaigns&action=manual_send&emailid='.$this->email_id.'&totalsend='.$this->total.'&alreadysent=';
+                        $url = 'admin.php?page=wysija_campaigns&action=manual_send&emailid='.$this->email_id.'&_wpnonce='.WYSIJA_view::secure(array('action' => 'manual_send'), true).'&totalsend='.$this->total.'&alreadysent=';
 
 			$html_response.= '<script type="text/javascript" language="javascript">';
 			$html_response.= 'var mycounter = document.getElementById("counter");';

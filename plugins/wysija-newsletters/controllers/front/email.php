@@ -5,8 +5,8 @@ class WYSIJA_control_front_email extends WYSIJA_control_front{
     var $model='email';
     var $view='email';
 
-    function WYSIJA_control_front_email(){
-        parent::WYSIJA_control_front();
+    function __construct(){
+        parent::__construct();
     }
 
     function view(){
@@ -28,7 +28,7 @@ class WYSIJA_control_front_email extends WYSIJA_control_front{
         $email_id = (int)$_REQUEST['email_id'];
         // Get current email object.
         $current_email = $emailM->getOne($email_id);
-
+        if(empty($current_email)) exit;
         if($current_email->type==2){
 
             $emailM->reset();
@@ -38,25 +38,13 @@ class WYSIJA_control_front_email extends WYSIJA_control_front{
             $current_email = $emailM->getOne($email_id);
         }
 
-
-
-
         // Get current user object if possible
         $current_user = null;
-        if(isset($_REQUEST['user_id']) && (int)$_REQUEST['user_id'] > 0 ){
-            // Get User Model
-            $userM = WYSIJA::get('user','model');
-            $userM->getFormat = OBJECT;
-            $current_user = $userM->getOne((int)$_REQUEST['user_id']);
-        }
+
         // Parse and replace user tags.
         $mailerH->parseUserTags($current_email);
         $mailerH->parseSubjectUserTags($current_email);
 	$mailerH->replaceusertags($current_email, $current_user);
-	// Start tracking if this preview is opened from a newsletter
-	if ($current_user !== null) {
-	    $mailerH->tracker_replaceusertags($current_email, $current_user);
-	}
 
         // Set Body
         $email_render = $current_email->body;

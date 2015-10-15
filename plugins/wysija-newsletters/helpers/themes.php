@@ -3,8 +3,8 @@ defined('WYSIJA') or die('Restricted access');
 class WYSIJA_help_themes extends WYSIJA_object{
     var $extensions = array('png', 'jpg', 'jpeg', 'gif');
 
-    function WYSIJA_help_themes(){
-
+    function __construct(){
+        parent::__construct();
     }
 
     /**
@@ -257,8 +257,9 @@ class WYSIJA_help_themes extends WYSIJA_object{
             return false;
         }
 
-        $timecreated=time();
-        $dirthemetemp=$helperF->makeDir('temp'.DS.'temp_'.$timecreated,0777);
+        //$timecreated=time();
+        $timecreated = substr( md5(rand()), 0, 20);
+        $dirthemetemp=$helperF->makeDir('temp'.DS.'temp_'.$timecreated,0755);
 
         $zipclass=WYSIJA::get('zip','helper');
         if(!$zipclass->unzip_wp($tempzipfile,$dirthemetemp)) {
@@ -276,13 +277,28 @@ class WYSIJA_help_themes extends WYSIJA_object{
                 $helperF->rrmdir($dirthemetemp);
                 return false;
             }else{
-
                 if(!in_array($filename, array('.','..','.DS_Store','Thumbs.db')))    $theme_key=$filename;
             }
         }
 
+        // making sure this theme only has allowed files in its folders and subfolders
+        $dir_iterator = new RecursiveDirectoryIterator($dirthemetemp);
+        $iterator = new RecursiveIteratorIterator($dir_iterator, RecursiveIteratorIterator::SELF_FIRST);
+
+        $allowed_extensions = array('png', 'jpg', 'jpeg', 'gif', 'css', 'txt');
+
+        foreach ($iterator as $file) {
+
+            if( !$file->isDir() && !in_array( pathinfo( $file->getBasename(), PATHINFO_EXTENSION ), $allowed_extensions)) {
+                $this->error(sprintf('Your theme is not valid. It can only contain files that have the following extensions: "%s"', join('", "', $allowed_extensions)));
+                $helperF->rrmdir($dirthemetemp);
+                return false;
+            }
+        }
+
          if(!$theme_key){
-            $this->error('There was an error while unzipping the file :'.$tempzipfile.' to the folder: '.$dirthemetemp);
+            $this->error('There was an error while unzipping the file :'.  esc_html($tempzipfile).' to the folder: '.esc_html($dirthemetemp));
+            $helperF->rrmdir($dirthemetemp);
             return false;
         }
 
@@ -291,6 +307,7 @@ class WYSIJA_help_themes extends WYSIJA_object{
         //make sure we don't overwrite existing folder
         if($manual && !isset($_REQUEST['overwriteexistingtheme']) && file_exists($dirtheme.DS.$theme_key)){
             $this->error(sprintf(__('A theme called %1$s exists already. To overwrite it, tick the corresponding checkbox before uploading.',WYSIJA),'<strong>'.$theme_key.'</strong>'),1);
+            $helperF->rrmdir($dirthemetemp);
             return false;
         }
 
@@ -305,8 +322,8 @@ class WYSIJA_help_themes extends WYSIJA_object{
                 if($manual){
                     if(!file_exists($dirthemetemp.DS.$testfile)){
                         //this is not a theme file let's remove it
-                        if($keyindex==0)    $this->error('Missing directory :'.$testfile);
-                        else    $this->error('Missing file :'.$dirthemetemp.DS.$testfile);
+                        if($keyindex==0)    $this->error('Missing directory :'.  esc_html($testfile));
+                        else    $this->error('Missing file :'.$dirthemetemp.DS.esc_html($testfile));
 
                         $result=false;
 
@@ -320,7 +337,7 @@ class WYSIJA_help_themes extends WYSIJA_object{
              //once it's all good we move the theme to the right folder
             $helperF->rcopy($dirthemetemp.DS.$listoffilestocheck[0],$dirtheme.DS.$listoffilestocheck[0]);
 
-            $this->notice(sprintf(__('The theme %1$s has been installed on your site.',WYSIJA),'<strong>'.$theme_key.'</strong>'));
+            $this->notice(sprintf(__('The theme %1$s has been installed on your site.',WYSIJA),'<strong>'.  esc_html($theme_key).'</strong>'));
         }else{
             $this->error(__("We could not install your theme. It appears it's not in the valid format.",WYSIJA),1);
         }

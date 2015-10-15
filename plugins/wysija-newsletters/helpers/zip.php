@@ -2,10 +2,10 @@
 defined('WYSIJA') or die('Restricted access');
 class WYSIJA_help_zip extends WYSIJA_object{
 
-    function WYSIJA_help_zip(){
-
+    function __construct(){
+      parent::__construct();
     }
-    
+
     /**
      * reeusing wordpress method
      * @param type $temp_file_addr

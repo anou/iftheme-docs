@@ -2,82 +2,36 @@
 defined('WYSIJA') or die('Restricted access');
 class WYSIJA_control_back_campaigns extends WYSIJA_control{
 
-	function WYSIJA_control_back_campaigns(){
+	function __construct(){
 		if(!WYSIJA::current_user_can('wysija_newsletters'))  die('Action is forbidden.');
-		parent::WYSIJA_control();
+		parent::__construct();;
 	}
 
 	function save_poll(){
-		$model_config = WYSIJA::get('config','model');
-		$model_config->save(array('poll_origin' => $_REQUEST['how'] , 'poll_origin_url' => $_REQUEST['where']));
+		$this->requireSecurity();
 
-		$res['result'] = true;
-		$res['msg'] = '<span><span class="checkmark">---</span>'. __('Thanks!',WYSIJA). '</span>';
-		return $res;
-	}
+                if( in_array($_REQUEST['how'], array('repository' , 'search_engine' , 'friend', 'url' )) ){
 
-	function search_terms( $request = null ){
-		$response = (object) array(
-			'status' => false,
-			'message' => __( 'Your request has failed', WYSIJA ),
-			'results' => array(),
-			'more' => true,
-		);
+                    $data_conf = array( 'poll_origin' => $_REQUEST['how'] );
+                    if( !empty( $_REQUEST['where'] ) ){
+                        $data_conf['poll_origin_url'] = esc_url($_REQUEST['where']);
+                    }
+                    $model_config = WYSIJA::get('config','model');
+                    $model_config->save( $data_conf );
 
-		if ( ( ! defined( 'DOING_AJAX' ) && is_null( $request ) ) || ! is_user_logged_in() ){
-			return $response;
-		}
+                    $res['result'] = true;
+                    $res['msg'] = '<span><span class="checkmark">---</span>'. __('Thanks!',WYSIJA). '</span>';
+                    return $res;
+                }
 
-		$request = (object) wp_parse_args(
-			$request,
-			array(
-				'search' => isset( $_GET['search'] ) ? $_GET['search'] : '',
-				'post_type' => isset( $_GET['post_type'] ) ? $_GET['post_type'] : null,
-				'page' => absint( isset( $_GET['page'] ) ? $_GET['page'] : 0 ),
-				'page_limit' => absint( isset( $_GET['page_limit'] ) ? $_GET['page_limit'] : 10 ),
-			)
-		);
+                $res['result'] = false;
+                return $res;
 
-		if ( is_null( $request->post_type ) ){
-			return $response;
-		}
-
-		$response->status  = true;
-		$response->message = __( 'Request successful', WYSIJA );
-
-		$response->post_type = get_post_types( array( 'name' => $request->post_type ) );
-		$response->post_type = reset( $response->post_type );
-
-		preg_match( '/@(\w+)/i', $request->search, $response->regex );
-
-		if ( ! empty( $response->regex ) ){
-			$request->search = array_filter( array_map( 'trim', explode( '|', str_replace( $response->regex[0], '|', $request->search ) ) ) );
-			$request->search = reset( $request->search );
-			$taxonomies      = $response->regex[1];
-		} else {
-			$taxonomies = get_object_taxonomies( $response->post_type );
-		}
-		$response->taxonomies = get_object_taxonomies( $response->post_type, 'objects' );
-
-		$response->results = get_terms(
-			(array) $taxonomies,
-			array(
-				'hide_empty' => false,
-				'search' => $request->search,
-				'number' => $request->page_limit,
-				'offset' => $request->page_limit * ( $request->page - 1 ),
-			)
-		);
-
-		if ( empty( $response->results ) || count( $response->results ) < $request->page_limit ){
-			$response->more = false;
-		}
-
-		return $response;
 	}
 
 	function switch_theme() {
-		if(isset($_POST['wysijaData'])) {
+		$this->requireSecurity();
+                if(isset($_POST['wysijaData'])) {
 			$rawData = $_POST['wysijaData'];
 			// avoid using stripslashes as it's not reliable depending on the magic quotes settings
 			$rawData = str_replace('\"', '"', $rawData);
@@ -111,7 +65,8 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
 	}
 
 	function save_editor() {
-		// decode json data and convert to array
+		$this->requireSecurity();
+                // decode json data and convert to array
 		$rawData = '';
 		if(isset($_POST['wysijaData'])) {
 			$rawData = $_POST['wysijaData'];
@@ -127,7 +82,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
 		}
 
 		$helper_wj_engine = WYSIJA::get('wj_engine', 'helper');
-		$helper_wj_engine->setData($rawData);
+		$helper_wj_engine->setData( $rawData );
 		$result = false;
 
 		// get email id
@@ -162,7 +117,8 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
 	}
 
 	function save_styles() {
-		// decode json data and convert to array
+		$this->requireSecurity();
+                // decode json data and convert to array
 		$rawData = '';
 		if(isset($_POST['wysijaStyles'])) {
 			$rawData = $_POST['wysijaStyles'];
@@ -209,7 +165,7 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
 	}
 
 	function deleteimg(){
-
+                $this->requireSecurity();
 		if(isset($_REQUEST['imgid']) && $_REQUEST['imgid']>0){
 			/* delete the image with id imgid */
 			 $result=wp_delete_attachment($_REQUEST['imgid'],true);
@@ -224,7 +180,8 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
 	}
 
 	function deleteTheme(){
-		if(isset($_REQUEST['themekey']) && $_REQUEST['themekey']){
+		$this->requireSecurity();
+                if(isset($_REQUEST['themekey']) && $_REQUEST['themekey']){
 			/* delete the image with id imgid */
 			$helperTheme=WYSIJA::get('themes','helper');
 			$result=$helperTheme->delete($_REQUEST['themekey']);
@@ -237,7 +194,8 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
 
 	// set newsletter default theme
 	function setDefaultTheme() {
-		if(isset($_REQUEST['theme']) && $_REQUEST['theme']) {
+		$this->requireSecurity();
+                if(isset($_REQUEST['theme']) && $_REQUEST['theme']) {
 			// check that the theme exists
 			// TODO
 			$theme_exists = true;
@@ -256,7 +214,8 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
 	}
 
 	function save_IQS() {
-		// decode json data and convert to array
+		$this->requireSecurity();
+                // decode json data and convert to array
 		$wysijaIMG = '';
 		if(isset($_POST['wysijaIMG'])) {
 			$wysijaIMG = json_decode(stripslashes($_POST['wysijaIMG']), TRUE);
@@ -284,148 +243,9 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
 		return array('result' => $result);
 	}
 
-
-	function view_NL() {
-		// get campaign id
-		$email_id = (int)$_REQUEST['id'];
-
-		// update data in DB
-		$model_email = WYSIJA::get('email', 'model');
-		$result = $model_email->getOne(false,array('email_id' => $email_id));
-
-		echo $result['body'];
-		exit;
-	}
-
-	function display_NL() {
-		// get email id
-		$email_id = (int)$_REQUEST['id'];
-
-		// update data in DB
-		$model_email = WYSIJA::get('email', 'model');
-		$email= $model_email->getOne(false,array('email_id' => $email_id));
-
-		$helper_wj_engine = WYSIJA::get('wj_engine', 'helper');
-		$helper_wj_engine->setStyles($result['wj_styles'], true);
-		$helper_wj_engine->setData($result['wj_data'], true);
-		$html = $helper_wj_engine->renderEmail($email);
-		print $html;
-		exit;
-	}
-
-	/**
-	 * returns the images attached to displayed posts
-	 */
-	function get_post_images() {
-		// get parameters
-		$params = array(
-
-		);
-
-		$result = true;
-
-		if($params['post_id'] === null) {
-
-		}
-
-		return array(
-			'result' => $result,
-			'images' => $images
-		);
-	}
-
-	/**
-	 * returns a list of articles to the popup in the visual editor
-	 * @global type $wpdb
-	 * @return boolean
-	 */
-	function get_articles(){
-		// fixes issue with pcre functions
-		@ini_set('pcre.backtrack_limit', 1000000);
-
-		// get parameters
-		$raw_data = $_REQUEST['data'];
-		$params = array();
-		foreach ($raw_data as $value) {
-			$params[$value['name']] = $value['value'];
-		}
-
-		// get options
-		$model_config = WYSIJA::get('config', 'model');
-		$interpret_shortcode = (bool)$model_config->getValue('interp_shortcode');
-
-		// post statuses
-		$helper_wp_tools = WYSIJA::get('wp_tools', 'helper');
-		$post_statuses = $helper_wp_tools->get_post_statuses();
-		$post_types = $helper_wp_tools->get_post_types();
-
-		// filter by post_type
-		if(isset($params['post_type'])) {
-			$post_types_filter = array();
-			if(strlen(trim($params['post_type'])) === 0) {
-				$post_types_filter = array_keys($post_types);
-				$post_types_filter[] = 'post';
-				$post_types_filter[] = 'page';
-			} else {
-				$post_types_filter = trim($params['post_type']);
-			}
-			// set condition on post type
-			$params['post_type'] = $post_types_filter;
-		}
-
-		// query offset when doing incremental loading
-		$query_offset = (isset($_REQUEST['query_offset']) && (int)$_REQUEST['query_offset'] >= 0) ? (int)$_REQUEST['query_offset'] : 0;
-		$params['query_offset'] = $query_offset;
-
-		// fetch posts
-		$helper_articles = WYSIJA::get('articles', 'helper');
-
-		// set is_search_query (true) to get a count in addition to the results
-		$params['is_search_query'] = true;
-
-		$model_wp_posts = WYSIJA::get('wp_posts','model');
-		$data = $model_wp_posts->get_posts($params);
-
-		// extract data
-		$posts = $data['rows'];
-		// contains the total number of rows available
-		$count = $data['count'];
-
-		// return results
-		$result = array(
-			'result' => true,
-			'append' => ($query_offset > 0)
-		);
-
-		if(empty($posts) === false) {
-			foreach($posts as $key => $post) {
-				// interpret shortcodes
-				if($interpret_shortcode === true) {
-					$posts[$key]['post_content'] = apply_filters('the_content', $posts[$key]['post_content']);
-				}
-
-				// get thumbnail
-				$posts[$key]['post_image'] = $helper_articles->getImage($post);
-
-				// set post status
-				$post_status_label = '';
-				if(isset($post_statuses[$posts[$key]['post_status']])) {
-					$post_status_label = $post_statuses[$posts[$key]['post_status']];
-				}
-				$posts[$key]['post_status'] = $post_status_label;
-			}
-			$result['posts'] = $posts;
-			$result['total'] = (int)$count['total'];
-		}else {
-			$result['msg'] = __('There are no posts corresponding to that search.', WYSIJA);
-			$result['result'] = false;
-		}
-
-		return $result;
-	}
-
 	function insert_articles() {
-		// get raw params
+		$this->requireSecurity();
+                // get raw params
 		$raw_params = $_REQUEST['data'];
 
 		// format params
@@ -501,7 +321,8 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
 	}
 
 	function send_preview($spamtest=false){
-		$mailer=WYSIJA::get('mailer','helper');
+		$this->requireSecurity();
+                $mailer=WYSIJA::get('mailer','helper');
 		$email_id = $_REQUEST['id'];
 		$resultarray=array();
 
@@ -651,12 +472,14 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
 	 * send spam test function step 2 of the newsletter edition process
 	 */
 	function send_spamtest(){
-		return apply_filters('wysija_send_spam_test','',$this);
+		$this->requireSecurity();
+                return apply_filters('wysija_send_spam_test','',$this);
 	}
 
 	function set_divider()
 	{
-		$src = isset($_POST['wysijaData']['src']) ? $_POST['wysijaData']['src'] : NULL;
+		$this->requireSecurity();
+                $src = isset($_POST['wysijaData']['src']) ? $_POST['wysijaData']['src'] : NULL;
 		$width = isset($_POST['wysijaData']['width']) ? (int)$_POST['wysijaData']['width'] : NULL;
 		$height = isset($_POST['wysijaData']['height']) ? (int)$_POST['wysijaData']['height'] : NULL;
 
@@ -685,17 +508,8 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
 		return base64_encode($helper_wj_engine->renderEditorBlock($block));
 	}
 
-	function get_social_bookmarks() {
-		$size = isset($_POST['wysijaData']['size']) ? $_POST['wysijaData']['size'] : NULL;
-		$theme = isset($_POST['wysijaData']['theme']) ? $_POST['wysijaData']['theme'] : NULL;
-
-		$bookmarksHelper = WYSIJA::get('bookmarks', 'helper');
-		$bookmarks = $bookmarksHelper->getAll($size, $theme);
-		return json_encode(array('icons' => $bookmarks));
-	}
-
 	function generate_social_bookmarks() {
-
+                $this->requireSecurity();
 		$size = 'medium';
 		$iconset = '01';
 
@@ -787,7 +601,8 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
 	}
 
 	function install_theme() {
-		if( isset($_REQUEST['theme_id'])){
+		$this->requireSecurity();
+                if( isset($_REQUEST['theme_id'])){
 			global $wp_version;
 			//check if theme is premium if you have the premium licence
 			if(isset($_REQUEST['premium']) && $_REQUEST['premium']){
@@ -839,6 +654,15 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
 		}
 
 		return array('result' => $result, 'themes' => $themes);
+	}
+
+        function get_social_bookmarks() {
+		$size = isset($_POST['wysijaData']['size']) ? $_POST['wysijaData']['size'] : NULL;
+		$theme = isset($_POST['wysijaData']['theme']) ? $_POST['wysijaData']['theme'] : NULL;
+
+		$bookmarksHelper = WYSIJA::get('bookmarks', 'helper');
+		$bookmarks = $bookmarksHelper->getAll($size, $theme);
+		return json_encode(array('icons' => $bookmarks));
 	}
 
 	function refresh_themes() {
@@ -1000,5 +824,155 @@ class WYSIJA_control_back_campaigns extends WYSIJA_control{
 
 			return base64_encode($helper_wj_engine->renderEditorAutoPost($posts, $params));
 		}
+	}
+
+        function search_terms( $request = null ){
+		$response = (object) array(
+			'status' => false,
+			'message' => __( 'Your request has failed', WYSIJA ),
+			'results' => array(),
+			'more' => true,
+		);
+
+		if ( ( ! defined( 'DOING_AJAX' ) && is_null( $request ) ) || ! is_user_logged_in() ){
+			return $response;
+		}
+
+		$request = (object) wp_parse_args(
+			$request,
+			array(
+				'search' => isset( $_GET['search'] ) ? $_GET['search'] : '',
+				'post_type' => isset( $_GET['post_type'] ) ? $_GET['post_type'] : null,
+				'page' => absint( isset( $_GET['page'] ) ? $_GET['page'] : 0 ),
+				'page_limit' => absint( isset( $_GET['page_limit'] ) ? $_GET['page_limit'] : 10 ),
+			)
+		);
+
+		if ( is_null( $request->post_type ) ){
+			return $response;
+		}
+
+		$response->status  = true;
+		$response->message = __( 'Request successful', WYSIJA );
+
+		$response->post_type = get_post_types( array( 'name' => $request->post_type ) );
+		$response->post_type = reset( $response->post_type );
+
+		preg_match( '/@(\w+)/i', $request->search, $response->regex );
+
+		if ( ! empty( $response->regex ) ){
+			$request->search = array_filter( array_map( 'trim', explode( '|', str_replace( $response->regex[0], '|', $request->search ) ) ) );
+			$request->search = reset( $request->search );
+			$taxonomies      = $response->regex[1];
+		} else {
+			$taxonomies = get_object_taxonomies( $response->post_type );
+		}
+		$response->taxonomies = get_object_taxonomies( $response->post_type, 'objects' );
+
+		$response->results = get_terms(
+			(array) $taxonomies,
+			array(
+				'hide_empty' => false,
+				'search' => $request->search,
+				'number' => $request->page_limit,
+				'offset' => $request->page_limit * ( $request->page - 1 ),
+			)
+		);
+
+		if ( empty( $response->results ) || count( $response->results ) < $request->page_limit ){
+			$response->more = false;
+		}
+
+		return $response;
+	}
+
+        /**
+	 * returns a list of articles to the popup in the visual editor
+	 * @global type $wpdb
+	 * @return boolean
+	 */
+	function get_articles(){
+		// fixes issue with pcre functions
+		@ini_set('pcre.backtrack_limit', 1000000);
+
+		// get parameters
+		$raw_data = $_REQUEST['data'];
+		$params = array();
+		foreach ($raw_data as $value) {
+			$params[$value['name']] = $value['value'];
+		}
+
+		// get options
+		$model_config = WYSIJA::get('config', 'model');
+		$interpret_shortcode = (bool)$model_config->getValue('interp_shortcode');
+
+		// post statuses
+		$helper_wp_tools = WYSIJA::get('wp_tools', 'helper');
+		$post_statuses = $helper_wp_tools->get_post_statuses();
+		$post_types = $helper_wp_tools->get_post_types();
+
+		// filter by post_type
+		if(isset($params['post_type'])) {
+			$post_types_filter = array();
+			if(strlen(trim($params['post_type'])) === 0) {
+				$post_types_filter = array_keys($post_types);
+				$post_types_filter[] = 'post';
+				$post_types_filter[] = 'page';
+			} else {
+				$post_types_filter = trim($params['post_type']);
+			}
+			// set condition on post type
+			$params['post_type'] = $post_types_filter;
+		}
+
+		// query offset when doing incremental loading
+		$query_offset = (isset($_REQUEST['query_offset']) && (int)$_REQUEST['query_offset'] >= 0) ? (int)$_REQUEST['query_offset'] : 0;
+		$params['query_offset'] = $query_offset;
+
+		// fetch posts
+		$helper_articles = WYSIJA::get('articles', 'helper');
+
+		// set is_search_query (true) to get a count in addition to the results
+		$params['is_search_query'] = true;
+
+		$model_wp_posts = WYSIJA::get('wp_posts','model');
+		$data = $model_wp_posts->get_posts($params);
+
+		// extract data
+		$posts = $data['rows'];
+		// contains the total number of rows available
+		$count = $data['count'];
+
+		// return results
+		$result = array(
+			'result' => true,
+			'append' => ($query_offset > 0)
+		);
+
+		if(empty($posts) === false) {
+			foreach($posts as $key => $post) {
+				// interpret shortcodes
+				if($interpret_shortcode === true) {
+					$posts[$key]['post_content'] = apply_filters('the_content', $posts[$key]['post_content']);
+				}
+
+				// get thumbnail
+				$posts[$key]['post_image'] = $helper_articles->getImage($post);
+
+				// set post status
+				$post_status_label = '';
+				if(isset($post_statuses[$posts[$key]['post_status']])) {
+					$post_status_label = $post_statuses[$posts[$key]['post_status']];
+				}
+				$posts[$key]['post_status'] = $post_status_label;
+			}
+			$result['posts'] = $posts;
+			$result['total'] = (int)$count['total'];
+		}else {
+			$result['msg'] = __('There are no posts corresponding to that search.', WYSIJA);
+			$result['result'] = false;
+		}
+
+		return $result;
 	}
 }
