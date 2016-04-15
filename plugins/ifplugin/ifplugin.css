@@ -1,0 +1,3 @@
+.news .top-block { background: #fff url("images/bg-top-post.png") repeat center center; }
+.block-home .news h3.post-title a, #content .post-single.news h2 a { color: #008AC9; }
+.block-home .news .post-excerpt { background-color: #fff; }

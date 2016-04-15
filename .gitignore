@@ -1,1 +1,14 @@
-plugins/
+plugins/breadcrumb-navxt/
+plugins/github-updater/
+plugins/google-analytics-for-wordpress/
+plugins/kint-debugger/
+plugins/lightbox-plus/
+plugins/responsive-video-embeds/
+plugins/rich-text-tags/
+plugins/sitepress-multilingual-cms/
+plugins/taxonomy-terms-order/
+plugins/tinymce-advanced/
+plugins/tinymce-blockformats/
+plugins/wpml-string-translation/
+plugins/wpml-translation-management/
+plugins/wysija-newsletters/
