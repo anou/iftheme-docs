@@ -71,7 +71,11 @@ function news_post_init() {
 		'show_ui'             => true,
 		'show_in_menu'        => true,
 		'query_var'           => true,
-		'rewrite'             => array( 'slug' => 'news' ),
+		'rewrite'             => array( 
+		                          'slug' => 'if-news',
+		                          'with_front' => false,
+		                          
+                             ),
 		'capability_type'     => 'post',
 		'has_archive'         => true,
 		'hierarchical'        => false,
@@ -79,12 +83,31 @@ function news_post_init() {
 		'supports'            => array( 'title', 'editor', 'author', 'thumbnail', 'excerpt', /* 'comments' */ ),
 		'taxonomies'          => array( 'category' ),
 		'register_meta_box_cb'=> 'add_news_metaboxes',
+		'menu_icon' => 'dashicons-format-aside', //https://developer.wordpress.org/resource/dashicons
 	);
 
 	register_post_type( 'news', $args );
 }
 add_action( 'init', 'news_post_init', 0 );
 
+
+/**
+ * to fix permalinks on activation/Desactivation
+ */
+function news_rewrite_flush() {
+    // First, we "add" the custom post type via the above written function.
+    // Note: "add" is written with quotes, as CPTs don't get added to the DB,
+    // They are only referenced in the post_type column with a post entry, 
+    // when you add a post of this CPT.
+    news_post_init();
+
+    // ATTENTION: This is *only* done during plugin activation hook in this example!
+    // You should *NEVER EVER* do this on every page load!!
+    flush_rewrite_rules();
+}
+register_activation_hook( __FILE__, 'news_rewrite_flush' );
+
+add_filter('post_updated_messages', 'set_messages' );
 function set_messages($messages) {
   global $post, $post_ID;
   $post_type = get_post_type( $post_ID );
@@ -94,21 +117,20 @@ function set_messages($messages) {
   
   $messages[$post_type] = array(
     0 => '', // Unused. Messages start at index 1.
-    1 => sprintf( __($singular.' updated. <a href="%s">View '.strtolower($singular).'</a>', 'ifplugin'), esc_url( get_permalink($post_ID) ) ),
+    1 => sprintf( __('%1$s updated. <a href="%2$s">View %1$s</a>', 'ifplugin'), $singular, esc_url( get_permalink($post_ID) ) ),
     2 => __('Custom field updated.', 'ifplugin'),
     3 => __('Custom field deleted.', 'ifplugin'),
-    4 => __($singular.' updated.', 'ifplugin'),
-    5 => isset($_GET['revision']) ? sprintf( __($singular.' restored to revision from %s', 'ifplugin'), wp_post_revision_title( (int) $_GET['revision'], false ) ) : false,
-    6 => sprintf( __($singular.' published. <a href="%s">View '.strtolower($singular).'</a>', 'ifplugin'), esc_url( get_permalink($post_ID) ) ),
+    4 => sprintf( __('%s updated.', 'ifplugin'), $singular ),
+    5 => isset($_GET['revision']) ? sprintf( __('%1$s restored to revision from %2$s', 'ifplugin'), $singular, wp_post_revision_title( (int) $_GET['revision'], false ) ) : false,
+    6 => sprintf( __('%1$s published. <a href="%2$s">View %1$s</a>', 'ifplugin'), $singular, esc_url( get_permalink($post_ID) ) ),
     7 => __('Page saved.', 'ifplugin'),
-    8 => sprintf( __($singular.' submitted. <a target="_blank" href="%s">Preview '.strtolower($singular).'</a>', 'ifplugin'), esc_url( add_query_arg( 'preview', 'true', get_permalink($post_ID) ) ) ),
-    9 => sprintf( __($singular.' scheduled for: <strong>%1$s</strong>. <a target="_blank" href="%2$s">Preview '.strtolower($singular).'</a>', 'ifplugin'), date_i18n( __( 'M j, Y @ G:i' ), strtotime( $post->post_date ) ), esc_url( get_permalink($post_ID) ) ),
-    10 => sprintf( __($singular.' draft updated. <a target="_blank" href="%s">Preview '.strtolower($singular).'</a>', 'ifplugin'), esc_url( add_query_arg( 'preview', 'true', get_permalink($post_ID) ) ) ),
+    8 => sprintf( __('%1$s submitted. <a target="_blank" href="%2$s">Preview %1$s</a>', 'ifplugin'), $singular, esc_url( add_query_arg( 'preview', 'true', get_permalink($post_ID) ) ) ),
+    9 => sprintf( __('%3$s scheduled for: <strong>%1$s</strong>. <a target="_blank" href="%2$s">Preview %3$s</a>', 'ifplugin'), date_i18n( __( 'M j, Y @ G:i' ), strtotime( $post->post_date ) ), esc_url( get_permalink($post_ID) ), $singular ),
+    10 => sprintf( __('%1$s draft updated. <a target="_blank" href="%2$s">Preview %1$s</a>', 'ifplugin'), $singular, esc_url( add_query_arg( 'preview', 'true', get_permalink($post_ID) ) ) ),
   );
   return $messages;
 }
 
-add_filter('post_updated_messages', 'set_messages' );
 
 
 /**
@@ -241,6 +263,7 @@ function add_metabox_classes($classes) {
  *
  * @param int $post_id The ID of the post being saved.
  */
+add_action( 'save_post', 'ifplugin_save_news_meta' );
 function ifplugin_save_news_meta( $post_id ) {
 	// We need to verify this came from our screen and with proper authorization,
 	// because the save_post action can be triggered at other times.
@@ -293,6 +316,7 @@ function ifplugin_save_news_meta( $post_id ) {
   
   	if ( !$check_date ) {
     	$prevent_publish = true;
+//       add_filter( 'post_updated_messages', 'remove_all_messages_on_error' );
     	ifplugin_set_news_error();
   	} 
   	else {
@@ -326,7 +350,14 @@ function ifplugin_save_news_meta( $post_id ) {
   }
 
 }
-add_action( 'save_post', 'ifplugin_save_news_meta' );
+
+/*
+//remove "post saved" message on error
+function remove_all_messages_on_error( $messages ) {
+  return array();
+}
+*/
+
 
 function ifplugin_update_news_meta( $post_id, $field_key, $news_data ) {
   // We passed all the check so,
@@ -392,7 +423,7 @@ function ifplugin_set_news_error( $op = '' ) {
     $msg,
     'error'
   );
-  set_transient( 'settings_errors', get_settings_errors(), 30 );
+  set_transient( 'news_date_errors', get_settings_errors(), 3600 );
 }
 
 /**
@@ -401,13 +432,14 @@ function ifplugin_set_news_error( $op = '' ) {
 *
 * @since 1.0.0
 */
+add_action( 'admin_notices', '_news_date_admin_notices' );
 function _news_date_admin_notices() {
   // If there are no errors, then we'll exit the function
-  if ( ! ( $errors = get_transient( 'settings_errors' ) ) ) {
+  if ( ! ( $errors = get_transient( 'news_date_errors' ) ) ) {
     return;
   }
-  // Otherwise, build the list of errors that exist in the settings errores
-  $message = '<div id="ifplugin-message" class="error"><p><ul>';
+  // Otherwise, build the list of errors that exist in the settings errors
+  $message = '<div id="ifplugin-message" class="error is-dismissible"><p><ul>';
   foreach ( $errors as $error ) {
     $message .= '<li>' . $error['message'] . '</li>';
   }
@@ -415,12 +447,12 @@ function _news_date_admin_notices() {
   // Write them out to the screen
   echo $message;
   // Clear and the transient and unhook any other notices so we don't see duplicate messages
-  delete_transient( 'settings_errors' );
+  delete_transient( 'news_date_errors' );
   remove_action( 'admin_notices', '_news_date_admin_notices' );
 }
-add_action( 'admin_notices', '_news_date_admin_notices' );
 
 
+add_filter('redirect_post_location','_ifplugin_redirect_location',10,2);
 function _ifplugin_redirect_location($location,$post_id){
     //If post was published...
     if (isset($_POST['publish'])){
@@ -434,13 +466,11 @@ function _ifplugin_redirect_location($location,$post_id){
 
     return $location;
 } 
-add_filter('redirect_post_location','_ifplugin_redirect_location',10,2);
 
 /**
  * Add data for news for display in front end
  */
 add_filter('if_event_data', 'ifplugin_data_news');
-
 function ifplugin_data_news($data) {
   $pid = $data['post_id'];
   $type = get_post_type( $pid );
@@ -458,23 +488,49 @@ function ifplugin_data_news($data) {
  * Add stylesheet to the page
  */
 add_action( 'wp_enqueue_scripts', 'ifplugin_stylesheet' );
-
 function ifplugin_stylesheet() {
     wp_enqueue_style( 'ifplugin-style', plugins_url('ifplugin.css', __FILE__) );
 }
 
 /**
+ * admin Pages for settings
+ */
+/*
+add_action( 'admin_menu', 'wporg_custom_admin_menu' );
+function wporg_custom_admin_menu() {
+    add_options_page(
+        __('IF News','iftheme'),
+        __('IF News Settings','iftheme'),
+        'manage_options',
+        'news-ifplugin',
+        'if_news_options_page'
+    );
+}
+
+function if_news_options_page() {
+    ?>
+    <div class="wrap">
+        <h2>My Plugin Options</h2>
+        your form goes here
+    </div>
+    <?php
+}
+*/
+
+/** end admin **/
+
+/**
 * Alter main query to be aware of our custom type
 */
+/*
 function ifplugin_news_posts ( $query ) {
   $default_types = get_post_types();
-  
 	if( $query->is_main_query() && !is_admin() ) {
     $post_types = $query->get('post_type');
-
     if( !$post_types || $post_types == 'post' ) $query->set('post_type', $default_types );
     elseif ( is_array($post_types) ) $query->set('post_type', array_merge($post_types, $default_types) );
 	}
 }
+*/
 //add_action( 'pre_get_posts', 'ifplugin_news_posts' );
 
