@@ -1,22 +1,22 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: IF Plugin\n"
-"POT-Creation-Date: 2016-04-12 10:03+0200\n"
-"PO-Revision-Date: 2016-04-12 10:10+0200\n"
+"POT-Creation-Date: 2018-02-26 10:21+0100\n"
+"PO-Revision-Date: 2018-02-26 10:23+0100\n"
 "Last-Translator: David THOMAS <anou@smol.org>\n"
 "Language-Team: David THOMAS <anou@smol.org>\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 1.8.7\n"
+"X-Generator: Poedit 2.0.6\n"
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-WPHeader: ifplugin.php\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 "X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;"
-"esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;"
-"_n_noop:1,2;_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
+"esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;_n_noop:1,2;"
+"_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
 "X-Poedit-SearchPath-0: .\n"
 "X-Poedit-SearchPathExcluded-0: *.js\n"
 
@@ -81,106 +81,101 @@ msgstr "Aucun Article trouvé."
 msgid "No news found in Trash."
 msgstr "Aucun Article trouvé dans la corbeille."
 
-#: ifplugin.php:119
-#, php-format
-msgid " updated. <a href=\"%s\">View "
-msgstr " mise à jour. <a href=\"%s\">Voir "
-
 #: ifplugin.php:120
+#, php-format
+msgid "%1$s updated. <a href=\"%2$s\">View %1$s</a>"
+msgstr "%1$s mis à jour. <a href=\"%2$s\">Voir %1$s</a>"
+
+#: ifplugin.php:121
 msgid "Custom field updated."
 msgstr "Champ personnalisé mis à jour."
 
-#: ifplugin.php:121
+#: ifplugin.php:122
 msgid "Custom field deleted."
 msgstr "Champ personnalisé supprimé."
 
-#: ifplugin.php:122
-msgid " updated."
-msgstr " mis à jour."
-
 #: ifplugin.php:123
 #, php-format
-msgid " restored to revision from %s"
-msgstr " restauré avec la révision de %s"
+msgid "%s updated."
+msgstr "%s mis à jour."
 
 #: ifplugin.php:124
 #, php-format
-msgid " published. <a href=\"%s\">View "
-msgstr " publié. <a href=\"%s\">Voir "
+msgid "%1$s restored to revision from %2$s"
+msgstr "%1$s restauré à partir de la révision %2$s"
 
 #: ifplugin.php:125
+#, php-format
+msgid "%1$s published. <a href=\"%2$s\">View %1$s</a>"
+msgstr "%1$s publié. <a href=\"%2$s\">Voir %1$s</a>"
+
+#: ifplugin.php:126
 msgid "Page saved."
 msgstr "Page sauvegardée."
 
-#: ifplugin.php:126
-#, php-format
-msgid " submitted. <a target=\"_blank\" href=\"%s\">Preview "
-msgstr " soumis. <a target=\"_blank\" href=\"%s\">Prévisualiser "
-
 #: ifplugin.php:127
 #, php-format
-msgid ""
-" scheduled for: <strong>%1$s</strong>. <a target=\"_blank\" href=\"%2$s"
-"\">Preview "
-msgstr ""
-" prévue le : <strong>%1$s</strong>. <a target=\"_blank\" href=\"%2$s"
-"\">Prévisualiser "
-
-#: ifplugin.php:127
-msgid "M j, Y @ G:i"
-msgstr "j M Y @ G:i"
+msgid "%1$s submitted. <a target=\"_blank\" href=\"%2$s\">Preview %1$s</a>"
+msgstr "%1$s soumis. <a target=\"_blank\" href=\"%2$s\">Prévisualiser %1$s</a>"
 
 #: ifplugin.php:128
 #, php-format
-msgid " draft updated. <a target=\"_blank\" href=\"%s\">Preview "
-msgstr " brouillon mis à jour. <a target=« _blank » href=« %s »>Aperçu "
+msgid ""
+"%3$s scheduled for: <strong>%1$s</strong>. <a target=\"_blank\" href=\"%2$s"
+"\">Preview %3$s</a>"
+msgstr ""
+"%3$s prévu pour : <strong>%1$s</strong>. <a target=\"_blank\" href=\"%2$s"
+"\">Aperçu %3$s</a>"
 
-#: ifplugin.php:158
+#: ifplugin.php:128
+msgid "M j, Y @ G:i"
+msgstr "j M Y @ G:i"
+
+#: ifplugin.php:129
+#, php-format
+msgid "%1$s draft updated. <a target=\"_blank\" href=\"%2$s\">Preview %1$s</a>"
+msgstr ""
+"Brouillon de %1$s mis à jour. <a target=\"_blank\" href=\"%2$s"
+"\">Prévisualiser %1$s</a>"
+
+#: ifplugin.php:159
 msgid "News Date"
 msgstr "Date de l’Article"
 
-#: ifplugin.php:165
+#: ifplugin.php:166
 msgid "Please enter a date (YYYY-MM-DD)"
 msgstr "Veuillez entrer une date (AAAA-MM-JJ)"
 
-#: ifplugin.php:176
+#: ifplugin.php:177
 msgid "News Subhead"
 msgstr "Surtitre de l’Article"
 
-#: ifplugin.php:183
+#: ifplugin.php:184
 msgid "Subhead text"
 msgstr "Surtitre"
 
-#: ifplugin.php:217
+#: ifplugin.php:218
 msgid "Mandatory field"
 msgstr "Champ requis"
 
-#: ifplugin.php:405
+#: ifplugin.php:406
 msgid "News not published! Saved has a draft."
 msgstr "Article non publié ! Enregistré comme brouillon."
 
-#: ifplugin.php:409
+#: ifplugin.php:410
 msgid "News Date field must be a valid date"
 msgstr "Le champ Date de l’Article doit être une date valide"
 
-#: ifplugin.php:412
+#: ifplugin.php:413
 msgid "News Date field must be in the right format: YYYY-MM-DD"
 msgstr "Le champ Date de l’Article doit être au bon format : AAAA-MM-JJ"
 
-#: ifplugin.php:415
+#: ifplugin.php:416
 msgid ""
 "News Date field must be in the right format: YYYY-MM-DD and a valid date"
 msgstr ""
-"Le champ Date de l’Article doit être au bon format : AAAA-MM-DD et être "
-"une date valide"
-
-#: ifplugin.php:500
-msgid "IF News"
-msgstr ""
-
-#: ifplugin.php:501
-msgid "IF News Settings"
-msgstr ""
+"Le champ Date de l’Article doit être au bon format : AAAA-MM-DD et être une "
+"date valide"
 
 #. Plugin Name of the plugin/theme
 msgid "IF Plugin"
@@ -188,9 +183,11 @@ msgstr "IF Plugin"
 
 #. Description of the plugin/theme
 msgid ""
-"Site specific code for IF (for examplke, adds the \"news\" custom content "
+"Site specific code for IF (for example, adds the \"news\" custom content "
 "type...)"
 msgstr ""
+"Code spécifique au site pour l'IF Thème (par exemple, ajoute le type de "
+"contenu personnalisé \"news\" ...)"
 
 #. Author of the plugin/theme
 msgid "David THOMAS"
@@ -199,3 +196,28 @@ msgstr "David THOMAS"
 #. Author URI of the plugin/theme
 msgid "http://www.smol.org/studio-de-creation-sympathique/habitants/anou"
 msgstr "http://www.smol.org/studio-de-creation-sympathique/habitants/anou"
+
+#~ msgid " updated. <a href=\"%s\">View "
+#~ msgstr " mise à jour. <a href=\"%s\">Voir "
+
+#~ msgid " updated."
+#~ msgstr " mis à jour."
+
+#~ msgid " restored to revision from %s"
+#~ msgstr " restauré avec la révision de %s"
+
+#~ msgid " published. <a href=\"%s\">View "
+#~ msgstr " publié. <a href=\"%s\">Voir "
+
+#~ msgid " submitted. <a target=\"_blank\" href=\"%s\">Preview "
+#~ msgstr " soumis. <a target=\"_blank\" href=\"%s\">Prévisualiser "
+
+#~ msgid ""
+#~ " scheduled for: <strong>%1$s</strong>. <a target=\"_blank\" href=\"%2$s"
+#~ "\">Preview "
+#~ msgstr ""
+#~ " prévue le : <strong>%1$s</strong>. <a target=\"_blank\" href=\"%2$s"
+#~ "\">Prévisualiser "
+
+#~ msgid " draft updated. <a target=\"_blank\" href=\"%s\">Preview "
+#~ msgstr " brouillon mis à jour. <a target=« _blank » href=« %s »>Aperçu "
