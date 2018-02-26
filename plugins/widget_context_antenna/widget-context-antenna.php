@@ -26,6 +26,17 @@ For changelog see readme.txt
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+/**
+ * Load plugin textdomain.
+ *
+ * @since 1.0
+ */
+function wca_load_textdomain() {
+  load_plugin_textdomain('wca', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );  
+}
+add_action( 'plugins_loaded', 'wca_load_textdomain' );
+
+
 // Go!
 new widget_context();
 
@@ -385,20 +396,19 @@ class widget_context {
 				
 		}
 		global $multi;
-		
 		// Check Antennas settings
-		if (!empty($vis_settings['antenna'])) {
+		if ( isset($vis_settings['antenna']) && is_array($vis_settings['antenna']) && !empty($vis_settings['antenna'])) {
 			 
 			if(function_exists('get_current_antenna')){
 				$current_antenna = $multi && is_front_page() ? '' : get_current_antenna();
 			}
 			$visibility_options_antennas = array_keys($vis_settings['antenna']);
 			
-			if (function_exists('icl_object_id')) {
-			 foreach ($visibility_options_antennas as $k => $antID) {
-  			 $tabID[] = icl_object_id($antID, 'category', true, ICL_LANGUAGE_CODE);
-			 }	
-			}
+			if( array_key_exists( 'wpml_object_id' , $GLOBALS['wp_filter']) ) {
+        foreach ($visibility_options_antennas as $k => $antID) {
+          $tabID[] = apply_filters( 'wpml_object_id', $antID, 'category', true, ICL_LANGUAGE_CODE );
+        }	
+      }
 
 			if(in_array($current_antenna, $visibility_options_antennas) || in_array($current_antenna, $tabID)) {
 				$do_show_by_antenna = true;
@@ -446,25 +456,25 @@ class widget_context {
 	
 	function display_widget_context($args = array(), $wid = null) {
 		global $current_user;
+		$class = '';
 		
 		//Hide all if $current_user is not admin (user->ID == 1)
-		if($current_user->ID !== 1){$class = 'none';}
+		if($current_user->ID !== 1){ $class = 'none'; }
 //$this->printAdminOptions();
 
-		
 		$group = 'location'; // Produces: wl[$wid][$group][homepage/singlepost/...]
 		$options = get_option($this->options_name);
-		
+
 		$groupA = 'antenna'; // Produces: wl[$wid][$groupA][ANTENA'S ID]
 		$antennas = $this->get_antennas_list();
 		
 		$out = '<div class="widget-context '.$class.'"><div class="widget-context-inside">';
 
-		$out .=   '<div class="wl-header"><h5>Widget Context:</h5>'
+		$out .=   '<div class="wl-header"><h5>' . __('Widget Context:', 'wca') . '</h5>'
 			. '<p class="wl-visibility">'		
-				. $this->make_simple_radio($options, $wid, 'incexc', 'selected',  __('<strong>Show</strong> on selected','iftheme')) 
-				. $this->make_simple_radio($options, $wid, 'incexc', 'notselected',  __('<strong>Hide</strong> on selected','iftheme')) 
-				. $this->make_simple_radio($options, $wid, 'incexc', 'hide',  __('Hide','iftheme')) 
+				. $this->make_simple_radio($options, $wid, 'incexc', 'selected',  __('<strong>Show</strong> on selected', 'wca')) 
+				. $this->make_simple_radio($options, $wid, 'incexc', 'notselected',  __('<strong>Hide</strong> on selected', 'wca')) 
+				. $this->make_simple_radio($options, $wid, 'incexc', 'hide',  __('Hide', 'wca')) 
 			. '</p></div>';
 
 		//Add "Country" homepage
@@ -472,14 +482,14 @@ class widget_context {
 			global $multi;
 			
 			if($multi){
-				$out .=   '<div class="wl-header"><h5>Country Context:</h5>'
+				$out .=   '<div class="wl-header"><h5>' . __('Country Context:', 'wca') . '</h5>'
 					. '<p class="wl-visibility wl-antennas">';
-				$out .= $this->make_simple_checkbox_antenna($options, $wid, 'country', 0, __('Country Homepage','iftheme'));
+				$out .= $this->make_simple_checkbox_antenna($options, $wid, 'country', 0, __('Country Homepage', 'wca'));
 				$out .= '</p></div>';
 			}
 		}
 
-		$out .=   '<div class="wl-header"><h5>Antennas Context:</h5>'
+		$out .=   '<div class="wl-header"><h5>' . __('Antennas Context:', 'wca') . '</h5>'
 			. '<p class="wl-visibility wl-antennas">';
 		if(!isset($antennas['aid'])) { //multi-antennas
 			foreach($antennas as $a => $vals) {
@@ -550,7 +560,7 @@ class widget_context {
 	function printAdminOptions() {
 		global $wp_registered_widget_controls, $wp_registered_widgets;
 		
-		print '<div class="wrap"><h2>'.__('Widget Context Plugin Settings','iftheme') . '</h2></div>';		
+		print '<div class="wrap"><h2>'.__('Widget Context Plugin Settings', 'wca') . '</h2></div>';		
 		print '<pre>'; print_r(get_option($this->options_name)); print '</pre>';
 	}
 	
@@ -579,7 +589,7 @@ class widget_context {
 	}
 	
 	function makeSubmitButton() {
-		return '<p class="submit"><input type="submit" name="Submit" value="' . __('Save Options','iftheme') . '" /></p>';
+		return '<p class="submit"><input type="submit" name="Submit" value="' . __('Save Options', 'wca') . '" /></p>';
 	}
 	
 	function make_simple_checkbox($options, $prefix, $id, $fieldname = null, $label) {
@@ -608,16 +618,15 @@ class widget_context {
 
 	function make_simple_checkbox_antenna($options, $prefix, $id, $fieldname = null, $label) {
 		global $current_user;
-		
-		if ($fieldname !== null) {
+		if( $fieldname !== null && isset($options[$prefix][$id][$fieldname]) ) {
 			$value = strip_tags($options[$prefix][$id][$fieldname]);
-			$value2 = strip_tags($options[$prefix][$id][$fieldname]);
+// 			$value2 = strip_tags($options[$prefix][$id][$fieldname]);
 			$fieldval = $fieldname;
 			$fieldname = '[' . $fieldname . ']';
-			
-		} else {
-			$value = strip_tags($options[$prefix][$id]);
-			$value2 = strip_tags($options[$prefix][$id]);
+		} 
+		else {
+			$value = isset( $options[$prefix][$id] ) ? $options[$prefix][$id] : 0;
+// 			$value2 = strip_tags($options[$prefix][$id]);
 			$fieldval = $fieldname = '';
 		}
 		
@@ -629,7 +638,6 @@ class widget_context {
 		
 		$prefix = '[' . $prefix . ']';
 		$id = '[' . $id . ']';
-		
 		if (!empty($value)) {
 			$value = 1; $checked = 'checked="checked"'; $classname = 'wl-active';
 		} else {
@@ -684,12 +692,12 @@ class widget_context {
 	
 	function make_simple_radio($options, $id, $fieldname, $value, $label = null) {
 		global $current_user;
-		//always selected if not admin
+		// always selected if not admin
 		if($current_user->ID != 1){
 			$options[$id][$fieldname] = 'selected';
 		}
 	
-		if ($options[$id][$fieldname] == $value) {
+		if ( isset($options[$id][$fieldname]) && $options[$id][$fieldname] == $value) {
 			$checked = 'checked="checked"'; $classname = 'wl-active';
 		} else {
 			$checked = ''; $classname = 'wl-inactive'; 
@@ -700,7 +708,7 @@ class widget_context {
 		
 		$out = '<label class="' . $classname . ' label-'. $value .'"><input type="radio" name="wl'. $id . $fieldname . '" value="'. $value .'" '. $checked .' /> ' 
 			. $label . '</label>';
-			
+
 		return $out;
 	}
 
@@ -731,7 +739,7 @@ class widget_context {
 				$list .= '<option value="' . $sid . '" ' . $selected . '>' . $svalue . '</option>';
 			}
 		} else {
-			$list .= '<option value="error" selected="selected">'. __('No options given','iftheme') .'</option>';
+			$list .= '<option value="error" selected="selected">'. __('No options given', 'wca') .'</option>';
 		}
 		
 		$list .= '</select> ' . $label_after . '</label>';
