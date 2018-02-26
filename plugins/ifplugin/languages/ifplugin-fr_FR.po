@@ -1,15 +1,15 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: IF Plugin\n"
-"POT-Creation-Date: 2015-10-07 12:02+0200\n"
-"PO-Revision-Date: 2015-10-07 12:12+0200\n"
+"POT-Creation-Date: 2016-04-12 10:03+0200\n"
+"PO-Revision-Date: 2016-04-12 10:10+0200\n"
 "Last-Translator: David THOMAS <anou@smol.org>\n"
 "Language-Team: David THOMAS <anou@smol.org>\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 1.8.5\n"
+"X-Generator: Poedit 1.8.7\n"
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-WPHeader: ifplugin.php\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
@@ -23,101 +23,101 @@ msgstr ""
 #: ifplugin.php:51
 msgctxt "post type general name"
 msgid "News"
-msgstr "Actu"
+msgstr "Articles"
 
 #: ifplugin.php:52
 msgctxt "post type singular name"
 msgid "News"
-msgstr "Actu"
+msgstr "Article"
 
 #: ifplugin.php:53
 msgctxt "admin menu"
 msgid "News"
-msgstr "Actu"
+msgstr "Articles"
 
 #: ifplugin.php:54
 msgctxt "add new on admin bar"
 msgid "News"
-msgstr "Actu"
+msgstr "Article"
 
 #: ifplugin.php:55
 msgctxt "news"
 msgid "Add New"
-msgstr "Ajouter nouvelle"
+msgstr "Ajouter nouvel"
 
 #: ifplugin.php:56
 msgid "Add New News"
-msgstr "Ajouter une nouvelle Actu"
+msgstr "Ajouter un nouvel article"
 
 #: ifplugin.php:57
 msgid "New News"
-msgstr "Nouvelle Actu"
+msgstr "Nouvel Article"
 
 #: ifplugin.php:58
 msgid "Edit News"
-msgstr "Modifier l’Actu"
+msgstr "Modifier l’Article"
 
 #: ifplugin.php:59
 msgid "View News"
-msgstr "Voir l’Actu"
+msgstr "Voir l’Article"
 
 #: ifplugin.php:60
 msgid "All News"
-msgstr "Toutes les Actus"
+msgstr "Tous les Articles"
 
 #: ifplugin.php:61
 msgid "Search News"
-msgstr "Rechercher Actu"
+msgstr "Rechercher Article"
 
 #: ifplugin.php:62
 msgid "Parent News:"
-msgstr ""
+msgstr "Article parent :"
 
 #: ifplugin.php:63
 msgid "No news found."
-msgstr "Aucune Actu trouvée."
+msgstr "Aucun Article trouvé."
 
 #: ifplugin.php:64
 msgid "No news found in Trash."
-msgstr "Aucune Actu trouvée dans la poubelle."
+msgstr "Aucun Article trouvé dans la corbeille."
 
-#: ifplugin.php:97
+#: ifplugin.php:119
 #, php-format
 msgid " updated. <a href=\"%s\">View "
 msgstr " mise à jour. <a href=\"%s\">Voir "
 
-#: ifplugin.php:98
+#: ifplugin.php:120
 msgid "Custom field updated."
 msgstr "Champ personnalisé mis à jour."
 
-#: ifplugin.php:99
+#: ifplugin.php:121
 msgid "Custom field deleted."
 msgstr "Champ personnalisé supprimé."
 
-#: ifplugin.php:100
+#: ifplugin.php:122
 msgid " updated."
 msgstr " mis à jour."
 
-#: ifplugin.php:101
+#: ifplugin.php:123
 #, php-format
 msgid " restored to revision from %s"
 msgstr " restauré avec la révision de %s"
 
-#: ifplugin.php:102
+#: ifplugin.php:124
 #, php-format
 msgid " published. <a href=\"%s\">View "
-msgstr " publiée. <a href=\"%s\">Voir "
+msgstr " publié. <a href=\"%s\">Voir "
 
-#: ifplugin.php:103
+#: ifplugin.php:125
 msgid "Page saved."
 msgstr "Page sauvegardée."
 
-#: ifplugin.php:104
+#: ifplugin.php:126
 #, php-format
 msgid " submitted. <a target=\"_blank\" href=\"%s\">Preview "
 msgstr " soumis. <a target=\"_blank\" href=\"%s\">Prévisualiser "
 
-#: ifplugin.php:105
+#: ifplugin.php:127
 #, php-format
 msgid ""
 " scheduled for: <strong>%1$s</strong>. <a target=\"_blank\" href=\"%2$s"
@@ -126,53 +126,61 @@ msgstr ""
 " prévue le : <strong>%1$s</strong>. <a target=\"_blank\" href=\"%2$s"
 "\">Prévisualiser "
 
-#: ifplugin.php:105
+#: ifplugin.php:127
 msgid "M j, Y @ G:i"
 msgstr "j M Y @ G:i"
 
-#: ifplugin.php:106
+#: ifplugin.php:128
 #, php-format
 msgid " draft updated. <a target=\"_blank\" href=\"%s\">Preview "
 msgstr " brouillon mis à jour. <a target=« _blank » href=« %s »>Aperçu "
 
-#: ifplugin.php:137
+#: ifplugin.php:158
 msgid "News Date"
-msgstr "Date de l’Actu"
+msgstr "Date de l’Article"
 
-#: ifplugin.php:144
+#: ifplugin.php:165
 msgid "Please enter a date (YYYY-MM-DD)"
 msgstr "Veuillez entrer une date (AAAA-MM-JJ)"
 
-#: ifplugin.php:155
+#: ifplugin.php:176
 msgid "News Subhead"
-msgstr "Surtitre de l’Actu"
+msgstr "Surtitre de l’Article"
 
-#: ifplugin.php:162
+#: ifplugin.php:183
 msgid "Subhead text"
 msgstr "Surtitre"
 
-#: ifplugin.php:196
+#: ifplugin.php:217
 msgid "Mandatory field"
 msgstr "Champ requis"
 
-#: ifplugin.php:375
+#: ifplugin.php:405
 msgid "News not published! Saved has a draft."
-msgstr "Actu non publiée ! Enregistrée comme brouillon."
+msgstr "Article non publié ! Enregistré comme brouillon."
 
-#: ifplugin.php:379
+#: ifplugin.php:409
 msgid "News Date field must be a valid date"
-msgstr "Le champ Date de l’Actu doit être une date valide"
+msgstr "Le champ Date de l’Article doit être une date valide"
 
-#: ifplugin.php:382
+#: ifplugin.php:412
 msgid "News Date field must be in the right format: YYYY-MM-DD"
-msgstr "Le champ Date de l’Actu doit être au bon format : AAAA-MM-JJ"
+msgstr "Le champ Date de l’Article doit être au bon format : AAAA-MM-JJ"
 
-#: ifplugin.php:385
+#: ifplugin.php:415
 msgid ""
 "News Date field must be in the right format: YYYY-MM-DD and a valid date"
 msgstr ""
-"Le champ Date de l’Actu doit être au bon format : AAAA-MM-DD et être une "
-"date valide"
+"Le champ Date de l’Article doit être au bon format : AAAA-MM-DD et être "
+"une date valide"
+
+#: ifplugin.php:500
+msgid "IF News"
+msgstr ""
+
+#: ifplugin.php:501
+msgid "IF News Settings"
+msgstr ""
 
 #. Plugin Name of the plugin/theme
 msgid "IF Plugin"
@@ -190,4 +198,4 @@ msgstr "David THOMAS"
 
 #. Author URI of the plugin/theme
 msgid "http://www.smol.org/studio-de-creation-sympathique/habitants/anou"
-msgstr ""
+msgstr "http://www.smol.org/studio-de-creation-sympathique/habitants/anou"

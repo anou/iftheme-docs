@@ -1,7 +1,7 @@
 <?php
 /*
  * Plugin Name: IF Plugin
- * Description: Site specific code for IF (for examplke, adds the "news" custom content type...)
+ * Description: Site specific code for IF (for example, adds the "news" custom content type...)
  * Version: 1.0.0
  * Author: David THOMAS
  * Author URI: http://www.smol.org/studio-de-creation-sympathique/habitants/anou
@@ -11,25 +11,25 @@
  */
 /*
   Copyright 2014  David THOMAS  (email: anou@smol.org)
-  
+
   This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License, version 2, as 
+  it under the terms of the GNU General Public License, version 2, as
   published by the Free Software Foundation.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 /**
- * TODO/IDEA: 
+ * TODO/IDEA:
  * - Adapt theme with "if ifplugin installed"
- * - 
+ * -
  */
 /**
  * Load plugin textdomain.
@@ -37,7 +37,7 @@
  * @since 1.0
  */
 function ifplugin_load_textdomain() {
-  load_plugin_textdomain('ifplugin', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );  
+  load_plugin_textdomain('ifplugin', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 }
 add_action( 'plugins_loaded', 'ifplugin_load_textdomain' );
 
@@ -71,10 +71,10 @@ function news_post_init() {
 		'show_ui'             => true,
 		'show_in_menu'        => true,
 		'query_var'           => true,
-		'rewrite'             => array( 
+		'rewrite'             => array(
 		                          'slug' => 'if-news',
 		                          'with_front' => false,
-		                          
+
                              ),
 		'capability_type'     => 'post',
 		'has_archive'         => true,
@@ -97,7 +97,7 @@ add_action( 'init', 'news_post_init', 0 );
 function news_rewrite_flush() {
     // First, we "add" the custom post type via the above written function.
     // Note: "add" is written with quotes, as CPTs don't get added to the DB,
-    // They are only referenced in the post_type column with a post entry, 
+    // They are only referenced in the post_type column with a post entry,
     // when you add a post of this CPT.
     news_post_init();
 
@@ -111,10 +111,10 @@ add_filter('post_updated_messages', 'set_messages' );
 function set_messages($messages) {
   global $post, $post_ID;
   $post_type = get_post_type( $post_ID );
-  
+
   $obj = get_post_type_object($post_type);
   $singular = $obj->labels->singular_name;
-  
+
   $messages[$post_type] = array(
     0 => '', // Unused. Messages start at index 1.
     1 => sprintf( __('%1$s updated. <a href="%2$s">View %1$s</a>', 'ifplugin'), $singular, esc_url( get_permalink($post_ID) ) ),
@@ -149,10 +149,10 @@ function add_news_metaboxes() {
  * Defines custom meta boxes array
  */
 function ifplugin_meta_boxes() {
- 
+
     // Defines $prefix. Should begin with an underscore unless you want fields to be doubled in the Custom Fields editor.
     $prefix = '_ifp_';
- 
+
     // Defines meta box array.
     $meta_boxes[] = array(
       'id' => 'ifp_newsdate',
@@ -171,7 +171,7 @@ function ifplugin_meta_boxes() {
         ),
       ) // End array meta_box_fields
     ); // End array $meta_boxes
- 
+
     $meta_boxes[] = array(
       'id' => 'ifp_news_subhead',
       'title' => __('News Subhead', 'ifplugin'),
@@ -189,9 +189,9 @@ function ifplugin_meta_boxes() {
         ),
       ) // End array meta_box_fields
     ); // End array $meta_boxes
- 
+
     // Add other meta boxes here as needed.
- 
+
     return $meta_boxes;
 } // End function thtk_example_meta_boxes()
 
@@ -207,7 +207,7 @@ function ifp_news_meta_html( $post, $fields ) {
   foreach($infos as $k => $field) {
 
    	$value = get_post_meta( $post->ID, $field['id'], true );
-   	
+
    	$value = $field['id'] == '_ifp_news_date' ? date('Y-m-d', $value) : $value;
 
     switch( $field['type']){
@@ -220,7 +220,7 @@ function ifp_news_meta_html( $post, $fields ) {
       break;
     }
   }
-  
+
   echo $output;
 }
 
@@ -290,7 +290,7 @@ function ifplugin_save_news_meta( $post_id ) {
 		}
 	}
   /* OK, it's safe for us to save the data now. */
-	
+
   $meta_boxes = ifplugin_meta_boxes();
 
   foreach( $meta_boxes as $k => $meta_box ) {
@@ -300,7 +300,7 @@ function ifplugin_save_news_meta( $post_id ) {
   foreach( $fields as $k => $field ) {
 
   	$fid = $field[0]['id'];
-  	
+
   	// Make sure that it is set.
   	//_ifp_news_subhead & _ifp_news_date
   	if ( !isset( $_POST[$fid] ) ) {
@@ -309,16 +309,16 @@ function ifplugin_save_news_meta( $post_id ) {
   	// Sanitize user input.
   	$news_data = sanitize_text_field( $_POST[$fid] );
     $prevent_publish = false;//Set to true if data was invalid.
-    
+
     //check format
   	//Date must be YYYY-MM-DD
   	$check_date = $fid == '_ifp_news_date' ? _ifplugin_check_date( $news_data ) : true;
-  
+
   	if ( !$check_date ) {
     	$prevent_publish = true;
 //       add_filter( 'post_updated_messages', 'remove_all_messages_on_error' );
     	ifplugin_set_news_error();
-  	} 
+  	}
   	else {
     	switch($fid) {
       	case '_ifp_news_date':
@@ -328,7 +328,7 @@ function ifplugin_save_news_meta( $post_id ) {
       	break;
       	default:
       	  $field_data = $news_data;
-      	  
+
     	}
 
       //save it finally
@@ -404,7 +404,7 @@ function _ifplugin_check_date( $postedDate ) {
 
 function ifplugin_set_news_error( $op = '' ) {
   $msg = __('News not published! Saved has a draft.');
-  $msg .= '<br />'; 
+  $msg .= '<br />';
   switch ($op) {
     case 'valid':
       $msg .= __('News Date field must be a valid date','ifplugin');
@@ -415,8 +415,8 @@ function ifplugin_set_news_error( $op = '' ) {
     default :
       $msg .= __('News Date field must be in the right format: YYYY-MM-DD and a valid date','ifplugin');
   }
-  
-  
+
+
   add_settings_error(
     'news-date-misformatted',
     'news-date-misformatted',
@@ -465,7 +465,7 @@ function _ifplugin_redirect_location($location,$post_id){
     }
 
     return $location;
-} 
+}
 
 /**
  * Add data for news for display in front end
@@ -474,7 +474,7 @@ add_filter('if_event_data', 'ifplugin_data_news');
 function ifplugin_data_news($data) {
   $pid = $data['post_id'];
   $type = get_post_type( $pid );
-  
+
   if( 'news' == $type ) {
     $meta = get_post_meta($pid);
     $data['start'] = utf8_encode(strftime('%d %b',$meta['_ifp_news_date'][0]));

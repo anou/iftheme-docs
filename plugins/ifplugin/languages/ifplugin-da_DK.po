@@ -1,11 +1,9 @@
-#, fuzzy
 msgid ""
 msgstr ""
-"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "Project-Id-Version: IF Plugin\n"
-"POT-Creation-Date: 2016-05-19 16:23+0200\n"
-"PO-Revision-Date: 2015-10-05 03:22+0200\n"
-"Last-Translator: David THOMAS <anou@smol.org>\n"
+"POT-Creation-Date: 2016-05-20 12:22+0200\n"
+"PO-Revision-Date: 2016-05-24 10:04+0200\n"
 "Language-Team: David THOMAS <anou@smol.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -15,30 +13,32 @@ msgstr ""
 "X-Poedit-WPHeader: ifplugin.php\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 "X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;"
-"esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;"
-"_n_noop:1,2;_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
+"esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;_n_noop:1,2;"
+"_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
+"Last-Translator: David THOMAS <anou@smol.org>\n"
+"Language: da_DK\n"
 "X-Poedit-SearchPath-0: .\n"
 "X-Poedit-SearchPathExcluded-0: *.js\n"
 
 #: ifplugin.php:51
 msgctxt "post type general name"
 msgid "News"
-msgstr ""
+msgstr "Artikler"
 
 #: ifplugin.php:52
 msgctxt "post type singular name"
 msgid "News"
-msgstr ""
+msgstr "Artikel"
 
 #: ifplugin.php:53
 msgctxt "admin menu"
 msgid "News"
-msgstr ""
+msgstr "Artikler"
 
 #: ifplugin.php:54
 msgctxt "add new on admin bar"
 msgid "News"
-msgstr ""
+msgstr "Artikler"
 
 #: ifplugin.php:55
 msgctxt "news"
@@ -131,8 +131,7 @@ msgstr ""
 
 #: ifplugin.php:129
 #, php-format
-msgid ""
-"%1$s draft updated. <a target=\"_blank\" href=\"%2$s\">Preview %1$s</a>"
+msgid "%1$s draft updated. <a target=\"_blank\" href=\"%2$s\">Preview %1$s</a>"
 msgstr ""
 
 #: ifplugin.php:159
