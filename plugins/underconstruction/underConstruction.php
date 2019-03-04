@@ -3,7 +3,7 @@
  Plugin Name: Under Construction
  Plugin URI: https://wordpress.org/plugins/underconstruction/
  Description: Makes it so your site can only be accessed by users who log in. Useful for developing a site on a live server, without the world being able to see it
- Version: 1.14
+ Version: 1.18
  Author: Noah Kagan
  Author URI: http://SumoMe.com/
  */
@@ -86,7 +86,7 @@ class underConstruction
 					$array = array();
 				}
 				
-				if(!in_array($_SERVER['REMOTE_ADDR'], $array)){
+				if(!in_array(inet_ntop(inet_pton($_SERVER['REMOTE_ADDR'])), $array)){
 
 					//send a 503 if the setting requires it
 					if (get_option('underConstructionHTTPStatus') == 503)

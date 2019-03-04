@@ -2,8 +2,8 @@
 Contributors: Jeremy Massel
 Tags: construction, under construction, private, preview, security, coming soon
 Requires at least: 2.7
-Tested up to: 4.3
-Stable tag: 1.14
+Tested up to: 4.7
+Stable tag: 1.18
 
 Creates a 'Coming Soon' page that will show for all users who are not logged in
 
@@ -41,6 +41,14 @@ I've had a few people ask me this. If you like it, please go to WordPress.org an
 Sorry, I get a lot of questions. But visit the homepage for this plugin and leave me a comment. They go right to my inbox, and well I might not be able to for a few days, I promise I'll get back to you.
 
 == Changelog ==
+= 1.18 =
+* Fix PHP warnings and update Wordpress version compatibility.
+
+= 1.17 =
+* Add ipv6 support  https://wordpress.org/support/topic/underconstruction-ipv6-support
+
+= 1.15 =
+* Add capability check for options page.  Requires publish_pages
 
 = 1.14 =
 * Remove banner from dashboard

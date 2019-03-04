@@ -1,7 +1,7 @@
 <?php
 
 if($_SERVER['REQUEST_METHOD'] == "POST"){
-	if(!wp_verify_nonce($_POST['save_options_field'], 'save_options')){
+	if(!wp_verify_nonce($_POST['save_options_field'], 'save_options') || ! current_user_can('publish_pages')){
 		die("Sorry, but this request is invalid");
 	}
 }
@@ -108,10 +108,11 @@ if (isset($_POST['http_status']))
 // 		process IP addresses
 // ======================================
 
-if(isset($_POST['ip_address'])){
+if(isset($_POST['ip_address']) && $_POST['ip_address']) {
 
 	$ip = $_POST['ip_address'];
-	$ip = long2ip(ip2long($ip));
+	$ip = inet_ntop(inet_pton($ip));
+	//$ip = long2ip(ip2long($ip));
 
 	if($ip != "0.0.0.0"){
 		$array = get_option('underConstructionIPWhitelist');
@@ -150,7 +151,7 @@ $current_theme_has_uc_page = file_exists(get_template_directory() . '/under-cons
 
 add_thickbox();
 
-if ($_GET['underconstruction_global_notification'] == 0) {
+if (array_key_exists('underconstruction_global_notification', $_GET) && $_GET['underconstruction_global_notification'] == 0) {
 	update_option('underconstruction_global_notification', 0);
 }
 ?>

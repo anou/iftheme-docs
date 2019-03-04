@@ -1,0 +1,83 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Widget Context Antenna\n"
+"POT-Creation-Date: 2017-11-02 11:59+0100\n"
+"PO-Revision-Date: 2017-11-02 12:18+0100\n"
+"Last-Translator: David THOMAS <anou@smol.org>\n"
+"Language-Team: David THOMAS <anou@smol.org>\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 2.0.4\n"
+"X-Poedit-Basepath: ..\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Poedit-Flags-xgettext: --add-comments=translators:\n"
+"X-Poedit-WPHeader: widget-context-antenna.php\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;"
+"esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;"
+"_n_noop:1,2;_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPathExcluded-0: *.js\n"
+
+#: widget-context-antenna.php:473
+msgid "Widget Context:"
+msgstr "Contexte du Widget :"
+
+#: widget-context-antenna.php:475
+msgid "<strong>Show</strong> on selected"
+msgstr "<strong>Afficher</strong> si sélectionné"
+
+#: widget-context-antenna.php:476
+msgid "<strong>Hide</strong> on selected"
+msgstr "<strong>Masquer</strong> si sélectionné"
+
+#: widget-context-antenna.php:477
+msgid "Hide"
+msgstr "Masquer"
+
+#: widget-context-antenna.php:485
+msgid "Country Context:"
+msgstr "Contexte Pays :"
+
+#: widget-context-antenna.php:487
+msgid "Country Homepage"
+msgstr "Page d'accueil Pays"
+
+#: widget-context-antenna.php:492
+msgid "Antennas Context:"
+msgstr "Contexte Antenne :"
+
+#: widget-context-antenna.php:563
+msgid "Widget Context Plugin Settings"
+msgstr "Paramètres du plugin Contexte du Widget"
+
+#: widget-context-antenna.php:592
+msgid "Save Options"
+msgstr "Sauvegarder les options"
+
+#: widget-context-antenna.php:742
+msgid "No options given"
+msgstr "Aucune option"
+
+#. Plugin Name of the plugin/theme
+msgid "Widget Context Antenna"
+msgstr "Contexte Antenne Widget"
+
+#. Plugin URI of the plugin/theme
+#. Author URI of the plugin/theme
+msgid "http://smol.org"
+msgstr "http://smol.org"
+
+#. Description of the plugin/theme
+msgid ""
+"Display widgets in antenna context. Do not activate it if you have only one "
+"antenna!!!"
+msgstr ""
+"Afficher les widgets contextuellement selon l’antenne courante. Ne pas "
+"activer si vous avez une seule antenne !!!"
+
+#. Author of the plugin/theme
+msgid "David Thomas"
+msgstr "David Thomas"

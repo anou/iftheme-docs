@@ -1,0 +1,209 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Before You Are Dead Countdown\n"
+"POT-Creation-Date: 2014-08-21 10:01+0100\n"
+"PO-Revision-Date: 2014-08-21 10:08+0100\n"
+"Last-Translator: David THOMAS <anou@smol.org>\n"
+"Language-Team: David Thomas <anou@smol.org>\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.6.8\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;"
+"esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;_n_noop:1,2;"
+"_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Poedit-SearchPath-0: .\n"
+
+#: smol-widget-display.php:122
+msgid "Custom class"
+msgstr "Classe personnalisée"
+
+#: smol-widget-display.php:125
+msgid "Fill with your custom class name"
+msgstr "Renseigner votre classe personnalisée"
+
+#: smol-widget-display.php:130
+msgid "Display Path"
+msgstr "Chemin"
+
+#: smol-widget-display.php:133
+msgid ""
+"Fill with the desired path. Use <strong>*</strong> as a wildcard to target "
+"all pages under <em>my-path</em> has in <em>my-path/*</em>"
+msgstr ""
+"Renseignez le chemin désiré. Utilisez le symbole <strong>*</strong> comme "
+"joker pour afficher votre widget dans les pages enfants du chemin <em>mon-"
+"chemin</em>. Ex. : <em>mon-chemin/*</em>"
+
+#: smol-widget-display.php:138
+msgid "Category"
+msgstr "Catégorie"
+
+#: smol-widget-display.php:141
+msgid "Choose on which category you want to display this widget."
+msgstr "Choisissez sur quel catégorie votre widget s'affiche."
+
+#: smol-widget-display.php:146
+msgid "Display on category's children"
+msgstr "Afficher également sur les catégories enfants"
+
+#: smol-widget-display.php:230
+msgid "No categories"
+msgstr "Pas de catégorie"
+
+#: smol-widget-display_settings.php:28
+msgid "Smol Widget Display Settings"
+msgstr "Paramètres de Smol Widget Display"
+
+#: smol-widget-display_settings.php:36
+msgid "Final Date"
+msgstr "Date finale"
+
+#: smol-widget-display_settings.php:42
+msgid ""
+"Click and select the countdown end date. If empty, you are dead tomorrow "
+"after midnight."
+msgstr ""
+"Cliquez et sélectionnez la date de fin du compte à rebours. Si laissé vide, "
+"vous serez mort demain après minuit."
+
+#: smol-widget-display_settings.php:48
+msgid "Date format"
+msgstr "Format de date"
+
+#: smol-widget-display_settings.php:54
+msgid ""
+"Please choose a date format. It must match the format of Final date field!"
+msgstr ""
+"Merci de choisir un format de date. Il doit être identique au format du "
+"champ Date finale !"
+
+#: smol-widget-display_settings.php:56
+msgid "day - month - Year (d/m/Y)"
+msgstr "jour - mois - Année (d/m/Y)"
+
+#: smol-widget-display_settings.php:57
+msgid "month - day - Year (m/d/Y)"
+msgstr "mois - jour - Année (m/d/Y)"
+
+#: smol-widget-display_settings.php:58
+msgid "Year - month - day (Y/m/d)"
+msgstr "Année - mois - jour (Y/m/d)"
+
+#: smol-widget-display_settings.php:66
+msgid "After countdown string"
+msgstr "Phrase de fin du compte à rebours"
+
+#: smol-widget-display_settings.php:72
+msgid ""
+"Fill with your last words (displayed at the countdown's end. I promise)."
+msgstr ""
+"Renseignez vos derniers mots (ils seront affichés à la fin du compte à "
+"rebours. Promis)."
+
+#: smol-widget-display_settings.php:73
+msgid "You are dead now!"
+msgstr "Maintenant vous êtes mort !"
+
+#: smol-widget-display_settings.php:79
+msgid "Display years"
+msgstr "Afficher les années"
+
+#: smol-widget-display_settings.php:85
+msgid "Check this box if you want to display Years."
+msgstr "Cocher cette case si vous voulez afficher les années"
+
+#: smol-widget-display_settings.php:93
+msgid ""
+"Here you can configure some settings for the BYAD Countdown. But if you're "
+"already dead, don't bother."
+msgstr ""
+"Ci-dessous, vous pouvez configurer quelques réglages pour le Compte à "
+"rebours BYAD. Si vous êtes déjà mort, ne vous tracassez pas, laissez vide."
+
+#: smol-widget-display_settings.php:202
+msgid "Before You Are Dead Countdown Settings"
+msgstr "Paramètres Compte à rebours Before You Are Dead"
+
+#: smol-widget-display_settings.php:203
+msgid "BYAD Countdown"
+msgstr "Compte à rebours BYAD"
+
+#: smol-widget-display_settings.php:216
+msgid "You do not have sufficient permissions to access this page."
+msgstr "Vous n'avez pas les droits suffisants pour accéder à cette page."
+
+#: smol-widget-display_widget.php:10
+msgid "Smol Widget Display Widget"
+msgstr "Widget Smol Widget Display"
+
+#: smol-widget-display_widget.php:13
+msgid "Widget for displaying post(s) depending on a user defined tag)"
+msgstr ""
+
+#: smol-widget-display_widget.php:63
+msgid "No tag defined in your widget settings"
+msgstr ""
+
+#: smol-widget-display_widget.php:74
+msgid "The Final Countdown"
+msgstr "Vos derniers instants"
+
+#: smol-widget-display_widget.php:79
+msgid "Title"
+msgstr "Titre"
+
+#: templates/smol-widget-display-tpl.php:2
+msgid "Smol Widget Display"
+msgstr "Smol Widget Display"
+
+#~ msgid "Settings"
+#~ msgstr "Paramètres"
+
+#~ msgid "Before You Are Dead Countdown Widget"
+#~ msgstr "Widget Compte à rebours Before You Are Dead"
+
+#~ msgid ""
+#~ "Widget for displaying a countdown (Years (opt.), Days, Hours, Minutes, "
+#~ "Seconds)"
+#~ msgstr ""
+#~ "Widget pour afficher un compte à rebours (Années (opt.), Jours, Heures, "
+#~ "Minutes, Secondes)"
+
+#~ msgid "Years"
+#~ msgstr "Années"
+
+#~ msgid "Months"
+#~ msgstr "Mois"
+
+#~ msgid "Days"
+#~ msgstr "Jours"
+
+#~ msgid "Hours"
+#~ msgstr "Heures"
+
+#~ msgid "Minutes"
+#~ msgstr "Minutes"
+
+#~ msgid "Seconds"
+#~ msgstr "Secondes"
+
+#~ msgid "BYAD Countdown Settings"
+#~ msgstr "Paramètres du Compte à Rebours BYAD"
+
+#~ msgid "Before You Are Dead Countdown"
+#~ msgstr "Compte à rebours Before You Are Dead"
+
+#~ msgid ""
+#~ "Here you can configure the Before You Are Dead (BYAD) Countdown Plugin."
+#~ msgstr ""
+#~ "Espace de configuration pour le plugin Compte à rebours Before You Are "
+#~ "Dead (BYAD)."
+
+#, fuzzy
+#~ msgid "Your are dead now!"
+#~ msgstr "Maintenant vous êtes mort !"

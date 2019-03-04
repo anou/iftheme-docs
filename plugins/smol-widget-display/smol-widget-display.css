@@ -1,0 +1,33 @@
+/* @import url('http://fonts.googleapis.com/css?family=Montserrat:400,700'); */
+
+@font-face {
+    font-family: 'dinMed';
+    src: url("fonts/DINWebPro-Medium.eot");
+    src: url('fonts/DINWebPro-Medium.eot?#iefix') format('embedded-opentype'),
+         url('fonts/DINWebPro-Medium.woff') format('woff'),
+         url('fonts/DINCompPro-Medium.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+.otw-sc-tabs.smol-tabs { margin-bottom: 15px; background: #fff; }
+
+
+
+.otw-sc-tabs.smol-tabs .ui-tabs-nav li { margin-right: 1px; text-shadow: none; background: #ddd none; font: normal 14px/1em 'dinMed', sans-serif; height: auto;}
+
+.otw-sc-tabs.smol-tabs .ui-tabs-nav li:last-child { margin-right: 0;}
+
+.otw-sc-tabs.smol-tabs .ui-tabs-nav li.ui-tabs-active { border-radius: 0; border: 0 none; background: #008ac9 none; font: normal 14px/1em 'dinMed', sans-serif; color: #fff; text-transform: uppercase;}
+.otw-sc-tabs.smol-tabs .ui-tabs-nav li span.tab-title, .otw-sc-tabs.smol-tabs .ui-tabs-nav li a { background:  #ddd none; color: #fff; text-transform: uppercase; margin: 0; padding: 0.9em 1em 0.6em;}
+.otw-sc-tabs.smol-tabs .ui-tabs-nav li span.tab-title:hover, .otw-sc-tabs.smol-tabs .ui-tabs-nav li a:hover{ color: #008ac9;}
+.otw-sc-tabs.smol-tabs .ui-tabs-nav li.ui-tabs-active a,
+.otw-sc-tabs.smol-tabs .ui-tabs-nav li span.tab-title { background: #008ac9 none; color: #fff; padding: 1em 1em 0.7em; }
+.otw-sc-tabs .ui-tabs-nav li:first-child { border-left: 0 none; }
+.otw-sc-tabs.smol-tabs .ui-tabs-nav li span.tab-title:hover { color: #fff; }
+
+.otw-sc-tabs.smol-tabs .ui-tabs-panel { border: 0 none; border-top: 6px solid #008ac9; box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2); padding: 1px 0 0;}
+/*add padding for text*/
+.otw-sc-tabs.smolpad.smol-tabs .ui-tabs-panel { padding: 1px 18px 14px;}
+
+.otw-sc-tabs.smol-tabs a img{ display: inline;}
