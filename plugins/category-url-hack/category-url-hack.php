@@ -32,6 +32,7 @@ if (!class_exists("CategoryURLRedirect")) {
         	'name'               => 'categ_url_hack[categ]',
         	'id'                 => 'categ_redirect',
         	'selected'           => $categ_redirect,
+        	'show_option_none'   => '--  ' . __('No redirect', 'categ_url_hack') . ' --'
         );
       ?>
       
@@ -41,7 +42,7 @@ if (!class_exists("CategoryURLRedirect")) {
         <h2><?php _e( 'Category redirect settings', 'categ_url_hack' ); ?></h2>  
         <form method="post" action="options-general.php?page=category-redirect">
           <p><label for="categ_redirect"><?php _e('Choose a category to redirect', 'categ_url_hack');?></label>&nbsp;<?php wp_dropdown_categories( $args ) ?></p>
-          <p><label for="categ_url_url"><?php _e("URL to redirect to:", 'categ_url_hack' ); ?></label>&nbsp;<input type="text" id="categ_url_url" name="categ_url_hack[url]" value="<?php echo $categ_url_url; ?>" size="20">&nbsp;<?php _e("ex: http://www.smol.org/" ); ?></p>  
+          <p><label for="categ_url_url"><?php _e("URL to redirect to:", 'categ_url_hack' ); ?></label>&nbsp;<input type="text" id="categ_url_url" name="categ_url_hack[url]" value="<?php echo $categ_url_url; ?>" placeholder="<?php _e('Relative or Absolute URL', 'categ_url_hack' );?>" size="20">&nbsp;<?php _e("eg: /my-page or https://www.smol.org" ); ?></p>  
           
           <p class="submit"><input type="submit" name="submit_categ_url" value="<?php _e('Save settings', 'categ_url_hack' ) ?>" /></p>
         </form>
@@ -66,8 +67,12 @@ if (!class_exists("CategoryURLRedirect")) {
 			$categ = get_query_var('cat');
 			$categz = array();
 
-      //WPML compliant
-      if ( function_exists('icl_object_id') ) {
+      // WPML compliant
+/*
+      $original = array_key_exists( 'wpml_object_id' , $GLOBALS['wp_filter'] ) ? apply_filters( 'wpml_object_id', $currenta, 'category', true, $default_lg ) : $currenta;
+      apply_filters( 'wpml_object_id', int $element_id, string $element_type, bool $return_original_if_missing, mixed $ulanguage_code )
+*/
+      if ( array_key_exists( 'wpml_object_id' , $GLOBALS['wp_filter'] ) ) {
         global $sitepress, $wpdb;
         $defaultlg = $sitepress->get_default_language();
         
@@ -83,10 +88,10 @@ if (!class_exists("CategoryURLRedirect")) {
         }
       }
 
-			if (!empty($redirects)) {
-			  if ($redirects['categ'] == $categ || in_array($redirects['categ'], $categz)) {
-			    wp_redirect( $redirects['url'], '301' );
-          exit;
+			if ( !empty($redirects) && !empty($categz) ) {
+			  if( $redirects['categ'] == $categ || in_array($redirects['categ'], $categz) ) {
+			    wp_redirect( $redirects['url'] );
+          exit();
         }
 			}
 		} // end function redirect
